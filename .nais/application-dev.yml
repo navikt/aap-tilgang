@@ -1,0 +1,59 @@
+apiVersion: nais.io/v1alpha1
+kind: Application
+metadata:
+  name: tilgang
+  namespace: aap
+  labels:
+    team: aap
+    sub: tilgang
+spec:
+  image: {{image}}
+  replicas:
+    cpuThresholdPercentage: 90
+    disableAutoScaling: true
+    max: 1
+    min: 1
+  ingresses:
+    - https://aap-tilgang.intern.dev.nav.no
+  azure:
+    application:
+      enabled: true
+  resources:
+    limits:
+      memory: 1024Mi
+    requests:
+      cpu: 500m
+      memory: 1024Mi
+  liveness:
+    path: /actuator/live
+    initialDelay: 3
+    periodSeconds: 3
+    failureThreshold: 21
+  readiness:
+    path: /actuator/ready
+    initialDelay: 3
+    periodSeconds: 3
+    failureThreshold: 21
+  prometheus:
+    enabled: true
+    path: /actuator/metrics
+  observability:
+    autoInstrumentation:
+      enabled: true
+      runtime: "java"
+  secureLogs:
+    enabled: true
+  env:
+    - name: PDL_BASE_URL
+      value: https://pdl-api.dev-fss-pub.nais.io/graphql
+    - name: PDL_AUDIENCE
+      value: dev-fss:pdl:pdl-api
+    - name: PDL_SCOPE
+      value: api://dev-fss.pdl.pdl-api/.default
+  accessPolicy:
+    inbound:
+      rules:
+        - application: behandlingsflyt
+    outbound:
+      external:
+        - host: pdl-api.dev-fss-pub.nais.io
