@@ -1,4 +1,4 @@
-package tilgang
+package tilgang.auth
 
 import java.net.URL
 

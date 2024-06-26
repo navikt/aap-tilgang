@@ -1,5 +1,6 @@
 package tilgang
 
+import tilgang.auth.AzureConfig
 import java.net.URI
 
 private fun getEnvVar(envar: String) = System.getenv(envar) ?: error("missing envvar $envar")

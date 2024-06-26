@@ -1,4 +1,4 @@
-package oppslag.routes
+package tilgang.routes
 
 import io.ktor.http.*
 import io.ktor.server.application.*
