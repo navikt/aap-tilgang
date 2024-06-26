@@ -3,7 +3,9 @@ package tilgang.integrasjoner.pdl
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
+import tilgang.LOGGER
 import tilgang.PdlConfig
+import tilgang.auth.AzureAdTokenProvider
 import tilgang.auth.AzureConfig
 import tilgang.http.HttpClientFactory
 
@@ -12,12 +14,13 @@ class PdlGraphQLClient(
     private val pdlConfig: PdlConfig
 ) {
     private val httpClient = HttpClientFactory.create()
-//    private val azureTokenProvider = AzureAdTokenProvider(
-//        azureConfig,
-//        pdlConfig.scope
-//    ).also { SECURE_LOGGER.info("azure scope: ${pdlConfig.scope}") }
+    private val azureTokenProvider = AzureAdTokenProvider(
+        azureConfig,
+        pdlConfig.scope
+    ).also { LOGGER.info("azure scope: ${pdlConfig.scope}") }
 
     suspend fun hentPersonBolk(token: String, personidenter: List<String>, callId: String):List<PersonResultat>? {
+        val azureToken = azureTokenProvider.getClientCredentialToken()
         val result = query(token, PdlRequest.hentPersonBolk(personidenter), callId)
         return result.getOrThrow().data?.hentPersonBolk?.map { PersonResultat(it.ident, it.person?.adressebeskyttelse?.map { it.gradering }, it.code) }
     }
