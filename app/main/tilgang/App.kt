@@ -5,6 +5,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import io.ktor.http.*
 import io.ktor.serialization.jackson.*
 import io.ktor.server.application.*
+import io.ktor.server.auth.*
 import io.ktor.server.engine.*
 import io.ktor.server.metrics.micrometer.*
 import io.ktor.server.netty.*
@@ -21,6 +22,8 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
 import tilgang.auth.authentication
+import tilgang.integrasjoner.pdl.PdlGraphQLClient
+import tilgang.routes.tilgang
 
 val LOGGER: Logger = LoggerFactory.getLogger("aap-tilgang")
 
@@ -33,7 +36,7 @@ fun Application.api(
     config: Config = Config(),
 ) {
     val prometheus = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
-    //val pdl = PdlGraphQLClient(config.azureConfig, config.pdlConfig)
+    val pdl = PdlGraphQLClient(config.azureConfig, config.pdlConfig)
 
     install(MicrometerMetrics) { registry = prometheus }
 
@@ -74,5 +77,9 @@ fun Application.api(
 
     routing {
         actuator(prometheus)
+
+        authenticate {
+            tilgang(pdl)
+        }
     }
 }

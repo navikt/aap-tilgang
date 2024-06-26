@@ -3,6 +3,12 @@ package tilgang.integrasjoner.pdl
 import tilgang.graphql.GraphQLError
 import tilgang.graphql.GraphQLExtensions
 
+data class PersonResultat(
+    val ident: String,
+    val adressebeskyttelse: List<String>?,
+    val code: String
+)
+
 internal data class PdlResponse(
     val data: PdlData?,
     val errors: List<GraphQLError>?,

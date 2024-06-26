@@ -12,6 +12,22 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 
 const val AZURE = "azure"
+
+internal fun ApplicationCall.rolle(): String {
+    return requireNotNull(principal<JWTPrincipal>()) {
+        "principal mangler i ktor auth"
+    }.getClaim("rolle", String::class)
+        ?: error("Rolle mangler i token claims")
+}
+
+internal fun ApplicationCall.ident(): String {
+    return requireNotNull(principal<JWTPrincipal>()) {
+        "principal mangler i ktor auth"
+    }.getClaim("ident", String::class)
+        ?: error("Ident mangler i token claims")
+}
+
+
 fun Application.authentication(config: AzureConfig) {
     val idPortenProvider: JwkProvider = JwkProviderBuilder(config.jwks)
         .cached(10, 24, TimeUnit.HOURS)
