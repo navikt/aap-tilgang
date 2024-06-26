@@ -13,10 +13,10 @@ import java.util.concurrent.TimeUnit
 
 const val AZURE = "azure"
 
-internal fun ApplicationCall.rolle(): String {
+internal fun ApplicationCall.roller(): String {
     return requireNotNull(principal<JWTPrincipal>()) {
         "principal mangler i ktor auth"
-    }.getClaim("rolle", String::class)
+    }.getClaim("roller", String::class)
         ?: error("Rolle mangler i token claims")
 }
 

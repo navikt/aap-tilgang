@@ -19,14 +19,11 @@ class PdlGraphQLClient(
         pdlConfig.scope
     ).also { LOGGER.info("azure scope: ${pdlConfig.scope}") }
 
-    suspend fun hentPersonBolk(token: String, personidenter: List<String>, callId: String):List<PersonResultat>? {
+    suspend fun hentPersonBolk(personidenter: List<String>, callId: String):List<PersonResultat>? {
         val azureToken = azureTokenProvider.getClientCredentialToken()
-        val result = query(token, PdlRequest.hentPersonBolk(personidenter), callId)
+        val result = query(azureToken, PdlRequest.hentPersonBolk(personidenter), callId)
         return result.getOrThrow().data?.hentPersonBolk?.map { PersonResultat(it.ident, it.person?.adressebeskyttelse?.map { it.gradering }, it.code) }
     }
-
-
-
 
     private suspend fun query(accessToken: String, query: PdlRequest, callId: String): Result<PdlResponse> {
         val request = httpClient.post(pdlConfig.baseUrl) {

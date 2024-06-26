@@ -5,7 +5,7 @@ import tilgang.graphql.GraphQLExtensions
 
 data class PersonResultat(
     val ident: String,
-    val adressebeskyttelse: List<String>?,
+    val adressebeskyttelse: List<Gradering>?,
     val code: String
 )
 
@@ -43,5 +43,11 @@ internal data class PdlVegadresse(
 )
 
 internal data class Adressebeskyttelse(
-    val gradering: String
+    val gradering: Gradering
 )
+
+enum class Gradering {
+    FORTROLIG,
+    STRENGT_FORTROLIG_UTLAND,
+    STRENGT_FORTROLIG
+}
