@@ -16,14 +16,14 @@ const val AZURE = "azure"
 internal fun ApplicationCall.roller(): String {
     return requireNotNull(principal<JWTPrincipal>()) {
         "principal mangler i ktor auth"
-    }.getClaim("roller", String::class)
+    }.getClaim("groups", String::class)
         ?: error("Rolle mangler i token claims")
 }
 
 internal fun ApplicationCall.ident(): String {
     return requireNotNull(principal<JWTPrincipal>()) {
         "principal mangler i ktor auth"
-    }.getClaim("ident", String::class)
+    }.getClaim("NAVident", String::class)
         ?: error("Ident mangler i token claims")
 }
 

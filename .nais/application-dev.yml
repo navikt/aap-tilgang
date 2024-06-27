@@ -18,6 +18,13 @@ spec:
   azure:
     application:
       enabled: true
+      claims:
+        extra:
+          - "NAVident"
+        groups:
+          {{#each roles}}
+          - id: "{{this.group}}"
+          {{/each}}
   resources:
     limits:
       memory: 1024Mi
@@ -44,6 +51,10 @@ spec:
   secureLogs:
     enabled: true
   env:
+  {{#each roles as |role|}}
+    - name: "{{role.name}}"
+      value: "{{role.group}}"
+  {{/each}}
     - name: PDL_BASE_URL
       value: https://pdl-api.dev-fss-pub.nais.io/graphql
     - name: PDL_AUDIENCE

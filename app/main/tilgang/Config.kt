@@ -2,6 +2,7 @@ package tilgang
 
 import tilgang.auth.AzureConfig
 import java.net.URI
+import java.util.*
 
 private fun getEnvVar(envar: String) = System.getenv(envar) ?: error("missing envvar $envar")
 
@@ -13,6 +14,16 @@ data class Config(
         jwks =  URI.create(getEnvVar("AZURE_OPENID_CONFIG_JWKS_URI")).toURL(),
         issuer = getEnvVar("AZURE_OPENID_CONFIG_ISSUER")
     ),
+    val roles: List<Role> = listOf(
+        Role(Rolle.VEILEDER, UUID.fromString(getEnvVar("AAP_VEILEDER"))),
+        Role(Rolle.SAKSBEHANDLER, UUID.fromString(getEnvVar("AAP_SAKSBEHANDLER"))),
+        Role(Rolle.BESLUTTER, UUID.fromString(getEnvVar("AAP_BESLUTTER"))),
+        Role(Rolle.AVDELINGSLEDER, UUID.fromString(getEnvVar("AAP_AVDELINGSLEDER"))),
+        Role(Rolle.UTVIKLER, UUID.fromString(getEnvVar("AAP_UTVIKLER"))),
+        Role(Rolle.STRENGT_FORTROLIG_ADRESSE, UUID.fromString(getEnvVar("STRENGT_FORTROLIG_ADRESSE"))),
+        Role(Rolle.FORTROLIG_ADRESSE, UUID.fromString(getEnvVar("FORTROLIG_ADRESSE"))
+        )
+    ),
     val pdlConfig: PdlConfig = PdlConfig(),
 )
 
@@ -22,3 +33,17 @@ data class PdlConfig(
     val scope: String = getEnvVar("PDL_SCOPE")
 )
 
+data class Role(
+    val name: Rolle,
+    val objectId: UUID,
+)
+
+enum class Rolle {
+    VEILEDER,
+    SAKSBEHANDLER,
+    BESLUTTER,
+    AVDELINGSLEDER,
+    UTVIKLER,
+    STRENGT_FORTROLIG_ADRESSE,
+    FORTROLIG_ADRESSE
+}

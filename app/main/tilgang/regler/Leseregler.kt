@@ -1,5 +1,6 @@
 package tilgang.regler
 
+import tilgang.Rolle
 import tilgang.integrasjoner.pdl.Gradering
 import tilgang.integrasjoner.pdl.PersonResultat
 
@@ -11,6 +12,6 @@ fun harTilgangTilPersoner(roller: List<Rolle>, personer: List<PersonResultat>?):
     val adresseBeskyttelse = personer.flatMap { it.adressebeskyttelse }
 
     return adresseBeskyttelse.isEmpty()
-            || (Rolle.KODE_6 in roller)
-            || (Rolle.KODE_7 in roller && finnStrengeste(adresseBeskyttelse) === Gradering.FORTROLIG)
+            || (Rolle.STRENGT_FORTROLIG_ADRESSE in roller && finnStrengeste(adresseBeskyttelse) === Gradering.STRENGT_FORTROLIG)
+            || (Rolle.FORTROLIG_ADRESSE in roller && finnStrengeste(adresseBeskyttelse) === Gradering.FORTROLIG)
 }

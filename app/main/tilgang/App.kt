@@ -79,7 +79,7 @@ fun Application.api(
         actuator(prometheus)
 
         authenticate {
-            tilgang(pdl)
+            tilgang(pdl, config.roles)
         }
     }
 }

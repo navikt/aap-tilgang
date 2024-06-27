@@ -1,16 +1,10 @@
 package tilgang.regler
 
+import tilgang.Role
+import tilgang.Rolle
 import tilgang.integrasjoner.pdl.Gradering
 
-enum class Rolle {
-    VEILEDER,
-    SAKSBEHANDLER,
-    BESLUTTER,
-    AVDELINGSLEDER,
-    UTVIKLER,
-    KODE_6,
-    KODE_7
-}
+
 
 
 fun finnStrengeste(adresseBeskyttelser: List<Gradering>): Gradering {
@@ -21,14 +15,13 @@ fun finnStrengeste(adresseBeskyttelser: List<Gradering>): Gradering {
     }
 }
 
-fun parseRoller(roller: String): List<Rolle> {
-    return roller.split(",").filter { parseRolle(it) != null }.map { Rolle.valueOf(it) }
-}
-
-fun parseRolle(rolle: String): Rolle? {
-    return try {
-        Rolle.valueOf(rolle)
-    } catch (e: Exception) {
-        null
-    }
+fun parseRoller(rolesWithGroupIds: List<Role>, rollerFraToken: String): List<Rolle> {
+    return rollerFraToken
+        .split(",")
+        .filter { it in rolesWithGroupIds
+            .map { it.objectId.toString() }
+        }
+        .map {rollefraToken ->
+            Rolle.valueOf(rolesWithGroupIds.first { it.objectId.toString() == rollefraToken}.name.name)
+        }
 }
