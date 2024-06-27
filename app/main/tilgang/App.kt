@@ -21,6 +21,7 @@ import tilgang.routes.actuator
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
+import tilgang.auth.AZURE
 import tilgang.auth.authentication
 import tilgang.integrasjoner.pdl.PdlGraphQLClient
 import tilgang.routes.tilgang
@@ -78,7 +79,7 @@ fun Application.api(
     routing {
         actuator(prometheus)
 
-        authenticate {
+        authenticate(AZURE) {
             tilgang(pdl, config.roles)
         }
     }
