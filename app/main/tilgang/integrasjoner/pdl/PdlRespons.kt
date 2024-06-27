@@ -5,7 +5,7 @@ import tilgang.graphql.GraphQLExtensions
 
 data class PersonResultat(
     val ident: String,
-    val adressebeskyttelse: List<Gradering>?,
+    val adressebeskyttelse: List<Gradering>,
     val code: String
 )
 
