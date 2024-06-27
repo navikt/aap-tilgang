@@ -4,9 +4,6 @@ import tilgang.Role
 import tilgang.Rolle
 import tilgang.integrasjoner.pdl.Gradering
 
-
-
-
 fun finnStrengeste(adresseBeskyttelser: List<Gradering>): Gradering {
     return when {
         Gradering.STRENGT_FORTROLIG in adresseBeskyttelser -> Gradering.STRENGT_FORTROLIG
@@ -18,10 +15,11 @@ fun finnStrengeste(adresseBeskyttelser: List<Gradering>): Gradering {
 fun parseRoller(rolesWithGroupIds: List<Role>, rollerFraToken: String): List<Rolle> {
     return rollerFraToken
         .split(",")
-        .filter { it in rolesWithGroupIds
-            .map { it.objectId.toString() }
+        .filter {
+            it in rolesWithGroupIds
+                .map { it.objectId.toString() }
         }
-        .map {rollefraToken ->
-            Rolle.valueOf(rolesWithGroupIds.first { it.objectId.toString() == rollefraToken}.name.name)
+        .map { rollefraToken ->
+            Rolle.valueOf(rolesWithGroupIds.first { it.objectId.toString() == rollefraToken }.name.name)
         }
 }

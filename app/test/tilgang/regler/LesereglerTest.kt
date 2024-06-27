@@ -21,7 +21,7 @@ class LesereglerTest {
     }
 
     @Test
-    fun `Rolle kode 6 har tilgang til person med fortrolig og strengt fortrolig adresse`() {
+    fun `Rolle STRENGT_FORTROLIG_ADRESSE har tilgang til person med fortrolig og strengt fortrolig adresse`() {
         val roller = listOf(Rolle.STRENGT_FORTROLIG_ADRESSE)
         val personer = listOf(
             PersonResultat("1000", listOf(Gradering.FORTROLIG), "kode"),
@@ -32,7 +32,7 @@ class LesereglerTest {
     }
 
     @Test
-    fun `Rolle kode 7 har tilgang til person med fortrolig, men ikke strengt fortrolig, adresse`() {
+    fun `Rolle FORTROLIG_ADRESSE har tilgang til person med fortrolig, men ikke strengt fortrolig, adresse`() {
         val roller = listOf(Rolle.FORTROLIG_ADRESSE)
         val personListe1 = listOf(PersonResultat("1000", listOf(Gradering.FORTROLIG), "kode"))
         val personListe2 = listOf(

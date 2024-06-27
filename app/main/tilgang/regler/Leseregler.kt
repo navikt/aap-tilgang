@@ -4,6 +4,10 @@ import tilgang.Rolle
 import tilgang.integrasjoner.pdl.Gradering
 import tilgang.integrasjoner.pdl.PersonResultat
 
+fun harLesetilgang(roller: List<Rolle>, personer: List<PersonResultat>?): Boolean {
+    return harTilgangTilPersoner(roller, personer)
+}
+
 fun harTilgangTilPersoner(roller: List<Rolle>, personer: List<PersonResultat>?): Boolean {
     if (personer.isNullOrEmpty()) {
         return true
