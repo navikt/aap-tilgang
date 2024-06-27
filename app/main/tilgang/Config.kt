@@ -18,8 +18,8 @@ data class Config(
         Role(Rolle.VEILEDER, UUID.fromString(getEnvVar("AAP_VEILEDER"))),
         Role(Rolle.SAKSBEHANDLER, UUID.fromString(getEnvVar("AAP_SAKSBEHANDLER"))),
         Role(Rolle.BESLUTTER, UUID.fromString(getEnvVar("AAP_BESLUTTER"))),
-        Role(Rolle.AVDELINGSLEDER, UUID.fromString(getEnvVar("AAP_AVDELINGSLEDER"))),
-        Role(Rolle.UTVIKLER, UUID.fromString(getEnvVar("AAP_UTVIKLER"))),
+        // Role(Rolle.AVDELINGSLEDER, UUID.fromString(getEnvVar("AAP_AVDELINGSLEDER"))),
+        // Role(Rolle.UTVIKLER, UUID.fromString(getEnvVar("AAP_UTVIKLER"))),
         Role(Rolle.STRENGT_FORTROLIG_ADRESSE, UUID.fromString(getEnvVar("STRENGT_FORTROLIG_ADRESSE"))),
         Role(Rolle.FORTROLIG_ADRESSE, UUID.fromString(getEnvVar("FORTROLIG_ADRESSE"))
         )
@@ -42,8 +42,8 @@ enum class Rolle {
     VEILEDER,
     SAKSBEHANDLER,
     BESLUTTER,
-    AVDELINGSLEDER,
-    UTVIKLER,
+    // AVDELINGSLEDER,
+    // UTVIKLER,
     STRENGT_FORTROLIG_ADRESSE,
     FORTROLIG_ADRESSE
 }
