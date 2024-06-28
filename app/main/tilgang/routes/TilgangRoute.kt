@@ -19,9 +19,9 @@ fun Route.tilgang(pdlClient: PdlGraphQLClient, roles: List<Role>) {
             val personer = pdlClient.hentPersonBolk(body.identer, call.request.header("Nav-CallId") ?: "ukjent")
 
             if (harLesetilgang(roller, personer)) {
-                call.respond(HttpStatusCode.OK)
+                call.respond(HttpStatusCode.OK, TilgangResponse(true))
             }
-            call.respond(HttpStatusCode.Forbidden, body)
+            call.respond(HttpStatusCode.OK, TilgangResponse(false))
         }
         post("/skrive") {
             val body = call.receive<TilgangSkriveRequest>()
@@ -30,9 +30,9 @@ fun Route.tilgang(pdlClient: PdlGraphQLClient, roles: List<Role>) {
             val enhet = finnEnhet(call.ident())
 
             if (kanSkriveTilAvklaringsbehov(Avklaringsbehov.fraKode(body.avklaringsbehov), roller, enhet, personer)) {
-                call.respond(HttpStatusCode.OK)
+                call.respond(HttpStatusCode.OK, TilgangResponse(true))
             }
-            call.respond(HttpStatusCode.Forbidden, body)
+            call.respond(HttpStatusCode.OK, TilgangResponse(false))
         }
     }
 }
@@ -44,3 +44,4 @@ fun finnEnhet(ident: String): Enhet {
 
 data class TilgangLeseRequest(val identer: List<String>)
 data class TilgangSkriveRequest(val identer: List<String>, val avklaringsbehov: String)
+data class TilgangResponse(val tilgang: Boolean)
