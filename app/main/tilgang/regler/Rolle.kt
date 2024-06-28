@@ -12,9 +12,8 @@ fun finnStrengeste(adresseBeskyttelser: List<Gradering>): Gradering {
     }
 }
 
-fun parseRoller(rolesWithGroupIds: List<Role>, rollerFraToken: String): List<Rolle> {
+fun parseRoller(rolesWithGroupIds: List<Role>, rollerFraToken: List<String>): List<Rolle> {
     return rollerFraToken
-        .split(",")
         .filter {
             it in rolesWithGroupIds
                 .map { it.objectId.toString() }

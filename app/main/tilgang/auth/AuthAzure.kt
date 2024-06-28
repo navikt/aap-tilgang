@@ -13,11 +13,12 @@ import java.util.concurrent.TimeUnit
 
 const val AZURE = "azure"
 
-internal fun ApplicationCall.roller(): String {
-    return requireNotNull(principal<JWTPrincipal>()) {
+internal fun ApplicationCall.roller(): List<String> {
+    val roller = requireNotNull(principal<JWTPrincipal>()) {
         "principal mangler i ktor auth"
-    }.getClaim("groups", String::class)
-        ?: error("Rolle mangler i token claims")
+    }.getListClaim("groups", String::class)
+    LOGGER.info("Roller: $roller")
+    return roller
 }
 
 internal fun ApplicationCall.ident(): String {
