@@ -1,10 +1,12 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
-    kotlin("jvm") version "1.9.24"
-    id("io.ktor.plugin") version "2.3.11"
+    kotlin("jvm") version "2.0.0"
+    id("io.ktor.plugin") version "2.3.12"
     application
 }
 
-val ktorVersion = "2.3.11"
+val ktorVersion = "2.3.12"
 val aapLibVersion = "3.7.145"
 
 application {
@@ -47,11 +49,14 @@ repositories {
 }
 
 tasks {
-    withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-        kotlinOptions.jvmTarget = "21"
-    }
     withType<Test> {
         useJUnitPlatform()
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_21)
     }
 }
 
