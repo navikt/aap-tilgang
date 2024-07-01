@@ -7,16 +7,15 @@ fun kanSkriveTilAvklaringsbehov(
     ident: String,
     avklaringsbehov: Avklaringsbehov,
     roller: List<Rolle>,
-    enhet: Enhet,
     personer: List<PersonResultat>
 ): Boolean {
-    return kanRolleOgEnhetAvklareBehov(avklaringsbehov, roller, enhet)
+    return kanRolleOgEnhetAvklareBehov(avklaringsbehov, roller)
             && harLesetilgang(ident, roller, personer)
 }
 
-private fun kanRolleOgEnhetAvklareBehov(avklaringsbehov: Avklaringsbehov, roller: List<Rolle>, enhet: Enhet): Boolean {
-    val erLokalSaksbehandler = Rolle.SAKSBEHANDLER in roller && enhet === Enhet.LOKAL
-    val erNaySaksbehandler = Rolle.SAKSBEHANDLER in roller && enhet === Enhet.NAY
+private fun kanRolleOgEnhetAvklareBehov(avklaringsbehov: Avklaringsbehov, roller: List<Rolle>): Boolean {
+    val erLokalSaksbehandler = Rolle.VEILEDER in roller
+    val erNaySaksbehandler = Rolle.SAKSBEHANDLER in roller
     val erBeslutter = Rolle.BESLUTTER in roller
 
     if (avklaringsbehov === Avklaringsbehov.MANUELT_SATT_PÅ_VENT) {

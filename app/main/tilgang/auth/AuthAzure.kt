@@ -28,6 +28,11 @@ internal fun ApplicationCall.ident(): String {
         ?: error("Ident mangler i token claims")
 }
 
+internal fun ApplicationCall.token(): String {
+    return requireNotNull(this.request.headers["Authorization"]) {
+        "Authorization header mangler"
+    }.split(" ")[1]
+}
 
 fun Application.authentication(config: AzureConfig) {
     val idPortenProvider: JwkProvider = JwkProviderBuilder(config.jwks)

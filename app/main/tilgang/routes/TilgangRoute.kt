@@ -8,14 +8,18 @@ import io.ktor.server.routing.*
 import tilgang.Role
 import tilgang.auth.ident
 import tilgang.auth.roller
+import tilgang.auth.token
+import tilgang.integrasjoner.msgraph.MsGraphClient
 import tilgang.integrasjoner.pdl.PdlGraphQLClient
 import tilgang.regler.*
 
-fun Route.tilgang(pdlClient: PdlGraphQLClient, roles: List<Role>) {
+fun Route.tilgang(pdlClient: PdlGraphQLClient, msGraphClient: MsGraphClient, roles: List<Role>) {
     route("/tilgang") {
         post("/lese") {
             val body = call.receive<TilgangLeseRequest>()
             val roller = parseRoller(rolesWithGroupIds = roles, call.roller())
+            val adGrupper = msGraphClient.hentAdGrupper(call.token()).groups.map { it.name }
+            tilgang.LOGGER.info("adGrupper: $adGrupper")
             val personer =
                 requireNotNull(pdlClient.hentPersonBolk(body.identer, call.request.header("Nav-CallId") ?: "ukjent"))
 
@@ -30,13 +34,11 @@ fun Route.tilgang(pdlClient: PdlGraphQLClient, roles: List<Role>) {
             val personer =
                 requireNotNull(pdlClient.hentPersonBolk(body.identer, call.request.header("Nav-CallId") ?: "ukjent"))
             val ident = call.ident()
-            val enhet = finnEnhet(ident)
 
             if (kanSkriveTilAvklaringsbehov(
                     ident,
                     Avklaringsbehov.fraKode(body.avklaringsbehov),
                     roller,
-                    enhet,
                     personer
                 )
             ) {
@@ -47,10 +49,6 @@ fun Route.tilgang(pdlClient: PdlGraphQLClient, roles: List<Role>) {
     }
 }
 
-// TODO: Erstatt med kall til ekstern tjeneste
-fun finnEnhet(ident: String): Enhet {
-    return Enhet.NAY
-}
 
 data class TilgangLeseRequest(val identer: List<String>)
 data class TilgangSkriveRequest(val identer: List<String>, val avklaringsbehov: String)

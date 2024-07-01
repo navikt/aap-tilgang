@@ -10,7 +10,7 @@ class LesereglerTest {
     @Test
     fun `Saksbehandler uten fortrolige-roller skal ikke kunne lese fortrolige adresser`() {
         val ident = "1234"
-        val roller = listOf(Rolle.SAKSBEHANDLER)
+        val roller = listOf(Rolle.VEILEDER, Rolle.SAKSBEHANDLER)
         val personListe1 = listOf(PersonResultat("1000", listOf(Gradering.FORTROLIG), "kode"))
         val personerListe2 = listOf(PersonResultat("1234", listOf(Gradering.STRENGT_FORTROLIG), "kode"))
         val personerListe3 = listOf(PersonResultat("5678", listOf(Gradering.STRENGT_FORTROLIG_UTLAND), "kode"))
@@ -49,7 +49,7 @@ class LesereglerTest {
     @Test
     fun `Saksbehandler skal ikke ha tilgang til egen sak`() {
         val ident = "1234"
-        val roller = listOf(Rolle.SAKSBEHANDLER)
+        val roller = listOf(Rolle.VEILEDER, Rolle.SAKSBEHANDLER)
         val personListe = listOf(PersonResultat("1234", emptyList(), "kode"))
         assertFalse(harLesetilgang(ident, roller, personListe))
     }

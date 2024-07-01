@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
 import tilgang.auth.AZURE
 import tilgang.auth.authentication
+import tilgang.integrasjoner.msgraph.MsGraphClient
 import tilgang.integrasjoner.pdl.PdlException
 import tilgang.integrasjoner.pdl.PdlGraphQLClient
 import tilgang.routes.tilgang
@@ -39,6 +40,7 @@ fun Application.api(
 ) {
     val prometheus = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
     val pdl = PdlGraphQLClient(config.azureConfig, config.pdlConfig)
+    val msGraph = MsGraphClient(config.azureConfig, config.msGraphConfig)
 
     install(MicrometerMetrics) { registry = prometheus }
 
@@ -81,7 +83,7 @@ fun Application.api(
         actuator(prometheus)
 
         authenticate(AZURE) {
-            tilgang(pdl, config.roles)
+            tilgang(pdl, msGraph, config.roles)
         }
     }
 }
