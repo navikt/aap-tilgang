@@ -9,21 +9,20 @@ import tilgang.Role
 import tilgang.auth.ident
 import tilgang.auth.roller
 import tilgang.auth.token
-import tilgang.integrasjoner.msgraph.MsGraphClient
+import tilgang.geo.GeoService
 import tilgang.integrasjoner.pdl.PdlGraphQLClient
 import tilgang.regler.*
 
-fun Route.tilgang(pdlClient: PdlGraphQLClient, msGraphClient: MsGraphClient, roles: List<Role>) {
+fun Route.tilgang(pdlClient: PdlGraphQLClient, geoService: GeoService, roles: List<Role>) {
     route("/tilgang") {
         post("/lese") {
             val body = call.receive<TilgangLeseRequest>()
             val roller = parseRoller(rolesWithGroupIds = roles, call.roller())
-            val adGrupper = msGraphClient.hentAdGrupper(call.token()).groups.map { it.name }
-            tilgang.LOGGER.info("adGrupper: $adGrupper")
+            val geoRoller = geoService.hentGeoRoller(call.token())
             val personer =
                 requireNotNull(pdlClient.hentPersonBolk(body.identer, call.request.header("Nav-CallId") ?: "ukjent"))
 
-            if (harLesetilgang(call.ident(), roller, personer)) {
+            if (harLesetilgang(call.ident(), geoRoller, roller, personer)) {
                 call.respond(HttpStatusCode.OK, TilgangResponse(true))
             }
             call.respond(HttpStatusCode.OK, TilgangResponse(false))
@@ -31,6 +30,7 @@ fun Route.tilgang(pdlClient: PdlGraphQLClient, msGraphClient: MsGraphClient, rol
         post("/skrive") {
             val body = call.receive<TilgangSkriveRequest>()
             val roller = parseRoller(rolesWithGroupIds = roles, call.roller())
+            val geoRoller = geoService.hentGeoRoller(call.token())
             val personer =
                 requireNotNull(pdlClient.hentPersonBolk(body.identer, call.request.header("Nav-CallId") ?: "ukjent"))
             val ident = call.ident()
@@ -38,6 +38,7 @@ fun Route.tilgang(pdlClient: PdlGraphQLClient, msGraphClient: MsGraphClient, rol
             if (kanSkriveTilAvklaringsbehov(
                     ident,
                     Avklaringsbehov.fraKode(body.avklaringsbehov),
+                    geoRoller,
                     roller,
                     personer
                 )
