@@ -38,7 +38,6 @@ data class PdlConfig(
 
 data class MsGraphConfig(
     val baseUrl: String = getEnvVar("MS_GRAPH_BASE_URL"),
-    //val audience: String = getEnvVar("MS_GRAPH_AUDIENCE"),
     val scope: String = getEnvVar("MS_GRAPH_SCOPE")
 )
 

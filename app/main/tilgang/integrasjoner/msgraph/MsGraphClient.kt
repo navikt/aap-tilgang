@@ -18,8 +18,10 @@ class MsGraphClient(azureConfig: AzureConfig, private val msGraphConfig: MsGraph
     )
 
     suspend fun hentAdGrupper(currentToken: String): MemberOf {
+        val graphToken = azureTokenProvider.getOnBehalfOfToken(currentToken)
+
         val respons = httpClient.get("${msGraphConfig.baseUrl}/me/memberOf") {
-            bearerAuth(currentToken)
+            bearerAuth(graphToken)
             contentType(ContentType.Application.Json)
         }
 
