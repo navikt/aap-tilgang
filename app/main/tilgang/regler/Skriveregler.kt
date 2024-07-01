@@ -4,13 +4,14 @@ import tilgang.Rolle
 import tilgang.integrasjoner.pdl.PersonResultat
 
 fun kanSkriveTilAvklaringsbehov(
+    ident: String,
     avklaringsbehov: Avklaringsbehov,
     roller: List<Rolle>,
     enhet: Enhet,
-    personer: List<PersonResultat>?
+    personer: List<PersonResultat>
 ): Boolean {
     return kanRolleOgEnhetAvklareBehov(avklaringsbehov, roller, enhet)
-            && harLesetilgang(roller, personer)
+            && harLesetilgang(ident, roller, personer)
 }
 
 private fun kanRolleOgEnhetAvklareBehov(avklaringsbehov: Avklaringsbehov, roller: List<Rolle>, enhet: Enhet): Boolean {

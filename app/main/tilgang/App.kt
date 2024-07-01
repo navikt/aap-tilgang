@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
 import tilgang.auth.AZURE
 import tilgang.auth.authentication
+import tilgang.integrasjoner.pdl.PdlException
 import tilgang.integrasjoner.pdl.PdlGraphQLClient
 import tilgang.routes.tilgang
 
@@ -59,10 +60,10 @@ fun Application.api(
     }
 
     install(StatusPages) {
-//        exception<PdlException> { call, cause ->
-//            LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause)
-//            call.respondText(text = "Feil i PDL: ${cause.message}", status = HttpStatusCode.InternalServerError)
-//        }
+        exception<PdlException> { call, cause ->
+            LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause)
+            call.respondText(text = "Feil i PDL: ${cause.message}", status = HttpStatusCode.InternalServerError)
+        }
         exception<Throwable> { call, cause ->
             LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause)
             call.respondText(text = "Feil i tjeneste: ${cause.message}", status = HttpStatusCode.InternalServerError)

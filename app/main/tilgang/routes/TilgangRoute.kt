@@ -16,9 +16,10 @@ fun Route.tilgang(pdlClient: PdlGraphQLClient, roles: List<Role>) {
         post("/lese") {
             val body = call.receive<TilgangLeseRequest>()
             val roller = parseRoller(rolesWithGroupIds = roles, call.roller())
-            val personer = pdlClient.hentPersonBolk(body.identer, call.request.header("Nav-CallId") ?: "ukjent")
+            val personer =
+                requireNotNull(pdlClient.hentPersonBolk(body.identer, call.request.header("Nav-CallId") ?: "ukjent"))
 
-            if (harLesetilgang(roller, personer)) {
+            if (harLesetilgang(call.ident(), roller, personer)) {
                 call.respond(HttpStatusCode.OK, TilgangResponse(true))
             }
             call.respond(HttpStatusCode.OK, TilgangResponse(false))
@@ -26,10 +27,19 @@ fun Route.tilgang(pdlClient: PdlGraphQLClient, roles: List<Role>) {
         post("/skrive") {
             val body = call.receive<TilgangSkriveRequest>()
             val roller = parseRoller(rolesWithGroupIds = roles, call.roller())
-            val personer = pdlClient.hentPersonBolk(body.identer, call.request.header("Nav-CallId") ?: "ukjent")
-            val enhet = finnEnhet(call.ident())
+            val personer =
+                requireNotNull(pdlClient.hentPersonBolk(body.identer, call.request.header("Nav-CallId") ?: "ukjent"))
+            val ident = call.ident()
+            val enhet = finnEnhet(ident)
 
-            if (kanSkriveTilAvklaringsbehov(Avklaringsbehov.fraKode(body.avklaringsbehov), roller, enhet, personer)) {
+            if (kanSkriveTilAvklaringsbehov(
+                    ident,
+                    Avklaringsbehov.fraKode(body.avklaringsbehov),
+                    roller,
+                    enhet,
+                    personer
+                )
+            ) {
                 call.respond(HttpStatusCode.OK, TilgangResponse(true))
             }
             call.respond(HttpStatusCode.OK, TilgangResponse(false))
