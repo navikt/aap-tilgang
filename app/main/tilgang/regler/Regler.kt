@@ -1,7 +1,10 @@
 package tilgang.regler
 
 import tilgang.Rolle
+import tilgang.geo.GeoRolle
 import tilgang.geo.GeoService
+import tilgang.geo.GeoType
+import tilgang.integrasjoner.pdl.PdlGeoType
 import tilgang.integrasjoner.pdl.Gradering
 import tilgang.integrasjoner.pdl.HentGeografiskTilknytningResult
 import tilgang.integrasjoner.pdl.PersonResultat
@@ -20,7 +23,10 @@ fun vurderTilgang(
     return when (operasjon) {
         Operasjon.SE -> harLesetilgang(ident, roller, personer, søkersGeografiskeTilknytning)
         Operasjon.DRIFTE -> harDriftTilgang(roller.roller)
-        Operasjon.DELEGERE -> harLesetilgang(ident, roller, personer, søkersGeografiskeTilknytning) && erAvdelingsleder(roller.roller)
+        Operasjon.DELEGERE -> harLesetilgang(ident, roller, personer, søkersGeografiskeTilknytning) && erAvdelingsleder(
+            roller.roller
+        )
+
         Operasjon.SAKSBEHANDLE -> kanSkriveTilAvklaringsbehov(
             ident,
             requireNotNull(avklaringsbehov) { "Avklaringsbehov er påkrevd for operasjon 'SAKSBEHANDLE'" },
@@ -42,7 +48,12 @@ fun kanSkriveTilAvklaringsbehov(
             && harLesetilgang(ident, roller, personer, søkersGeografiskeTilknytning)
 }
 
-fun harLesetilgang(ident: String, roller: Roller, personer: List<PersonResultat>, søkersGeografiskeTilknytning: HentGeografiskTilknytningResult): Boolean {
+fun harLesetilgang(
+    ident: String,
+    roller: Roller,
+    personer: List<PersonResultat>,
+    søkersGeografiskeTilknytning: HentGeografiskTilknytningResult
+): Boolean {
     return !erEgenSak(ident, personer)
             && harLeseRoller(roller.roller)
             && sjekkGeo(roller.geoRoller, søkersGeografiskeTilknytning)
@@ -70,12 +81,23 @@ private fun erEgenSak(ident: String, personer: List<PersonResultat>): Boolean {
     return personer.any { it.ident === ident }
 }
 
-private fun sjekkGeo(geoRoller: List<String>, søkersGeografiskeTilknytning: HentGeografiskTilknytningResult): Boolean {
-    if (GeoService.NASJONAL in geoRoller) {
+private fun sjekkGeo(
+    geoRoller: List<GeoRolle>,
+    søkersGeografiskeTilknytning: HentGeografiskTilknytningResult
+): Boolean {
+    if (geoRoller.any { it.geoType == GeoType.NASJONAL }) {
         return true
     }
-    // TODO: Sammenlign geo-roller med resultat fra pdl (Vet ikke formatet på GEO-rollene enda)
-    return true
+    return when (søkersGeografiskeTilknytning.gtType) {
+        PdlGeoType.KOMMUNE -> søkersGeografiskeTilknytning.gtKommune in geoRoller.filter { it.geoType === GeoType.KOMMUNE }
+            .map { it.kode }
+
+        PdlGeoType.BYDEL -> søkersGeografiskeTilknytning.gtBydel in geoRoller.filter { it.geoType === GeoType.BYDEL }
+            .map { it.kode }
+
+        PdlGeoType.UTLAND -> geoRoller.any { it.geoType == GeoType.UTLAND }
+        PdlGeoType.UDEFINERT -> geoRoller.any { it.geoType == GeoType.UDEFINERT }
+    }
 }
 
 private fun harLeseRoller(roller: List<Rolle>): Boolean {

@@ -33,13 +33,13 @@ internal data class PdlPerson(
 )
 
 data class HentGeografiskTilknytningResult(
-    val gtType: GeoType,
+    val gtType: PdlGeoType,
     val gtKommune: String?,
     val gtBydel: String?,
     val gtLand: String?
 )
 
-enum class GeoType {
+enum class PdlGeoType {
     BYDEL, KOMMUNE, UDEFINERT, UTLAND
 }
 

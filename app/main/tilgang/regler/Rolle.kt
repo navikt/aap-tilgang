@@ -2,6 +2,7 @@ package tilgang.regler
 
 import tilgang.Role
 import tilgang.Rolle
+import tilgang.geo.GeoRolle
 import tilgang.integrasjoner.pdl.Gradering
 
 fun finnStrengeste(adresseBeskyttelser: List<Gradering>): Gradering {
@@ -24,6 +25,6 @@ fun parseRoller(rolesWithGroupIds: List<Role>, rollerFraToken: List<String>): Li
 }
 
 data class Roller(
-    val geoRoller: List<String>,
+    val geoRoller: List<GeoRolle>,
     val roller: List<Rolle>
 )
