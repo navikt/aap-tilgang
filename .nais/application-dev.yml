@@ -65,7 +65,7 @@ spec:
       value: https://graph.microsoft.com/v1.0
     - name: MS_GRAPH_SCOPE
       value: https://graph.microsoft.com/.default
-    - name: BEHANDLINGSFLYT_URL
+    - name: BEHANDLINGSFLYT_BASE_URL
       value: http://behandlingsflyt
     - name: BEHANDLINGSFLYT_SCOPE
       value: api://dev-gcp.aap.behandlingsflyt/.default
