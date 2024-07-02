@@ -68,7 +68,7 @@ spec:
     - name: BEHANDLINGSFLYT_URL
       value: http://behandlingsflyt
     - name: BEHANDLINGSFLYT_SCOPE
-      value: api://dev-gcp.aap.behandlingsflyt/.default"
+      value: api://dev-gcp.aap.behandlingsflyt/.default
   accessPolicy:
     inbound:
       rules:
