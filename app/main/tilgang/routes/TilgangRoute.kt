@@ -73,6 +73,7 @@ fun Route.tilgang(
                     call.request.header("Nav-CallId") ?: "ukjent"
                 )
             )
+            tilgang.LOGGER.info("Geografisk tilknytning: ${søkersGeografiskeTilknytning}")
             if (harLesetilgang(call.ident(), Roller(geoRoller, roller), personer, søkersGeografiskeTilknytning)) {
                 call.respond(HttpStatusCode.OK, TilgangResponse(true))
             }
