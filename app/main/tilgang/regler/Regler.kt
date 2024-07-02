@@ -3,6 +3,7 @@ package tilgang.regler
 import tilgang.Rolle
 import tilgang.geo.GeoService
 import tilgang.integrasjoner.pdl.Gradering
+import tilgang.integrasjoner.pdl.HentGeografiskTilknytningResult
 import tilgang.integrasjoner.pdl.PersonResultat
 import tilgang.routes.Operasjon
 
@@ -10,20 +11,22 @@ fun vurderTilgang(
     ident: String,
     roller: Roller,
     søkerIdent: String,
+    søkersGeografiskeTilknytning: HentGeografiskTilknytningResult,
     personer: List<PersonResultat>,
     behandlingsreferanse: String,
     avklaringsbehov: Avklaringsbehov?,
     operasjon: Operasjon
 ): Boolean {
     return when (operasjon) {
-        Operasjon.SE -> harLesetilgang(ident, roller, personer)
-        Operasjon.DRIFTE -> true // TODO
-        Operasjon.DELEGERE -> harLesetilgang(ident, roller, personer) && erAvdelingsleder(roller.roller)
+        Operasjon.SE -> harLesetilgang(ident, roller, personer, søkersGeografiskeTilknytning)
+        Operasjon.DRIFTE -> harDriftTilgang(roller.roller)
+        Operasjon.DELEGERE -> harLesetilgang(ident, roller, personer, søkersGeografiskeTilknytning) && erAvdelingsleder(roller.roller)
         Operasjon.SAKSBEHANDLE -> kanSkriveTilAvklaringsbehov(
             ident,
             requireNotNull(avklaringsbehov) { "Avklaringsbehov er påkrevd for operasjon 'SAKSBEHANDLE'" },
             roller,
-            personer
+            personer,
+            søkersGeografiskeTilknytning
         )
     }
 }
@@ -32,17 +35,23 @@ fun kanSkriveTilAvklaringsbehov(
     ident: String,
     avklaringsbehov: Avklaringsbehov,
     roller: Roller,
-    personer: List<PersonResultat>
+    personer: List<PersonResultat>,
+    søkersGeografiskeTilknytning: HentGeografiskTilknytningResult
 ): Boolean {
     return kanAvklareBehov(avklaringsbehov, roller.roller)
-            && harLesetilgang(ident, roller, personer)
+            && harLesetilgang(ident, roller, personer, søkersGeografiskeTilknytning)
 }
 
-fun harLesetilgang(ident: String, roller: Roller, personer: List<PersonResultat>): Boolean {
+fun harLesetilgang(ident: String, roller: Roller, personer: List<PersonResultat>, søkersGeografiskeTilknytning: HentGeografiskTilknytningResult): Boolean {
     return !erEgenSak(ident, personer)
             && harLeseRoller(roller.roller)
-            && sjekkGeo(roller.geoRoller, personer)
+            && sjekkGeo(roller.geoRoller, søkersGeografiskeTilknytning)
             && sjekkAdresseBeskyttelse(roller.roller, personer)
+}
+
+fun harDriftTilgang(roller: List<Rolle>): Boolean {
+    // TODO: Flere begrensninger?
+    return Rolle.UTVIKLER in roller
 }
 
 fun erAvdelingsleder(roller: List<Rolle>): Boolean {
@@ -61,11 +70,11 @@ private fun erEgenSak(ident: String, personer: List<PersonResultat>): Boolean {
     return personer.any { it.ident === ident }
 }
 
-private fun sjekkGeo(geoRoller: List<String>, personer: List<PersonResultat>): Boolean {
+private fun sjekkGeo(geoRoller: List<String>, søkersGeografiskeTilknytning: HentGeografiskTilknytningResult): Boolean {
     if (GeoService.NASJONAL in geoRoller) {
         return true
     }
-    // TODO: Gjør sammenligning etter å ha hentet geografisk tilknytning fra pdl
+    // TODO: Sammenlign geo-roller med resultat fra pdl (Vet ikke formatet på GEO-rollene enda)
     return true
 }
 

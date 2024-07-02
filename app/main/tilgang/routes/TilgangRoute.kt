@@ -28,6 +28,7 @@ fun Route.tilgang(
             val geoRoller = geoService.hentGeoRoller(token)
 
             val identer = behandlingsflytClient.hentIdenter(token, body.saksnummer).identer
+            val søkerIdent = identer.first()
             val personer =
                 requireNotNull(
                     pdlClient.hentPersonBolk(
@@ -35,11 +36,18 @@ fun Route.tilgang(
                         call.request.header("Nav-CallId") ?: "ukjent"
                     )
                 )
+            val søkersGeografiskeTilknytning = requireNotNull(
+                pdlClient.hentGeografiskTilknytning(
+                    søkerIdent,
+                    call.request.header("Nav-CallId") ?: "ukjent"
+                )
+            )
 
             if (vurderTilgang(
                     call.ident(),
                     Roller(geoRoller, roller),
-                    identer.first(),
+                    søkerIdent,
+                    søkersGeografiskeTilknytning,
                     personer,
                     body.behandlingsreferanse,
                     body.avklaringsbehov,
@@ -59,8 +67,13 @@ fun Route.tilgang(
             val geoRoller = geoService.hentGeoRoller(call.token())
             val personer =
                 requireNotNull(pdlClient.hentPersonBolk(body.identer, call.request.header("Nav-CallId") ?: "ukjent"))
-
-            if (harLesetilgang(call.ident(), Roller(geoRoller, roller), personer)) {
+            val søkersGeografiskeTilknytning = requireNotNull(
+                pdlClient.hentGeografiskTilknytning(
+                    body.identer.first(),
+                    call.request.header("Nav-CallId") ?: "ukjent"
+                )
+            )
+            if (harLesetilgang(call.ident(), Roller(geoRoller, roller), personer, søkersGeografiskeTilknytning)) {
                 call.respond(HttpStatusCode.OK, TilgangResponse(true))
             }
             call.respond(HttpStatusCode.OK, TilgangResponse(false))

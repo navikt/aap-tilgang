@@ -25,6 +25,12 @@ class PdlGraphQLClient(
         return result.getOrThrow().data?.hentPersonBolk?.map { PersonResultat(it.ident, it.person?.adressebeskyttelse?.map { it.gradering } ?: emptyList(), it.code) }
     }
 
+    suspend fun hentGeografiskTilknytning(ident: String, callId: String): HentGeografiskTilknytningResult? {
+        val azureToken = azureTokenProvider.getClientCredentialToken()
+        val result = query(azureToken, PdlRequest.hentGeografiskTilknytning(ident), callId)
+        return result.getOrThrow().data?.hentGeografiskTilknytning
+    }
+
     private suspend fun query(accessToken: String, query: PdlRequest, callId: String): Result<PdlResponse> {
         val request = httpClient.post(pdlConfig.baseUrl) {
             accept(ContentType.Application.Json)

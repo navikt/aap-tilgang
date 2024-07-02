@@ -8,6 +8,10 @@ internal data class PdlRequest(val query: String, val variables: Variables) {
             query = PERSON_BOLK_QUERY.asQuery(),
             variables = Variables(identer = personidenter),
         )
+        fun hentGeografiskTilknytning(ident: String) = PdlRequest(
+            query = GEOGRAFISK_TILKNYTNING_QUERY.asQuery(),
+            variables = Variables(ident = ident)
+        )
     }
 }
 
@@ -25,6 +29,18 @@ val PERSON_BOLK_QUERY = """
             code
         }
     }
+""".trimIndent()
+
+private const val ident = "\$ident"
+val GEOGRAFISK_TILKNYTNING_QUERY = """
+    query($ident: ID!) {
+        hentGeografiskTilknytning(ident: $ident) {
+            gtType
+            gtKommune
+            gtBydel
+            gtLand
+        }
+}
 """.trimIndent()
 
 fun String.asQuery() = this.replace("\n", "")

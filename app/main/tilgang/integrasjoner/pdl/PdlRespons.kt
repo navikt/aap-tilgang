@@ -16,6 +16,7 @@ internal data class PdlResponse(
 )
 
 internal data class PdlData(
+    val hentGeografiskTilknytning: HentGeografiskTilknytningResult?,
     val hentPerson: PdlPerson?,
     val hentPersonBolk: List<HentPersonBolkResult>?
 )
@@ -30,6 +31,17 @@ internal data class PdlPerson(
     val adressebeskyttelse: List<Adressebeskyttelse>?,
     val code: Code?     //Denne er påkrevd ved hentPersonBolk
 )
+
+data class HentGeografiskTilknytningResult(
+    val gType: GeoType,
+    val gtKommune: String?,
+    val gtBydel: String?,
+    val gtLand: String?
+)
+
+enum class GeoType {
+    BYDEL, KOMMUNE, UDEFINERT, UTLAND
+}
 
 internal enum class Code {
     ok, not_found, bad_request //TODO: add more
