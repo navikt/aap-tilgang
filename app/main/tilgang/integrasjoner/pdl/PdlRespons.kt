@@ -33,7 +33,7 @@ internal data class PdlPerson(
 )
 
 data class HentGeografiskTilknytningResult(
-    val gType: GeoType,
+    val gType: GeoType?,
     val gtKommune: String?,
     val gtBydel: String?,
     val gtLand: String?
