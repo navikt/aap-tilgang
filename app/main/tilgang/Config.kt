@@ -19,6 +19,7 @@ data class Config(
         Role(Rolle.SAKSBEHANDLER, UUID.fromString(getEnvVar("AAP_SAKSBEHANDLER"))),
         Role(Rolle.VEILEDER, UUID.fromString(getEnvVar("AAP_VEILEDER"))),
         Role(Rolle.BESLUTTER, UUID.fromString(getEnvVar("AAP_BESLUTTER"))),
+        Role(Rolle.LES, UUID.fromString(getEnvVar("AAP_LES"))),
         // Role(Rolle.AVDELINGSLEDER, UUID.fromString(getEnvVar("AAP_AVDELINGSLEDER"))),
         // Role(Rolle.UTVIKLER, UUID.fromString(getEnvVar("AAP_UTVIKLER"))),
         Role(Rolle.STRENGT_FORTROLIG_ADRESSE, UUID.fromString(getEnvVar("STRENGT_FORTROLIG_ADRESSE"))),
@@ -27,7 +28,8 @@ data class Config(
         )
     ),
     val pdlConfig: PdlConfig = PdlConfig(),
-    val msGraphConfig: MsGraphConfig = MsGraphConfig()
+    val msGraphConfig: MsGraphConfig = MsGraphConfig(),
+    val behandlingsflytConfig: BehandlingsflytConfig = BehandlingsflytConfig()
 )
 
 data class PdlConfig(
@@ -41,6 +43,11 @@ data class MsGraphConfig(
     val scope: String = getEnvVar("MS_GRAPH_SCOPE")
 )
 
+data class BehandlingsflytConfig(
+    val baseUrl: String = getEnvVar("BEHANDLINGSFLYT_BASE_URL"),
+    val scope: String = getEnvVar("BEHANDLINGSFLYT_SCOPE")
+)
+
 data class Role(
     val name: Rolle,
     val objectId: UUID,
@@ -51,9 +58,8 @@ enum class Rolle {
     SAKSBEHANDLER,
     BESLUTTER,
     LES,
-
-    // AVDELINGSLEDER,
-    // UTVIKLER,
+    AVDELINGSLEDER,
+    UTVIKLER,
     STRENGT_FORTROLIG_ADRESSE,
     FORTROLIG_ADRESSE
 }

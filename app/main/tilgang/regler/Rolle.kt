@@ -22,3 +22,8 @@ fun parseRoller(rolesWithGroupIds: List<Role>, rollerFraToken: List<String>): Li
             Rolle.valueOf(rolesWithGroupIds.first { it.objectId.toString() == rollefraToken }.name.name)
         }
 }
+
+data class Roller(
+    val geoRoller: List<String>,
+    val roller: List<Rolle>
+)

@@ -24,7 +24,10 @@ import org.slf4j.event.Level
 import tilgang.auth.AZURE
 import tilgang.auth.authentication
 import tilgang.geo.GeoService
+import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytClient
+import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytException
 import tilgang.integrasjoner.msgraph.MsGraphClient
+import tilgang.integrasjoner.msgraph.MsGraphException
 import tilgang.integrasjoner.pdl.PdlException
 import tilgang.integrasjoner.pdl.PdlGraphQLClient
 import tilgang.routes.tilgang
@@ -42,6 +45,7 @@ fun Application.api(
     val prometheus = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
     val pdl = PdlGraphQLClient(config.azureConfig, config.pdlConfig)
     val msGraph = MsGraphClient(config.azureConfig, config.msGraphConfig)
+    val behandlingsflyt = BehandlingsflytClient(config.azureConfig, config.behandlingsflytConfig)
     val geoService = GeoService(msGraph)
 
     install(MicrometerMetrics) { registry = prometheus }
@@ -68,6 +72,14 @@ fun Application.api(
             LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause)
             call.respondText(text = "Feil i PDL: ${cause.message}", status = HttpStatusCode.InternalServerError)
         }
+        exception<MsGraphException> { call, cause ->
+            LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause)
+            call.respondText(text = "Feil i Microsoft Graph: ${cause.message}", status = HttpStatusCode.InternalServerError)
+        }
+        exception<BehandlingsflytException> { call, cause ->
+            LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause)
+            call.respondText(text = "Feil i behandlingsflyt: ${cause.message}", status = HttpStatusCode.InternalServerError)
+        }
         exception<Throwable> { call, cause ->
             LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause)
             call.respondText(text = "Feil i tjeneste: ${cause.message}", status = HttpStatusCode.InternalServerError)
@@ -85,7 +97,7 @@ fun Application.api(
         actuator(prometheus)
 
         authenticate(AZURE) {
-            tilgang(pdl, geoService, config.roles)
+            tilgang(pdl, behandlingsflyt, geoService, config.roles)
         }
     }
 }

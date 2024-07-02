@@ -10,11 +10,49 @@ import tilgang.auth.ident
 import tilgang.auth.roller
 import tilgang.auth.token
 import tilgang.geo.GeoService
+import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytClient
 import tilgang.integrasjoner.pdl.PdlGraphQLClient
 import tilgang.regler.*
 
-fun Route.tilgang(pdlClient: PdlGraphQLClient, geoService: GeoService, roles: List<Role>) {
+fun Route.tilgang(
+    pdlClient: PdlGraphQLClient,
+    behandlingsflytClient: BehandlingsflytClient,
+    geoService: GeoService,
+    roles: List<Role>
+) {
     route("/tilgang") {
+        post {
+            val body = call.receive<TilgangRequest>()
+            val token = call.token()
+            val roller = parseRoller(rolesWithGroupIds = roles, call.roller())
+            val geoRoller = geoService.hentGeoRoller(token)
+
+            val identer = behandlingsflytClient.hentIdenter(token, body.saksnummer).identer
+            val personer =
+                requireNotNull(
+                    pdlClient.hentPersonBolk(
+                        identer,
+                        call.request.header("Nav-CallId") ?: "ukjent"
+                    )
+                )
+
+            if (vurderTilgang(
+                    call.ident(),
+                    Roller(geoRoller, roller),
+                    identer.first(),
+                    personer,
+                    body.behandlingsreferanse,
+                    body.avklaringsbehov,
+                    body.operasjon
+                )
+            ) {
+                call.respond(HttpStatusCode.OK, TilgangResponse(true))
+            }
+            call.respond(HttpStatusCode.OK, TilgangResponse(false))
+
+        }
+
+        // TODO: Fjern denne
         post("/lese") {
             val body = call.receive<TilgangLeseRequest>()
             val roller = parseRoller(rolesWithGroupIds = roles, call.roller())
@@ -22,27 +60,7 @@ fun Route.tilgang(pdlClient: PdlGraphQLClient, geoService: GeoService, roles: Li
             val personer =
                 requireNotNull(pdlClient.hentPersonBolk(body.identer, call.request.header("Nav-CallId") ?: "ukjent"))
 
-            if (harLesetilgang(call.ident(), geoRoller, roller, personer)) {
-                call.respond(HttpStatusCode.OK, TilgangResponse(true))
-            }
-            call.respond(HttpStatusCode.OK, TilgangResponse(false))
-        }
-        post("/skrive") {
-            val body = call.receive<TilgangSkriveRequest>()
-            val roller = parseRoller(rolesWithGroupIds = roles, call.roller())
-            val geoRoller = geoService.hentGeoRoller(call.token())
-            val personer =
-                requireNotNull(pdlClient.hentPersonBolk(body.identer, call.request.header("Nav-CallId") ?: "ukjent"))
-            val ident = call.ident()
-
-            if (kanSkriveTilAvklaringsbehov(
-                    ident,
-                    Avklaringsbehov.fraKode(body.avklaringsbehov),
-                    geoRoller,
-                    roller,
-                    personer
-                )
-            ) {
+            if (harLesetilgang(call.ident(), Roller(geoRoller, roller), personer)) {
                 call.respond(HttpStatusCode.OK, TilgangResponse(true))
             }
             call.respond(HttpStatusCode.OK, TilgangResponse(false))
@@ -50,7 +68,19 @@ fun Route.tilgang(pdlClient: PdlGraphQLClient, geoService: GeoService, roles: Li
     }
 }
 
+data class TilgangRequest(
+    val saksnummer: String,
+    val behandlingsreferanse: String,
+    val avklaringsbehov: Avklaringsbehov?,
+    val operasjon: Operasjon
+)
+
+enum class Operasjon {
+    SE,
+    SAKSBEHANDLE,
+    DRIFTE,
+    DELEGERE
+}
 
 data class TilgangLeseRequest(val identer: List<String>)
-data class TilgangSkriveRequest(val identer: List<String>, val avklaringsbehov: String)
 data class TilgangResponse(val tilgang: Boolean)
