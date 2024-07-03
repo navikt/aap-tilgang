@@ -9,6 +9,7 @@ import tilgang.integrasjoner.pdl.PdlGeoType
 import tilgang.integrasjoner.pdl.Gradering
 import tilgang.integrasjoner.pdl.HentGeografiskTilknytningResult
 import tilgang.integrasjoner.pdl.PersonResultat
+import tilgang.routes.Operasjon
 
 class ReglerTest {
     @Test
@@ -16,7 +17,7 @@ class ReglerTest {
         val ident = "1234"
         val roller = Roller(listOf(GeoRolle(GeoType.KOMMUNE, "0301")), listOf(Rolle.VEILEDER, Rolle.SAKSBEHANDLER))
         val søkersGeografiskeTilknytning = HentGeografiskTilknytningResult(
-            PdlGeoType.BYDEL, null, null, "030102"
+            PdlGeoType.BYDEL, null, "030102", null
         )
         val personListe1 = listOf(PersonResultat("1000", listOf(Gradering.FORTROLIG), "kode"))
         val personerListe2 = listOf(PersonResultat("1234", listOf(Gradering.STRENGT_FORTROLIG), "kode"))
@@ -71,6 +72,46 @@ class ReglerTest {
         )
         val personListe = listOf(PersonResultat("1234", emptyList(), "kode"))
         assertFalse(harLesetilgang(ident, roller, personListe, søkersGeografiskeTilknytning))
+    }
+
+    @Test
+    fun `Utvikler skal kun ha tilgang til operasjon 'DRIFTE'`() {
+        val ident = "1234"
+        val roller = Roller(emptyList(), listOf(Rolle.UTVIKLER))
+        val søkersGeografiskeTilknytning = HentGeografiskTilknytningResult(
+            PdlGeoType.KOMMUNE, "0301", null, null
+        )
+        val personListe = listOf(PersonResultat("1000", emptyList(), "kode"))
+        assertTrue(vurderTilgang(ident, roller, "1000", søkersGeografiskeTilknytning, personListe, "bref-123", null, Operasjon.DRIFTE))
+        assertFalse(vurderTilgang(ident, roller, "1000", søkersGeografiskeTilknytning, personListe, "bref-123", null, Operasjon.SE))
+        assertFalse(vurderTilgang(ident, roller, "1000", søkersGeografiskeTilknytning, personListe, "bref-123", null, Operasjon.SAKSBEHANDLE))
+        assertFalse(vurderTilgang(ident, roller, "1000", søkersGeografiskeTilknytning, personListe, "bref-123", null, Operasjon.DELEGERE))
+    }
+
+    @Test
+    fun `Saksbehandler, veileder og avdelingsleder skal ikke kunne lese saker som er utenfor deres geografiske rettigher`() {
+            val ident = "1234"
+            val roller = Roller(listOf(GeoRolle(GeoType.KOMMUNE, "0301")), listOf(Rolle.VEILEDER, Rolle.SAKSBEHANDLER))
+            val søkersGeografiskeTilknytning = HentGeografiskTilknytningResult(
+                PdlGeoType.BYDEL, null, "500101", null
+            )
+
+            val personListe = listOf(PersonResultat("1000", emptyList(), "kode"))
+
+            assertFalse(harLesetilgang(ident, roller, personListe, søkersGeografiskeTilknytning))
+    }
+
+    @Test
+    fun `Skal kunne lese bydel i kommune`() {
+        val ident = "1234"
+        val roller = Roller(listOf(GeoRolle(GeoType.KOMMUNE, "0301")), listOf(Rolle.VEILEDER, Rolle.SAKSBEHANDLER))
+        val søkersGeografiskeTilknytning = HentGeografiskTilknytningResult(
+            PdlGeoType.BYDEL, null, "030102", null
+        )
+
+        val personListe = listOf(PersonResultat("1000", emptyList(), "kode"))
+
+        assertTrue(harLesetilgang(ident, roller, personListe, søkersGeografiskeTilknytning))
     }
 
 }
