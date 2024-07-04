@@ -74,5 +74,7 @@ spec:
       rules:
         - application: behandlingsflyt
     outbound:
+      rules:
+        - application: behandlingsflyt
       external:
         - host: pdl-api.dev-fss-pub.nais.io
