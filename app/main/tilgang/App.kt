@@ -30,6 +30,7 @@ import tilgang.integrasjoner.msgraph.MsGraphClient
 import tilgang.integrasjoner.msgraph.MsGraphException
 import tilgang.integrasjoner.pdl.PdlException
 import tilgang.integrasjoner.pdl.PdlGraphQLClient
+import tilgang.regler.RegelService
 import tilgang.routes.tilgang
 
 val LOGGER: Logger = LoggerFactory.getLogger("aap-tilgang")
@@ -47,6 +48,7 @@ fun Application.api(
     val msGraph = MsGraphClient(config.azureConfig, config.msGraphConfig)
     val behandlingsflyt = BehandlingsflytClient(config.azureConfig, config.behandlingsflytConfig)
     val geoService = GeoService(msGraph)
+    val regelService = RegelService(geoService, pdl)
 
     install(MicrometerMetrics) { registry = prometheus }
 
@@ -97,7 +99,7 @@ fun Application.api(
         actuator(prometheus)
 
         authenticate(AZURE) {
-            tilgang(pdl, behandlingsflyt, geoService, config.roles)
+            tilgang(behandlingsflyt, regelService, config.roles)
         }
     }
 }
