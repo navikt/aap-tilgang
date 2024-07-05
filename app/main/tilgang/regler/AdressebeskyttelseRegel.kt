@@ -30,7 +30,7 @@ data object AdressebeskyttelseRegel: Regel<AdressebeskyttelseInput> {
 data class AdressebeskyttelseInput(val roller: List<Rolle>, val personer: List<PersonResultat>)
 class AdressebeskyttelseInputGenerator(private val pdlService: PdlGraphQLClient): InputGenerator<AdressebeskyttelseInput> {
     override suspend fun generer(input: RegelInput): AdressebeskyttelseInput {
-        val personer = requireNotNull(pdlService.hentPersonBolk(input.identer, input.callId))
+        val personer = requireNotNull(pdlService.hentPersonBolk(input.identer.søker.union(input.identer.barn).toList(), input.callId))
         return AdressebeskyttelseInput(input.roller, personer)
     }
 

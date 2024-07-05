@@ -42,7 +42,7 @@ class GeoInputGenerator(private val geoService: GeoService, private val pdlClien
         val geoRoller = geoService.hentGeoRoller(input.currentToken)
         val søkersGeografiskeTilknytning = requireNotNull(
             pdlClient.hentGeografiskTilknytning(
-                input.identer.first(),
+                input.identer.søker.first(),
                 input.callId
             )
         )
@@ -52,5 +52,5 @@ class GeoInputGenerator(private val geoService: GeoService, private val pdlClien
 
 data class GeoInput(
     val geoRoller: List<GeoRolle>,
-    val søkersGeografiskTilknytningResult: HentGeografiskTilknytningResult
+    val søkersGeografiskTilknytning: HentGeografiskTilknytningResult
 )

@@ -2,15 +2,18 @@ package tilgang.regler
 
 data object EgenSakRegel : Regel<EgenSakInput> {
     override fun vurder(input: EgenSakInput): Boolean {
-        return input.ident in input.søkerIdenter.union(input.barnIdententer)
+        val identer = input.søkerIdenter.union(input.barnIdententer)
+        return input.ident !in identer
     }
 }
 
 data object EgenSakInputGenerator : InputGenerator<EgenSakInput> {
     override suspend fun generer(input: RegelInput): EgenSakInput {
-        // TODO: Se om man kan hente pnr for navident - ellers vil denne alltid gå gjennom ettersom de andre identene er på pnr-format
-        // TODO: RegelInput må opprettes med riktig objekt for identer
-        return EgenSakInput(input.ident, input.identer, input.identer)
+        val (søkerIdenter, barnIdenter) = input.identer
+
+        //TODO: input.ident er NAV-ident - må finne pnr
+
+        return EgenSakInput(input.ident, søkerIdenter, barnIdenter)
     }
 }
 

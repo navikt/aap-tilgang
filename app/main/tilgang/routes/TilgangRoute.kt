@@ -23,7 +23,10 @@ fun Route.tilgang(
             val callId = call.request.header("Nav-CallId") ?: "ukjent"
             val token = call.token()
             val roller = parseRoller(rolesWithGroupIds = roles, call.roller())
-            val identer = behandlingsflytClient.hentIdenter(token, body.saksnummer).identer
+            val identer = behandlingsflytClient.hentIdenter(token, body.saksnummer)
+            val avklaringsbehov =
+                if (body.avklaringsbehovKode != null) Avklaringsbehov.fraKode(body.avklaringsbehovKode) else null
+
             val regelInput = RegelInput(
                 callId,
                 call.ident(),
@@ -31,8 +34,7 @@ fun Route.tilgang(
                 roller,
                 identer,
                 body.behandlingsreferanse,
-                body.avklaringsbehov,
-                body.operasjon
+                avklaringsbehov, body.operasjon
             )
             if (regelService.vurderTilgang(regelInput)
             ) {
@@ -46,8 +48,8 @@ fun Route.tilgang(
 
 data class TilgangRequest(
     val saksnummer: String,
-    val behandlingsreferanse: String,
-    val avklaringsbehov: Avklaringsbehov?,
+    val behandlingsreferanse: String?,
+    val avklaringsbehovKode: String?,
     val operasjon: Operasjon
 )
 

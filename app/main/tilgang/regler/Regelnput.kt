@@ -1,6 +1,7 @@
 package tilgang.regler
 
 import tilgang.Rolle
+import tilgang.integrasjoner.behandlingsflyt.IdenterRespons
 import tilgang.routes.Operasjon
 
 class RegelInput (
@@ -8,8 +9,8 @@ class RegelInput (
     val ident: String,
     val currentToken: String,
     val roller: List<Rolle>,
-    val identer: List<String>,
-    val behandlingsreferanse: String,
+    val identer: IdenterRespons,
+    val behandlingsreferanse: String?,
     val avklaringsbehov: Avklaringsbehov?,
     val operasjon: Operasjon
 )

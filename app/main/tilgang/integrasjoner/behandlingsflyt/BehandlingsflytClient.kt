@@ -25,6 +25,6 @@ class BehandlingsflytClient(azureConfig: AzureConfig, private val behandlingsfly
             else -> throw BehandlingsflytException("Feil ved henting av identer fra behandlingsflyt: ${respons.status} : ${respons.bodyAsText()}")
         }
     }
-
-    data class IdenterRespons(val identer: List<String>)
 }
+
+data class IdenterRespons(val søker: List<String>, val barn: List<String>)
