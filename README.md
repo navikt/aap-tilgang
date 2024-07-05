@@ -1,4 +1,4 @@
-## AAP oppslag
+## aap-tilgang
 Applikasjon for å sjekke om brukere har tilgang til sak/ressurs
 
 ## Komme i gang
