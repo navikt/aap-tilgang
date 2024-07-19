@@ -40,7 +40,7 @@ dependencies {
 
     testImplementation(kotlin("test"))
     testImplementation("com.nimbusds:nimbus-jose-jwt:9.37.3")
-    testImplementation("org.junit.jupiter:junit-jupiter-params:${libs.junit.jupiter.params.get().version}")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:5.10.2")
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
 }
 
