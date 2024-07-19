@@ -9,23 +9,34 @@ import tilgang.auth.AzureAdTokenProvider
 import tilgang.auth.AzureConfig
 import tilgang.http.HttpClientFactory
 
+interface IPdlGraphQLClient {
+    suspend fun hentPersonBolk(personidenter: List<String>, callId: String): List<PersonResultat>?
+
+    suspend fun hentGeografiskTilknytning(ident: String, callId: String): HentGeografiskTilknytningResult?
+}
+
 class PdlGraphQLClient(
     azureConfig: AzureConfig,
     private val pdlConfig: PdlConfig
-) {
+) : IPdlGraphQLClient {
     private val httpClient = HttpClientFactory.create()
     private val azureTokenProvider = AzureAdTokenProvider(
         azureConfig,
         pdlConfig.scope
     ).also { LOGGER.info("azure scope: ${pdlConfig.scope}") }
 
-    suspend fun hentPersonBolk(personidenter: List<String>, callId: String):List<PersonResultat>? {
+    override suspend fun hentPersonBolk(personidenter: List<String>, callId: String): List<PersonResultat>? {
         val azureToken = azureTokenProvider.getClientCredentialToken()
         val result = query(azureToken, PdlRequest.hentPersonBolk(personidenter), callId)
-        return result.getOrThrow().data?.hentPersonBolk?.map { PersonResultat(it.ident, it.person?.adressebeskyttelse?.map { it.gradering } ?: emptyList(), it.code) }
+        return result.getOrThrow().data?.hentPersonBolk?.map {
+            PersonResultat(
+                it.ident,
+                it.person?.adressebeskyttelse?.map { it.gradering } ?: emptyList(),
+                it.code)
+        }
     }
 
-    suspend fun hentGeografiskTilknytning(ident: String, callId: String): HentGeografiskTilknytningResult? {
+    override suspend fun hentGeografiskTilknytning(ident: String, callId: String): HentGeografiskTilknytningResult? {
         val azureToken = azureTokenProvider.getClientCredentialToken()
         val result = query(azureToken, PdlRequest.hentGeografiskTilknytning(ident), callId)
         return result.getOrThrow().data?.hentGeografiskTilknytning
@@ -36,7 +47,7 @@ class PdlGraphQLClient(
             accept(ContentType.Application.Json)
             header("Nav-Call-Id", callId)
             header("TEMA", "AAP")
-            header("Behandlingsnummer","B287")
+            header("Behandlingsnummer", "B287")
             bearerAuth(accessToken)
             contentType(ContentType.Application.Json)
             setBody(query)

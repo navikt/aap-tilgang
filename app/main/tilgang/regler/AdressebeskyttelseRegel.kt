@@ -2,7 +2,7 @@ package tilgang.regler
 
 import tilgang.Rolle
 import tilgang.integrasjoner.pdl.Gradering
-import tilgang.integrasjoner.pdl.PdlGraphQLClient
+import tilgang.integrasjoner.pdl.IPdlGraphQLClient
 import tilgang.integrasjoner.pdl.PersonResultat
 
 data object AdressebeskyttelseRegel: Regel<AdressebeskyttelseInput> {
@@ -28,7 +28,7 @@ data object AdressebeskyttelseRegel: Regel<AdressebeskyttelseInput> {
 }
 
 data class AdressebeskyttelseInput(val roller: List<Rolle>, val personer: List<PersonResultat>)
-class AdressebeskyttelseInputGenerator(private val pdlService: PdlGraphQLClient): InputGenerator<AdressebeskyttelseInput> {
+class AdressebeskyttelseInputGenerator(private val pdlService: IPdlGraphQLClient): InputGenerator<AdressebeskyttelseInput> {
     override suspend fun generer(input: RegelInput): AdressebeskyttelseInput {
         val personer = requireNotNull(pdlService.hentPersonBolk(input.identer.søker.union(input.identer.barn).toList(), input.callId))
         return AdressebeskyttelseInput(input.roller, personer)

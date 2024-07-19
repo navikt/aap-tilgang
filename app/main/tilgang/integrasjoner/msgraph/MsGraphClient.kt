@@ -10,14 +10,18 @@ import tilgang.auth.AzureAdTokenProvider
 import tilgang.auth.AzureConfig
 import tilgang.http.HttpClientFactory
 
-class MsGraphClient(azureConfig: AzureConfig, private val msGraphConfig: MsGraphConfig) {
+interface IMsGraphClient {
+    suspend fun hentAdGrupper(currentToken: String): MemberOf
+}
+
+class MsGraphClient(azureConfig: AzureConfig, private val msGraphConfig: MsGraphConfig) : IMsGraphClient {
     private val httpClient = HttpClientFactory.create()
     private val azureTokenProvider = AzureAdTokenProvider(
         azureConfig,
         msGraphConfig.scope
     )
 
-    suspend fun hentAdGrupper(currentToken: String): MemberOf {
+    override suspend fun hentAdGrupper(currentToken: String): MemberOf {
         val graphToken = azureTokenProvider.getOnBehalfOfToken(currentToken)
 
         val respons = httpClient.get("${msGraphConfig.baseUrl}/me/memberOf") {
@@ -30,16 +34,16 @@ class MsGraphClient(azureConfig: AzureConfig, private val msGraphConfig: MsGraph
             else -> throw MsGraphException("Feil fra Microsoft Graph: ${respons.status} : ${respons.bodyAsText()}")
         }
     }
-
-    data class MemberOf(
-        @JsonProperty("value")
-        val groups: List<Group> = emptyList()
-    )
-
-    data class Group(
-        @JsonProperty("id")
-        val id: String,
-        @JsonProperty("mailNickname")
-        val name: String
-    )
 }
+
+data class MemberOf(
+    @JsonProperty("value")
+    val groups: List<Group> = emptyList()
+)
+
+data class Group(
+    @JsonProperty("id")
+    val id: String,
+    @JsonProperty("mailNickname")
+    val name: String
+)

@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
 import tilgang.auth.AZURE
 import tilgang.auth.authentication
+import tilgang.enhet.EnhetService
 import tilgang.geo.GeoService
 import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytClient
 import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytException
@@ -48,7 +49,8 @@ fun Application.api(
     val msGraph = MsGraphClient(config.azureConfig, config.msGraphConfig)
     val behandlingsflyt = BehandlingsflytClient(config.azureConfig, config.behandlingsflytConfig)
     val geoService = GeoService(msGraph)
-    val regelService = RegelService(geoService, pdl)
+    val enhetService = EnhetService(msGraph)
+    val regelService = RegelService(geoService, enhetService, pdl)
 
     install(MicrometerMetrics) { registry = prometheus }
 

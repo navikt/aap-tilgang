@@ -1,11 +1,13 @@
 package tilgang.regler
 
+import org.slf4j.LoggerFactory
+import tilgang.enhet.EnhetService
 import tilgang.geo.GeoRolle
 import tilgang.geo.GeoService
 import tilgang.geo.GeoType
 import tilgang.integrasjoner.pdl.HentGeografiskTilknytningResult
+import tilgang.integrasjoner.pdl.IPdlGraphQLClient
 import tilgang.integrasjoner.pdl.PdlGeoType
-import tilgang.integrasjoner.pdl.PdlGraphQLClient
 
 data object GeoRegel : Regel<GeoInput> {
 
@@ -36,10 +38,18 @@ data object GeoRegel : Regel<GeoInput> {
     }
 }
 
-class GeoInputGenerator(private val geoService: GeoService, private val pdlClient: PdlGraphQLClient) :
+private val logger = LoggerFactory.getLogger(GeoInputGenerator::class.java)
+
+class GeoInputGenerator(
+    private val geoService: GeoService,
+    private val enhetService: EnhetService,
+    private val pdlClient: IPdlGraphQLClient
+) :
     InputGenerator<GeoInput> {
     override suspend fun generer(input: RegelInput): GeoInput {
         val geoRoller = geoService.hentGeoRoller(input.currentToken)
+        val enhetRoller = enhetService.hentEnhetRoller(input.currentToken)
+        logger.info("Enhetroller for $input: $enhetRoller")
         val søkersGeografiskeTilknytning = requireNotNull(
             pdlClient.hentGeografiskTilknytning(
                 input.identer.søker.first(),

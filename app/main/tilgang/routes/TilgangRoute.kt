@@ -13,9 +13,7 @@ import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytClient
 import tilgang.regler.*
 
 fun Route.tilgang(
-    behandlingsflytClient: BehandlingsflytClient,
-    regelService: RegelService,
-    roles: List<Role>
+    behandlingsflytClient: BehandlingsflytClient, regelService: RegelService, roles: List<Role>
 ) {
     route("/tilgang") {
         post {
@@ -28,16 +26,9 @@ fun Route.tilgang(
                 if (body.avklaringsbehovKode != null) Avklaringsbehov.fraKode(body.avklaringsbehovKode) else null
 
             val regelInput = RegelInput(
-                callId,
-                call.ident(),
-                token,
-                roller,
-                identer,
-                body.behandlingsreferanse,
-                avklaringsbehov, body.operasjon
+                callId, call.ident(), token, roller, identer, body.behandlingsreferanse, avklaringsbehov, body.operasjon
             )
-            if (regelService.vurderTilgang(regelInput)
-            ) {
+            if (regelService.vurderTilgang(regelInput)) {
                 call.respond(HttpStatusCode.OK, TilgangResponse(true))
             }
             call.respond(HttpStatusCode.OK, TilgangResponse(false))
@@ -54,10 +45,7 @@ data class TilgangRequest(
 )
 
 enum class Operasjon {
-    SE,
-    SAKSBEHANDLE,
-    DRIFTE,
-    DELEGERE
+    SE, SAKSBEHANDLE, DRIFTE, DELEGERE
 }
 
 data class TilgangResponse(val tilgang: Boolean)

@@ -1,8 +1,8 @@
 package tilgang.geo
 
-import tilgang.integrasjoner.msgraph.MsGraphClient
+import tilgang.integrasjoner.msgraph.IMsGraphClient
 
-class GeoService(private val msGraphClient: MsGraphClient) {
+class GeoService(private val msGraphClient: IMsGraphClient) {
 
     suspend fun hentGeoRoller(currentToken: String): List<GeoRolle> {
         return msGraphClient.hentAdGrupper(currentToken).groups
