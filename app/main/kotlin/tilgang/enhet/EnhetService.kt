@@ -11,14 +11,14 @@ class EnhetService(private val msGraphClient: IMsGraphClient) {
     }
 
     private fun parseEnhetRolle(rolleNavn: String): EnhetRolle {
-        val kode = rolleNavn.removePrefix("${ENHET_GROUP_PREFIX}_")
-        return EnhetRolle(enhetType = kode, kode = kode)
+        val kode = rolleNavn.removePrefix("${ENHET_GROUP_PREFIX}")
+        return EnhetRolle(kode = kode)
     }
 
     companion object {
-        const val ENHET_GROUP_PREFIX = "0000-GA-ENHET"
+        const val ENHET_GROUP_PREFIX = "0000-GA-ENHET-"
     }
 
 }
 
-data class EnhetRolle(val enhetType: String, val kode: String?)
+data class EnhetRolle(val kode: String)
