@@ -11,7 +11,7 @@ class EnhetService(private val msGraphClient: IMsGraphClient) {
     }
 
     private fun parseEnhetRolle(rolleNavn: String): EnhetRolle {
-        val kode = rolleNavn.removePrefix("${ENHET_GROUP_PREFIX}")
+        val kode = rolleNavn.removePrefix(ENHET_GROUP_PREFIX)
         return EnhetRolle(kode = kode)
     }
 

@@ -27,6 +27,10 @@ class Fakes(azurePort: Int = 0): AutoCloseable {
         System.setProperty("azure.openid.config.issuer", "tilgang")
     }
 
+    fun azurePort(): Int {
+        return azure.port()
+    }
+
     override fun close() {
         azure.stop(0L, 0L)
     }

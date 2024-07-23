@@ -1,37 +1,39 @@
 package tilgang.routes
 
-import io.ktor.http.*
-import io.ktor.server.application.*
+import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
+import com.papsign.ktor.openapigen.route.path.normal.post
+import com.papsign.ktor.openapigen.route.response.respond
+import com.papsign.ktor.openapigen.route.route
 import io.ktor.server.request.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
 import tilgang.Role
 import tilgang.auth.ident
 import tilgang.auth.roller
 import tilgang.auth.token
 import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytClient
-import tilgang.regler.*
+import tilgang.regler.Avklaringsbehov
+import tilgang.regler.RegelInput
+import tilgang.regler.RegelService
+import tilgang.regler.parseRoller
 
-fun Route.tilgang(
+fun NormalOpenAPIRoute.tilgang(
     behandlingsflytClient: BehandlingsflytClient, regelService: RegelService, roles: List<Role>
 ) {
     route("/tilgang") {
-        post {
-            val body = call.receive<TilgangRequest>()
-            val callId = call.request.header("Nav-CallId") ?: "ukjent"
-            val token = call.token()
-            val roller = parseRoller(rolesWithGroupIds = roles, call.roller())
-            val identer = behandlingsflytClient.hentIdenter(token, body.saksnummer)
+        post<Unit, TilgangResponse, TilgangRequest> {_, req ->
+            val callId = pipeline.context.request.header("Nav-CallId") ?: "ukjent"
+            val token = token()
+            val roller = parseRoller(rolesWithGroupIds = roles, roller())
+            val identer = behandlingsflytClient.hentIdenter(token, req.saksnummer)
             val avklaringsbehov =
-                if (body.avklaringsbehovKode != null) Avklaringsbehov.fraKode(body.avklaringsbehovKode) else null
+                if (req.avklaringsbehovKode != null) Avklaringsbehov.fraKode(req.avklaringsbehovKode) else null
 
             val regelInput = RegelInput(
-                callId, call.ident(), token, roller, identer, body.behandlingsreferanse, avklaringsbehov, body.operasjon
+                callId, ident(), token, roller, identer, req.behandlingsreferanse, avklaringsbehov, req.operasjon
             )
             if (regelService.vurderTilgang(regelInput)) {
-                call.respond(HttpStatusCode.OK, TilgangResponse(true))
+                respond(TilgangResponse(true))
             }
-            call.respond(HttpStatusCode.OK, TilgangResponse(false))
+            respond(TilgangResponse(false))
 
         }
     }

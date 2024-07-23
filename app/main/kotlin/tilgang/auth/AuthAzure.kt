@@ -2,6 +2,7 @@ package tilgang.auth
 
 import com.auth0.jwk.JwkProvider
 import com.auth0.jwk.JwkProviderBuilder
+import com.papsign.ktor.openapigen.route.response.OpenAPIPipelineContext
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -13,23 +14,23 @@ import java.util.concurrent.TimeUnit
 
 const val AZURE = "azure"
 
-internal fun ApplicationCall.roller(): List<String> {
-    val roller = requireNotNull(principal<JWTPrincipal>()) {
+internal fun OpenAPIPipelineContext.roller(): List<String> {
+    val roller = requireNotNull(pipeline.context.principal<JWTPrincipal>()) {
         "principal mangler i ktor auth"
     }.getListClaim("groups", String::class)
     LOGGER.info("Roller: $roller")
     return roller
 }
 
-internal fun ApplicationCall.ident(): String {
-    return requireNotNull(principal<JWTPrincipal>()) {
+internal fun OpenAPIPipelineContext.ident(): String {
+    return requireNotNull(pipeline.context.principal<JWTPrincipal>()) {
         "principal mangler i ktor auth"
     }.getClaim("NAVident", String::class)
         ?: error("Ident mangler i token claims")
 }
 
-internal fun ApplicationCall.token(): String {
-    return requireNotNull(this.request.headers["Authorization"]) {
+internal fun OpenAPIPipelineContext.token(): String {
+    return requireNotNull(pipeline.context.request.headers["Authorization"]) {
         "Authorization header mangler"
     }.split(" ")[1]
 }

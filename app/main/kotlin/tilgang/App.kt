@@ -2,6 +2,8 @@ package tilgang
 
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.papsign.ktor.openapigen.OpenAPIGen
+import com.papsign.ktor.openapigen.route.apiRouting
 import io.ktor.http.*
 import io.ktor.serialization.jackson.*
 import io.ktor.server.application.*
@@ -78,11 +80,17 @@ fun Application.api(
         }
         exception<MsGraphException> { call, cause ->
             LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause)
-            call.respondText(text = "Feil i Microsoft Graph: ${cause.message}", status = HttpStatusCode.InternalServerError)
+            call.respondText(
+                text = "Feil i Microsoft Graph: ${cause.message}",
+                status = HttpStatusCode.InternalServerError
+            )
         }
         exception<BehandlingsflytException> { call, cause ->
             LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause)
-            call.respondText(text = "Feil i behandlingsflyt: ${cause.message}", status = HttpStatusCode.InternalServerError)
+            call.respondText(
+                text = "Feil i behandlingsflyt: ${cause.message}",
+                status = HttpStatusCode.InternalServerError
+            )
         }
         exception<Throwable> { call, cause ->
             LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause)
@@ -97,11 +105,27 @@ fun Application.api(
         }
     }
 
+    swaggerDoc()
+
     routing {
         actuator(prometheus)
 
         authenticate(AZURE) {
-            tilgang(behandlingsflyt, regelService, config.roles)
+            this@routing.apiRouting {
+                tilgang(behandlingsflyt, regelService, config.roles)
+            }
+        }
+    }
+}
+
+private fun Application.swaggerDoc() {
+    install(OpenAPIGen) {
+        // this serves OpenAPI definition on /openapi.json
+        serveOpenApiJson = true
+        // this serves Swagger UI on /swagger-ui/index.html
+        serveSwaggerUi = true
+        info {
+            title = "AAP - Tilgang"
         }
     }
 }
