@@ -29,7 +29,8 @@ data class Config(
     ),
     val pdlConfig: PdlConfig = PdlConfig(),
     val msGraphConfig: MsGraphConfig = MsGraphConfig(),
-    val behandlingsflytConfig: BehandlingsflytConfig = BehandlingsflytConfig()
+    val behandlingsflytConfig: BehandlingsflytConfig = BehandlingsflytConfig(),
+    val skjermingConfig: SkjermingConfig = SkjermingConfig()
 )
 
 data class PdlConfig(
@@ -48,6 +49,11 @@ data class BehandlingsflytConfig(
     val scope: String = getEnvVar("BEHANDLINGSFLYT_SCOPE")
 )
 
+data class SkjermingConfig(
+    val baseUrl: String = getEnvVar("SKJERMING_BASE_URL"),
+    val scope: String = getEnvVar("SKJERMING_SCOPE")
+)
+
 data class Role(
     val name: Rolle,
     val objectId: UUID,
@@ -61,5 +67,6 @@ enum class Rolle {
     AVDELINGSLEDER,
     UTVIKLER,
     STRENGT_FORTROLIG_ADRESSE,
-    FORTROLIG_ADRESSE
+    FORTROLIG_ADRESSE,
+    SKJERMET,
 }
