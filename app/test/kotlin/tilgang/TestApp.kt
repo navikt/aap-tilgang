@@ -19,6 +19,11 @@ fun main() {
                     jwks = URI.create("http://localhost:${fakes.azurePort()}").resolve("/jwks").toURL(),
                     issuer = ""
                 ),
+                redis = RedisConfig(
+                    uri = URI.create("http://127.0.0.1:6379"),
+                    username = "test",
+                    password = "test"
+                ),
                 roles = listOf(),
                 // Kan fylles inn med ekte verdier om disse fakes i Fakes
                 pdlConfig = PdlConfig(baseUrl = "", audience = "", scope = ""),

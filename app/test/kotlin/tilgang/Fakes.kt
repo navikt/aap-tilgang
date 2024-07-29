@@ -12,11 +12,13 @@ import io.ktor.server.routing.*
 import kotlinx.coroutines.runBlocking
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import tilgang.redis.Redis
 
 class Fakes(azurePort: Int = 0): AutoCloseable {
     private val log: Logger = LoggerFactory.getLogger(Fakes::class.java)
     private val azure = embeddedServer(Netty, port = azurePort, module = { azureFake() }).start()
-
+    private val redis = Redis(InitTestRedis.uri)
+    
     init {
         Thread.currentThread().setUncaughtExceptionHandler { _, e -> log.error("Uhåndtert feil", e) }
         // Azure
@@ -33,6 +35,7 @@ class Fakes(azurePort: Int = 0): AutoCloseable {
 
     override fun close() {
         azure.stop(0L, 0L)
+        redis.close()
     }
 
     private fun NettyApplicationEngine.port(): Int =
