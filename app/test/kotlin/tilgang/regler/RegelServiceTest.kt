@@ -4,6 +4,8 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
+import tilgang.SkjermingConfig
+import tilgang.auth.AzureConfig
 import tilgang.enhet.EnhetService
 import tilgang.geo.GeoService
 import tilgang.integrasjoner.behandlingsflyt.IdenterRespons
@@ -14,10 +16,12 @@ import tilgang.integrasjoner.pdl.HentGeografiskTilknytningResult
 import tilgang.integrasjoner.pdl.IPdlGraphQLClient
 import tilgang.integrasjoner.pdl.PdlGeoType
 import tilgang.integrasjoner.pdl.PersonResultat
+import tilgang.integrasjoner.skjerming.SkjermingClient
 import tilgang.routes.Operasjon
+import java.net.URI
 import java.util.*
 
-class RegelServiceTest {
+class RegelServiceTest(azureConfig: AzureConfig) {
     @ParameterizedTest
     @EnumSource(Avklaringsbehov::class)
     fun `skal alltid gi false når roller er tom array`(avklaringsbehov: Avklaringsbehov) {
@@ -46,7 +50,9 @@ class RegelServiceTest {
             }
         }
         val enhetService = EnhetService(graphClient)
-        val regelService = RegelService(geoService, enhetService, pdlService)
+        val skjermingClient = object : SkjermingClient(AzureConfig(URI("").toURL(),"","",URI("").toURL(),""), SkjermingConfig()) {
+        }
+        val regelService = RegelService(geoService, enhetService, pdlService, skjermingClient)
 
         runBlocking {
             val svar = regelService.vurderTilgang(

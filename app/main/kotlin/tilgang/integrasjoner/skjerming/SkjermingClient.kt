@@ -9,10 +9,10 @@ import tilgang.SkjermingConfig
 import tilgang.auth.AzureConfig
 
 
-class SkjermingClient(azureConfig: AzureConfig, private val skjermingConfig: SkjermingConfig) {
+open class SkjermingClient(azureConfig: AzureConfig, private val skjermingConfig: SkjermingConfig) {
     val httpClient = HttpClient()
 
-    suspend fun isSkjermet(ident: String): Boolean {
+    open suspend fun isSkjermet(ident: String): Boolean {
         val url = "${skjermingConfig.baseUrl}$ident"
         val response = httpClient.post(url) {
             contentType(ContentType.Application.Json)
