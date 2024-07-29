@@ -21,7 +21,7 @@ import tilgang.routes.Operasjon
 import java.net.URI
 import java.util.*
 
-class RegelServiceTest(azureConfig: AzureConfig) {
+class RegelServiceTest {
     @ParameterizedTest
     @EnumSource(Avklaringsbehov::class)
     fun `skal alltid gi false når roller er tom array`(avklaringsbehov: Avklaringsbehov) {
@@ -50,7 +50,13 @@ class RegelServiceTest(azureConfig: AzureConfig) {
             }
         }
         val enhetService = EnhetService(graphClient)
-        val skjermingClient = object : SkjermingClient(AzureConfig(URI("").toURL(),"","",URI("").toURL(),""), SkjermingConfig()) {
+        val skjermingClient = object : SkjermingClient(AzureConfig(
+            clientId = "",
+            clientSecret = "",
+            tokenEndpoint = URI.create("http://localhost:1234").resolve("/token").toURL(),
+            jwks = URI.create("http://localhost:1234").resolve("/jwks").toURL(),
+            issuer = ""
+        ), SkjermingConfig("skjerming_base_url", "skjerming_scope")) {
         }
         val regelService = RegelService(geoService, enhetService, pdlService, skjermingClient)
 

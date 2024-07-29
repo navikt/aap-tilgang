@@ -41,6 +41,9 @@ spec:
     initialDelay: 3
     periodSeconds: 3
     failureThreshold: 21
+  redis:
+    - instance: tilgang
+      access: readwrite
   prometheus:
     enabled: true
     path: /actuator/metrics

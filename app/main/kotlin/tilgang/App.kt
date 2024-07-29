@@ -34,6 +34,7 @@ import tilgang.integrasjoner.msgraph.MsGraphException
 import tilgang.integrasjoner.pdl.PdlException
 import tilgang.integrasjoner.pdl.PdlGraphQLClient
 import tilgang.integrasjoner.skjerming.SkjermingClient
+import tilgang.redis.Redis
 import tilgang.regler.RegelService
 import tilgang.routes.tilgang
 
@@ -46,6 +47,7 @@ fun main() {
 
 fun Application.api(
     config: Config = Config(),
+    redis: Redis = Redis(config.redis)
 ) {
     val prometheus = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
     val pdl = PdlGraphQLClient(config.azureConfig, config.pdlConfig)
@@ -114,7 +116,7 @@ fun Application.api(
 
         authenticate(AZURE) {
             this@routing.apiRouting {
-                tilgang(behandlingsflyt, regelService, config.roles)
+                tilgang(behandlingsflyt, regelService, config.roles, redis)
             }
         }
     }

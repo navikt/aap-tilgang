@@ -30,7 +30,8 @@ data class Config(
     val pdlConfig: PdlConfig = PdlConfig(),
     val msGraphConfig: MsGraphConfig = MsGraphConfig(),
     val behandlingsflytConfig: BehandlingsflytConfig = BehandlingsflytConfig(),
-    val skjermingConfig: SkjermingConfig = SkjermingConfig()
+    val skjermingConfig: SkjermingConfig = SkjermingConfig(),
+    val redis: RedisConfig = RedisConfig()
 )
 
 data class PdlConfig(
@@ -57,6 +58,12 @@ data class SkjermingConfig(
 data class Role(
     val name: Rolle,
     val objectId: UUID,
+)
+
+data class RedisConfig(
+    val uri: URI = URI(getEnvVar("REDIS_URI_TILGANG")),
+    val username: String = getEnvVar("REDIS_USERNAME_TILGANG"),
+    val password: String = getEnvVar("REDIS_PASSWORD_TILGANG"),
 )
 
 enum class Rolle {
