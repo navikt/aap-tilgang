@@ -14,8 +14,8 @@ class EnhetServiceTest {
             override suspend fun hentAdGrupper(currentToken: String): MemberOf {
                 return MemberOf(
                     groups = listOf(
-                        Group(name = "0000-GA-ENHET-12345", id = "xxx"),
-                        Group(name = "0000-GA-GEO-12345", id = "xxx")
+                        Group(name = "0000-GA-ENHET_12345", id = "xxx"),
+                        Group(name = "0000-GA-GEO_12345", id = "xxx")
                     )
                 )
             }

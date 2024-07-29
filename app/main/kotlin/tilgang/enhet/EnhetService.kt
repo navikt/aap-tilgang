@@ -16,7 +16,7 @@ class EnhetService(private val msGraphClient: IMsGraphClient) {
     }
 
     companion object {
-        const val ENHET_GROUP_PREFIX = "0000-GA-ENHET-"
+        const val ENHET_GROUP_PREFIX = "0000-GA-ENHET_"
     }
 
 }
