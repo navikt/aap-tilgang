@@ -17,7 +17,7 @@ import tilgang.redis.Redis
 class Fakes(azurePort: Int = 0): AutoCloseable {
     private val log: Logger = LoggerFactory.getLogger(Fakes::class.java)
     private val azure = embeddedServer(Netty, port = azurePort, module = { azureFake() }).start()
-    private val redis = Redis(InitTestRedis.uri)
+    val redis = Redis(InitTestRedis.uri)
     
     init {
         Thread.currentThread().setUncaughtExceptionHandler { _, e -> log.error("Uhåndtert feil", e) }
