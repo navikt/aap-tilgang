@@ -5,11 +5,14 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import tilgang.LOGGER
 import tilgang.PdlConfig
 import tilgang.auth.AzureAdTokenProvider
 import tilgang.auth.AzureConfig
 import tilgang.http.HttpClientFactory
+import tilgang.metrics.cacheHit
+import tilgang.metrics.cacheMiss
 import tilgang.redis.Key
 import tilgang.redis.Redis
 
@@ -22,7 +25,8 @@ interface IPdlGraphQLClient {
 class PdlGraphQLClient(
     azureConfig: AzureConfig,
     private val pdlConfig: PdlConfig,
-    private val redis: Redis
+    private val redis: Redis,
+    private val prometheus: PrometheusMeterRegistry
 ) : IPdlGraphQLClient {
     private val httpClient = HttpClientFactory.create()
     private val azureTokenProvider = AzureAdTokenProvider(
@@ -38,10 +42,12 @@ class PdlGraphQLClient(
         }.map {
             redis[Key("personBolk", it)]!!.toPersonResultat()
         }
+        prometheus.cacheHit("personBolk").increment(personBolkResult.size.toDouble())
 
         val manglendePersonidenter = personidenter.filter {
             !redis.exists(Key("personBolk", it))
         }
+        prometheus.cacheMiss("bersonBolk").increment(manglendePersonidenter.size.toDouble())
 
         val result = query(azureToken, PdlRequest.hentPersonBolk(manglendePersonidenter), callId)
         val nyePersoner = result.getOrThrow().data?.hentPersonBolk?.map {
@@ -72,9 +78,11 @@ class PdlGraphQLClient(
         val azureToken = azureTokenProvider.getClientCredentialToken()
 
         if(redis.exists(Key("geografiskTilknytning", ident))) {
+            prometheus.cacheHit("Pdl").increment()
             return redis[Key("geografiskTilknytning", ident)]!!.toHentGeografiskTilknytningResult()
         } //TODO: denne kan teknisk sett unngå token credentials, kan vi doppe den, eller burde vi dobbelsjekke
-
+        prometheus.cacheMiss("Pdl").increment()
+        
         val result = query(azureToken, PdlRequest.hentGeografiskTilknytning(ident), callId)
         val geoTilknytning = result.getOrThrow().data?.hentGeografiskTilknytning
         redis.set(Key("geografiskTilknytning", ident), geoTilknytning!!.toByteArray(), 3600)

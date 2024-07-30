@@ -6,25 +6,31 @@ import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import org.slf4j.LoggerFactory
 import tilgang.BehandlingsflytConfig
 import tilgang.auth.AzureAdTokenProvider
 import tilgang.auth.AzureConfig
 import tilgang.http.HttpClientFactory
+import tilgang.metrics.cacheHit
+import tilgang.metrics.cacheMiss
 import tilgang.redis.Key
 import tilgang.redis.Redis
 
 private val log = LoggerFactory.getLogger(BehandlingsflytClient::class.java)
 
-class BehandlingsflytClient(azureConfig: AzureConfig, private val behandlingsflytConfig: BehandlingsflytConfig, private val redis: Redis) {
+class BehandlingsflytClient(azureConfig: AzureConfig, private val behandlingsflytConfig: BehandlingsflytConfig, private val redis: Redis, private val prometheus: PrometheusMeterRegistry) {
     private val httpClient = HttpClientFactory.create()
     private val azureTokenProvider = AzureAdTokenProvider(azureConfig, behandlingsflytConfig.scope)
 
     suspend fun hentIdenter(currentToken: String, saksnummer: String): IdenterRespons {
         val token = azureTokenProvider.getOnBehalfOfToken(currentToken)
         if (redis.exists(Key("identer", saksnummer))) {
+            prometheus.cacheHit("Behandlingsflyt").increment()
             return redis[Key("identer", saksnummer)]!!.toIdenterRespons()
         }
+        prometheus.cacheMiss("Behandlingsflyt").increment()
+        
         val url = "${behandlingsflytConfig.baseUrl}/api/sak/${saksnummer}/identer"
         log.info("Kaller behandlingsflyt med URL: $url")
 

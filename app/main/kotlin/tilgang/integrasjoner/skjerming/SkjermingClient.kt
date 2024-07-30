@@ -7,19 +7,24 @@ import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import tilgang.SkjermingConfig
 import tilgang.auth.AzureConfig
+import tilgang.metrics.cacheHit
+import tilgang.metrics.cacheMiss
 import tilgang.redis.Key
 import tilgang.redis.Redis
 
 
-open class SkjermingClient(azureConfig: AzureConfig, private val skjermingConfig: SkjermingConfig, private val redis: Redis) {
+open class SkjermingClient(azureConfig: AzureConfig, private val skjermingConfig: SkjermingConfig, private val redis: Redis, private val prometheus: PrometheusMeterRegistry) {
     val httpClient = HttpClient()
 
     open suspend fun isSkjermet(ident: String): Boolean {
         if (redis.exists(Key("skjerming", ident))) {
+            prometheus.cacheHit("skjerming").increment()
             return redis[Key("skjerming", ident)]!!.toBool()
         }
+        prometheus.cacheMiss("skjerming").increment()
 
         val url = "${skjermingConfig.baseUrl}$ident"
         val response = httpClient.post(url) {

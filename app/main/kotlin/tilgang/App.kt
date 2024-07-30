@@ -50,12 +50,12 @@ fun Application.api(
     redis: Redis = Redis(config.redis)
 ) {
     val prometheus = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
-    val pdl = PdlGraphQLClient(config.azureConfig, config.pdlConfig, redis)
-    val msGraph = MsGraphClient(config.azureConfig, config.msGraphConfig, redis)
-    val behandlingsflyt = BehandlingsflytClient(config.azureConfig, config.behandlingsflytConfig, redis)
+    val pdl = PdlGraphQLClient(config.azureConfig, config.pdlConfig, redis, prometheus)
+    val msGraph = MsGraphClient(config.azureConfig, config.msGraphConfig, redis, prometheus)
+    val behandlingsflyt = BehandlingsflytClient(config.azureConfig, config.behandlingsflytConfig, redis, prometheus)
     val geoService = GeoService(msGraph)
     val enhetService = EnhetService(msGraph)
-    val skjermingClient = SkjermingClient(config.azureConfig, config.skjermingConfig, redis)
+    val skjermingClient = SkjermingClient(config.azureConfig, config.skjermingConfig, redis, prometheus)
     val regelService = RegelService(geoService, enhetService, pdl, skjermingClient)
 
     install(MicrometerMetrics) { registry = prometheus }
@@ -116,7 +116,7 @@ fun Application.api(
 
         authenticate(AZURE) {
             this@routing.apiRouting {
-                tilgang(behandlingsflyt, regelService, config.roles)
+                tilgang(behandlingsflyt, regelService, config.roles, prometheus)
             }
         }
     }

@@ -7,10 +7,13 @@ import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import tilgang.MsGraphConfig
 import tilgang.auth.AzureAdTokenProvider
 import tilgang.auth.AzureConfig
 import tilgang.http.HttpClientFactory
+import tilgang.metrics.cacheHit
+import tilgang.metrics.cacheMiss
 import tilgang.redis.Key
 import tilgang.redis.Redis
 
@@ -18,7 +21,7 @@ interface IMsGraphClient {
     suspend fun hentAdGrupper(currentToken: String, ident:String): MemberOf
 }
 
-class MsGraphClient(azureConfig: AzureConfig, private val msGraphConfig: MsGraphConfig, private val redis: Redis) : IMsGraphClient {
+class MsGraphClient(azureConfig: AzureConfig, private val msGraphConfig: MsGraphConfig, private val redis: Redis, private val prometheus: PrometheusMeterRegistry) : IMsGraphClient {
     private val httpClient = HttpClientFactory.create()
     private val azureTokenProvider = AzureAdTokenProvider(
         azureConfig,
@@ -29,8 +32,10 @@ class MsGraphClient(azureConfig: AzureConfig, private val msGraphConfig: MsGraph
         val graphToken = azureTokenProvider.getOnBehalfOfToken(currentToken)
 
         if (redis.exists(Key("msgraph", ident))) {
+            prometheus.cacheHit("msgraph").increment()
             return redis[Key("msgraph")]!!.toMemberOf()
         }
+        prometheus.cacheMiss("msgraph").increment()
 
         val respons = httpClient.get("${msGraphConfig.baseUrl}/me/memberOf") {
             bearerAuth(graphToken)
