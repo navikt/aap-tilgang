@@ -11,7 +11,7 @@ class EnhetServiceTest {
     @Test
     fun `lister kun opp enhets-roller`() {
         val graphClient = object : IMsGraphClient {
-            override suspend fun hentAdGrupper(currentToken: String): MemberOf {
+            override suspend fun hentAdGrupper(currentToken: String, ident: String): MemberOf {
                 return MemberOf(
                     groups = listOf(
                         Group(name = "0000-GA-ENHET_12345", id = "xxx"),
@@ -24,7 +24,7 @@ class EnhetServiceTest {
         val service = EnhetService(graphClient)
 
         runBlocking {
-            val res = service.hentEnhetRoller("xxx")
+            val res = service.hentEnhetRoller("xxx", "")
             assertThat(res).isNotEmpty()
             assertThat(res).hasSize(1)
             assertThat(res[0].kode).isEqualTo("12345")

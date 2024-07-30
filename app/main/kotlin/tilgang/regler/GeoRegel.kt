@@ -1,6 +1,5 @@
 package tilgang.regler
 
-import tilgang.enhet.EnhetService
 import tilgang.geo.GeoRolle
 import tilgang.geo.GeoService
 import tilgang.geo.GeoType
@@ -43,18 +42,19 @@ class GeoInputGenerator(
 ) :
     InputGenerator<GeoInput> {
     override suspend fun generer(input: RegelInput): GeoInput {
-        val geoRoller = geoService.hentGeoRoller(input.currentToken)
+        val geoRoller = geoService.hentGeoRoller(input.currentToken, input.ident)
         val søkersGeografiskeTilknytning = requireNotNull(
             pdlClient.hentGeografiskTilknytning(
                 input.identer.søker.first(),
                 input.callId
             )
         )
-        return GeoInput(geoRoller, søkersGeografiskeTilknytning)
+        return GeoInput(geoRoller, søkersGeografiskeTilknytning, input.ident)
     }
 }
 
 data class GeoInput(
     val geoRoller: List<GeoRolle>,
-    val søkersGeografiskTilknytning: HentGeografiskTilknytningResult
+    val søkersGeografiskTilknytning: HentGeografiskTilknytningResult,
+    val ident: String
 )

@@ -1,5 +1,7 @@
 package tilgang.integrasjoner.pdl
 
+import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.ObjectMapper
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
@@ -8,6 +10,8 @@ import tilgang.PdlConfig
 import tilgang.auth.AzureAdTokenProvider
 import tilgang.auth.AzureConfig
 import tilgang.http.HttpClientFactory
+import tilgang.redis.Key
+import tilgang.redis.Redis
 
 interface IPdlGraphQLClient {
     suspend fun hentPersonBolk(personidenter: List<String>, callId: String): List<PersonResultat>?
@@ -17,7 +21,8 @@ interface IPdlGraphQLClient {
 
 class PdlGraphQLClient(
     azureConfig: AzureConfig,
-    private val pdlConfig: PdlConfig
+    private val pdlConfig: PdlConfig,
+    private val redis: Redis
 ) : IPdlGraphQLClient {
     private val httpClient = HttpClientFactory.create()
     private val azureTokenProvider = AzureAdTokenProvider(
@@ -27,19 +32,64 @@ class PdlGraphQLClient(
 
     override suspend fun hentPersonBolk(personidenter: List<String>, callId: String): List<PersonResultat>? {
         val azureToken = azureTokenProvider.getClientCredentialToken()
-        val result = query(azureToken, PdlRequest.hentPersonBolk(personidenter), callId)
-        return result.getOrThrow().data?.hentPersonBolk?.map {
-            PersonResultat(
+
+        val personBolkResult = personidenter.filter {
+            redis.exists(Key("personBolk", it))
+        }.map {
+            redis[Key("personBolk", it)]!!.toPersonResultat()
+        }
+
+        val manglendePersonidenter = personidenter.filter {
+            !redis.exists(Key("personBolk", it))
+        }
+
+        val result = query(azureToken, PdlRequest.hentPersonBolk(manglendePersonidenter), callId)
+        val nyePersoner = result.getOrThrow().data?.hentPersonBolk?.map {
+            val nyPerson = PersonResultat(
                 it.ident,
                 it.person?.adressebeskyttelse?.map { it.gradering } ?: emptyList(),
                 it.code)
-        }
+            redis.set(Key("personBolk", it.ident), nyPerson.toByteArray(), 3600)
+            nyPerson
+        }?.toMutableList()
+        nyePersoner?.addAll(personBolkResult)
+
+        return nyePersoner?.toList()
     }
 
-    override suspend fun hentGeografiskTilknytning(ident: String, callId: String): HentGeografiskTilknytningResult? {
+    fun ByteArray.toPersonResultat(): PersonResultat {
+        val mapper = ObjectMapper()
+        val tr = object : TypeReference<PersonResultat>() {}
+        return mapper.readValue(this, tr)
+    }
+
+    fun PersonResultat.toByteArray(): ByteArray {
+        val mapper = ObjectMapper()
+        return mapper.writeValueAsBytes(this)
+    }
+
+    override suspend fun hentGeografiskTilknytning(ident: String, callId: String): HentGeografiskTilknytningResult {
         val azureToken = azureTokenProvider.getClientCredentialToken()
+
+        if(redis.exists(Key("geografiskTilknytning", ident))) {
+            return redis[Key("geografiskTilknytning", ident)]!!.toHentGeografiskTilknytningResult()
+        } //TODO: denne kan teknisk sett unngå token credentials, kan vi doppe den, eller burde vi dobbelsjekke
+
         val result = query(azureToken, PdlRequest.hentGeografiskTilknytning(ident), callId)
-        return result.getOrThrow().data?.hentGeografiskTilknytning
+        val geoTilknytning = result.getOrThrow().data?.hentGeografiskTilknytning
+        redis.set(Key("geografiskTilknytning", ident), geoTilknytning!!.toByteArray(), 3600)
+        return geoTilknytning
+    }
+
+    fun ByteArray.toHentGeografiskTilknytningResult(): HentGeografiskTilknytningResult {
+        val mapper = ObjectMapper()
+        val tr = object : TypeReference<HentGeografiskTilknytningResult>() {}
+        return mapper.readValue(this, tr)
+    }
+
+    fun HentGeografiskTilknytningResult.toByteArray(): ByteArray {
+        val mapper = ObjectMapper()
+        return mapper.writeValueAsBytes(this)
     }
 
     private suspend fun query(accessToken: String, query: PdlRequest, callId: String): Result<PdlResponse> {

@@ -4,6 +4,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
+import tilgang.Fakes
 import tilgang.SkjermingConfig
 import tilgang.auth.AzureConfig
 import tilgang.enhet.EnhetService
@@ -25,8 +26,9 @@ class RegelServiceTest {
     @ParameterizedTest
     @EnumSource(Avklaringsbehov::class)
     fun `skal alltid gi false når roller er tom array`(avklaringsbehov: Avklaringsbehov) {
+        Fakes().use{
         val graphClient = object : IMsGraphClient {
-            override suspend fun hentAdGrupper(currentToken: String): MemberOf {
+            override suspend fun hentAdGrupper(currentToken: String, ident: String): MemberOf {
                 return MemberOf(groups = listOf(Group(id = "0", name = "000-GA-GEO-abc")))
             }
         }
@@ -56,7 +58,7 @@ class RegelServiceTest {
             tokenEndpoint = URI.create("http://localhost:1234").resolve("/token").toURL(),
             jwks = URI.create("http://localhost:1234").resolve("/jwks").toURL(),
             issuer = ""
-        ), SkjermingConfig("skjerming_base_url", "skjerming_scope")) {
+        ), SkjermingConfig("skjerming_base_url", "skjerming_scope"), it.redis) {
         }
         val regelService = RegelService(geoService, enhetService, pdlService, skjermingClient)
 
@@ -74,6 +76,7 @@ class RegelServiceTest {
                 )
             )
             Assertions.assertFalse(svar)
+        }
         }
     }
 }

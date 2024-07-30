@@ -1,7 +1,5 @@
 package tilgang.routes
 
-import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
@@ -12,7 +10,6 @@ import tilgang.auth.ident
 import tilgang.auth.roller
 import tilgang.auth.token
 import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytClient
-import tilgang.redis.Key
 import tilgang.redis.Redis
 import tilgang.regler.Avklaringsbehov
 import tilgang.regler.RegelInput
@@ -20,16 +17,11 @@ import tilgang.regler.RegelService
 import tilgang.regler.parseRoller
 
 fun NormalOpenAPIRoute.tilgang(
-    behandlingsflytClient: BehandlingsflytClient, regelService: RegelService, roles: List<Role>, redis: Redis
+    behandlingsflytClient: BehandlingsflytClient, regelService: RegelService, roles: List<Role>
 ) {
     route("/tilgang") {
         post<Unit, TilgangResponse, TilgangRequest> {_, req ->
             val callId = pipeline.context.request.header("Nav-CallId") ?: "ukjent"
-            
-            val key = Key(req.hashCode().toString())
-            if (redis.exists(key)) {
-                respond(redis[key]!!.toTilgangResponse())
-            }
             
             val token = token()
             val roller = parseRoller(rolesWithGroupIds = roles, roller())
@@ -42,22 +34,11 @@ fun NormalOpenAPIRoute.tilgang(
             )
             val harTilgang = regelService.vurderTilgang(regelInput)
             
-            redis.set(key, TilgangResponse(harTilgang).toByteArray(), 3600)
             respond(TilgangResponse(harTilgang))
         }
     }
 }
 
-fun ByteArray.toTilgangResponse(): TilgangResponse {
-    val mapper = ObjectMapper()
-    val tr = object : TypeReference<TilgangResponse>() {}
-    return mapper.readValue(this, tr)
-}
-
-fun TilgangResponse.toByteArray(): ByteArray {
-    val mapper = ObjectMapper()
-    return mapper.writeValueAsBytes(this)
-}
 
 data class TilgangRequest(
     val saksnummer: String,

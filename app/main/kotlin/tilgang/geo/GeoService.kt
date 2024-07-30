@@ -4,8 +4,8 @@ import tilgang.integrasjoner.msgraph.IMsGraphClient
 
 class GeoService(private val msGraphClient: IMsGraphClient) {
 
-    suspend fun hentGeoRoller(currentToken: String): List<GeoRolle> {
-        return msGraphClient.hentAdGrupper(currentToken).groups
+    suspend fun hentGeoRoller(currentToken: String, ident: String): List<GeoRolle> {
+        return msGraphClient.hentAdGrupper(currentToken, ident).groups
             .filter { it.name.startsWith(GEO_GROUP_PREFIX) }
             .map { parseGeoRolle(it.name) }
     }

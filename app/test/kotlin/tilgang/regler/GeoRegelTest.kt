@@ -13,7 +13,7 @@ class GeoRegelTest {
         val søkersGeografiskeTilknytning = HentGeografiskTilknytningResult(
             PdlGeoType.BYDEL, null, "500101", null
         )
-        val input = GeoInput(listOf(GeoRolle(GeoType.KOMMUNE, "0301")), søkersGeografiskeTilknytning)
+        val input = GeoInput(listOf(GeoRolle(GeoType.KOMMUNE, "0301")), søkersGeografiskeTilknytning,"")
         assertFalse(GeoRegel.vurder(input))
     }
 
@@ -22,7 +22,7 @@ class GeoRegelTest {
         val søkersGeografiskeTilknytning = HentGeografiskTilknytningResult(
             PdlGeoType.BYDEL, null, "030102", null
         )
-        val input = GeoInput(listOf(GeoRolle(GeoType.KOMMUNE, "0301")), søkersGeografiskeTilknytning)
+        val input = GeoInput(listOf(GeoRolle(GeoType.KOMMUNE, "0301")), søkersGeografiskeTilknytning, "")
         assertTrue(GeoRegel.vurder(input))
     }
 

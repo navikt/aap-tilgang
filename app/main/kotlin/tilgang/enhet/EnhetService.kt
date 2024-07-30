@@ -4,8 +4,8 @@ import tilgang.integrasjoner.msgraph.IMsGraphClient
 
 class EnhetService(private val msGraphClient: IMsGraphClient) {
 
-    suspend fun hentEnhetRoller(currentToken: String): List<EnhetRolle> {
-        return msGraphClient.hentAdGrupper(currentToken).groups
+    suspend fun hentEnhetRoller(currentToken: String, ident: String): List<EnhetRolle> {
+        return msGraphClient.hentAdGrupper(currentToken, ident).groups
             .filter { it.name.startsWith(ENHET_GROUP_PREFIX) }
             .map { parseEnhetRolle(it.name) }
     }
