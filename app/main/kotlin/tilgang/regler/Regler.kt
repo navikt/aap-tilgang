@@ -15,7 +15,7 @@ class RegelService(geoService: GeoService, enhetService: EnhetService, pdlServic
             RegelMedInputgenerator(EgenSakRegel, EgenSakInputGenerator),
             RegelMedInputgenerator(LeseRolleRegel, RolleInputGenerator),
             RegelMedInputgenerator(AdressebeskyttelseRegel, AdressebeskyttelseInputGenerator(pdlService)),
-            RegelMedInputgenerator(GeoRegel, GeoInputGenerator(geoService, enhetService, pdlService)),
+            RegelMedInputgenerator(GeoRegel, GeoInputGenerator(geoService, pdlService)),
             RegelMedInputgenerator(EgenAnsattRegel, EgenAnsattInputGenerator(skjermetClient))
         ),
         Operasjon.DRIFTE to listOf(
@@ -29,7 +29,9 @@ class RegelService(geoService: GeoService, enhetService: EnhetService, pdlServic
             RegelMedInputgenerator(EgenSakRegel, EgenSakInputGenerator),
             RegelMedInputgenerator(AvklaringsbehovRolleRegel, AvklaringsbehovInputGenerator),
             RegelMedInputgenerator(AdressebeskyttelseRegel, AdressebeskyttelseInputGenerator(pdlService)),
-            RegelMedInputgenerator(GeoRegel, GeoInputGenerator(geoService, enhetService, pdlService)),
+            RegelMedInputgenerator(GeoRegel, GeoInputGenerator(geoService, pdlService)),
+            // TODO: Enhetsregelen gir kun mening hvis saker er knyttet mot enhet, noe de p.d. ikke er
+            //RegelMedInputgenerator(EnhetRegel, EnhetInputGenerator(enhetService)),
             RegelMedInputgenerator(EgenAnsattRegel, EgenAnsattInputGenerator(skjermetClient))
         )
     )

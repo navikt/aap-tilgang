@@ -1,6 +1,5 @@
 package tilgang.regler
 
-import org.slf4j.LoggerFactory
 import tilgang.enhet.EnhetService
 import tilgang.geo.GeoRolle
 import tilgang.geo.GeoService
@@ -38,18 +37,13 @@ data object GeoRegel : Regel<GeoInput> {
     }
 }
 
-private val logger = LoggerFactory.getLogger(GeoInputGenerator::class.java)
-
 class GeoInputGenerator(
     private val geoService: GeoService,
-    private val enhetService: EnhetService,
     private val pdlClient: IPdlGraphQLClient
 ) :
     InputGenerator<GeoInput> {
     override suspend fun generer(input: RegelInput): GeoInput {
         val geoRoller = geoService.hentGeoRoller(input.currentToken)
-        val enhetRoller = enhetService.hentEnhetRoller(input.currentToken)
-        logger.info("Enhetroller for $input: $enhetRoller")
         val søkersGeografiskeTilknytning = requireNotNull(
             pdlClient.hentGeografiskTilknytning(
                 input.identer.søker.first(),
