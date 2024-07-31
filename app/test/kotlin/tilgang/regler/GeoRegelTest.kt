@@ -27,6 +27,9 @@ class GeoRegelTest {
             val osloBydelTilknytning = HentGeografiskTilknytningResult(
                 PdlGeoType.BYDEL, null, "030102", null
             )
+            val trondheimBydelTilknytning = HentGeografiskTilknytningResult(
+                PdlGeoType.BYDEL, null, "500101", null
+            )
             val osloKommuneTilknytning = HentGeografiskTilknytningResult(
                 PdlGeoType.KOMMUNE, "0301", null, null
             )
@@ -44,6 +47,7 @@ class GeoRegelTest {
                 Arguments.of(osloBydelTilknytning, osloKommuneRolle, true),
                 Arguments.of(osloKommuneTilknytning, osloKommuneRolle, true),
                 Arguments.of(nordreFolloTilknytning, osloKommuneRolle, false),
+                Arguments.of(trondheimBydelTilknytning, osloKommuneRolle, false),
                 Arguments.of(utlandTilknytning, osloKommuneRolle, false),
                 Arguments.of(udefinertTilknytning, osloKommuneRolle, false),
                 Arguments.of(osloKommuneTilknytning, utlandRolle, false),
