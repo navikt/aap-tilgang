@@ -11,15 +11,16 @@ data object GeoRegel : Regel<GeoInput> {
 
     override fun vurder(input: GeoInput): Boolean {
         val (geoRoller, søkersGeografiskeTilknytning) = input
+        val harNasjonalTilgang = geoRoller.any { it.geoType === GeoType.NASJONAL }
 
-        if (geoRoller.any { it.geoType === GeoType.NASJONAL }) {
-            return true
-        }
         return when (søkersGeografiskeTilknytning.gtType) {
-            PdlGeoType.KOMMUNE -> søkersGeografiskeTilknytning.gtKommune in geoRoller.filter { it.geoType === GeoType.KOMMUNE }
+            PdlGeoType.KOMMUNE -> harNasjonalTilgang
+                    || søkersGeografiskeTilknytning.gtKommune in geoRoller.filter { it.geoType === GeoType.KOMMUNE }
                 .map { it.kode }
 
-            PdlGeoType.BYDEL -> harRettigheterTilBydel(requireNotNull(søkersGeografiskeTilknytning.gtBydel), geoRoller)
+            PdlGeoType.BYDEL -> harNasjonalTilgang
+                    || harRettigheterTilBydel(requireNotNull(søkersGeografiskeTilknytning.gtBydel), geoRoller)
+
             PdlGeoType.UTLAND -> geoRoller.any { it.geoType == GeoType.UTLAND }
             PdlGeoType.UDEFINERT -> geoRoller.any { it.geoType == GeoType.UDEFINERT }
         }
