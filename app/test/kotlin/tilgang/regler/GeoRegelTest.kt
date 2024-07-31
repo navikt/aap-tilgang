@@ -11,14 +11,14 @@ import tilgang.integrasjoner.pdl.HentGeografiskTilknytningResult
 import tilgang.integrasjoner.pdl.PdlGeoType
 
 class GeoRegelTest {
-    @ParameterizedTest(name = "Skal returnere {2} for rolle {1} og geografisk tilknytning {0}")
+    @ParameterizedTest(name = "Skal returnere {2} for roller {1} og geografisk tilknytning {0}")
     @MethodSource("testData")
     fun geoTest(
         geografiskTilknytning: HentGeografiskTilknytningResult,
-        rolle: GeoRolle,
+        roller: List<GeoRolle>,
         forventet: Boolean
     ) {
-        assertEquals(forventet, GeoRegel.vurder(GeoInput(listOf(rolle), geografiskTilknytning, "")))
+        assertEquals(forventet, GeoRegel.vurder(GeoInput(roller, geografiskTilknytning, "")))
     }
 
     companion object {
@@ -44,22 +44,26 @@ class GeoRegelTest {
             val nasjonalRolle = GeoRolle(GeoType.NASJONAL, null)
             val udefinertRolle = GeoRolle(GeoType.UDEFINERT, null)
             return listOf(
-                Arguments.of(osloBydelTilknytning, osloKommuneRolle, true),
-                Arguments.of(osloKommuneTilknytning, osloKommuneRolle, true),
-                Arguments.of(nordreFolloTilknytning, osloKommuneRolle, false),
-                Arguments.of(trondheimBydelTilknytning, osloKommuneRolle, false),
-                Arguments.of(utlandTilknytning, osloKommuneRolle, false),
-                Arguments.of(udefinertTilknytning, osloKommuneRolle, false),
-                Arguments.of(osloKommuneTilknytning, utlandRolle, false),
-                Arguments.of(utlandTilknytning, utlandRolle, true),
-                Arguments.of(udefinertTilknytning, utlandRolle, false),
-                Arguments.of(osloBydelTilknytning, nasjonalRolle, true),
-                Arguments.of(osloKommuneTilknytning, nasjonalRolle, true),
-                Arguments.of(utlandTilknytning, nasjonalRolle, false),
-                Arguments.of(udefinertTilknytning, nasjonalRolle, false),
-                Arguments.of(udefinertTilknytning, udefinertRolle, true),
-                Arguments.of(osloBydelTilknytning, udefinertRolle, false),
-                Arguments.of(utlandTilknytning, udefinertRolle, false),
+                Arguments.of(osloBydelTilknytning, listOf(osloKommuneRolle), true),
+                Arguments.of(osloKommuneTilknytning, listOf(osloKommuneRolle), true),
+                Arguments.of(nordreFolloTilknytning, listOf(osloKommuneRolle), false),
+                Arguments.of(trondheimBydelTilknytning, listOf(osloKommuneRolle), false),
+                Arguments.of(utlandTilknytning, listOf(osloKommuneRolle), false),
+                Arguments.of(udefinertTilknytning, listOf(osloKommuneRolle), false),
+                Arguments.of(osloKommuneTilknytning, listOf(utlandRolle), false),
+                Arguments.of(utlandTilknytning, listOf(utlandRolle), true),
+                Arguments.of(udefinertTilknytning, listOf(utlandRolle), false),
+                Arguments.of(osloBydelTilknytning, listOf(nasjonalRolle), true),
+                Arguments.of(osloKommuneTilknytning, listOf(nasjonalRolle), true),
+                Arguments.of(utlandTilknytning, listOf(nasjonalRolle), false),
+                Arguments.of(udefinertTilknytning, listOf(nasjonalRolle), false),
+                Arguments.of(udefinertTilknytning, listOf(udefinertRolle), true),
+                Arguments.of(osloBydelTilknytning, listOf(udefinertRolle), false),
+                Arguments.of(utlandTilknytning, listOf(udefinertRolle), false),
+                Arguments.of(osloBydelTilknytning, emptyList<GeoRolle>(), false),
+                Arguments.of(osloKommuneTilknytning, emptyList<GeoRolle>(), false),
+                Arguments.of(utlandTilknytning, emptyList<GeoRolle>(), false),
+                Arguments.of(udefinertTilknytning, emptyList<GeoRolle>(), false),
             )
         }
     }
