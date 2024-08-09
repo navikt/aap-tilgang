@@ -31,7 +31,7 @@ data class AdressebeskyttelseInput(val roller: List<Rolle>, val personer: List<P
 
 class AdressebeskyttelseInputGenerator(private val pdlService: IPdlGraphQLClient): InputGenerator<AdressebeskyttelseInput> {
     override suspend fun generer(input: RegelInput): AdressebeskyttelseInput {
-        val personer = requireNotNull(pdlService.hentPersonBolk(input.identer.søker.union(input.identer.barn).toList(), input.callId))
+        val personer = requireNotNull(pdlService.hentPersonBolk(input.søkerIdenter.søker.union(input.søkerIdenter.barn).toList(), input.callId))
         return AdressebeskyttelseInput(input.roller, personer)
     }
 

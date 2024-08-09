@@ -43,14 +43,14 @@ class GeoInputGenerator(
 ) :
     InputGenerator<GeoInput> {
     override suspend fun generer(input: RegelInput): GeoInput {
-        val geoRoller = geoService.hentGeoRoller(input.currentToken, input.ident)
+        val geoRoller = geoService.hentGeoRoller(input.currentToken, input.ansattIdent)
         val søkersGeografiskeTilknytning = requireNotNull(
             pdlClient.hentGeografiskTilknytning(
-                input.identer.søker.first(),
+                input.søkerIdenter.søker.first(),
                 input.callId
             )
         )
-        return GeoInput(geoRoller, søkersGeografiskeTilknytning, input.ident)
+        return GeoInput(geoRoller, søkersGeografiskeTilknytning, input.ansattIdent)
     }
 }
 

@@ -72,11 +72,11 @@ class RegelServiceTest {
                 val svar = regelService.vurderTilgang(
                     RegelInput(
                         callId = UUID.randomUUID().toString(),
-                        ident = "123",
+                        ansattIdent = "123",
                         avklaringsbehov = avklaringsbehov,
                         behandlingsreferanse = null,
                         currentToken = "xxx",
-                        identer = IdenterRespons(søker = listOf("423"), barn = listOf()),
+                        søkerIdenter = IdenterRespons(søker = listOf("423"), barn = listOf()),
                         operasjon = Operasjon.SAKSBEHANDLE,
                         roller = listOf()
                     )

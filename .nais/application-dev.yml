@@ -73,9 +73,9 @@ spec:
     - name: BEHANDLINGSFLYT_SCOPE
       value: api://dev-gcp.aap.behandlingsflyt/.default
     - name: SKJERMING_BASE_URL
-      value: http://dev-gcp.nom.skjerming/
+      value: http://dev-gcp.nom.skjermede-personer-pip/
     - name: SKJERMING_SCOPE
-      value: api://dev-gcp.nom.skjerming/.default
+      value: api://dev-gcp.nom.skjermede-personer-pip/.default
   accessPolicy:
     inbound:
       rules:

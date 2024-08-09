@@ -6,10 +6,10 @@ import tilgang.routes.Operasjon
 
 class RegelInput (
     val callId: String,
-    val ident: String,
+    val ansattIdent: String,
     val currentToken: String,
     val roller: List<Rolle>,
-    val identer: IdenterRespons,
+    val søkerIdenter: IdenterRespons,
     val behandlingsreferanse: String?,
     val avklaringsbehov: Avklaringsbehov?,
     val operasjon: Operasjon
