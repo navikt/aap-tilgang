@@ -10,6 +10,7 @@ import io.ktor.http.*
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import tilgang.SkjermingConfig
 import tilgang.auth.AzureConfig
+import tilgang.integrasjoner.behandlingsflyt.IdenterRespons
 import tilgang.metrics.cacheHit
 import tilgang.metrics.cacheMiss
 import tilgang.redis.Key
@@ -19,23 +20,26 @@ import tilgang.redis.Redis
 open class SkjermingClient(azureConfig: AzureConfig, private val skjermingConfig: SkjermingConfig, private val redis: Redis, private val prometheus: PrometheusMeterRegistry) {
     val httpClient = HttpClient()
 
-    open suspend fun isSkjermet(ident: String): Boolean {
-        if (redis.exists(Key("skjerming", ident))) {
+    open suspend fun isSkjermet(identer: IdenterRespons): Boolean {
+        if (redis.exists(Key("skjerming", identer.søker.first()))) {
             prometheus.cacheHit("skjerming").increment()
-            return redis[Key("skjerming", ident)]!!.toBool()
+            return redis[Key("skjerming", identer.søker.first())]!!.toBool()
         }
         prometheus.cacheMiss("skjerming").increment()
 
-        val url = "${skjermingConfig.baseUrl}$ident"
+        val url = "${skjermingConfig.baseUrl}/skjermetBulk"
         val response = httpClient.post(url) {
+            val alleRelaterteSøkerIdenter = identer.søker + identer.barn
             contentType(ContentType.Application.Json)
-            setBody(SkjermetDataRequestDTO(ident))
+            setBody(SkjermetDataBulkRequestDTO(alleRelaterteSøkerIdenter))
         }
         return when (response.status) {
             HttpStatusCode.OK -> {
-                val result = response.body<Boolean>()
-                redis.set(Key("skjerming", ident), result.toByteArray(), 3600)
-                result
+                val result = response.body<Map<String, Boolean>>()
+                val eksistererSkjermet = result.values.any {identIsSkjermet -> identIsSkjermet}
+
+                redis.set(Key("skjerming", identer.søker.first()), eksistererSkjermet.toByteArray(), 3600)
+                eksistererSkjermet
             }
             else -> throw SkjermingException("Feil ved henting av skjerming for ident: ${response.status} : ${response.bodyAsText()}")
         }
@@ -56,4 +60,4 @@ fun Boolean.toByteArray(): ByteArray {
     return mapper.writeValueAsBytes(this)
 }
 
-internal data class SkjermetDataRequestDTO(val personident: String)
+internal data class SkjermetDataBulkRequestDTO(val personIdenter: List<String>)

@@ -13,7 +13,7 @@ class EnhetInputGenerator(
     private val enhetService: EnhetService,
 ) : InputGenerator<EnhetInput> {
     override suspend fun generer(input: RegelInput): EnhetInput {
-        val enhetsRoller = enhetService.hentEnhetRoller(input.currentToken, input.ident)
+        val enhetsRoller = enhetService.hentEnhetRoller(input.currentToken, input.ansattIdent)
         return EnhetInput(enhetsRoller, "placeholder")
     }
 }

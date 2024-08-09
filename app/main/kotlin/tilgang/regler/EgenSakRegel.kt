@@ -9,11 +9,11 @@ data object EgenSakRegel : Regel<EgenSakInput> {
 
 data object EgenSakInputGenerator : InputGenerator<EgenSakInput> {
     override suspend fun generer(input: RegelInput): EgenSakInput {
-        val (søkerIdenter, barnIdenter) = input.identer
+        val (søkerIdenter, barnIdenter) = input.søkerIdenter
 
         //TODO: input.ident er NAV-ident - må finne pnr
 
-        return EgenSakInput(input.ident, søkerIdenter, barnIdenter)
+        return EgenSakInput(input.ansattIdent, søkerIdenter, barnIdenter)
     }
 }
 
