@@ -98,6 +98,7 @@ fun Application.api(
         }
         exception<Throwable> { call, cause ->
             LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause)
+            LOGGER.error("Feil i tjeneste: ${cause.message}")
             call.respondText(text = "Feil i tjeneste: ${cause.message}", status = HttpStatusCode.InternalServerError)
         }
     }
