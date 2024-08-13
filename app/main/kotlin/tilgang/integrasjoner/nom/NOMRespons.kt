@@ -1,10 +1,14 @@
 package tilgang.integrasjoner.nom;
 
-data class NOMRespons (
-    val ressurs: Ressurs
+internal data class NOMRespons (
+    val data: NOMData?
 )
 
-data class Ressurs(
+internal data class NOMData(
+    val ressurs: Ressurs?
+)
+
+internal data class Ressurs(
     val navident: String,
     val personident: String
 )

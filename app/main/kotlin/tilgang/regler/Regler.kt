@@ -3,14 +3,14 @@ package tilgang.regler
 import org.slf4j.LoggerFactory
 import tilgang.enhet.EnhetService
 import tilgang.geo.GeoService
-import tilgang.integrasjoner.nom.NOMClient
+import tilgang.integrasjoner.nom.INOMClient
 import tilgang.integrasjoner.pdl.IPdlGraphQLClient
 import tilgang.integrasjoner.skjerming.SkjermingClient
 import tilgang.routes.Operasjon
 
 private val logger = LoggerFactory.getLogger(RegelService::class.java)
 
-class RegelService(geoService: GeoService, enhetService: EnhetService, pdlService: IPdlGraphQLClient, skjermetClient: SkjermingClient, nomClient: NOMClient){
+class RegelService(geoService: GeoService, enhetService: EnhetService, pdlService: IPdlGraphQLClient, skjermetClient: SkjermingClient, nomClient: INOMClient){
     private val reglerForOperasjon = mapOf(
         Operasjon.SE to listOf(
             RegelMedInputgenerator(EgenSakRegel, EgenSakInputGenerator(nomClient)),

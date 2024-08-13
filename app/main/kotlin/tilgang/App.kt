@@ -57,7 +57,7 @@ fun Application.api(
     val geoService = GeoService(msGraph)
     val enhetService = EnhetService(msGraph)
     val skjermingClient = SkjermingClient(config.azureConfig, config.skjermingConfig, redis, prometheus)
-    val nomClient = NOMClient(redis, config.nomConfig, prometheus)
+    val nomClient = NOMClient(config.azureConfig, redis, config.nomConfig, prometheus)
     val regelService = RegelService(geoService, enhetService, pdl, skjermingClient, nomClient)
 
     install(MicrometerMetrics) { registry = prometheus }

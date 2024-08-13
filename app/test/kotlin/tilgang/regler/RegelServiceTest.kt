@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import tilgang.Fakes
-import tilgang.NOMConfig
 import tilgang.SkjermingConfig
 import tilgang.auth.AzureConfig
 import tilgang.enhet.EnhetService
@@ -16,7 +15,7 @@ import tilgang.integrasjoner.behandlingsflyt.IdenterRespons
 import tilgang.integrasjoner.msgraph.Group
 import tilgang.integrasjoner.msgraph.IMsGraphClient
 import tilgang.integrasjoner.msgraph.MemberOf
-import tilgang.integrasjoner.nom.NOMClient
+import tilgang.integrasjoner.nom.INOMClient
 import tilgang.integrasjoner.pdl.HentGeografiskTilknytningResult
 import tilgang.integrasjoner.pdl.IPdlGraphQLClient
 import tilgang.integrasjoner.pdl.PdlGeoType
@@ -68,7 +67,12 @@ class RegelServiceTest {
                 ), SkjermingConfig("skjerming_base_url", "skjerming_scope"), it.redis, prometheus
             ) {
             }
-            val nomClient = NOMClient(it.redis, NOMConfig("nom_base_url_", "nom_scope"), prometheus)
+
+            val nomClient = object : INOMClient {
+                override suspend fun personNummerTilNavIdent(søkerIdent: String): String {
+                    return "T131785"
+                }
+            }
             val regelService = RegelService(geoService, enhetService, pdlService, skjermingClient, nomClient)
 
             runBlocking {
