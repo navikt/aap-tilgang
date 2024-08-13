@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.papsign.ktor.openapigen.OpenAPIGen
 import com.papsign.ktor.openapigen.route.apiRouting
+import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import io.ktor.http.*
 import io.ktor.serialization.jackson.*
 import io.ktor.server.application.*
@@ -17,6 +18,7 @@ import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.util.*
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import tilgang.routes.actuator
@@ -118,11 +120,22 @@ fun Application.api(
         actuator(prometheus)
 
         authenticate(AZURE) {
-            this@routing.apiRouting {
+            apiRoute {
                 tilgang(behandlingsflyt, regelService, config.roles, prometheus)
             }
         }
     }
+}
+
+/**
+ * Triks for å få NormalOpenAPIRoute til å virke med auth
+ */
+@KtorDsl
+fun Route.apiRoute(config: NormalOpenAPIRoute.() -> Unit) {
+    NormalOpenAPIRoute(
+        this,
+        application.plugin(OpenAPIGen).globalModuleProvider
+    ).apply(config)
 }
 
 private fun Application.swaggerDoc() {
