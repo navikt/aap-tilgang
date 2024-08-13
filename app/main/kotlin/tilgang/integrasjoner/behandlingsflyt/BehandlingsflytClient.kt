@@ -40,10 +40,13 @@ class BehandlingsflytClient(azureConfig: AzureConfig, private val behandlingsfly
         }
         
         log.info("Respons: $respons")
+        log.info("Respons-status: ${respons.status}")
+        val body = respons.body<IdenterRespons>()
+        log.info("Respons-body: ${body}")
 
         return when (respons.status) {
             HttpStatusCode.OK -> {
-                val identer = respons.body<IdenterRespons>()
+                val identer = body
                 redis.set(Key("identer", saksnummer), identer.toByteArray(), 3600)
                 identer
             }
