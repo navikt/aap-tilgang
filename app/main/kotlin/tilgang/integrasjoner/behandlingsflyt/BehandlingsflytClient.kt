@@ -1,7 +1,7 @@
 package tilgang.integrasjoner.behandlingsflyt
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -52,13 +52,13 @@ class BehandlingsflytClient(azureConfig: AzureConfig, private val behandlingsfly
     }
 
     fun ByteArray.toIdenterRespons(): IdenterRespons {
-        val mapper = ObjectMapper()
+        val mapper = jacksonObjectMapper()
         val tr = object : TypeReference<IdenterRespons>() {}
         return mapper.readValue(this, tr)
     }
 
     fun IdenterRespons.toByteArray(): ByteArray {
-        val mapper = ObjectMapper()
+        val mapper = jacksonObjectMapper()
         return mapper.writeValueAsBytes(this)
     }
 }

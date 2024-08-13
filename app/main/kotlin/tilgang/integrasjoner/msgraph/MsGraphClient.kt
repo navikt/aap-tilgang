@@ -2,7 +2,7 @@ package tilgang.integrasjoner.msgraph
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -53,13 +53,13 @@ class MsGraphClient(azureConfig: AzureConfig, private val msGraphConfig: MsGraph
     }
 
     fun ByteArray.toMemberOf(): MemberOf {
-        val mapper = ObjectMapper()
+        val mapper = jacksonObjectMapper()
         val tr = object : TypeReference<MemberOf>() {}
         return mapper.readValue(this, tr)
     }
 
     fun MemberOf.toByteArray(): ByteArray {
-        val mapper = ObjectMapper()
+        val mapper = jacksonObjectMapper()
         return mapper.writeValueAsBytes(this)
     }
 }

@@ -1,7 +1,7 @@
 package tilgang.integrasjoner.skjerming
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
@@ -50,13 +50,13 @@ open class SkjermingClient(azureConfig: AzureConfig, private val skjermingConfig
 
 
 fun ByteArray.toBool(): Boolean {
-    val mapper = ObjectMapper()
+    val mapper = jacksonObjectMapper()
     val tr = object : TypeReference<Boolean>() {}
     return mapper.readValue(this, tr)
 }
 
 fun Boolean.toByteArray(): ByteArray {
-    val mapper = ObjectMapper()
+    val mapper = jacksonObjectMapper()
     return mapper.writeValueAsBytes(this)
 }
 

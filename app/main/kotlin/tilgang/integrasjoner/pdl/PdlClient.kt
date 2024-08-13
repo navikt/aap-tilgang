@@ -1,7 +1,7 @@
 package tilgang.integrasjoner.pdl
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
@@ -64,13 +64,13 @@ class PdlGraphQLClient(
     }
 
     fun ByteArray.toPersonResultat(): PersonResultat {
-        val mapper = ObjectMapper()
+        val mapper = jacksonObjectMapper()
         val tr = object : TypeReference<PersonResultat>() {}
         return mapper.readValue(this, tr)
     }
 
     fun PersonResultat.toByteArray(): ByteArray {
-        val mapper = ObjectMapper()
+        val mapper = jacksonObjectMapper()
         return mapper.writeValueAsBytes(this)
     }
 
@@ -90,13 +90,13 @@ class PdlGraphQLClient(
     }
 
     fun ByteArray.toHentGeografiskTilknytningResult(): HentGeografiskTilknytningResult {
-        val mapper = ObjectMapper()
+        val mapper = jacksonObjectMapper()
         val tr = object : TypeReference<HentGeografiskTilknytningResult>() {}
         return mapper.readValue(this, tr)
     }
 
     fun HentGeografiskTilknytningResult.toByteArray(): ByteArray {
-        val mapper = ObjectMapper()
+        val mapper = jacksonObjectMapper()
         return mapper.writeValueAsBytes(this)
     }
 

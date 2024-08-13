@@ -1,7 +1,7 @@
 package tilgang.integrasjoner.nom
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -58,12 +58,12 @@ open class NOMClient(azureConfig: AzureConfig, private val redis: Redis, private
 }
 
 fun ByteArray.toNavident(): String {
-    val mapper = ObjectMapper()
+    val mapper = jacksonObjectMapper()
     val tr = object : TypeReference<String>() {}
     return mapper.readValue(this, tr)
 }
 
-fun Boolean.toByteArray(): ByteArray {
-    val mapper = ObjectMapper()
+fun String.toByteArray(): ByteArray {
+    val mapper = jacksonObjectMapper()
     return mapper.writeValueAsBytes(this)
 }

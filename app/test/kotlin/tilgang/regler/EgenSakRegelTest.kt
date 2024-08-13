@@ -1,15 +1,7 @@
 package tilgang.regler
 
-import io.micrometer.prometheusmetrics.PrometheusConfig
-import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
-import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
-import tilgang.Fakes
-import tilgang.NOMConfig
-import tilgang.auth.AzureConfig
-import tilgang.integrasjoner.nom.NOMClient
-import java.net.URI
 
 class EgenSakRegelTest {
     @Test
