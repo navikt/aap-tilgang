@@ -55,4 +55,3 @@ fun Boolean.toByteArray(): ByteArray {
     val mapper = ObjectMapper()
     return mapper.writeValueAsBytes(this)
 }
-
