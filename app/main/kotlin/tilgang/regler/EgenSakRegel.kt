@@ -4,7 +4,7 @@ import tilgang.integrasjoner.nom.NOMClient
 
 data object EgenSakRegel : Regel<EgenSakInput> {
     override fun vurder(input: EgenSakInput): Boolean {
-        return input.navAnsattIdent == input.navIdentFraNOM
+        return input.navAnsattIdent != input.navIdentFraNOM
     }
 }
 
