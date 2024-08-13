@@ -38,6 +38,8 @@ class BehandlingsflytClient(azureConfig: AzureConfig, private val behandlingsfly
             bearerAuth(token)
             contentType(ContentType.Application.Json)
         }
+        
+        log.info("Respons: $respons")
 
         return when (respons.status) {
             HttpStatusCode.OK -> {
