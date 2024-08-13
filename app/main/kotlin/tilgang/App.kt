@@ -34,6 +34,7 @@ import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytException
 import tilgang.integrasjoner.msgraph.MsGraphClient
 import tilgang.integrasjoner.msgraph.MsGraphException
 import tilgang.integrasjoner.nom.NOMClient
+import tilgang.integrasjoner.nom.NOMException
 import tilgang.integrasjoner.pdl.PdlException
 import tilgang.integrasjoner.pdl.PdlGraphQLClient
 import tilgang.integrasjoner.skjerming.SkjermingClient
@@ -97,6 +98,13 @@ fun Application.api(
             LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause)
             call.respondText(
                 text = "Feil i behandlingsflyt: ${cause.message}",
+                status = HttpStatusCode.InternalServerError
+            )
+        }
+        exception<NOMException> { call, cause ->
+            LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause)
+            call.respondText(
+                text = "Feil i NOM: ${cause.message}",
                 status = HttpStatusCode.InternalServerError
             )
         }
