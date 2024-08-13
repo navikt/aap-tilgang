@@ -14,8 +14,8 @@ import java.time.LocalDateTime
 const val EnDagSekunder: Long = 60 * 60 * 24
 
 data class Key(
-    val value: String,
     val prefix: String = "",
+    val value: String
 ) {
     fun get(): ByteArray = "$prefix:$value".toByteArray()
 }

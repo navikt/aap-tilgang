@@ -33,7 +33,7 @@ class MsGraphClient(azureConfig: AzureConfig, private val msGraphConfig: MsGraph
 
         if (redis.exists(Key("msgraph", ident))) {
             prometheus.cacheHit("msgraph").increment()
-            return redis[Key("msgraph")]!!.toMemberOf()
+            return redis[Key("msgraph", ident)]!!.toMemberOf()
         }
         prometheus.cacheMiss("msgraph").increment()
 
