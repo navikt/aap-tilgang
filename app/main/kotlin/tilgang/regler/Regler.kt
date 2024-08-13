@@ -14,22 +14,21 @@ class RegelService(geoService: GeoService, enhetService: EnhetService, pdlServic
     private val reglerForOperasjon = mapOf(
         Operasjon.SE to listOf(
             RegelMedInputgenerator(LeseRolleRegel, RolleInputGenerator),
-            // TODO: Aktiver når vi vet den funker
-            // RegelMedInputgenerator(EgenSakRegel, EgenSakInputGenerator(nomClient)),
+            RegelMedInputgenerator(EgenSakRegel, EgenSakInputGenerator(nomClient)),
             RegelMedInputgenerator(AdressebeskyttelseRegel, AdressebeskyttelseInputGenerator(pdlService)),
             RegelMedInputgenerator(GeoRegel, GeoInputGenerator(geoService, pdlService)),
             RegelMedInputgenerator(EgenAnsattRegel, EgenAnsattInputGenerator(skjermetClient))
         ),
         Operasjon.DRIFTE to listOf(
             RegelMedInputgenerator(DriftRolleRegel, RolleInputGenerator),
-            //RegelMedInputgenerator(EgenSakRegel, EgenSakInputGenerator(nomClient))
+            RegelMedInputgenerator(EgenSakRegel, EgenSakInputGenerator(nomClient))
         ),
         Operasjon.DELEGERE to listOf(
             RegelMedInputgenerator(AvdelingslederRolleRegel, RolleInputGenerator),
         ),
         Operasjon.SAKSBEHANDLE to listOf(
             RegelMedInputgenerator(AvklaringsbehovRolleRegel, AvklaringsbehovInputGenerator),
-            //RegelMedInputgenerator(EgenSakRegel, EgenSakInputGenerator(nomClient)),
+            RegelMedInputgenerator(EgenSakRegel, EgenSakInputGenerator(nomClient)),
             RegelMedInputgenerator(AdressebeskyttelseRegel, AdressebeskyttelseInputGenerator(pdlService)),
             RegelMedInputgenerator(GeoRegel, GeoInputGenerator(geoService, pdlService)),
             // TODO: Enhetsregelen gir kun mening hvis saker er knyttet mot enhet, noe de p.d. ikke er
