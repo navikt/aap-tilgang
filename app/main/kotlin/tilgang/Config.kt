@@ -31,6 +31,7 @@ data class Config(
     val msGraphConfig: MsGraphConfig = MsGraphConfig(),
     val behandlingsflytConfig: BehandlingsflytConfig = BehandlingsflytConfig(),
     val skjermingConfig: SkjermingConfig = SkjermingConfig(),
+    val nomConfig: NOMConfig = NOMConfig(),
     val redis: RedisConfig = RedisConfig()
 )
 
@@ -53,6 +54,11 @@ data class BehandlingsflytConfig(
 data class SkjermingConfig(
     val baseUrl: String = getEnvVar("SKJERMING_BASE_URL"),
     val scope: String = getEnvVar("SKJERMING_SCOPE")
+)
+
+data class NOMConfig(
+    val baseUrl: String = getEnvVar("NOM_BASE_URL"),
+    val scope: String = getEnvVar("NOM_SCOPE")
 )
 
 data class Role(

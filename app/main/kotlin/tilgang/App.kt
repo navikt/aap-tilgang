@@ -31,6 +31,7 @@ import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytClient
 import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytException
 import tilgang.integrasjoner.msgraph.MsGraphClient
 import tilgang.integrasjoner.msgraph.MsGraphException
+import tilgang.integrasjoner.nom.NOMClient
 import tilgang.integrasjoner.pdl.PdlException
 import tilgang.integrasjoner.pdl.PdlGraphQLClient
 import tilgang.integrasjoner.skjerming.SkjermingClient
@@ -56,7 +57,8 @@ fun Application.api(
     val geoService = GeoService(msGraph)
     val enhetService = EnhetService(msGraph)
     val skjermingClient = SkjermingClient(config.azureConfig, config.skjermingConfig, redis, prometheus)
-    val regelService = RegelService(geoService, enhetService, pdl, skjermingClient)
+    val nomClient = NOMClient(redis, config.nomConfig, prometheus)
+    val regelService = RegelService(geoService, enhetService, pdl, skjermingClient, nomClient)
 
     install(MicrometerMetrics) { registry = prometheus }
 
