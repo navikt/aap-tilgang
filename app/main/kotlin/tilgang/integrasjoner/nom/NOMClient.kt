@@ -13,7 +13,6 @@ import tilgang.NOMConfig
 import tilgang.auth.AzureAdTokenProvider
 import tilgang.auth.AzureConfig
 import tilgang.http.HttpClientFactory
-import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytClient
 import tilgang.metrics.cacheHit
 import tilgang.metrics.cacheMiss
 import tilgang.redis.Key
@@ -23,7 +22,7 @@ interface INOMClient {
     suspend fun personNummerTilNavIdent(søkerIdent: String): String
 }
 
-private val log = LoggerFactory.getLogger(BehandlingsflytClient::class.java)
+private val log = LoggerFactory.getLogger(NOMClient::class.java)
 
 open class NOMClient(azureConfig: AzureConfig, private val redis: Redis, private val nomConfig: NOMConfig, private val prometheus: PrometheusMeterRegistry): INOMClient {
     val httpClient = HttpClientFactory.create()
