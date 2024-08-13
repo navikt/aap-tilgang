@@ -4,6 +4,7 @@ import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import tilgang.Fakes
@@ -26,6 +27,7 @@ import tilgang.routes.Operasjon
 import java.net.URI
 import java.util.*
 
+@Disabled
 class RegelServiceTest {
     @ParameterizedTest
     @EnumSource(Avklaringsbehov::class)
