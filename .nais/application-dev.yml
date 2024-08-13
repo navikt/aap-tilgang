@@ -76,6 +76,10 @@ spec:
       value: http://dev-gcp.nom.skjermede-personer-pip/
     - name: SKJERMING_SCOPE
       value: api://dev-gcp.nom.skjermede-personer-pip/.default
+    - name: NOM_BASE_URL
+      value: https://nom-api.intern.dev.nav.no/graphql
+    - name: NOM_SCOPE
+      value: api://dev-gcp.nom.nom-api/.default
   accessPolicy:
     inbound:
       rules:
@@ -83,5 +87,7 @@ spec:
     outbound:
       rules:
         - application: behandlingsflyt
+        - application: nom-api
+          namespace: nom
       external:
         - host: pdl-api.dev-fss-pub.nais.io

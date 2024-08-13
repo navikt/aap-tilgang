@@ -1,20 +1,19 @@
 package tilgang.regler
 
+import tilgang.integrasjoner.nom.NOMClient
+
 data object EgenSakRegel : Regel<EgenSakInput> {
     override fun vurder(input: EgenSakInput): Boolean {
-        val identer = input.søkerIdenter.union(input.barnIdententer)
-        return input.ident !in identer
+        return input.navAnsattIdent == input.navIdentFraNOM
     }
 }
 
-data object EgenSakInputGenerator : InputGenerator<EgenSakInput> {
+class EgenSakInputGenerator(private val nomClient: NOMClient) : InputGenerator<EgenSakInput> {
     override suspend fun generer(input: RegelInput): EgenSakInput {
-        val (søkerIdenter, barnIdenter) = input.søkerIdenter
-
-        //TODO: input.ident er NAV-ident - må finne pnr
-
-        return EgenSakInput(input.ansattIdent, søkerIdenter, barnIdenter)
+        val søkerIdent = input.søkerIdenter.søker.first()
+        val navIdentFraNOM = nomClient.personNummerTilNavIdent(søkerIdent)
+        return EgenSakInput(input.ansattIdent, navIdentFraNOM)
     }
 }
 
-data class EgenSakInput(val ident: String, val søkerIdenter: List<String>, val barnIdententer: List<String>)
+data class EgenSakInput(val navAnsattIdent: String, val navIdentFraNOM: String)
