@@ -26,7 +26,6 @@ import tilgang.routes.Operasjon
 import java.net.URI
 import java.util.*
 
-@Disabled
 class RegelServiceTest {
     @ParameterizedTest
     @EnumSource(Avklaringsbehov::class)
