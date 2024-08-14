@@ -85,11 +85,13 @@ fun Application.api(
 
     install(StatusPages) {
         exception<PdlException> { call, cause ->
-            LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause.stackTraceToString())
+            LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause)
+            LOGGER.error("Feil i PDL: ${cause.message} \n ${cause.stackTraceToString()}")
             call.respondText(text = "Feil i PDL: ${cause.message}", status = HttpStatusCode.InternalServerError)
         }
         exception<MsGraphException> { call, cause ->
             LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause.stackTraceToString())
+            LOGGER.error("Feil i MS Graph: ${cause.message} \n ${cause.stackTraceToString()}")
             call.respondText(
                 text = "Feil i Microsoft Graph: ${cause.message}",
                 status = HttpStatusCode.InternalServerError
@@ -97,6 +99,7 @@ fun Application.api(
         }
         exception<BehandlingsflytException> { call, cause ->
             LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause.stackTraceToString())
+            LOGGER.error("Feil i behandlingsflyt: ${cause.message} \n ${cause.stackTraceToString()}")
             call.respondText(
                 text = "Feil i behandlingsflyt: ${cause.message}",
                 status = HttpStatusCode.InternalServerError
@@ -104,6 +107,7 @@ fun Application.api(
         }
         exception<NOMException> { call, cause ->
             LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause.stackTraceToString())
+            LOGGER.error("Feil i NOM: ${cause.message} \n ${cause.stackTraceToString()}")
             call.respondText(
                 text = "Feil i NOM: ${cause.message}",
                 status = HttpStatusCode.InternalServerError
@@ -111,6 +115,7 @@ fun Application.api(
         }
         exception<SkjermingException> { call, cause ->
             LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause.stackTraceToString())
+            LOGGER.error("Feil i skjerming: ${cause.message} \n ${cause.stackTraceToString()}")
             call.respondText(
                 text = "Feil i skjerming: ${cause.message}",
                 status = HttpStatusCode.InternalServerError
