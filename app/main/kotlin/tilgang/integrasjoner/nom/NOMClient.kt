@@ -37,7 +37,7 @@ open class NOMClient(
     ).also { LOGGER.info("azure scope: ${nomConfig.scope}") }
 
     override suspend fun personNummerTilNavIdent(søkerIdent: String): String {
-        val azureToken = ""// azureTokenProvider.getClientCredentialToken()
+        val azureToken = azureTokenProvider.getClientCredentialToken()
 
         log.info("Got token: $azureToken")
 
@@ -62,20 +62,8 @@ open class NOMClient(
             HttpStatusCode.OK -> {
                 val result = response.body<NOMRespons>()
 
-                if (result.errors?.isNotEmpty()!!) {
-                    var errorsMedPath = ""
-                    for (error in result.errors) {
-                        errorsMedPath = errorsMedPath.plus(
-                            "Feil ved oppslag mot NOM med respons: (${error.message}, på path (${
-                                error.path.joinToString(
-                                    "",
-                                    "",
-                                    "/"
-                                )
-                            })\n"
-                        )
-                    }
-                    throw NOMException(errorsMedPath)
+                if (result.errors != null) {
+                    throw NOMException("Feil mot NOM: ${result.errors}")
                 }
 
                 val navIdentFraNOM = result.data?.ressurs?.navident.orEmpty()

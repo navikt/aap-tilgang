@@ -1,7 +1,9 @@
 package tilgang.integrasjoner.nom;
 
+import tilgang.graphql.GraphQLError
+
 internal data class NOMRespons (
-    val errors: List<Error>?,
+    val errors: List<GraphQLError>?,
     val data: NOMData?
 )
 
@@ -12,9 +14,4 @@ internal data class NOMData(
 internal data class Ressurs(
     val navident: String,
     val personident: String
-)
-
-internal data class Error(
-    val message: String,
-    val path: List<String>,
 )
