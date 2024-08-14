@@ -8,6 +8,7 @@ import io.ktor.http.*
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import tilgang.LOGGER
 import tilgang.SkjermingConfig
+import tilgang.auth.AzureAdTokenProvider
 import tilgang.auth.AzureConfig
 import tilgang.http.HttpClientFactory
 import tilgang.integrasjoner.behandlingsflyt.IdenterRespons
@@ -25,9 +26,15 @@ open class SkjermingClient(
     private val redis: Redis,
     private val prometheus: PrometheusMeterRegistry
 ) {
+    private val azureTokenProvider = AzureAdTokenProvider(
+        azureConfig,
+        skjermingConfig.scope
+    ).also { LOGGER.info("azure scope: ${skjermingConfig.scope}") }
     val httpClient = HttpClientFactory.create()
 
     open suspend fun isSkjermet(identer: IdenterRespons): Boolean {
+        val azureToken = azureTokenProvider.getClientCredentialToken()
+        
         if (redis.exists(Key(SKJERMING_PREFIX, identer.søker.first()))) {
             prometheus.cacheHit(SKJERMING_PREFIX).increment()
             return redis[Key(SKJERMING_PREFIX, identer.søker.first())]!!.deserialize()
@@ -40,6 +47,7 @@ open class SkjermingClient(
         LOGGER.info("Skjerming body: ${SkjermetDataBulkRequestDTO(alleRelaterteSøkerIdenter)}")
         val response = httpClient.post(url) {
             contentType(ContentType.Application.Json)
+            bearerAuth(azureToken)
             setBody(SkjermetDataBulkRequestDTO(alleRelaterteSøkerIdenter))
         }
         LOGGER.info("Skjerming response: $response")
