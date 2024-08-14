@@ -47,6 +47,11 @@ class PdlGraphQLClient(
         val manglendePersonidenter = personidenter.filter {
             !redis.exists(Key(PERSON_BOLK_PREFIX, it))
         }
+        
+        if (manglendePersonidenter.isEmpty()) {
+            return personBolkResult
+        }
+        
         prometheus.cacheMiss(PERSON_BOLK_PREFIX).increment(manglendePersonidenter.size.toDouble())
 
         val result = query(azureToken, PdlRequest.hentPersonBolk(manglendePersonidenter), callId)
