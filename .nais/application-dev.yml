@@ -77,7 +77,7 @@ spec:
     - name: SKJERMING_SCOPE
       value: api://dev-gcp.nom.skjermede-personer-pip/.default
     - name: NOM_BASE_URL
-      value: https://nom-api.intern.dev.nav.no/graphql
+      value: http://nom-api.nom/graphql
     - name: NOM_SCOPE
       value: api://dev-gcp.nom.nom-api/.default
   accessPolicy:
