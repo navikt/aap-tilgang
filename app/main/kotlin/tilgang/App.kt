@@ -85,32 +85,32 @@ fun Application.api(
 
     install(StatusPages) {
         exception<PdlException> { call, cause ->
-            LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause)
+            LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause.stackTraceToString())
             call.respondText(text = "Feil i PDL: ${cause.message}", status = HttpStatusCode.InternalServerError)
         }
         exception<MsGraphException> { call, cause ->
-            LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause)
+            LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause.stackTraceToString())
             call.respondText(
                 text = "Feil i Microsoft Graph: ${cause.message}",
                 status = HttpStatusCode.InternalServerError
             )
         }
         exception<BehandlingsflytException> { call, cause ->
-            LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause)
+            LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause.stackTraceToString())
             call.respondText(
                 text = "Feil i behandlingsflyt: ${cause.message}",
                 status = HttpStatusCode.InternalServerError
             )
         }
         exception<NOMException> { call, cause ->
-            LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause)
+            LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause.stackTraceToString())
             call.respondText(
                 text = "Feil i NOM: ${cause.message}",
                 status = HttpStatusCode.InternalServerError
             )
         }
         exception<SkjermingException> { call, cause ->
-            LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause)
+            LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause.stackTraceToString())
             call.respondText(
                 text = "Feil i skjerming: ${cause.message}",
                 status = HttpStatusCode.InternalServerError
