@@ -38,6 +38,7 @@ import tilgang.integrasjoner.nom.NOMException
 import tilgang.integrasjoner.pdl.PdlException
 import tilgang.integrasjoner.pdl.PdlGraphQLClient
 import tilgang.integrasjoner.skjerming.SkjermingClient
+import tilgang.integrasjoner.skjerming.SkjermingException
 import tilgang.redis.Redis
 import tilgang.regler.RegelService
 import tilgang.routes.tilgang
@@ -105,6 +106,13 @@ fun Application.api(
             LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause)
             call.respondText(
                 text = "Feil i NOM: ${cause.message}",
+                status = HttpStatusCode.InternalServerError
+            )
+        }
+        exception<SkjermingException> { call, cause ->
+            LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause)
+            call.respondText(
+                text = "Feil i skjerming: ${cause.message}",
                 status = HttpStatusCode.InternalServerError
             )
         }
