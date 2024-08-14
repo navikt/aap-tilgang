@@ -18,7 +18,6 @@ internal fun OpenAPIPipelineContext.roller(): List<String> {
     val roller = requireNotNull(pipeline.context.principal<JWTPrincipal>()) {
         "principal mangler i ktor auth"
     }.getListClaim("groups", String::class)
-    LOGGER.info("Roller: $roller")
     return roller
 }
 

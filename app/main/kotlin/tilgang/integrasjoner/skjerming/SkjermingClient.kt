@@ -44,13 +44,11 @@ open class SkjermingClient(
         val url = "${skjermingConfig.baseUrl}/skjermetBulk"
         val alleRelaterteSøkerIdenter = identer.søker + identer.barn
         
-        LOGGER.info("Skjerming body: ${SkjermetDataBulkRequestDTO(alleRelaterteSøkerIdenter)}")
         val response = httpClient.post(url) {
             contentType(ContentType.Application.Json)
             bearerAuth(azureToken)
             setBody(SkjermetDataBulkRequestDTO(alleRelaterteSøkerIdenter))
         }
-        LOGGER.info("Skjerming response: $response")
         return when (response.status) {
             HttpStatusCode.OK -> {
                 val result = response.body<Map<String, Boolean>>()
