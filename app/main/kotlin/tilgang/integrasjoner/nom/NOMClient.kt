@@ -7,7 +7,6 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
-import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
 import tilgang.LOGGER
 import tilgang.NOMConfig
