@@ -89,5 +89,7 @@ spec:
         - application: behandlingsflyt
         - application: nom-api
           namespace: nom
+        - application: skjermede-personer-pip
+          namespace: nom
       external:
         - host: pdl-api.dev-fss-pub.nais.io
