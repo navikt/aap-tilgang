@@ -6,6 +6,7 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
+import tilgang.LOGGER
 import tilgang.SkjermingConfig
 import tilgang.auth.AzureConfig
 import tilgang.http.HttpClientFactory
@@ -35,15 +36,17 @@ open class SkjermingClient(
 
         val url = "${skjermingConfig.baseUrl}/skjermetBulk"
         val alleRelaterteSøkerIdenter = identer.søker + identer.barn
+        
+        LOGGER.info("Skjerming body: ${SkjermetDataBulkRequestDTO(alleRelaterteSøkerIdenter)}")
         val response = httpClient.post(url) {
             contentType(ContentType.Application.Json)
             setBody(SkjermetDataBulkRequestDTO(alleRelaterteSøkerIdenter))
         }
+        LOGGER.info("Skjerming response: $response")
         return when (response.status) {
             HttpStatusCode.OK -> {
                 val result = response.body<Map<String, Boolean>>()
                 val eksistererSkjermet = result.values.any { identIsSkjermet -> identIsSkjermet }
-
                 redis.set(Key(SKJERMING_PREFIX, identer.søker.first()), eksistererSkjermet.serialize())
                 eksistererSkjermet
             }
