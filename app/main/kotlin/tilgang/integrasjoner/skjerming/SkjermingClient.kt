@@ -8,6 +8,7 @@ import io.ktor.http.*
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import tilgang.SkjermingConfig
 import tilgang.auth.AzureConfig
+import tilgang.http.HttpClientFactory
 import tilgang.integrasjoner.behandlingsflyt.IdenterRespons
 import tilgang.metrics.cacheHit
 import tilgang.metrics.cacheMiss
@@ -23,7 +24,7 @@ open class SkjermingClient(
     private val redis: Redis,
     private val prometheus: PrometheusMeterRegistry
 ) {
-    val httpClient = HttpClient()
+    val httpClient = HttpClientFactory.create()
 
     open suspend fun isSkjermet(identer: IdenterRespons): Boolean {
         if (redis.exists(Key(SKJERMING_PREFIX, identer.søker.first()))) {
@@ -33,8 +34,8 @@ open class SkjermingClient(
         prometheus.cacheMiss(SKJERMING_PREFIX).increment()
 
         val url = "${skjermingConfig.baseUrl}/skjermetBulk"
+        val alleRelaterteSøkerIdenter = identer.søker + identer.barn
         val response = httpClient.post(url) {
-            val alleRelaterteSøkerIdenter = identer.søker + identer.barn
             contentType(ContentType.Application.Json)
             setBody(SkjermetDataBulkRequestDTO(alleRelaterteSøkerIdenter))
         }
