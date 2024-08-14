@@ -7,6 +7,7 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
+import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
 import tilgang.LOGGER
 import tilgang.NOMConfig
@@ -32,7 +33,7 @@ open class NOMClient(azureConfig: AzureConfig, private val redis: Redis, private
     ).also { LOGGER.info("azure scope: ${nomConfig.scope}") }
 
     override suspend fun personNummerTilNavIdent(søkerIdent: String): String {
-        val azureToken = azureTokenProvider.getClientCredentialToken()
+        val azureToken =""// azureTokenProvider.getClientCredentialToken()
 
         log.info("Got token: $azureToken")
 
@@ -56,7 +57,17 @@ open class NOMClient(azureConfig: AzureConfig, private val redis: Redis, private
         return when (response.status) {
             HttpStatusCode.OK -> {
                 val result = response.body<NOMRespons>()
-                log.info("Got response body: $result")
+
+                if (result.errors?.isNotEmpty()!!) {
+                    var errorsMedPath = ""
+                    for (error in result.errors) {
+                        errorsMedPath = errorsMedPath.plus(
+                            "Feil ved oppslag mot NOM med respons: (${error.message}, på path (${error.path.joinToString("", "", "/" )})\n"
+                        )
+                    }
+                    throw NOMException(errorsMedPath)
+                }
+
                 val navIdentFraNOM = result.data?.ressurs?.navident.orEmpty()
                 log.info("Got navIdentFraNOM: $navIdentFraNOM")
                 redis.set(Key("nom", søkerIdent), navIdentFraNOM.toByteArray(), 3600)

@@ -13,7 +13,7 @@ internal data class NOMRequest(val query: String, val variables: Variables)  {
 
 private const val personident = "\$personident"
 val RESSURS_PERSONNUMMER_TIL_NAVIDENT_QUERY = """
-    query($personident: ID!) {
+    query($personident: String!) {
         ressurs(where: {personident: $personident}) {
             navident
         }
