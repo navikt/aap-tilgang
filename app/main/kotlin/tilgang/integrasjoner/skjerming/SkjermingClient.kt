@@ -1,6 +1,5 @@
 package tilgang.integrasjoner.skjerming
 
-import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -68,4 +67,4 @@ open class SkjermingClient(
 
 }
 
-internal data class SkjermetDataBulkRequestDTO(val personIdenter: List<String>)
+internal data class SkjermetDataBulkRequestDTO(val personidenter: List<String>)
