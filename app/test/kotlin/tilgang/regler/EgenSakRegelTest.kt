@@ -12,7 +12,6 @@ import tilgang.Fakes
 import tilgang.NOMConfig
 import tilgang.auth.AzureConfig
 import tilgang.integrasjoner.nom.NOMClient
-import tilgang.integrasjoner.nom.toByteArray
 import tilgang.redis.Key
 import java.net.URI
 
