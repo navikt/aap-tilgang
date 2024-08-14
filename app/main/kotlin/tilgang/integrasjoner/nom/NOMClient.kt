@@ -39,8 +39,6 @@ open class NOMClient(
     override suspend fun personNummerTilNavIdent(søkerIdent: String): String {
         val azureToken = azureTokenProvider.getClientCredentialToken()
 
-        log.info("Got token: $azureToken")
-
         if (redis.exists(Key(NOM_PREFIX, søkerIdent))) {
             prometheus.cacheHit(NOM_PREFIX).increment()
             return redis[Key(NOM_PREFIX, søkerIdent)]!!.deserialize()
@@ -55,8 +53,6 @@ open class NOMClient(
             contentType(ContentType.Application.Json)
             setBody(query)
         }
-
-        log.info("Got response status: ${response.status}")
 
         return when (response.status) {
             HttpStatusCode.OK -> {
