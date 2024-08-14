@@ -1,7 +1,5 @@
 package tilgang.integrasjoner.nom
 
-import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -17,6 +15,8 @@ import tilgang.metrics.cacheHit
 import tilgang.metrics.cacheMiss
 import tilgang.redis.Key
 import tilgang.redis.Redis
+import tilgang.redis.Redis.Companion.deserialize
+import tilgang.redis.Redis.Companion.serialize
 
 interface INOMClient {
     suspend fun personNummerTilNavIdent(søkerIdent: String): String
@@ -24,7 +24,12 @@ interface INOMClient {
 
 private val log = LoggerFactory.getLogger(NOMClient::class.java)
 
-open class NOMClient(azureConfig: AzureConfig, private val redis: Redis, private val nomConfig: NOMConfig, private val prometheus: PrometheusMeterRegistry): INOMClient {
+open class NOMClient(
+    azureConfig: AzureConfig,
+    private val redis: Redis,
+    private val nomConfig: NOMConfig,
+    private val prometheus: PrometheusMeterRegistry
+) : INOMClient {
     val httpClient = HttpClientFactory.create()
     private val azureTokenProvider = AzureAdTokenProvider(
         azureConfig,
@@ -32,16 +37,16 @@ open class NOMClient(azureConfig: AzureConfig, private val redis: Redis, private
     ).also { LOGGER.info("azure scope: ${nomConfig.scope}") }
 
     override suspend fun personNummerTilNavIdent(søkerIdent: String): String {
-        val azureToken =""// azureTokenProvider.getClientCredentialToken()
+        val azureToken = ""// azureTokenProvider.getClientCredentialToken()
 
         log.info("Got token: $azureToken")
 
-        if (redis.exists(Key("nom", søkerIdent))) {
-            prometheus.cacheHit("nom").increment()
-            return redis[Key("nom", søkerIdent)]!!.toNavident()
+        if (redis.exists(Key(NOM_PREFIX, søkerIdent))) {
+            prometheus.cacheHit(NOM_PREFIX).increment()
+            return redis[Key(NOM_PREFIX, søkerIdent)]!!.deserialize()
         }
 
-        prometheus.cacheMiss("nom").increment()
+        prometheus.cacheMiss(NOM_PREFIX).increment()
 
         val query = NOMRequest.hentNavIdentFraPersonIdent(søkerIdent)
         val response = httpClient.post(nomConfig.baseUrl) {
@@ -61,7 +66,13 @@ open class NOMClient(azureConfig: AzureConfig, private val redis: Redis, private
                     var errorsMedPath = ""
                     for (error in result.errors) {
                         errorsMedPath = errorsMedPath.plus(
-                            "Feil ved oppslag mot NOM med respons: (${error.message}, på path (${error.path.joinToString("", "", "/" )})\n"
+                            "Feil ved oppslag mot NOM med respons: (${error.message}, på path (${
+                                error.path.joinToString(
+                                    "",
+                                    "",
+                                    "/"
+                                )
+                            })\n"
                         )
                     }
                     throw NOMException(errorsMedPath)
@@ -69,21 +80,15 @@ open class NOMClient(azureConfig: AzureConfig, private val redis: Redis, private
 
                 val navIdentFraNOM = result.data?.ressurs?.navident.orEmpty()
                 log.info("Got navIdentFraNOM: $navIdentFraNOM")
-                redis.set(Key("nom", søkerIdent), navIdentFraNOM.toByteArray(), 3600)
+                redis.set(Key(NOM_PREFIX, søkerIdent), navIdentFraNOM.serialize(), 3600)
                 navIdentFraNOM
             }
+
             else -> throw NOMException("Feil ved henting av match for søkerIdent ($søkerIdent) mot NOM: ${response.status} : ${response.bodyAsText()}")
         }
     }
-}
 
-fun ByteArray.toNavident(): String {
-    val mapper = jacksonObjectMapper()
-    val tr = object : TypeReference<String>() {}
-    return mapper.readValue(this, tr)
-}
-
-fun String.toByteArray(): ByteArray {
-    val mapper = jacksonObjectMapper()
-    return mapper.writeValueAsBytes(this)
+    companion object {
+        private const val NOM_PREFIX = "nom"
+    }
 }

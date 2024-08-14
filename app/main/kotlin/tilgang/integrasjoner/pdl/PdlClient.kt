@@ -1,7 +1,5 @@
 package tilgang.integrasjoner.pdl
 
-import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
@@ -15,6 +13,8 @@ import tilgang.metrics.cacheHit
 import tilgang.metrics.cacheMiss
 import tilgang.redis.Key
 import tilgang.redis.Redis
+import tilgang.redis.Redis.Companion.deserialize
+import tilgang.redis.Redis.Companion.serialize
 
 interface IPdlGraphQLClient {
     suspend fun hentPersonBolk(personidenter: List<String>, callId: String): List<PersonResultat>?
@@ -37,17 +37,17 @@ class PdlGraphQLClient(
     override suspend fun hentPersonBolk(personidenter: List<String>, callId: String): List<PersonResultat>? {
         val azureToken = azureTokenProvider.getClientCredentialToken()
 
-        val personBolkResult = personidenter.filter {
-            redis.exists(Key("personBolk", it))
+        val personBolkResult: List<PersonResultat> = personidenter.filter {
+            redis.exists(Key(PERSON_BOLK_PREFIX, it))
         }.map {
-            redis[Key("personBolk", it)]!!.toPersonResultat()
+            redis[Key(PERSON_BOLK_PREFIX, it)]!!.deserialize()
         }
-        prometheus.cacheHit("personBolk").increment(personBolkResult.size.toDouble())
+        prometheus.cacheHit(PERSON_BOLK_PREFIX).increment(personBolkResult.size.toDouble())
 
         val manglendePersonidenter = personidenter.filter {
-            !redis.exists(Key("personBolk", it))
+            !redis.exists(Key(PERSON_BOLK_PREFIX, it))
         }
-        prometheus.cacheMiss("bersonBolk").increment(manglendePersonidenter.size.toDouble())
+        prometheus.cacheMiss(PERSON_BOLK_PREFIX).increment(manglendePersonidenter.size.toDouble())
 
         val result = query(azureToken, PdlRequest.hentPersonBolk(manglendePersonidenter), callId)
         val nyePersoner = result.getOrThrow().data?.hentPersonBolk?.map {
@@ -55,7 +55,7 @@ class PdlGraphQLClient(
                 it.ident,
                 it.person?.adressebeskyttelse?.map { it.gradering } ?: emptyList(),
                 it.code)
-            redis.set(Key("personBolk", it.ident), nyPerson.toByteArray(), 3600)
+            redis.set(Key(PERSON_BOLK_PREFIX, it.ident), nyPerson.serialize(), 3600)
             nyPerson
         }?.toMutableList()
         nyePersoner?.addAll(personBolkResult)
@@ -63,41 +63,19 @@ class PdlGraphQLClient(
         return nyePersoner?.toList()
     }
 
-    fun ByteArray.toPersonResultat(): PersonResultat {
-        val mapper = jacksonObjectMapper()
-        val tr = object : TypeReference<PersonResultat>() {}
-        return mapper.readValue(this, tr)
-    }
-
-    fun PersonResultat.toByteArray(): ByteArray {
-        val mapper = jacksonObjectMapper()
-        return mapper.writeValueAsBytes(this)
-    }
-
     override suspend fun hentGeografiskTilknytning(ident: String, callId: String): HentGeografiskTilknytningResult {
         val azureToken = azureTokenProvider.getClientCredentialToken()
 
-        if(redis.exists(Key("geografiskTilknytning", ident))) {
-            prometheus.cacheHit("Pdl").increment()
-            return redis[Key("geografiskTilknytning", ident)]!!.toHentGeografiskTilknytningResult()
+        if (redis.exists(Key(GEO_PREFIX, ident))) {
+            prometheus.cacheHit(GEO_PREFIX).increment()
+            return redis[Key(GEO_PREFIX, ident)]!!.deserialize()
         } //TODO: denne kan teknisk sett unngå token credentials, kan vi doppe den, eller burde vi dobbelsjekke
-        prometheus.cacheMiss("Pdl").increment()
-        
+        prometheus.cacheMiss(GEO_PREFIX).increment()
+
         val result = query(azureToken, PdlRequest.hentGeografiskTilknytning(ident), callId)
-        val geoTilknytning = result.getOrThrow().data?.hentGeografiskTilknytning
-        redis.set(Key("geografiskTilknytning", ident), geoTilknytning!!.toByteArray(), 3600)
+        val geoTilknytning = result.getOrThrow().data?.hentGeografiskTilknytning!!
+        redis.set(Key(GEO_PREFIX, ident), geoTilknytning.serialize())
         return geoTilknytning
-    }
-
-    fun ByteArray.toHentGeografiskTilknytningResult(): HentGeografiskTilknytningResult {
-        val mapper = jacksonObjectMapper()
-        val tr = object : TypeReference<HentGeografiskTilknytningResult>() {}
-        return mapper.readValue(this, tr)
-    }
-
-    fun HentGeografiskTilknytningResult.toByteArray(): ByteArray {
-        val mapper = jacksonObjectMapper()
-        return mapper.writeValueAsBytes(this)
     }
 
     private suspend fun query(accessToken: String, query: PdlRequest, callId: String): Result<PdlResponse> {
@@ -117,6 +95,11 @@ class PdlGraphQLClient(
             }
             respons
         }
+    }
+
+    companion object {
+        private const val PERSON_BOLK_PREFIX = "personBolk"
+        private const val GEO_PREFIX = "geografiskTilknytning"
     }
 }
 

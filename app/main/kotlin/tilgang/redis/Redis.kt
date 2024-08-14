@@ -1,5 +1,7 @@
 package tilgang.redis
 
+import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.slf4j.LoggerFactory
 import redis.clients.jedis.DefaultJedisClientConfig
 import redis.clients.jedis.HostAndPort
@@ -40,7 +42,7 @@ class Redis private constructor(
         return Key(split[1], split[0])
     }
 
-    fun set(key: Key, value: ByteArray, expireSec: Long) {
+    fun set(key: Key, value: ByteArray, expireSec: Long = 3600) {
         pool.resource.use {
             it.set(key.get(), value, SetParams().ex(expireSec))
         }
@@ -94,5 +96,18 @@ class Redis private constructor(
 
     override fun close() {
         pool.close()
+    }
+
+    companion object {
+        inline fun <reified T> ByteArray.deserialize(): T {
+            val mapper = jacksonObjectMapper()
+            val tr = object : TypeReference<T>() {}
+            return mapper.readValue(this, tr)
+        }
+
+        inline fun <reified T> T.serialize(): ByteArray {
+            val mapper = jacksonObjectMapper()
+            return mapper.writeValueAsBytes(this)
+        }
     }
 }

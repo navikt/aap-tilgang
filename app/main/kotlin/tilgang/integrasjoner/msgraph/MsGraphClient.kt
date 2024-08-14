@@ -1,8 +1,6 @@
 package tilgang.integrasjoner.msgraph
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -16,12 +14,19 @@ import tilgang.metrics.cacheHit
 import tilgang.metrics.cacheMiss
 import tilgang.redis.Key
 import tilgang.redis.Redis
+import tilgang.redis.Redis.Companion.deserialize
+import tilgang.redis.Redis.Companion.serialize
 
 interface IMsGraphClient {
-    suspend fun hentAdGrupper(currentToken: String, ident:String): MemberOf
+    suspend fun hentAdGrupper(currentToken: String, ident: String): MemberOf
 }
 
-class MsGraphClient(azureConfig: AzureConfig, private val msGraphConfig: MsGraphConfig, private val redis: Redis, private val prometheus: PrometheusMeterRegistry) : IMsGraphClient {
+class MsGraphClient(
+    azureConfig: AzureConfig,
+    private val msGraphConfig: MsGraphConfig,
+    private val redis: Redis,
+    private val prometheus: PrometheusMeterRegistry
+) : IMsGraphClient {
     private val httpClient = HttpClientFactory.create()
     private val azureTokenProvider = AzureAdTokenProvider(
         azureConfig,
@@ -31,11 +36,11 @@ class MsGraphClient(azureConfig: AzureConfig, private val msGraphConfig: MsGraph
     override suspend fun hentAdGrupper(currentToken: String, ident: String): MemberOf {
         val graphToken = azureTokenProvider.getOnBehalfOfToken(currentToken)
 
-        if (redis.exists(Key("msgraph", ident))) {
-            prometheus.cacheHit("msgraph").increment()
-            return redis[Key("msgraph", ident)]!!.toMemberOf()
+        if (redis.exists(Key(MSGRAPH_PREFIX, ident))) {
+            prometheus.cacheHit(MSGRAPH_PREFIX).increment()
+            return redis[Key(MSGRAPH_PREFIX, ident)]!!.deserialize()
         }
-        prometheus.cacheMiss("msgraph").increment()
+        prometheus.cacheMiss(MSGRAPH_PREFIX).increment()
 
         val respons = httpClient.get("${msGraphConfig.baseUrl}/me/memberOf") {
             bearerAuth(graphToken)
@@ -45,22 +50,16 @@ class MsGraphClient(azureConfig: AzureConfig, private val msGraphConfig: MsGraph
         return when (respons.status) {
             HttpStatusCode.OK -> {
                 val memberOf = respons.body<MemberOf>()
-                redis.set(Key("msgraph", ident), memberOf.toByteArray(), 3600)
+                redis.set(Key(MSGRAPH_PREFIX, ident), memberOf.serialize())
                 respons.body()
             }
+
             else -> throw MsGraphException("Feil fra Microsoft Graph: ${respons.status} : ${respons.bodyAsText()}")
         }
     }
 
-    fun ByteArray.toMemberOf(): MemberOf {
-        val mapper = jacksonObjectMapper()
-        val tr = object : TypeReference<MemberOf>() {}
-        return mapper.readValue(this, tr)
-    }
-
-    fun MemberOf.toByteArray(): ByteArray {
-        val mapper = jacksonObjectMapper()
-        return mapper.writeValueAsBytes(this)
+    companion object {
+        private const val MSGRAPH_PREFIX = "msgraph"
     }
 }
 
