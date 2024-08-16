@@ -26,6 +26,7 @@ data class Config(
         Role(
             Rolle.FORTROLIG_ADRESSE, UUID.fromString(getEnvVar("FORTROLIG_ADRESSE"))
         )
+        // TODO: Skjermet/Egne ansatte
     ),
     val pdlConfig: PdlConfig = PdlConfig(),
     val msGraphConfig: MsGraphConfig = MsGraphConfig(),

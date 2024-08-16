@@ -5,7 +5,7 @@ import tilgang.integrasjoner.pdl.Gradering
 import tilgang.integrasjoner.pdl.IPdlGraphQLClient
 import tilgang.integrasjoner.pdl.PersonResultat
 
-data object AdressebeskyttelseRegel: Regel<AdressebeskyttelseInput> {
+data object AdressebeskyttelseRegel : Regel<AdressebeskyttelseInput> {
     override fun vurder(input: AdressebeskyttelseInput): Boolean {
         return sjekkAdressebeskyttelse(input.roller, input.personer)
     }
@@ -14,7 +14,10 @@ data object AdressebeskyttelseRegel: Regel<AdressebeskyttelseInput> {
         val adresseBeskyttelse = personer.flatMap { it.adressebeskyttelse }
 
         return adresseBeskyttelse.isEmpty()
-                || (Rolle.STRENGT_FORTROLIG_ADRESSE in roller && finnStrengeste(adresseBeskyttelse) === Gradering.STRENGT_FORTROLIG)
+                || (Rolle.STRENGT_FORTROLIG_ADRESSE in roller && finnStrengeste(adresseBeskyttelse) in listOf(
+            Gradering.STRENGT_FORTROLIG,
+            Gradering.STRENGT_FORTROLIG_UTLAND
+        ))
                 || (Rolle.FORTROLIG_ADRESSE in roller && finnStrengeste(adresseBeskyttelse) === Gradering.FORTROLIG)
     }
 
@@ -29,9 +32,15 @@ data object AdressebeskyttelseRegel: Regel<AdressebeskyttelseInput> {
 
 data class AdressebeskyttelseInput(val roller: List<Rolle>, val personer: List<PersonResultat>)
 
-class AdressebeskyttelseInputGenerator(private val pdlService: IPdlGraphQLClient): InputGenerator<AdressebeskyttelseInput> {
+class AdressebeskyttelseInputGenerator(private val pdlService: IPdlGraphQLClient) :
+    InputGenerator<AdressebeskyttelseInput> {
     override suspend fun generer(input: RegelInput): AdressebeskyttelseInput {
-        val personer = requireNotNull(pdlService.hentPersonBolk(input.søkerIdenter.søker.union(input.søkerIdenter.barn).toList(), input.callId))
+        val personer = requireNotNull(
+            pdlService.hentPersonBolk(
+                input.søkerIdenter.søker.union(input.søkerIdenter.barn).toList(),
+                input.callId
+            )
+        )
         return AdressebeskyttelseInput(input.roller, personer)
     }
 

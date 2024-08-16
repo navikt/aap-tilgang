@@ -59,6 +59,23 @@ class AdressebeskyttelseRegelTest {
     }
 
     @Test
+    fun `Rolle STRENGT_FORTROLIG_ADRESSE har tilgang til person med strengt fortrolig adresse utland`() {
+        val personer = listOf(
+            PersonResultat("5678", listOf(Gradering.STRENGT_FORTROLIG_UTLAND), "kode")
+        )
+        assertTrue(
+            AdressebeskyttelseRegel.vurder(
+                AdressebeskyttelseInput(
+                    listOf(
+                        Rolle.SAKSBEHANDLER,
+                        Rolle.STRENGT_FORTROLIG_ADRESSE
+                    ), personer
+                )
+            )
+        )
+    }
+
+    @Test
     fun `Rolle FORTROLIG_ADRESSE har tilgang til person med fortrolig, men ikke strengt fortrolig, adresse`() {
         val personListe1 = listOf(PersonResultat("1000", listOf(Gradering.FORTROLIG), "kode"))
         val personListe2 = listOf(

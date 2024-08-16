@@ -22,9 +22,11 @@ roles:
 
     #Adressebeskyttelse
   - name: FORTROLIG_ADRESSE
-    ad: 0000-GA-Fortrolig_Adresse
+    ad: 0000-GA-Fortrolig_Adresse #TODO: Oppdater med nytt rollenavn
     group: ea930b6b-9397-44d9-b9e6-f4cf527a632a
 
   - name: STRENGT_FORTROLIG_ADRESSE
-    ad: 0000-GA-Strengt_Fortrolig_Adresse
+    ad: 0000-GA-Strengt_Fortrolig_Adresse #TODO: Oppdater med nytt rollenavn
     group: 5ef775f2-61f8-4283-bf3d-8d03f428aa14
+    
+  # TODO: Egne ansatte/skjermede personer
