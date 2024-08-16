@@ -57,7 +57,6 @@ open class NOMClient(
         return when (response.status) {
             HttpStatusCode.OK -> {
                 val result = response.body<NOMRespons>()
-
                 if (result.errors != null) {
                     throw NOMException("Feil mot NOM: ${result.errors}")
                 }

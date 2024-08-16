@@ -4,27 +4,24 @@ import tilgang.auth.AzureConfig
 import java.net.URI
 import java.util.*
 
-private fun getEnvVar(envar: String) = System.getenv(envar) ?: error("missing envvar $envar")
-
 data class Config(
     val azureConfig: AzureConfig = AzureConfig(
-        clientId = getEnvVar("AZURE_APP_CLIENT_ID"),
-        clientSecret = getEnvVar("AZURE_APP_CLIENT_SECRET"),
-        tokenEndpoint = URI.create(getEnvVar("AZURE_OPENID_CONFIG_TOKEN_ENDPOINT")).toURL(),
-        jwks = URI.create(getEnvVar("AZURE_OPENID_CONFIG_JWKS_URI")).toURL(),
-        issuer = getEnvVar("AZURE_OPENID_CONFIG_ISSUER")
+        clientId = requiredConfigForKey("AZURE_APP_CLIENT_ID"),
+        clientSecret = requiredConfigForKey("AZURE_APP_CLIENT_SECRET"),
+        tokenEndpoint = URI.create(requiredConfigForKey("AZURE_OPENID_CONFIG_TOKEN_ENDPOINT")).toURL(),
+        jwks = URI.create(requiredConfigForKey("AZURE_OPENID_CONFIG_JWKS_URI")).toURL(),
+        issuer = requiredConfigForKey("AZURE_OPENID_CONFIG_ISSUER")
     ),
     val roles: List<Role> = listOf(
-        Role(Rolle.VEILEDER, UUID.fromString(getEnvVar("AAP_VEILEDER"))),
-        Role(Rolle.SAKSBEHANDLER, UUID.fromString(getEnvVar("AAP_SAKSBEHANDLER"))),
-        Role(Rolle.VEILEDER, UUID.fromString(getEnvVar("AAP_VEILEDER"))),
-        Role(Rolle.BESLUTTER, UUID.fromString(getEnvVar("AAP_BESLUTTER"))),
-        Role(Rolle.LES, UUID.fromString(getEnvVar("AAP_LES"))),
-        // Role(Rolle.AVDELINGSLEDER, UUID.fromString(getEnvVar("AAP_AVDELINGSLEDER"))),
-        // Role(Rolle.UTVIKLER, UUID.fromString(getEnvVar("AAP_UTVIKLER"))),
-        Role(Rolle.STRENGT_FORTROLIG_ADRESSE, UUID.fromString(getEnvVar("STRENGT_FORTROLIG_ADRESSE"))),
+        Role(Rolle.VEILEDER, UUID.fromString(requiredConfigForKey("AAP_VEILEDER"))),
+        Role(Rolle.SAKSBEHANDLER, UUID.fromString(requiredConfigForKey("AAP_SAKSBEHANDLER"))),
+        Role(Rolle.BESLUTTER, UUID.fromString(requiredConfigForKey("AAP_BESLUTTER"))),
+        Role(Rolle.LES, UUID.fromString(requiredConfigForKey("AAP_LES"))),
+        // Role(Rolle.AVDELINGSLEDER, UUID.fromString(requiredConfigForKey("AAP_AVDELINGSLEDER"))),
+        // Role(Rolle.UTVIKLER, UUID.fromString(requiredConfigForKey("AAP_UTVIKLER"))),
+        Role(Rolle.STRENGT_FORTROLIG_ADRESSE, UUID.fromString(requiredConfigForKey("STRENGT_FORTROLIG_ADRESSE"))),
         Role(
-            Rolle.FORTROLIG_ADRESSE, UUID.fromString(getEnvVar("FORTROLIG_ADRESSE"))
+            Rolle.FORTROLIG_ADRESSE, UUID.fromString(requiredConfigForKey("FORTROLIG_ADRESSE"))
         )
         // TODO: Skjermet/Egne ansatte
     ),
@@ -37,29 +34,29 @@ data class Config(
 )
 
 data class PdlConfig(
-    val baseUrl: String = getEnvVar("PDL_BASE_URL"),
-    val audience: String = getEnvVar("PDL_AUDIENCE"),
-    val scope: String = getEnvVar("PDL_SCOPE")
+    val baseUrl: String = requiredConfigForKey("PDL_BASE_URL"),
+    val audience: String = requiredConfigForKey("PDL_AUDIENCE"),
+    val scope: String = requiredConfigForKey("PDL_SCOPE")
 )
 
 data class MsGraphConfig(
-    val baseUrl: String = getEnvVar("MS_GRAPH_BASE_URL"),
-    val scope: String = getEnvVar("MS_GRAPH_SCOPE")
+    val baseUrl: String = requiredConfigForKey("MS_GRAPH_BASE_URL"),
+    val scope: String = requiredConfigForKey("MS_GRAPH_SCOPE")
 )
 
 data class BehandlingsflytConfig(
-    val baseUrl: String = getEnvVar("BEHANDLINGSFLYT_BASE_URL"),
-    val scope: String = getEnvVar("BEHANDLINGSFLYT_SCOPE")
+    val baseUrl: String = requiredConfigForKey("BEHANDLINGSFLYT_BASE_URL"),
+    val scope: String = requiredConfigForKey("BEHANDLINGSFLYT_SCOPE")
 )
 
 data class SkjermingConfig(
-    val baseUrl: String = getEnvVar("SKJERMING_BASE_URL"),
-    val scope: String = getEnvVar("SKJERMING_SCOPE")
+    val baseUrl: String = requiredConfigForKey("SKJERMING_BASE_URL"),
+    val scope: String = requiredConfigForKey("SKJERMING_SCOPE")
 )
 
 data class NOMConfig(
-    val baseUrl: String = getEnvVar("NOM_BASE_URL"),
-    val scope: String = getEnvVar("NOM_SCOPE")
+    val baseUrl: String = requiredConfigForKey("NOM_BASE_URL"),
+    val scope: String = requiredConfigForKey("NOM_SCOPE")
 )
 
 data class Role(
@@ -68,9 +65,9 @@ data class Role(
 )
 
 data class RedisConfig(
-    val uri: URI = URI(getEnvVar("REDIS_URI_TILGANG")),
-    val username: String = getEnvVar("REDIS_USERNAME_TILGANG"),
-    val password: String = getEnvVar("REDIS_PASSWORD_TILGANG"),
+    val uri: URI = URI(requiredConfigForKey("REDIS_URI_TILGANG")),
+    val username: String = requiredConfigForKey("REDIS_USERNAME_TILGANG"),
+    val password: String = requiredConfigForKey("REDIS_PASSWORD_TILGANG"),
 )
 
 enum class Rolle {
