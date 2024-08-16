@@ -19,7 +19,7 @@ import tilgang.redis.Redis.Companion.deserialize
 import tilgang.redis.Redis.Companion.serialize
 
 interface INOMClient {
-    suspend fun personNummerTilNavIdent(søkerIdent: String): String
+    suspend fun personNummerTilNavIdent(søkerIdent: String, callId: String): String
 }
 
 private val log = LoggerFactory.getLogger(NOMClient::class.java)
@@ -36,7 +36,7 @@ open class NOMClient(
         nomConfig.scope
     ).also { LOGGER.info("azure scope: ${nomConfig.scope}") }
 
-    override suspend fun personNummerTilNavIdent(søkerIdent: String): String {
+    override suspend fun personNummerTilNavIdent(søkerIdent: String, callId: String): String {
         val azureToken = azureTokenProvider.getClientCredentialToken()
 
         if (redis.exists(Key(NOM_PREFIX, søkerIdent))) {
@@ -63,12 +63,11 @@ open class NOMClient(
                 }
 
                 val navIdentFraNOM = result.data?.ressurs?.navident.orEmpty()
-                log.info("Got navIdentFraNOM: $navIdentFraNOM")
                 redis.set(Key(NOM_PREFIX, søkerIdent), navIdentFraNOM.serialize(), 3600)
                 navIdentFraNOM
             }
 
-            else -> throw NOMException("Feil ved henting av match for søkerIdent ($søkerIdent) mot NOM: ${response.status} : ${response.bodyAsText()}")
+            else -> throw NOMException("Feil ved henting av match, callId ($callId) mot NOM: ${response.status} : ${response.bodyAsText()}")
         }
     }
 

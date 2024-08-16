@@ -70,7 +70,7 @@ class RegelServiceTest {
             }
 
             val nomClient = object : INOMClient {
-                override suspend fun personNummerTilNavIdent(søkerIdent: String): String {
+                override suspend fun personNummerTilNavIdent(søkerIdent: String, callId: String): String {
                     return "T131785"
                 }
             }

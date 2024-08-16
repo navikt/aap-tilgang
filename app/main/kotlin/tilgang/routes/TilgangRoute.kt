@@ -42,7 +42,6 @@ fun NormalOpenAPIRoute.tilgang(
     }
 }
 
-
 data class TilgangRequest(
     val saksnummer: String,
     val behandlingsreferanse: String?,

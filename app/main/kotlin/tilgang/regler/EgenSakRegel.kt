@@ -11,7 +11,7 @@ data object EgenSakRegel : Regel<EgenSakInput> {
 class EgenSakInputGenerator(private val nomClient: INOMClient) : InputGenerator<EgenSakInput> {
     override suspend fun generer(input: RegelInput): EgenSakInput {
         val søkerIdent = input.søkerIdenter.søker.first()
-        val navIdentFraNOM = nomClient.personNummerTilNavIdent(søkerIdent)
+        val navIdentFraNOM = nomClient.personNummerTilNavIdent(søkerIdent, input.callId)
         return EgenSakInput(input.ansattIdent, navIdentFraNOM)
     }
 }
