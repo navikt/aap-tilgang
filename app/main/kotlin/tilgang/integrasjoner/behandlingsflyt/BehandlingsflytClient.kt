@@ -28,15 +28,15 @@ class BehandlingsflytClient(
     private val httpClient = HttpClientFactory.create()
     private val azureTokenProvider = AzureAdTokenProvider(azureConfig, behandlingsflytConfig.scope)
 
-    suspend fun hentIdenter(currentToken: String, saksnummer: String): IdenterRespons {
+    suspend fun hentIdenterForSak(currentToken: String, saksnummer: String): IdenterRespons {
         val token = azureTokenProvider.getOnBehalfOfToken(currentToken)
-        if (redis.exists(Key(IDENTER_PREFIX, saksnummer))) {
+        if (redis.exists(Key(IDENTER_SAK_PREFIX, saksnummer))) {
             prometheus.cacheHit(BEHANDLINGSFLYT).increment()
-            return redis[Key(IDENTER_PREFIX, saksnummer)]!!.deserialize()
+            return redis[Key(IDENTER_SAK_PREFIX, saksnummer)]!!.deserialize()
         }
         prometheus.cacheMiss(BEHANDLINGSFLYT).increment()
 
-        val url = "${behandlingsflytConfig.baseUrl}/api/sak/${saksnummer}/identer"
+        val url = "${behandlingsflytConfig.baseUrl}/pip/api/sak/${saksnummer}/identer"
         log.info("Kaller behandlingsflyt med URL: $url")
 
         val respons = httpClient.get(url) {
@@ -44,15 +44,41 @@ class BehandlingsflytClient(
             contentType(ContentType.Application.Json)
         }
 
-        log.info("Respons: $respons")
-        log.info("Respons-status: ${respons.status}")
         val body = respons.body<IdenterRespons>()
-        log.info("Respons-body: ${body}")
 
         return when (respons.status) {
             HttpStatusCode.OK -> {
                 val identer = body
-                redis.set(Key(IDENTER_PREFIX, saksnummer), identer.serialize())
+                redis.set(Key(IDENTER_SAK_PREFIX, saksnummer), identer.serialize())
+                identer
+            }
+
+            else -> throw BehandlingsflytException("Feil ved henting av identer fra behandlingsflyt: ${respons.status} : ${respons.bodyAsText()}")
+        }
+    }
+
+    suspend fun hentIdenterForBehandling(currentToken: String, behandlingsnummer: String): IdenterRespons {
+        val token = azureTokenProvider.getOnBehalfOfToken(currentToken)
+        if (redis.exists(Key(IDENTER_BEHANDLING_PREFIX, behandlingsnummer))) {
+            prometheus.cacheHit(BEHANDLINGSFLYT).increment()
+            return redis[Key(IDENTER_BEHANDLING_PREFIX, behandlingsnummer)]!!.deserialize()
+        }
+        prometheus.cacheMiss(BEHANDLINGSFLYT).increment()
+
+        val url = "${behandlingsflytConfig.baseUrl}/pip/api/behandling/${behandlingsnummer}/identer"
+        log.info("Kaller behandlingsflyt med URL: $url")
+
+        val respons = httpClient.get(url) {
+            bearerAuth(token)
+            contentType(ContentType.Application.Json)
+        }
+
+        val body = respons.body<IdenterRespons>()
+
+        return when (respons.status) {
+            HttpStatusCode.OK -> {
+                val identer = body
+                redis.set(Key(IDENTER_BEHANDLING_PREFIX, behandlingsnummer), identer.serialize())
                 identer
             }
 
@@ -61,7 +87,8 @@ class BehandlingsflytClient(
     }
 
     companion object {
-        private const val IDENTER_PREFIX = "identer"
+        private const val IDENTER_SAK_PREFIX = "identer_sak"
+        private const val IDENTER_BEHANDLING_PREFIX = "identer_behandling"
         private const val BEHANDLINGSFLYT = "Behandlingsflyt"
     }
 }

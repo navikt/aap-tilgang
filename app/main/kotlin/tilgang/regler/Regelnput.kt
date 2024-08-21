@@ -10,7 +10,6 @@ class RegelInput (
     val currentToken: String,
     val roller: List<Rolle>,
     val søkerIdenter: IdenterRespons,
-    val behandlingsreferanse: String?,
     val avklaringsbehov: Avklaringsbehov?,
     val operasjon: Operasjon
 )

@@ -18,32 +18,48 @@ import tilgang.regler.RegelService
 import tilgang.regler.parseRoller
 
 fun NormalOpenAPIRoute.tilgang(
-    behandlingsflytClient: BehandlingsflytClient, regelService: RegelService, roles: List<Role>, prometheus: PrometheusMeterRegistry
+    behandlingsflytClient: BehandlingsflytClient,
+    regelService: RegelService,
+    roles: List<Role>,
+    prometheus: PrometheusMeterRegistry
 ) {
     route("/tilgang") {
-        post<Unit, TilgangResponse, TilgangRequest> {_, req ->
+        post<Unit, TilgangResponse, TilgangRequest> { _, req ->
             prometheus.httpCallCounter("/tilgang").increment()
-            
+
             val callId = pipeline.context.request.header("Nav-CallId") ?: "ukjent"
-            
+
             val token = token()
             val roller = parseRoller(rolesWithGroupIds = roles, roller())
-            val identer = behandlingsflytClient.hentIdenter(token, req.saksnummer)
+
+            require(req.saksnummer != null || req.behandlingsreferanse != null)
+            val identer = when (req.saksnummer != null) {
+                true -> behandlingsflytClient.hentIdenterForSak(
+                    token,
+                    req.saksnummer
+                )
+
+                false -> behandlingsflytClient.hentIdenterForBehandling(
+                    token,
+                    req.behandlingsreferanse!!
+                )
+            }
+
             val avklaringsbehov =
                 if (req.avklaringsbehovKode != null) Avklaringsbehov.fraKode(req.avklaringsbehovKode) else null
 
             val regelInput = RegelInput(
-                callId, ident(), token, roller, identer, req.behandlingsreferanse, avklaringsbehov, req.operasjon
+                callId, ident(), token, roller, identer, avklaringsbehov, req.operasjon
             )
             val harTilgang = regelService.vurderTilgang(regelInput)
-            
+
             respond(TilgangResponse(harTilgang))
         }
     }
 }
 
 data class TilgangRequest(
-    val saksnummer: String,
+    val saksnummer: String?,
     val behandlingsreferanse: String?,
     val avklaringsbehovKode: String?,
     val operasjon: Operasjon
