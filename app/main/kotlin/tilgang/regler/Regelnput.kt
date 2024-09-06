@@ -1,8 +1,9 @@
 package tilgang.regler
 
+import tilgang.Avklaringsbehov
+import tilgang.Operasjon
 import tilgang.Rolle
 import tilgang.integrasjoner.behandlingsflyt.IdenterRespons
-import tilgang.routes.Operasjon
 
 class RegelInput (
     val callId: String,

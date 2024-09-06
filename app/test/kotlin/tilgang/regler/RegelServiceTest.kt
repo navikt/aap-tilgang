@@ -7,7 +7,9 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
+import tilgang.Avklaringsbehov
 import tilgang.Fakes
+import tilgang.Operasjon
 import tilgang.SkjermingConfig
 import tilgang.auth.AzureConfig
 import tilgang.enhet.EnhetService
@@ -22,7 +24,6 @@ import tilgang.integrasjoner.pdl.IPdlGraphQLClient
 import tilgang.integrasjoner.pdl.PdlGeoType
 import tilgang.integrasjoner.pdl.PersonResultat
 import tilgang.integrasjoner.skjerming.SkjermingClient
-import tilgang.routes.Operasjon
 import java.net.URI
 import java.util.*
 

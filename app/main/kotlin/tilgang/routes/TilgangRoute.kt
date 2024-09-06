@@ -12,7 +12,9 @@ import tilgang.auth.roller
 import tilgang.auth.token
 import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytClient
 import tilgang.metrics.httpCallCounter
-import tilgang.regler.Avklaringsbehov
+import tilgang.Avklaringsbehov
+import tilgang.TilgangRequest
+import tilgang.TilgangResponse
 import tilgang.regler.RegelInput
 import tilgang.regler.RegelService
 import tilgang.regler.parseRoller
@@ -36,7 +38,7 @@ fun NormalOpenAPIRoute.tilgang(
             val identer = when (req.saksnummer != null) {
                 true -> behandlingsflytClient.hentIdenterForSak(
                     token,
-                    req.saksnummer
+                    req.saksnummer!!
                 )
 
                 false -> behandlingsflytClient.hentIdenterForBehandling(
@@ -46,7 +48,7 @@ fun NormalOpenAPIRoute.tilgang(
             }
 
             val avklaringsbehov =
-                if (req.avklaringsbehovKode != null) Avklaringsbehov.fraKode(req.avklaringsbehovKode) else null
+                if (req.avklaringsbehovKode != null) Avklaringsbehov.fraKode(req.avklaringsbehovKode!!) else null
 
             val regelInput = RegelInput(
                 callId, ident(), token, roller, identer, avklaringsbehov, req.operasjon
@@ -57,16 +59,3 @@ fun NormalOpenAPIRoute.tilgang(
         }
     }
 }
-
-data class TilgangRequest(
-    val saksnummer: String?,
-    val behandlingsreferanse: String?,
-    val avklaringsbehovKode: String?,
-    val operasjon: Operasjon
-)
-
-enum class Operasjon {
-    SE, SAKSBEHANDLE, DRIFTE, DELEGERE
-}
-
-data class TilgangResponse(val tilgang: Boolean)

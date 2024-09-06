@@ -1,4 +1,4 @@
-package tilgang.regler
+package tilgang
 
 enum class Avklaringsbehov(val kode: String) {
     MANUELT_SATT_PÅ_VENT("9001"),

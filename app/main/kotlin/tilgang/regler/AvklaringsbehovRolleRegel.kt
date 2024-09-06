@@ -1,5 +1,6 @@
 package tilgang.regler
 
+import tilgang.Avklaringsbehov
 import tilgang.Rolle
 
 data object AvklaringsbehovRolleRegel: Regel<AvklaringsbehovRolleInput> {

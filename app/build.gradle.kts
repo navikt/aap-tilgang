@@ -1,7 +1,6 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
 plugins {
-    kotlin("jvm") version "2.0.20"
+    id("aap-tilgang.conventions")
+    kotlin("jvm")
     id("io.ktor.plugin") version "2.3.12"
     application
 }
@@ -14,6 +13,7 @@ application {
 }
 
 dependencies {
+    implementation(project(":api-kontrakt"))
     implementation("io.ktor:ktor-server-auth:$ktorVersion")
     implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
     implementation("io.ktor:ktor-server-call-logging:$ktorVersion")
@@ -56,12 +56,6 @@ repositories {
 tasks {
     withType<Test> {
         useJUnitPlatform()
-    }
-}
-
-kotlin {
-    compilerOptions {
-        jvmTarget.set(JvmTarget.JVM_21)
     }
 }
 

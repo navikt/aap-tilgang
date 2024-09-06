@@ -1,12 +1,12 @@
 package tilgang.regler
 
 import org.slf4j.LoggerFactory
+import tilgang.Operasjon
 import tilgang.enhet.EnhetService
 import tilgang.geo.GeoService
 import tilgang.integrasjoner.nom.INOMClient
 import tilgang.integrasjoner.pdl.IPdlGraphQLClient
 import tilgang.integrasjoner.skjerming.SkjermingClient
-import tilgang.routes.Operasjon
 
 private val logger = LoggerFactory.getLogger(RegelService::class.java)
 
