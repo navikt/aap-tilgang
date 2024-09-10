@@ -37,11 +37,11 @@ dependencies {
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.2")
     implementation("ch.qos.logback:logback-classic:1.5.7")
     implementation("net.logstash.logback:logstash-logback-encoder:8.0")
-    implementation("com.nimbusds:nimbus-jose-jwt:9.40")
+    implementation("com.nimbusds:nimbus-jose-jwt:9.41")
     implementation("redis.clients:jedis:5.1.5")
 
     testImplementation(kotlin("test"))
-    testImplementation("com.nimbusds:nimbus-jose-jwt:9.40")
+    testImplementation("com.nimbusds:nimbus-jose-jwt:9.41")
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.11.0")
     testImplementation("org.assertj:assertj-core:3.26.3")
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
