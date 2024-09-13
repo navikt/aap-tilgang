@@ -85,6 +85,7 @@ spec:
       rules:
         - application: behandlingsflyt
         - application: postmottak-backend
+        - application: oppgave
     outbound:
       rules:
         - application: behandlingsflyt
