@@ -49,7 +49,7 @@ dependencies {
     implementation("io.ktor:ktor-server-core:$ktorVersion")
     implementation("no.nav:ktor-openapi-generator:1.0.32")
 
-    implementation("com.nimbusds:nimbus-jose-jwt:9.41")
+    implementation("com.nimbusds:nimbus-jose-jwt:9.41.1")
     
     implementation("io.ktor:ktor-server-auth:$ktorVersion")
     implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
