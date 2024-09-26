@@ -45,9 +45,9 @@ dependencies {
     
     implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
     implementation("ch.qos.logback:logback-classic:1.5.8")
-    implementation("no.nav:ktor-openapi-generator:1.0.32")
+    implementation("no.nav:ktor-openapi-generator:1.0.34")
     implementation("io.ktor:ktor-server-core:$ktorVersion")
-    implementation("no.nav:ktor-openapi-generator:1.0.32")
+    implementation("no.nav:ktor-openapi-generator:1.0.34")
 
     implementation("com.nimbusds:nimbus-jose-jwt:9.41.1")
     
