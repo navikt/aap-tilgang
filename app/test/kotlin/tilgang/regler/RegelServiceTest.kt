@@ -3,11 +3,10 @@ package tilgang.regler
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlinx.coroutines.runBlocking
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
-import tilgang.Avklaringsbehov
 import tilgang.Fakes
 import tilgang.Operasjon
 import tilgang.SkjermingConfig
@@ -29,8 +28,8 @@ import java.util.*
 
 class RegelServiceTest {
     @ParameterizedTest
-    @EnumSource(Avklaringsbehov::class)
-    fun `skal alltid gi false når roller er tom array`(avklaringsbehov: Avklaringsbehov) {
+    @EnumSource(Definisjon::class)
+    fun `skal alltid gi false når roller er tom array`(avklaringsbehov: Definisjon) {
         Fakes().use {
             val graphClient = object : IMsGraphClient {
                 override suspend fun hentAdGrupper(currentToken: String, ident: String): MemberOf {

@@ -6,13 +6,13 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.server.request.*
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import tilgang.Role
 import tilgang.auth.ident
 import tilgang.auth.roller
 import tilgang.auth.token
 import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytClient
 import tilgang.metrics.httpCallCounter
-import tilgang.Avklaringsbehov
 import tilgang.TilgangRequest
 import tilgang.TilgangResponse
 import tilgang.regler.RegelInput
@@ -48,7 +48,7 @@ fun NormalOpenAPIRoute.tilgang(
             }
 
             val avklaringsbehov =
-                if (req.avklaringsbehovKode != null) Avklaringsbehov.fraKode(req.avklaringsbehovKode!!) else null
+                if (req.avklaringsbehovKode != null) Definisjon.forKode(req.avklaringsbehovKode!!) else null
 
             val regelInput = RegelInput(
                 callId, ident(), token, roller, identer, avklaringsbehov, req.operasjon

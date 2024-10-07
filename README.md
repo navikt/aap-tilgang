@@ -1,14 +1,18 @@
 ## aap-tilgang
-Applikasjon for å sjekke om brukere har tilgang til sak/ressurs
+Applikasjon for å sjekke om brukere har tilgang til Kelvin-ressurs
 
 ## Komme i gang
 Bruker gradle wrapper, så bare klon og kjør `./gradlew build`
 
+### Github package registry
+Miljøvariabelen `GITHUB_TOKEN` må være satt for å hente dependencies fra Github Package Registry.
+
+Den skal være satt til din github personal access token.
+Denne opprettes på Github ved å gå til settings -> developer settings. 
+Husk `read:packages`-rettighet og enable SSO.
+
+
 ## Henvendelser
-Løsningen er ikke produksjonssatt og vi har derfor vurdert at vi på nåværende tidspunkt ikke gjør kildekoden åpen av følgende grunn:
-
-- kode som implementerer lovendringer og forskrifter som ikke er ferdig behandlet.
-
 Spørsmål knyttet til koden eller prosjektet kan stilles som issues her på GitHub
 
 # For NAV-ansatte

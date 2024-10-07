@@ -1,6 +1,6 @@
 package tilgang.regler
 
-import tilgang.Avklaringsbehov
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import tilgang.Rolle
 
 data object AvklaringsbehovRolleRegel: Regel<AvklaringsbehovRolleInput> {
@@ -8,27 +8,32 @@ data object AvklaringsbehovRolleRegel: Regel<AvklaringsbehovRolleInput> {
         return kanAvklareBehov(input.avklaringsbehov, input.roller)
     }
 
-    private fun kanAvklareBehov(avklaringsbehov: Avklaringsbehov, roller: List<Rolle>): Boolean {
+    private fun kanAvklareBehov(avklaringsbehov: Definisjon, roller: List<Rolle>): Boolean {
         val erLokalSaksbehandler = Rolle.VEILEDER in roller
         val erNaySaksbehandler = Rolle.SAKSBEHANDLER in roller
         val erBeslutter = Rolle.BESLUTTER in roller
-
+        
         return when (avklaringsbehov) {
-            Avklaringsbehov.MANUELT_SATT_PÅ_VENT -> erLokalSaksbehandler || erNaySaksbehandler
-            Avklaringsbehov.FATTE_VEDTAK -> erBeslutter
-            Avklaringsbehov.AVKLAR_STUDENT -> erNaySaksbehandler
-            Avklaringsbehov.FORESLÅ_VEDTAK -> erNaySaksbehandler
-            Avklaringsbehov.VURDER_SYKEPENGEERSTATNING -> erNaySaksbehandler
-            Avklaringsbehov.FASTSETT_BEREGNINGSTIDSPUNKT -> erNaySaksbehandler
-            Avklaringsbehov.AVKLAR_SYKDOM -> erLokalSaksbehandler
-            Avklaringsbehov.AVKLAR_BISTANDSBEHOV -> erLokalSaksbehandler
-            Avklaringsbehov.FASTSETT_ARBEIDSEVNE -> erLokalSaksbehandler
-            Avklaringsbehov.FRITAK_MELDEPLIKT -> erLokalSaksbehandler
+            Definisjon.MANUELT_SATT_PÅ_VENT -> erLokalSaksbehandler || erNaySaksbehandler
+            Definisjon.AVKLAR_STUDENT -> erNaySaksbehandler
+            Definisjon.AVKLAR_SYKDOM -> erLokalSaksbehandler
+            Definisjon.AVKLAR_BISTANDSBEHOV -> erLokalSaksbehandler
+            Definisjon.FRITAK_MELDEPLIKT -> erLokalSaksbehandler
+            Definisjon.FASTSETT_ARBEIDSEVNE -> erLokalSaksbehandler
+            Definisjon.AVKLAR_SYKEPENGEERSTATNING -> erNaySaksbehandler
+            Definisjon.FASTSETT_BEREGNINGSTIDSPUNKT -> erNaySaksbehandler
+            Definisjon.AVKLAR_BARNETILLEGG -> erNaySaksbehandler
+            Definisjon.AVKLAR_SONINGSFORRHOLD -> erNaySaksbehandler
+            Definisjon.AVKLAR_HELSEINSTITUSJON -> erNaySaksbehandler
+            Definisjon.AVKLAR_SAMORDNING_GRADERING -> erNaySaksbehandler
+            Definisjon.FORESLÅ_VEDTAK -> erNaySaksbehandler
+            Definisjon.KVALITETSSIKRING -> erNaySaksbehandler
+            Definisjon.FATTE_VEDTAK -> erBeslutter
         }
     }
 }
 
-data class AvklaringsbehovRolleInput(val avklaringsbehov: Avklaringsbehov, val roller: List<Rolle>)
+data class AvklaringsbehovRolleInput(val avklaringsbehov: Definisjon, val roller: List<Rolle>)
 
 data object AvklaringsbehovInputGenerator: InputGenerator<AvklaringsbehovRolleInput> {
     override suspend fun generer(input: RegelInput): AvklaringsbehovRolleInput {

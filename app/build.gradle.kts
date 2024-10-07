@@ -7,6 +7,7 @@ plugins {
 
 val ktorVersion = "2.3.12"
 val aapLibVersion = "3.7.145"
+val behandlingsflytVersjon = "0.0.19"
 
 application {
     mainClass.set("tilgang.AppKt")
@@ -14,6 +15,7 @@ application {
 
 dependencies {
     implementation(project(":api-kontrakt"))
+    implementation("no.nav.aap.behandlingsflyt:kontrakt:$behandlingsflytVersjon")
     implementation("io.ktor:ktor-server-auth:$ktorVersion")
     implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
     implementation("io.ktor:ktor-server-call-logging:$ktorVersion")
@@ -46,11 +48,6 @@ dependencies {
     testImplementation("org.assertj:assertj-core:3.26.3")
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
     testImplementation("com.redis:testcontainers-redis:2.2.2")
-}
-
-repositories {
-    mavenCentral()
-    maven("https://github-package-registry-mirror.gc.nav.no/cached/maven-release")
 }
 
 tasks {
