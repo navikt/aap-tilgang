@@ -8,6 +8,7 @@ plugins {
 val ktorVersion = "2.3.12"
 val aapLibVersion = "3.7.145"
 val behandlingsflytVersjon = "0.0.19"
+val postmottakVersjon = "0.0.10"
 
 application {
     mainClass.set("tilgang.AppKt")
@@ -16,6 +17,7 @@ application {
 dependencies {
     implementation(project(":api-kontrakt"))
     implementation("no.nav.aap.behandlingsflyt:kontrakt:$behandlingsflytVersjon")
+    implementation("no.nav.aap.postmottak:kontrakt:$postmottakVersjon")
     implementation("io.ktor:ktor-server-auth:$ktorVersion")
     implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
     implementation("io.ktor:ktor-server-call-logging:$ktorVersion")

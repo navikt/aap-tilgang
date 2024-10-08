@@ -21,6 +21,7 @@ import io.ktor.server.routing.*
 import io.ktor.util.*
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
+import no.nav.aap.postmottak.saf.graphql.SafGraphqlClient
 import tilgang.routes.actuator
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -37,6 +38,7 @@ import tilgang.integrasjoner.nom.NOMClient
 import tilgang.integrasjoner.nom.NOMException
 import tilgang.integrasjoner.pdl.PdlException
 import tilgang.integrasjoner.pdl.PdlGraphQLClient
+import tilgang.integrasjoner.saf.SafException
 import tilgang.integrasjoner.skjerming.SkjermingClient
 import tilgang.integrasjoner.skjerming.SkjermingException
 import tilgang.redis.Redis
@@ -58,11 +60,13 @@ fun Application.api(
     val pdl = PdlGraphQLClient(config.azureConfig, config.pdlConfig, redis, prometheus)
     val msGraph = MsGraphClient(config.azureConfig, config.msGraphConfig, redis, prometheus)
     val behandlingsflyt = BehandlingsflytClient(config.azureConfig, config.behandlingsflytConfig, redis, prometheus)
+    val saf = SafGraphqlClient(config.azureConfig, config.safConfig, redis, prometheus)
     val geoService = GeoService(msGraph)
     val enhetService = EnhetService(msGraph)
     val skjermingClient = SkjermingClient(config.azureConfig, config.skjermingConfig, redis, prometheus)
     val nomClient = NOMClient(config.azureConfig, redis, config.nomConfig, prometheus)
     val regelService = RegelService(geoService, enhetService, pdl, skjermingClient, nomClient)
+    val tilgangService = TilgangService(saf, behandlingsflyt, regelService)
 
     install(MicrometerMetrics) { registry = prometheus }
 
@@ -105,6 +109,14 @@ fun Application.api(
                 status = HttpStatusCode.InternalServerError
             )
         }
+        exception<SafException> { call, cause ->
+            LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause.stackTraceToString())
+            LOGGER.error("Feil i SAF: ${cause.message} \n ${cause.stackTraceToString()}")
+            call.respondText(
+                text = "Feil i SAF: ${cause.message}",
+                status = HttpStatusCode.InternalServerError
+            )
+        }
         exception<NOMException> { call, cause ->
             LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause.stackTraceToString())
             LOGGER.error("Feil i NOM: ${cause.message} \n ${cause.stackTraceToString()}")
@@ -142,7 +154,7 @@ fun Application.api(
 
         authenticate(AZURE) {
             apiRoute {
-                tilgang(behandlingsflyt, regelService, config.roles, prometheus)
+                tilgang(tilgangService, config.roles, prometheus)
             }
         }
     }

@@ -58,13 +58,13 @@ class BehandlingsflytClient(
     }
 
     suspend fun hentIdenterForBehandling(currentToken: String, behandlingsnummer: String): IdenterRespons {
-        val token = azureTokenProvider.getOnBehalfOfToken(currentToken)
         if (redis.exists(Key(IDENTER_BEHANDLING_PREFIX, behandlingsnummer))) {
             prometheus.cacheHit(BEHANDLINGSFLYT).increment()
             return redis[Key(IDENTER_BEHANDLING_PREFIX, behandlingsnummer)]!!.deserialize()
         }
         prometheus.cacheMiss(BEHANDLINGSFLYT).increment()
 
+        val token = azureTokenProvider.getOnBehalfOfToken(currentToken)
         val url = "${behandlingsflytConfig.baseUrl}/pip/api/behandling/${behandlingsnummer}/identer"
         log.info("Kaller behandlingsflyt med URL: $url")
 

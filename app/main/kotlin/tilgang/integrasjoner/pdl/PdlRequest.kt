@@ -1,5 +1,7 @@
 package tilgang.integrasjoner.pdl
 
+import tilgang.graphql.asQuery
+
 internal data class PdlRequest(val query: String, val variables: Variables) {
     data class Variables(val ident: String? = null, val identer: List<String>? = null)
 
@@ -42,5 +44,3 @@ val GEOGRAFISK_TILKNYTNING_QUERY = """
         }
 }
 """.trimIndent()
-
-fun String.asQuery() = this.replace("\n", "")

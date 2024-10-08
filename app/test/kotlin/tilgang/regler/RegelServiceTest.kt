@@ -81,7 +81,8 @@ class RegelServiceTest {
                     RegelInput(
                         callId = UUID.randomUUID().toString(),
                         ansattIdent = "123",
-                        avklaringsbehov = avklaringsbehov,
+                        avklaringsbehovFraBehandlingsflyt = avklaringsbehov,
+                        avklaringsbehovFraPostmottak = null,
                         currentToken = "xxx",
                         søkerIdenter = IdenterRespons(søker = listOf("423"), barn = listOf()),
                         operasjon = Operasjon.SAKSBEHANDLE,

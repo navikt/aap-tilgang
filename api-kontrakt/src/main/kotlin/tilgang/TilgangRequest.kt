@@ -10,3 +10,9 @@ data class BehandlingRequest(
     val avklaringsbehovKode: String?,
     val operasjon: Operasjon
 )
+
+data class JournalpostRequest(
+    val journalpostId: Long,
+    val avklaringsbehovKode: String?,
+    val operasjon: Operasjon
+)

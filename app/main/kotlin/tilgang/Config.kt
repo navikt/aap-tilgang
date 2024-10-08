@@ -31,6 +31,7 @@ data class Config(
     val pdlConfig: PdlConfig = PdlConfig(),
     val msGraphConfig: MsGraphConfig = MsGraphConfig(),
     val behandlingsflytConfig: BehandlingsflytConfig = BehandlingsflytConfig(),
+    val safConfig: SafConfig = SafConfig(),
     val skjermingConfig: SkjermingConfig = SkjermingConfig(),
     val nomConfig: NOMConfig = NOMConfig(),
     val redis: RedisConfig = RedisConfig()
@@ -40,6 +41,11 @@ data class PdlConfig(
     val baseUrl: String = getEnvVar("PDL_BASE_URL"),
     val audience: String = getEnvVar("PDL_AUDIENCE"),
     val scope: String = getEnvVar("PDL_SCOPE")
+)
+
+data class SafConfig(
+    val baseUrl: String = getEnvVar("SAF_BASE_URL"),
+    val scope: String = getEnvVar("SAF_SCOPE")
 )
 
 data class MsGraphConfig(

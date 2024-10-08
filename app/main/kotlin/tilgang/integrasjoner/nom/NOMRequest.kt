@@ -1,6 +1,8 @@
 package tilgang.integrasjoner.nom
 
-internal data class NOMRequest(val query: String, val variables: Variables)  {
+import tilgang.graphql.asQuery
+
+internal data class NOMRequest(val query: String, val variables: Variables) {
     data class Variables(val personident: String)
 
     companion object {
@@ -19,5 +21,3 @@ val RESSURS_PERSONNUMMER_TIL_NAVIDENT_QUERY = """
         }
     }
 """.trimIndent()
-
-fun String.asQuery() = this.replace("\n", "")
