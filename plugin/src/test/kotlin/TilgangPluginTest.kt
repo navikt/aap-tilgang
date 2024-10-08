@@ -17,13 +17,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
-import no.nav.aap.tilgang.Behandlingsreferanse
-import no.nav.aap.tilgang.Ressurs
-import no.nav.aap.tilgang.RessursType
-import no.nav.aap.tilgang.Saksreferanse
-import no.nav.aap.tilgang.authorizedBehandlingPost
-import no.nav.aap.tilgang.authorizedGet
-import no.nav.aap.tilgang.authorizedSakPost
+import no.nav.aap.tilgang.*
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
@@ -60,8 +54,7 @@ class TilgangPluginTest {
         fun NormalOpenAPIRoute.getTestRoute() {
             route("testApi/sak/{saksnummer}") {
                 authorizedGet<TestReferanse, Saksinfo>(
-                    Operasjon.SE,
-                    Ressurs("saksnummer", RessursType.Sak)
+                    SakPathParam("saksnummer")
                 ) { req ->
                     respond(Saksinfo(saksnummer = req.saksnummer))
                 }

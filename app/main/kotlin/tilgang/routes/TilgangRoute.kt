@@ -7,14 +7,15 @@ import com.papsign.ktor.openapigen.route.route
 import io.ktor.server.request.*
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import tilgang.BehandlingRequest
 import tilgang.Role
+import tilgang.SakRequest
+import tilgang.TilgangResponse
 import tilgang.auth.ident
 import tilgang.auth.roller
 import tilgang.auth.token
 import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytClient
 import tilgang.metrics.httpCallCounter
-import tilgang.TilgangRequest
-import tilgang.TilgangResponse
 import tilgang.regler.RegelInput
 import tilgang.regler.RegelService
 import tilgang.regler.parseRoller
@@ -26,36 +27,49 @@ fun NormalOpenAPIRoute.tilgang(
     prometheus: PrometheusMeterRegistry
 ) {
     route("/tilgang") {
-        post<Unit, TilgangResponse, TilgangRequest> { _, req ->
-            prometheus.httpCallCounter("/tilgang").increment()
+        route("/sak") {
+            post<Unit, TilgangResponse, SakRequest> { _, req ->
+                prometheus.httpCallCounter("/tilgang/sak").increment()
 
-            val callId = pipeline.context.request.header("Nav-CallId") ?: "ukjent"
+                val callId = pipeline.context.request.header("Nav-CallId") ?: "ukjent"
 
-            val token = token()
-            val roller = parseRoller(rolesWithGroupIds = roles, roller())
-
-            require(req.saksnummer != null || req.behandlingsreferanse != null)
-            val identer = when (req.saksnummer != null) {
-                true -> behandlingsflytClient.hentIdenterForSak(
+                val token = token()
+                val roller = parseRoller(rolesWithGroupIds = roles, roller())
+                val identer = behandlingsflytClient.hentIdenterForSak(
                     token,
-                    req.saksnummer!!
+                    req.saksnummer
                 )
 
-                false -> behandlingsflytClient.hentIdenterForBehandling(
-                    token,
-                    req.behandlingsreferanse!!
+                val regelInput = RegelInput(
+                    callId, ident(), token, roller, identer, null, req.operasjon
                 )
+                val harTilgang = regelService.vurderTilgang(regelInput)
+
+                respond(TilgangResponse(harTilgang))
             }
+        }
+        route("/behandling") {
+            post<Unit, TilgangResponse, BehandlingRequest> { _, req ->
+                prometheus.httpCallCounter("/tilgang/behandling").increment()
 
-            val avklaringsbehov =
-                if (req.avklaringsbehovKode != null) Definisjon.forKode(req.avklaringsbehovKode!!) else null
+                val callId = pipeline.context.request.header("Nav-CallId") ?: "ukjent"
 
-            val regelInput = RegelInput(
-                callId, ident(), token, roller, identer, avklaringsbehov, req.operasjon
-            )
-            val harTilgang = regelService.vurderTilgang(regelInput)
+                val token = token()
+                val roller = parseRoller(rolesWithGroupIds = roles, roller())
+                val identer = behandlingsflytClient.hentIdenterForBehandling(
+                    token,
+                    req.behandlingsreferanse
+                )
+                val avklaringsbehov =
+                    if (req.avklaringsbehovKode != null) Definisjon.forKode(req.avklaringsbehovKode!!) else null
 
-            respond(TilgangResponse(harTilgang))
+                val regelInput = RegelInput(
+                    callId, ident(), token, roller, identer, avklaringsbehov, req.operasjon
+                )
+                val harTilgang = regelService.vurderTilgang(regelInput)
+
+                respond(TilgangResponse(harTilgang))
+            }
         }
     }
 }
