@@ -88,7 +88,7 @@ class PdlGraphQLClient(
             accept(ContentType.Application.Json)
             header("Nav-Call-Id", callId)
             header("TEMA", "AAP")
-            header("Behandlingsnummer", "B287")
+            header("Behandlingsnummer", BEHANDLINGSNUMMER_AAP_SAKSBEHANDLING)
             bearerAuth(accessToken)
             contentType(ContentType.Application.Json)
             setBody(query)
@@ -105,6 +105,7 @@ class PdlGraphQLClient(
     companion object {
         private const val PERSON_BOLK_PREFIX = "personBolk"
         private const val GEO_PREFIX = "geografiskTilknytning"
+        private const val BEHANDLINGSNUMMER_AAP_SAKSBEHANDLING = "B287"
     }
 }
 
