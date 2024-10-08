@@ -20,7 +20,7 @@ fun NormalOpenAPIRoute.tilgang(
 ) {
     route("/tilgang") {
         route("/sak") {
-            post<Unit, TilgangResponse, SakRequest> { _, req ->
+            post<Unit, TilgangResponse, SakTilgangRequest> { _, req ->
                 prometheus.httpCallCounter("/tilgang/sak").increment()
 
                 val callId = pipeline.context.request.header("Nav-CallId") ?: "ukjent"
@@ -33,7 +33,7 @@ fun NormalOpenAPIRoute.tilgang(
             }
         }
         route("/behandling") {
-            post<Unit, TilgangResponse, BehandlingRequest> { _, req ->
+            post<Unit, TilgangResponse, BehandlingTilgangRequest> { _, req ->
                 prometheus.httpCallCounter("/tilgang/behandling").increment()
 
                 val callId = pipeline.context.request.header("Nav-CallId") ?: "ukjent"

@@ -14,8 +14,8 @@ import no.nav.aap.komponenter.httpklient.auth.AzpName
 import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
 import org.slf4j.LoggerFactory
-import tilgang.BehandlingRequest
-import tilgang.SakRequest
+import tilgang.BehandlingTilgangRequest
+import tilgang.SakTilgangRequest
 
 val log = LoggerFactory.getLogger("TilgangPlugin")
 
@@ -37,7 +37,7 @@ fun Route.installerTilgangGetPlugin(
     behandlingPathParam: BehandlingPathParam
 ) {
     install(buildTilgangTilBehandlingPlugin { call: ApplicationCall ->
-        BehandlingRequest(
+        BehandlingTilgangRequest(
             call.parameters.getOrFail(
                 behandlingPathParam.param
             ), null, Operasjon.SE
@@ -50,7 +50,7 @@ fun Route.installerTilgangGetPlugin(
     sakPathParam: SakPathParam
 ) {
     install(buildTilgangTilSakPlugin { call: ApplicationCall ->
-        SakRequest(
+        SakTilgangRequest(
             call.parameters.getOrFail(sakPathParam.param),
             Operasjon.SE
         )
@@ -78,7 +78,7 @@ fun buildTilgangPluginWithApprovedList(approvedList: List<String>): RouteScopedP
     }
 }
 
-inline fun buildTilgangTilBehandlingPlugin(crossinline parse: suspend (call: ApplicationCall) -> BehandlingRequest): RouteScopedPlugin<Unit> {
+inline fun buildTilgangTilBehandlingPlugin(crossinline parse: suspend (call: ApplicationCall) -> BehandlingTilgangRequest): RouteScopedPlugin<Unit> {
     return createRouteScopedPlugin(name = "TilgangTilBehandlingPlugin") {
         on(AuthenticationChecked) { call ->
             val input = parse(call)
@@ -94,7 +94,7 @@ inline fun buildTilgangTilBehandlingPlugin(crossinline parse: suspend (call: App
     }
 }
 
-inline fun buildTilgangTilSakPlugin(crossinline parse: suspend (call: ApplicationCall) -> SakRequest): RouteScopedPlugin<Unit> {
+inline fun buildTilgangTilSakPlugin(crossinline parse: suspend (call: ApplicationCall) -> SakTilgangRequest): RouteScopedPlugin<Unit> {
     return createRouteScopedPlugin(name = "TilgangPlugin") {
         on(AuthenticationChecked) { call ->
             val input = parse(call)
@@ -112,19 +112,19 @@ inline fun buildTilgangTilSakPlugin(crossinline parse: suspend (call: Applicatio
 
 suspend inline fun <reified T : Behandlingsreferanse> ApplicationCall.parseBehandlingFraRequestBody(
     operasjon: Operasjon
-): BehandlingRequest {
+): BehandlingTilgangRequest {
     val referanseObject: T = DefaultJsonMapper.fromJson<T>(receiveText())
     val referanse = referanseObject.hentBehandlingsreferanse()
     val avklaringsbehovKode = referanseObject.hentAvklaringsbehovKode()
-    return BehandlingRequest(referanse, avklaringsbehovKode, operasjon)
+    return BehandlingTilgangRequest(referanse, avklaringsbehovKode, operasjon)
 }
 
 suspend inline fun <reified T : Saksreferanse> ApplicationCall.parseSakFraRequestBody(
     operasjon: Operasjon
-): SakRequest {
+): SakTilgangRequest {
     val referanseObject: T = DefaultJsonMapper.fromJson<T>(receiveText())
     val referanse = referanseObject.hentSaksreferanse()
-    return SakRequest(referanse, operasjon)
+    return SakTilgangRequest(referanse, operasjon)
 }
 
 fun ApplicationCall.azn(): AzpName {

@@ -1,11 +1,11 @@
 package tilgang
 
-data class SakRequest (
+data class SakTilgangRequest (
     val saksnummer: String,
     val operasjon: Operasjon
 )
 
-data class BehandlingRequest(
+data class BehandlingTilgangRequest(
     val behandlingsreferanse: String,
     val avklaringsbehovKode: String?,
     val operasjon: Operasjon

@@ -8,8 +8,8 @@ import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.OnBehalfOfTokenProvider
 import no.nav.aap.komponenter.config.requiredConfigForKey
-import tilgang.BehandlingRequest
-import tilgang.SakRequest
+import tilgang.BehandlingTilgangRequest
+import tilgang.SakTilgangRequest
 import java.net.URI
 
 object TilgangGateway {
@@ -21,7 +21,7 @@ object TilgangGateway {
         tokenProvider = OnBehalfOfTokenProvider,
     )
 
-    fun harTilgangTilSak(body: SakRequest, currentToken: OidcToken): Boolean {
+    fun harTilgangTilSak(body: SakTilgangRequest, currentToken: OidcToken): Boolean {
         val httpRequest = PostRequest(
             body = body,
             currentToken = currentToken
@@ -35,7 +35,7 @@ object TilgangGateway {
         return respons.tilgang
     }
 
-    fun harTilgangTilBehandling(body: BehandlingRequest, currentToken: OidcToken): Boolean {
+    fun harTilgangTilBehandling(body: BehandlingTilgangRequest, currentToken: OidcToken): Boolean {
         val httpRequest = PostRequest(
             body = body,
             currentToken = currentToken

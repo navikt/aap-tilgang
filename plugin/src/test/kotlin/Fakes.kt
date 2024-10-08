@@ -18,8 +18,8 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.coroutines.runBlocking
 import org.intellij.lang.annotations.Language
-import tilgang.BehandlingRequest
-import tilgang.SakRequest
+import tilgang.BehandlingTilgangRequest
+import tilgang.SakTilgangRequest
 import tilgang.TilgangResponse
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -67,12 +67,12 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
         routing {
             post("/tilgang/sak") {
                 // TODO: Test kontrakten på en litt mer fornuftig måte
-                val req = call.receive<SakRequest>()
+                val req = call.receive<SakTilgangRequest>()
                 call.respond(TilgangResponse(true))
             }
             post("/tilgang/behandling") {
                 // TODO: Test kontrakten på en litt mer fornuftig måte
-                val req = call.receive<BehandlingRequest>()
+                val req = call.receive<BehandlingTilgangRequest>()
                 call.respond(TilgangResponse(true))
             }
         }

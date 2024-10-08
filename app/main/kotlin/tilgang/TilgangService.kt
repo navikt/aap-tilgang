@@ -19,7 +19,7 @@ class TilgangService(
 
     suspend fun harTilgangTilSak(
         ansattIdent: String,
-        req: SakRequest,
+        req: SakTilgangRequest,
         roller: List<Rolle>,
         token: String,
         callId: String
@@ -40,7 +40,7 @@ class TilgangService(
 
     suspend fun harTilgangTilBehandling(
         ansattIdent: String,
-        req: BehandlingRequest,
+        req: BehandlingTilgangRequest,
         roller: List<Rolle>,
         token: String,
         callId: String
