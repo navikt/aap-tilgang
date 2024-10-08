@@ -64,7 +64,7 @@ class TilgangService(
 
     suspend fun harTilgangTilJournalpost(
         ansattIdent: String,
-        req: JournalpostRequest,
+        req: JournalpostTilgangRequest,
         roller: List<Rolle>,
         token: String,
         callId: String

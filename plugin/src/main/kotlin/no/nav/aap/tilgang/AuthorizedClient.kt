@@ -24,11 +24,29 @@ inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : B
     post<TParams, TResponse, TRequest> { params, request -> body(params, request) }
 }
 
+inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : Journalpostreferanse> NormalOpenAPIRoute.authorizedJournalpostPost(
+    operasjon: Operasjon,
+    noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams, TRequest) -> Unit
+) {
+    ktorRoute.installerTilgangTilJournalpostPlugin<TRequest>(operasjon)
+    @Suppress("UnauthorizedPost")
+    post<TParams, TResponse, TRequest> { params, request -> body(params, request) }
+}
+
 inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.authorizedGet(
     sakPathParam: SakPathParam,
     noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams) -> Unit
 ) {
     ktorRoute.installerTilgangGetPlugin(sakPathParam)
+    @Suppress("UnauthorizedGet")
+    get<TParams, TResponse> { params -> body(params) }
+}
+
+inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.authorizedGet(
+    journalpostPathParam: JournalpostPathParam,
+    noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams) -> Unit
+) {
+    ktorRoute.installerTilgangGetPlugin(journalpostPathParam)
     @Suppress("UnauthorizedGet")
     get<TParams, TResponse> { params -> body(params) }
 }

@@ -50,6 +50,15 @@ class TilgangPluginTest {
                 return null
             }
         }
+        
+        class Journalpostinfo(val journalpostId: Long): Journalpostreferanse {
+            override fun hentJournalpostreferanse(): Long {
+                return journalpostId
+            }
+            override fun hentAvklaringsbehovKode(): String? {
+                return null
+            }
+        }
 
         fun NormalOpenAPIRoute.getTestRoute() {
             route("testApi/sak/{saksnummer}") {
@@ -86,6 +95,18 @@ class TilgangPluginTest {
             }
         }
 
+        fun NormalOpenAPIRoute.postTestRouteJournalpost() {
+            route(
+                "testApi/journalpost",
+            ) {
+                authorizedJournalpostPost<Unit, Journalpostinfo, Journalpostinfo>(
+                    Operasjon.SAKSBEHANDLE,
+                ) { _, dto ->
+                    respond(Journalpostinfo(1337L))
+                }
+            }
+        }
+
         // Starter server
         private val server = embeddedServer(Netty, port = 8080) {
             install(OpenAPIGen)
@@ -96,6 +117,7 @@ class TilgangPluginTest {
                 getTestRoute()
                 postTestRouteSak()
                 postTestRouteBehandling()
+                postTestRouteJournalpost()
             }
             module(fakes)
         }.start()
@@ -155,6 +177,17 @@ class TilgangPluginTest {
         )
 
         assertThat(res?.behandlingsnummer).isEqualTo(uuid)
+    }
+
+    @Test
+    fun `Skal kunne hente journalpostid fra request body`() {
+        val res = client.post<_, Journalpostinfo>(
+            URI.create("http://localhost:8080/")
+                .resolve("testApi/journalpost"),
+            PostRequest(Journalpostinfo(1337L))
+        )
+
+        assertThat(res?.journalpostId).isEqualTo(1337L)
     }
 
 }

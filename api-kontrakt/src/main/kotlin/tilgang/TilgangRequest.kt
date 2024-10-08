@@ -11,7 +11,7 @@ data class BehandlingTilgangRequest(
     val operasjon: Operasjon
 )
 
-data class JournalpostRequest(
+data class JournalpostTilgangRequest(
     val journalpostId: Long,
     val avklaringsbehovKode: String?,
     val operasjon: Operasjon

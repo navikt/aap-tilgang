@@ -45,7 +45,7 @@ fun NormalOpenAPIRoute.tilgang(
             }
         }
         route("/journalpost") {
-            post<Unit, TilgangResponse, JournalpostRequest> { _, req ->
+            post<Unit, TilgangResponse, JournalpostTilgangRequest> { _, req ->
                 prometheus.httpCallCounter("/tilgang/journalpost").increment()
 
                 val callId = pipeline.context.request.header("Nav-CallId") ?: "ukjent"

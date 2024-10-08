@@ -15,6 +15,7 @@ import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
 import org.slf4j.LoggerFactory
 import tilgang.BehandlingTilgangRequest
+import tilgang.JournalpostTilgangRequest
 import tilgang.SakTilgangRequest
 
 val log = LoggerFactory.getLogger("TilgangPlugin")
@@ -31,6 +32,13 @@ inline fun <reified T : Saksreferanse> Route.installerTilgangTilSakPostPlugin(
 ) {
     install(DoubleReceive)
     install(buildTilgangTilSakPlugin { call: ApplicationCall -> call.parseSakFraRequestBody<T>(operasjon) })
+}
+
+inline fun <reified T : Journalpostreferanse> Route.installerTilgangTilJournalpostPlugin(
+    operasjon: Operasjon,
+) {
+    install(DoubleReceive)
+    install(buildTilgangTilJournalpostPlugin { call: ApplicationCall -> call.parseJournalpostFraRequestBody<T>(operasjon) })
 }
 
 fun Route.installerTilgangGetPlugin(
@@ -52,6 +60,18 @@ fun Route.installerTilgangGetPlugin(
     install(buildTilgangTilSakPlugin { call: ApplicationCall ->
         SakTilgangRequest(
             call.parameters.getOrFail(sakPathParam.param),
+            Operasjon.SE
+        )
+    })
+}
+
+fun Route.installerTilgangGetPlugin(
+    journalpostPathParam: JournalpostPathParam
+) {
+    install(buildTilgangTilJournalpostPlugin { call: ApplicationCall ->
+        JournalpostTilgangRequest(
+            call.parameters.getOrFail(journalpostPathParam.param).toLong(),
+            null,
             Operasjon.SE
         )
     })
@@ -95,11 +115,27 @@ inline fun buildTilgangTilBehandlingPlugin(crossinline parse: suspend (call: App
 }
 
 inline fun buildTilgangTilSakPlugin(crossinline parse: suspend (call: ApplicationCall) -> SakTilgangRequest): RouteScopedPlugin<Unit> {
-    return createRouteScopedPlugin(name = "TilgangPlugin") {
+    return createRouteScopedPlugin(name = "TilgangTilSakPlugin") {
         on(AuthenticationChecked) { call ->
             val input = parse(call)
             val harTilgang =
                 TilgangGateway.harTilgangTilSak(
+                    input,
+                    currentToken = call.token()
+                )
+            if (!harTilgang) {
+                call.respond(HttpStatusCode.Forbidden, "Ingen tilgang")
+            }
+        }
+    }
+}
+
+inline fun buildTilgangTilJournalpostPlugin(crossinline parse: suspend (call: ApplicationCall) -> JournalpostTilgangRequest): RouteScopedPlugin<Unit> {
+    return createRouteScopedPlugin(name = "TilgangTilJournalpostPlugin") {
+        on(AuthenticationChecked) { call ->
+            val input = parse(call)
+            val harTilgang =
+                TilgangGateway.harTilgangTilJournalpost(
                     input,
                     currentToken = call.token()
                 )
@@ -127,6 +163,15 @@ suspend inline fun <reified T : Saksreferanse> ApplicationCall.parseSakFraReques
     return SakTilgangRequest(referanse, operasjon)
 }
 
+suspend inline fun <reified T : Journalpostreferanse> ApplicationCall.parseJournalpostFraRequestBody(
+    operasjon: Operasjon
+): JournalpostTilgangRequest {
+    val referanseObject: T = DefaultJsonMapper.fromJson<T>(receiveText())
+    val referanse = referanseObject.hentJournalpostreferanse()
+    val avklaringsbehovKode = referanseObject.hentAvklaringsbehovKode()
+    return JournalpostTilgangRequest(referanse,avklaringsbehovKode, operasjon)
+}
+
 fun ApplicationCall.azn(): AzpName {
     val azp = principal<JWTPrincipal>()?.getClaim("azp_name", String::class)
     if (azp == null) {
@@ -141,5 +186,10 @@ interface Saksreferanse {
 
 interface Behandlingsreferanse {
     fun hentBehandlingsreferanse(): String
+    fun hentAvklaringsbehovKode(): String?
+}
+
+interface Journalpostreferanse {
+    fun hentJournalpostreferanse(): Long
     fun hentAvklaringsbehovKode(): String?
 }
