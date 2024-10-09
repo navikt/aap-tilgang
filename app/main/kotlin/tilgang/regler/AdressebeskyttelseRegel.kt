@@ -13,7 +13,8 @@ data object AdressebeskyttelseRegel : Regel<AdressebeskyttelseInput> {
     private fun sjekkAdressebeskyttelse(roller: List<Rolle>, personer: List<PersonResultat>): Boolean {
         val adresseBeskyttelse = personer.flatMap { it.adressebeskyttelse }
 
-        return adresseBeskyttelse.isEmpty()
+        return adresseBeskyttelse.isEmpty() 
+                || adresseBeskyttelse.all { it === Gradering.UGRADERT }
                 || (Rolle.STRENGT_FORTROLIG_ADRESSE in roller && finnStrengeste(adresseBeskyttelse) in listOf(
             Gradering.STRENGT_FORTROLIG,
             Gradering.STRENGT_FORTROLIG_UTLAND
@@ -25,7 +26,8 @@ data object AdressebeskyttelseRegel : Regel<AdressebeskyttelseInput> {
         return when {
             Gradering.STRENGT_FORTROLIG in adresseBeskyttelser -> Gradering.STRENGT_FORTROLIG
             Gradering.STRENGT_FORTROLIG_UTLAND in adresseBeskyttelser -> Gradering.STRENGT_FORTROLIG_UTLAND
-            else -> Gradering.FORTROLIG
+            Gradering.FORTROLIG in adresseBeskyttelser -> Gradering.FORTROLIG
+            else -> Gradering.UGRADERT
         }
     }
 }

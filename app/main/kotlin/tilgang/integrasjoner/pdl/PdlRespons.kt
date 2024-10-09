@@ -61,5 +61,6 @@ internal data class Adressebeskyttelse(
 enum class Gradering {
     FORTROLIG,
     STRENGT_FORTROLIG_UTLAND,
-    STRENGT_FORTROLIG
+    STRENGT_FORTROLIG,
+    UGRADERT
 }
