@@ -1,11 +1,11 @@
 plugins {
     id("aap-tilgang.conventions")
     kotlin("jvm")
-    id("io.ktor.plugin") version "2.3.12"
+    id("io.ktor.plugin") version "3.0.0"
     application
 }
 
-val ktorVersion = "2.3.12"
+val ktorVersion = "3.0.0"
 val aapLibVersion = "3.7.145"
 val behandlingsflytVersjon = "0.0.19"
 val postmottakVersjon = "0.0.10"
@@ -35,7 +35,7 @@ dependencies {
     implementation("io.ktor:ktor-client-core:$ktorVersion")
     implementation("io.ktor:ktor-client-logging:$ktorVersion")
 
-    implementation("dev.forst:ktor-openapi-generator:0.6.1")
+    implementation("no.nav:ktor-openapi-generator:1.0.46")
     implementation("io.micrometer:micrometer-registry-prometheus:1.13.4")
     implementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.2")

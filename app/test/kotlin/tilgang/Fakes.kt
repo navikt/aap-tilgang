@@ -18,7 +18,7 @@ class Fakes(azurePort: Int = 0): AutoCloseable {
     private val log: Logger = LoggerFactory.getLogger(Fakes::class.java)
     private val azure = embeddedServer(Netty, port = azurePort, module = { azureFake() }).start()
     val redis = Redis(InitTestRedis.uri)
-    
+
     init {
         Thread.currentThread().setUncaughtExceptionHandler { _, e -> log.error("Uhåndtert feil", e) }
         // Azure
@@ -38,10 +38,12 @@ class Fakes(azurePort: Int = 0): AutoCloseable {
         redis.close()
     }
 
-    private fun NettyApplicationEngine.port(): Int =
-        runBlocking { resolvedConnectors() }
-            .first { it.type == ConnectorType.HTTP }
+    private fun EmbeddedServer<*, *>.port(): Int {
+        return runBlocking {
+            this@port.engine.resolvedConnectors()
+        }.first { it.type == ConnectorType.HTTP }
             .port
+    }
 
     private fun Application.azureFake() {
         install(ContentNegotiation) {

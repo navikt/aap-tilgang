@@ -25,7 +25,7 @@ fun NormalOpenAPIRoute.tilgang(
             post<Unit, TilgangResponse, SakTilgangRequest> { _, req ->
                 prometheus.httpCallCounter("/tilgang/sak").increment()
 
-                val callId = pipeline.context.request.header("Nav-CallId") ?: "ukjent"
+                val callId = pipeline.call.request.header("Nav-CallId") ?: "ukjent"
                 val token = token()
                 val roller = parseRoller(rolesWithGroupIds = roles, roller())
 
@@ -38,10 +38,10 @@ fun NormalOpenAPIRoute.tilgang(
             post<Unit, TilgangResponse, BehandlingTilgangRequest> { _, req ->
                 prometheus.httpCallCounter("/tilgang/behandling").increment()
 
-                val callId = pipeline.context.request.header("Nav-CallId") ?: "ukjent"
+                val callId = pipeline.call.request.header("Nav-CallId") ?: "ukjent"
                 val token = token()
                 val roller = parseRoller(rolesWithGroupIds = roles, roller())
-                
+
                 val harTilgang = tilgangService.harTilgangTilBehandling(ident(), req, roller, token, callId)
                 respond(TilgangResponse(harTilgang))
             }
@@ -55,10 +55,10 @@ fun NormalOpenAPIRoute.tilgang(
                     respondWithStatus(HttpStatusCode.BadRequest)
                 }
 
-                val callId = pipeline.context.request.header("Nav-CallId") ?: "ukjent"
+                val callId = pipeline.call.request.header("Nav-CallId") ?: "ukjent"
                 val token = token()
                 val roller = parseRoller(rolesWithGroupIds = roles, roller())
-                
+
                 val harTilgang = tilgangService.harTilgangTilJournalpost(ident(), req, roller, token, callId)
 
                 respond(TilgangResponse(harTilgang))
