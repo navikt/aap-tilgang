@@ -99,7 +99,7 @@ fun buildTilgangPluginWithApprovedList(approvedList: List<String>): RouteScopedP
 }
 
 inline fun buildTilgangTilBehandlingPlugin(crossinline parse: suspend (call: ApplicationCall) -> BehandlingTilgangRequest): RouteScopedPlugin<Unit> {
-    return createRouteScopedPlugin(name = "TilgangTilBehandlingPlugin") {
+    return createRouteScopedPlugin(name = "TilgangPlugin") {
         on(AuthenticationChecked) { call ->
             val input = parse(call)
             val harTilgang =
@@ -115,7 +115,7 @@ inline fun buildTilgangTilBehandlingPlugin(crossinline parse: suspend (call: App
 }
 
 inline fun buildTilgangTilSakPlugin(crossinline parse: suspend (call: ApplicationCall) -> SakTilgangRequest): RouteScopedPlugin<Unit> {
-    return createRouteScopedPlugin(name = "TilgangTilSakPlugin") {
+    return createRouteScopedPlugin(name = "TilgangPlugin") {
         on(AuthenticationChecked) { call ->
             val input = parse(call)
             val harTilgang =
@@ -131,7 +131,7 @@ inline fun buildTilgangTilSakPlugin(crossinline parse: suspend (call: Applicatio
 }
 
 inline fun buildTilgangTilJournalpostPlugin(crossinline parse: suspend (call: ApplicationCall) -> JournalpostTilgangRequest): RouteScopedPlugin<Unit> {
-    return createRouteScopedPlugin(name = "TilgangTilJournalpostPlugin") {
+    return createRouteScopedPlugin(name = "TilgangPlugin") {
         on(AuthenticationChecked) { call ->
             val input = parse(call)
             val harTilgang =
@@ -169,7 +169,7 @@ suspend inline fun <reified T : Journalpostreferanse> ApplicationCall.parseJourn
     val referanseObject: T = DefaultJsonMapper.fromJson<T>(receiveText())
     val referanse = referanseObject.hentJournalpostreferanse()
     val avklaringsbehovKode = referanseObject.hentAvklaringsbehovKode()
-    return JournalpostTilgangRequest(referanse,avklaringsbehovKode, operasjon)
+    return JournalpostTilgangRequest(referanse, avklaringsbehovKode, operasjon)
 }
 
 fun ApplicationCall.azn(): AzpName {
