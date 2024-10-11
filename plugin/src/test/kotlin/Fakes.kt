@@ -82,10 +82,12 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
         }
     }
 
-    private fun NettyApplicationEngine.port(): Int =
-        runBlocking { resolvedConnectors() }
-            .first { it.type == ConnectorType.HTTP }
+    private fun EmbeddedServer<*, *>.port(): Int {
+        return runBlocking {
+            this@port.engine.resolvedConnectors()
+        }.first { it.type == ConnectorType.HTTP }
             .port
+    }
 
     init {
         // Azure
