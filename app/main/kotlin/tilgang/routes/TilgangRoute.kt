@@ -3,7 +3,9 @@ package tilgang.routes
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
+import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
+import io.ktor.http.*
 import io.ktor.server.request.*
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import tilgang.*
@@ -47,6 +49,11 @@ fun NormalOpenAPIRoute.tilgang(
         route("/journalpost") {
             post<Unit, TilgangResponse, JournalpostTilgangRequest> { _, req ->
                 prometheus.httpCallCounter("/tilgang/journalpost").increment()
+                
+                if(!(req.operasjon == Operasjon.SAKSBEHANDLE && req.avklaringsbehovKode == null)) {
+                    LOGGER.info("Kan ikke saksbehandle uten avklaringsbehov $req")
+                    respondWithStatus(HttpStatusCode.BadRequest)
+                }
 
                 val callId = pipeline.context.request.header("Nav-CallId") ?: "ukjent"
                 val token = token()
