@@ -1,4 +1,4 @@
-val ktorVersion = "2.3.12"
+val ktorVersion = "3.0.0"
 val komponenterVersjon = "0.0.69"
 
 plugins {
@@ -39,18 +39,17 @@ publishing {
 
 dependencies {
     implementation(project(":api-kontrakt"))
-    
+
     implementation("no.nav.aap.kelvin:httpklient:$komponenterVersjon")
-    implementation("no.nav.aap.kelvin:infrastructure:$komponenterVersjon")    
-    
+    implementation("no.nav.aap.kelvin:infrastructure:$komponenterVersjon")
+
     implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
     implementation("ch.qos.logback:logback-classic:1.5.8")
-    implementation("no.nav:ktor-openapi-generator:1.0.34")
+    implementation("no.nav:ktor-openapi-generator:1.0.46")
     implementation("io.ktor:ktor-server-core:$ktorVersion")
-    implementation("no.nav:ktor-openapi-generator:1.0.34")
 
     implementation("com.nimbusds:nimbus-jose-jwt:9.41.1")
-    
+
     implementation("io.ktor:ktor-server-auth:$ktorVersion")
     implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
     implementation("io.ktor:ktor-server-call-logging:$ktorVersion")
