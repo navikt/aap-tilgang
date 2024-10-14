@@ -71,8 +71,10 @@ class TilgangService(
     ): Boolean {
         val journalpostInfo: SafJournalpost = safClient.hentJournalpostInfo(req.journalpostId, callId)
         val identer = finnIdenterForJournalpost(journalpostInfo, token)
+        
         val avklaringsbehov =
             if (req.avklaringsbehovKode != null) PostmottakDefinisjon.forKode(req.avklaringsbehovKode!!) else null
+        log.debug("Avklaringsbehov: {} - for kode {}", avklaringsbehov, req.avklaringsbehovKode)
 
         val regelInput = RegelInput(
             callId = callId,
