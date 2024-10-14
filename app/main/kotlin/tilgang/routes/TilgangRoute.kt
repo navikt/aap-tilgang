@@ -49,8 +49,8 @@ fun NormalOpenAPIRoute.tilgang(
         route("/journalpost") {
             post<Unit, TilgangResponse, JournalpostTilgangRequest> { _, req ->
                 prometheus.httpCallCounter("/tilgang/journalpost").increment()
-                
-                if(!(req.operasjon == Operasjon.SAKSBEHANDLE && req.avklaringsbehovKode == null)) {
+
+                if (req.operasjon == Operasjon.SAKSBEHANDLE && req.avklaringsbehovKode == null) {
                     LOGGER.info("Kan ikke saksbehandle uten avklaringsbehov $req")
                     respondWithStatus(HttpStatusCode.BadRequest)
                 }
