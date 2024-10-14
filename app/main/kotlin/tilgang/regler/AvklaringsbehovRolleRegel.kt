@@ -6,7 +6,12 @@ import tilgang.Rolle
 
 data object AvklaringsbehovRolleRegel : Regel<AvklaringsbehovRolleInput> {
     override fun vurder(input: AvklaringsbehovRolleInput): Boolean {
-        return kanAvklareBehov(input.avklaringsbehov, input.roller)
+        require(input.avklaringsbehovFraBehandlingsflyt != null || input.avklaringsbehovFraPostmottak != null) { "Avklaringsbehov er påkrevd" }
+        if (input.avklaringsbehovFraBehandlingsflyt != null) {
+            return kanAvklareBehov(input.avklaringsbehovFraBehandlingsflyt, input.roller)
+        } else {
+            return kanAvklareBehov(input.avklaringsbehovFraPostmottak!!, input.roller)
+        }
     }
 
     private fun kanAvklareBehov(avklaringsbehov: Definisjon, roller: List<Rolle>): Boolean {
@@ -32,7 +37,7 @@ data object AvklaringsbehovRolleRegel : Regel<AvklaringsbehovRolleInput> {
             Definisjon.FATTE_VEDTAK -> erBeslutter
         }
     }
-    
+
     private fun kanAvklareBehov(avklaringsbehov: PostmottakDefinisjon, roller: List<Rolle>): Boolean {
         return when (avklaringsbehov) {
             else -> erNaySaksbehandler(roller)
@@ -52,12 +57,18 @@ data object AvklaringsbehovRolleRegel : Regel<AvklaringsbehovRolleInput> {
     }
 }
 
-data class AvklaringsbehovRolleInput(val avklaringsbehov: Definisjon, val roller: List<Rolle>)
+data class AvklaringsbehovRolleInput(
+    val avklaringsbehovFraBehandlingsflyt: Definisjon? = null,
+    val avklaringsbehovFraPostmottak: PostmottakDefinisjon?,
+    val roller: List<Rolle>
+)
 
 data object AvklaringsbehovInputGenerator : InputGenerator<AvklaringsbehovRolleInput> {
     override suspend fun generer(input: RegelInput): AvklaringsbehovRolleInput {
-        val avklaringsbehov =
-            requireNotNull(input.avklaringsbehovFraBehandlingsflyt) { "Avklaringsbehov er påkrevd" }
-        return AvklaringsbehovRolleInput(avklaringsbehov, input.roller)
+        return AvklaringsbehovRolleInput(
+            input.avklaringsbehovFraBehandlingsflyt,
+            input.avklaringsbehovFraPostmottak,
+            input.roller
+        )
     }
 }
