@@ -91,7 +91,7 @@ class TilgangService(
     private suspend fun finnIdenterForJournalpost(journalpost: SafJournalpost, token: String): IdenterRespons {
         val saksnummer = journalpost.sak?.fagsakId
         if(saksnummer != null) {
-            return behandlingsflytClient.hentIdenterForSak(saksnummer, token)
+            return behandlingsflytClient.hentIdenterForSak(currentToken = token, saksnummer)
         } else {
             val søkerIdent = journalpost.bruker?.id
             requireNotNull(søkerIdent)
