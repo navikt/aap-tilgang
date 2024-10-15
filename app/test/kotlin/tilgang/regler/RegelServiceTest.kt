@@ -10,7 +10,6 @@ import org.junit.jupiter.params.provider.EnumSource
 import tilgang.Fakes
 import tilgang.Operasjon
 import tilgang.SkjermingConfig
-import tilgang.auth.AzureConfig
 import tilgang.enhet.EnhetService
 import tilgang.geo.GeoService
 import tilgang.integrasjoner.behandlingsflyt.IdenterRespons
@@ -59,11 +58,11 @@ class RegelServiceTest {
             }
             val enhetService = EnhetService(graphClient)
             val skjermingClient = object : SkjermingClient(
-                AzureConfig(
+                no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureConfig(
                     clientId = "",
                     clientSecret = "",
-                    tokenEndpoint = URI.create("http://localhost:1234").resolve("/token").toURL(),
-                    jwks = URI.create("http://localhost:1234").resolve("/jwks").toURL(),
+                    tokenEndpoint = URI.create("http://localhost:1234").resolve("/token"),
+                    jwksUri = URI.create("http://localhost:1234").resolve("/jwks").toString(),
                     issuer = ""
                 ), SkjermingConfig("skjerming_base_url", "skjerming_scope"), it.redis, prometheus
             ) {

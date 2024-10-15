@@ -5,11 +5,11 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureConfig
 import org.slf4j.LoggerFactory
 import tilgang.LOGGER
 import tilgang.NOMConfig
 import tilgang.auth.AzureAdTokenProvider
-import tilgang.auth.AzureConfig
 import tilgang.http.HttpClientFactory
 import tilgang.metrics.cacheHit
 import tilgang.metrics.cacheMiss
@@ -30,7 +30,7 @@ open class NOMClient(
     private val nomConfig: NOMConfig,
     private val prometheus: PrometheusMeterRegistry
 ) : INOMClient {
-    val httpClient = HttpClientFactory.create()
+    private val httpClient = HttpClientFactory.create()
     private val azureTokenProvider = AzureAdTokenProvider(
         azureConfig,
         nomConfig.scope

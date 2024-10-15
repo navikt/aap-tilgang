@@ -5,11 +5,11 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlinx.coroutines.runBlocking
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureConfig
 import org.slf4j.LoggerFactory
 import tilgang.LOGGER
 import tilgang.SafConfig
 import tilgang.auth.AzureAdTokenProvider
-import tilgang.auth.AzureConfig
 import tilgang.http.HttpClientFactory
 import tilgang.integrasjoner.saf.SafException
 import tilgang.metrics.cacheHit

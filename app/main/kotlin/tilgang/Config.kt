@@ -1,19 +1,13 @@
 package tilgang
 
-import tilgang.auth.AzureConfig
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureConfig
 import java.net.URI
 import java.util.*
 
 private fun getEnvVar(envar: String) = System.getenv(envar) ?: error("missing envvar $envar")
 
 data class Config(
-    val azureConfig: AzureConfig = AzureConfig(
-        clientId = getEnvVar("AZURE_APP_CLIENT_ID"),
-        clientSecret = getEnvVar("AZURE_APP_CLIENT_SECRET"),
-        tokenEndpoint = URI.create(getEnvVar("AZURE_OPENID_CONFIG_TOKEN_ENDPOINT")).toURL(),
-        jwks = URI.create(getEnvVar("AZURE_OPENID_CONFIG_JWKS_URI")).toURL(),
-        issuer = getEnvVar("AZURE_OPENID_CONFIG_ISSUER")
-    ),
+    val azureConfig: AzureConfig = AzureConfig(),
     val roles: List<Role> = listOf(
         Role(Rolle.VEILEDER, UUID.fromString(getEnvVar("AAP_VEILEDER"))),
         Role(Rolle.SAKSBEHANDLER, UUID.fromString(getEnvVar("AAP_SAKSBEHANDLER"))),

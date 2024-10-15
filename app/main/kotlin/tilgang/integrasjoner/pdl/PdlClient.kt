@@ -4,10 +4,10 @@ import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureConfig
 import tilgang.LOGGER
 import tilgang.PdlConfig
 import tilgang.auth.AzureAdTokenProvider
-import tilgang.auth.AzureConfig
 import tilgang.http.HttpClientFactory
 import tilgang.metrics.cacheHit
 import tilgang.metrics.cacheMiss
