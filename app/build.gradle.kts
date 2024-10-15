@@ -34,7 +34,7 @@ dependencies {
 
     implementation("no.nav:ktor-openapi-generator:1.0.46")
     implementation("no.nav.aap.kelvin:server:1.0.16")
-    implementation("io.micrometer:micrometer-registry-prometheus:1.13.4")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.13.6")
     implementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.0")
     implementation("ch.qos.logback:logback-classic:1.5.8")
