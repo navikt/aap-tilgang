@@ -18,13 +18,10 @@ dependencies {
     implementation(project(":api-kontrakt"))
     implementation("no.nav.aap.behandlingsflyt:kontrakt:$behandlingsflytVersjon")
     implementation("no.nav.aap.postmottak:kontrakt:$postmottakVersjon")
-    implementation("io.ktor:ktor-server-auth:$ktorVersion")
-    implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
     implementation("io.ktor:ktor-server-call-logging:$ktorVersion")
     implementation("io.ktor:ktor-server-call-logging-jvm:$ktorVersion")
     implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-server-core:$ktorVersion")
-    implementation("io.ktor:ktor-server-metrics-micrometer:$ktorVersion")
     implementation("io.ktor:ktor-server-netty:$ktorVersion")
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
 
@@ -36,6 +33,7 @@ dependencies {
     implementation("io.ktor:ktor-client-logging:$ktorVersion")
 
     implementation("no.nav:ktor-openapi-generator:1.0.46")
+    implementation("no.nav.aap.kelvin:server:1.0.16")
     implementation("io.micrometer:micrometer-registry-prometheus:1.13.4")
     implementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.0")

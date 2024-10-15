@@ -3,7 +3,6 @@ package tilgang
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
-import tilgang.auth.AzureConfig
 import java.net.URI
 
 fun main() {
@@ -12,11 +11,11 @@ fun main() {
     embeddedServer(Netty, port = 8080) {
         api(
             Config(
-                azureConfig = AzureConfig(
+                azureConfig = no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureConfig(
                     clientId = "",
                     clientSecret = "",
-                    tokenEndpoint = URI.create("http://localhost:${fakes.azurePort()}").resolve("/token").toURL(),
-                    jwks = URI.create("http://localhost:${fakes.azurePort()}").resolve("/jwks").toURL(),
+                    tokenEndpoint = URI.create("http://localhost:${fakes.azurePort()}").resolve("/token"),
+                    jwksUri = URI.create("http://localhost:${fakes.azurePort()}").resolve("/jwks").toString(),
                     issuer = ""
                 ),
                 redis = RedisConfig(

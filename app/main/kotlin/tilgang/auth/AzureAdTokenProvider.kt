@@ -4,12 +4,13 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import io.ktor.client.*
 import io.ktor.client.call.*
-import io.ktor.http.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
+import io.ktor.http.*
 import io.ktor.serialization.jackson.*
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureConfig
 import tilgang.LOGGER
 
 class AzureAdTokenProvider(
@@ -33,7 +34,7 @@ class AzureAdTokenProvider(
 
     private suspend fun getAccessToken(cacheKey: String, body: () -> String): String {
         val token = cache.get(cacheKey)
-            ?: client.post(config.tokenEndpoint) {
+            ?: client.post(config.tokenEndpoint.toURL()) {
                 accept(ContentType.Application.Json)
                 contentType(ContentType.Application.FormUrlEncoded)
                 setBody(body())
