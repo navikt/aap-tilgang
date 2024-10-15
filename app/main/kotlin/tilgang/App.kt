@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.papsign.ktor.openapigen.OpenAPIGen
 import com.papsign.ktor.openapigen.route.apiRouting
-import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import io.ktor.http.*
 import io.ktor.serialization.jackson.*
 import io.ktor.server.application.*
@@ -18,12 +17,9 @@ import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import io.ktor.util.*
-import io.ktor.utils.io.KtorDsl
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import no.nav.aap.postmottak.saf.graphql.SafGraphqlClient
-import tilgang.routes.actuator
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
@@ -44,6 +40,7 @@ import tilgang.integrasjoner.skjerming.SkjermingClient
 import tilgang.integrasjoner.skjerming.SkjermingException
 import tilgang.redis.Redis
 import tilgang.regler.RegelService
+import tilgang.routes.actuator
 import tilgang.routes.tilgang
 
 val LOGGER: Logger = LoggerFactory.getLogger("aap-tilgang")
@@ -95,7 +92,7 @@ fun Application.api(
             call.respondText(text = "Feil i PDL: ${cause.message}", status = HttpStatusCode.InternalServerError)
         }
         exception<MsGraphException> { call, cause ->
-            LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause.stackTraceToString())
+            LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause)
             LOGGER.error("Feil i MS Graph: ${cause.message} \n ${cause.stackTraceToString()}")
             call.respondText(
                 text = "Feil i Microsoft Graph: ${cause.message}",
@@ -103,7 +100,7 @@ fun Application.api(
             )
         }
         exception<BehandlingsflytException> { call, cause ->
-            LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause.stackTraceToString())
+            LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause)
             LOGGER.error("Feil i behandlingsflyt: ${cause.message} \n ${cause.stackTraceToString()}")
             call.respondText(
                 text = "Feil i behandlingsflyt: ${cause.message}",
@@ -111,7 +108,7 @@ fun Application.api(
             )
         }
         exception<SafException> { call, cause ->
-            LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause.stackTraceToString())
+            LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause)
             LOGGER.error("Feil i SAF: ${cause.message} \n ${cause.stackTraceToString()}")
             call.respondText(
                 text = "Feil i SAF: ${cause.message}",
@@ -119,7 +116,7 @@ fun Application.api(
             )
         }
         exception<NOMException> { call, cause ->
-            LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause.stackTraceToString())
+            LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause)
             LOGGER.error("Feil i NOM: ${cause.message} \n ${cause.stackTraceToString()}")
             call.respondText(
                 text = "Feil i NOM: ${cause.message}",
@@ -127,7 +124,7 @@ fun Application.api(
             )
         }
         exception<SkjermingException> { call, cause ->
-            LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause.stackTraceToString())
+            LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause)
             LOGGER.error("Feil i skjerming: ${cause.message} \n ${cause.stackTraceToString()}")
             call.respondText(
                 text = "Feil i skjerming: ${cause.message}",
@@ -154,22 +151,11 @@ fun Application.api(
         actuator(prometheus)
 
         authenticate(AZURE) {
-            apiRoute {
+            apiRouting {
                 tilgang(tilgangService, config.roles, prometheus)
             }
         }
     }
-}
-
-/**
- * Triks for å få NormalOpenAPIRoute til å virke med auth
- */
-@KtorDsl
-fun Route.apiRoute(config: NormalOpenAPIRoute.() -> Unit) {
-    NormalOpenAPIRoute(
-        this,
-        application.plugin(OpenAPIGen).globalModuleProvider
-    ).apply(config)
 }
 
 private fun Application.swaggerDoc() {
