@@ -18,3 +18,8 @@ fun PrometheusMeterRegistry.httpCallCounter(path: String): Counter = this.counte
     "http_call",
     listOf(Tag.of("path", path))
 )
+
+fun PrometheusMeterRegistry.uhåndtertExceptionTeller(name: String): Counter = this.counter(
+    "uhaandtert_exception_total",
+    listOf(Tag.of("name", name))
+)

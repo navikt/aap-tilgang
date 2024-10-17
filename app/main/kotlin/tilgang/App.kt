@@ -30,6 +30,7 @@ import tilgang.integrasjoner.pdl.PdlGraphQLClient
 import tilgang.integrasjoner.saf.SafException
 import tilgang.integrasjoner.skjerming.SkjermingClient
 import tilgang.integrasjoner.skjerming.SkjermingException
+import tilgang.metrics.uhåndtertExceptionTeller
 import tilgang.redis.Redis
 import tilgang.regler.RegelService
 import tilgang.routes.actuator
@@ -63,7 +64,7 @@ fun Application.api(
     install(StatusPages) {
         exception<PdlException> { call, cause ->
             LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause)
-            LOGGER.error("Feil i PDL: ${cause.message} \n ${cause.stackTraceToString()}")
+            prometheus.uhåndtertExceptionTeller(cause.javaClass.name).increment()
             call.respondText(
                 text = "Feil i PDL: ${cause.message}",
                 status = HttpStatusCode.InternalServerError
@@ -71,7 +72,7 @@ fun Application.api(
         }
         exception<MsGraphException> { call, cause ->
             LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause)
-            LOGGER.error("Feil i MS Graph: ${cause.message} \n ${cause.stackTraceToString()}")
+            prometheus.uhåndtertExceptionTeller(cause.javaClass.name).increment()
             call.respondText(
                 text = "Feil i Microsoft Graph: ${cause.message}",
                 status = HttpStatusCode.InternalServerError
@@ -79,7 +80,7 @@ fun Application.api(
         }
         exception<BehandlingsflytException> { call, cause ->
             LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause)
-            LOGGER.error("Feil i behandlingsflyt: ${cause.message} \n ${cause.stackTraceToString()}")
+            prometheus.uhåndtertExceptionTeller(cause.javaClass.name).increment()
             call.respondText(
                 text = "Feil i behandlingsflyt: ${cause.message}",
                 status = HttpStatusCode.InternalServerError
@@ -87,7 +88,7 @@ fun Application.api(
         }
         exception<SafException> { call, cause ->
             LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause)
-            LOGGER.error("Feil i SAF: ${cause.message} \n ${cause.stackTraceToString()}")
+            prometheus.uhåndtertExceptionTeller(cause.javaClass.name).increment()
             call.respondText(
                 text = "Feil i SAF: ${cause.message}",
                 status = HttpStatusCode.InternalServerError
@@ -95,7 +96,7 @@ fun Application.api(
         }
         exception<NOMException> { call, cause ->
             LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause)
-            LOGGER.error("Feil i NOM: ${cause.message} \n ${cause.stackTraceToString()}")
+            prometheus.uhåndtertExceptionTeller(cause.javaClass.name).increment()
             call.respondText(
                 text = "Feil i NOM: ${cause.message}",
                 status = HttpStatusCode.InternalServerError
@@ -103,7 +104,7 @@ fun Application.api(
         }
         exception<SkjermingException> { call, cause ->
             LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause)
-            LOGGER.error("Feil i skjerming: ${cause.message} \n ${cause.stackTraceToString()}")
+            prometheus.uhåndtertExceptionTeller(cause.javaClass.name).increment()
             call.respondText(
                 text = "Feil i skjerming: ${cause.message}",
                 status = HttpStatusCode.InternalServerError
@@ -111,7 +112,7 @@ fun Application.api(
         }
         exception<Throwable> { call, cause ->
             LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause)
-            LOGGER.error("Feil i tjeneste: ${cause.message} \n ${cause.stackTraceToString()}")
+            prometheus.uhåndtertExceptionTeller(cause.javaClass.name).increment()
             call.respondText(
                 text = "Feil i tjeneste: ${cause.message}",
                 status = HttpStatusCode.InternalServerError
