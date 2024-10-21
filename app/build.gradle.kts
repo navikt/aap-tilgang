@@ -40,7 +40,7 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:1.5.11")
     implementation("net.logstash.logback:logstash-logback-encoder:8.0")
     implementation("com.nimbusds:nimbus-jose-jwt:9.41.2")
-    implementation("redis.clients:jedis:5.1.5")
+    implementation("redis.clients:jedis:5.2.0")
 
     testImplementation(kotlin("test"))
     testImplementation("com.nimbusds:nimbus-jose-jwt:9.41.2")
