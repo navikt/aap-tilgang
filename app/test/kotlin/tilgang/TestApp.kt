@@ -27,7 +27,10 @@ fun main() {
                 // Kan fylles inn med ekte verdier om disse fakes i Fakes
                 pdlConfig = PdlConfig(baseUrl = "", audience = "", scope = ""),
                 msGraphConfig = MsGraphConfig("", ""),
-                behandlingsflytConfig = BehandlingsflytConfig("", "")
+                behandlingsflytConfig = BehandlingsflytConfig("", ""),
+                safConfig = SafConfig("", ""),
+                skjermingConfig = SkjermingConfig("", ""),
+                nomConfig = NOMConfig("", "")
             )
         )
     }.start(wait = true)
