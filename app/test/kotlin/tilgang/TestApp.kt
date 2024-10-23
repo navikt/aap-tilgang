@@ -40,6 +40,6 @@ private fun Application.module(fakes: Fakes) {
         application.environment.log.info("Server har stoppet")
         fakes.close()
         // Release resources and unsubscribe from events
-        application.environment.monitor.unsubscribe(ApplicationStopped) {}
+        application.monitor.unsubscribe(ApplicationStopped) {}
     }
 }
