@@ -66,6 +66,18 @@ fun Route.installerTilgangGetPlugin(
 }
 
 fun Route.installerTilgangGetPlugin(
+    resolver: JournalpostIdResolver
+) {
+    install(buildTilgangTilJournalpostPlugin { call: ApplicationCall ->
+        JournalpostTilgangRequest(
+            resolver.resolve(call.parameters),
+            null,
+            Operasjon.SE
+        )
+    })
+}
+
+fun Route.installerTilgangGetPlugin(
     journalpostPathParam: JournalpostPathParam
 ) {
     install(buildTilgangTilJournalpostPlugin { call: ApplicationCall ->

@@ -1,10 +1,10 @@
 package no.nav.aap.tilgang
 
-import tilgang.Operasjon
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.OpenAPIPipelineResponseContext
+import tilgang.Operasjon
 
 inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : Saksreferanse> NormalOpenAPIRoute.authorizedSakPost(
     operasjon: Operasjon,
@@ -38,6 +38,15 @@ inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.a
     noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams) -> Unit
 ) {
     ktorRoute.installerTilgangGetPlugin(sakPathParam)
+    @Suppress("UnauthorizedGet")
+    get<TParams, TResponse> { params -> body(params) }
+}
+
+inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.authorizedGet(
+    journalpostIdResolver: JournalpostIdResolver,
+    noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams) -> Unit
+) {
+    ktorRoute.installerTilgangGetPlugin(journalpostIdResolver)
     @Suppress("UnauthorizedGet")
     get<TParams, TResponse> { params -> body(params) }
 }

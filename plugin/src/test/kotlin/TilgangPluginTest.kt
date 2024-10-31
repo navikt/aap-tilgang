@@ -70,6 +70,16 @@ class TilgangPluginTest {
             }
         }
 
+        fun NormalOpenAPIRoute.getJournalpostTestRoute() {
+            route("testApi/journalpost/{saksnummer}") {
+                authorizedGet<TestReferanse, Saksinfo>(
+                     { parameters -> requireNotNull(parameters["saksnummer"]); 1L }
+                ) { req ->
+                    respond(Saksinfo(saksnummer = req.saksnummer))
+                }
+            }
+        }
+
         val uuid = UUID.randomUUID()
         fun NormalOpenAPIRoute.postTestRouteSak() {
             route(
@@ -115,6 +125,7 @@ class TilgangPluginTest {
             }
             apiRouting {
                 getTestRoute()
+                getJournalpostTestRoute()
                 postTestRouteSak()
                 postTestRouteBehandling()
                 postTestRouteJournalpost()
@@ -151,6 +162,18 @@ class TilgangPluginTest {
         val res = client.get<Saksinfo>(
             URI.create("http://localhost:8080/")
                 .resolve("testApi/sak/$randomUuid"),
+            GetRequest()
+        )
+
+        assertThat(res?.saksnummer).isEqualTo(randomUuid)
+    }
+
+    @Test
+    fun `Skal kunne hente journalpost fra path params`() {
+        val randomUuid = UUID.randomUUID()
+        val res = client.get<Saksinfo>(
+            URI.create("http://localhost:8080/")
+                .resolve("testApi/journalpost/$randomUuid"),
             GetRequest()
         )
 
