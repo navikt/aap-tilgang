@@ -9,6 +9,7 @@ import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.contentnegotiation.*
+import io.ktor.server.request.*
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.error.DefaultResponseHandler
@@ -73,7 +74,7 @@ class TilgangPluginTest {
         fun NormalOpenAPIRoute.getJournalpostTestRoute() {
             route("testApi/journalpost/{saksnummer}") {
                 authorizedGet<TestReferanse, Saksinfo>(
-                     { parameters -> requireNotNull(parameters["saksnummer"]); 1L }
+                     { params, _ -> requireNotNull(params.saksnummer); 1L }
                 ) { req ->
                     respond(Saksinfo(saksnummer = req.saksnummer))
                 }
@@ -109,7 +110,9 @@ class TilgangPluginTest {
             route(
                 "testApi/journalpost",
             ) {
-                authorizedJournalpostPost<Unit, Journalpostinfo, Journalpostinfo>(
+                authorizedPost<Unit, Journalpostinfo, Journalpostinfo>(
+                    { params, body -> requireNotNull(body?.journalpostId); 1L },
+                    { request: Journalpostinfo? -> request?.journalpostId.toString()},
                     Operasjon.SAKSBEHANDLE,
                 ) { _, dto ->
                     respond(Journalpostinfo(1337L))
