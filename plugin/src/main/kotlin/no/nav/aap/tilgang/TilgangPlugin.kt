@@ -171,8 +171,11 @@ suspend inline fun <reified T : Behandlingsreferanse> ApplicationCall.parseBehan
 inline fun <reified T: Any> parseParams(params: Parameters) =
     DefaultJsonMapper.objectMapper().convertValue(params.entries().associate { it.key to it.value.first() }, T::class.java)
 
-suspend inline fun <reified T : Any> ApplicationCall.pareseGeneric() =
-    try {DefaultJsonMapper.fromJson<T>(receiveText()) } catch (e: RuntimeException) { null }
+suspend inline fun <reified T : Any> ApplicationCall.pareseGeneric(): T {
+    if (T::class == Unit::class) return Unit as T
+    return DefaultJsonMapper.fromJson<T>(receiveText())
+}
+
 
 suspend inline fun <reified T : Saksreferanse> ApplicationCall.parseSakFraRequestBody(
     operasjon: Operasjon

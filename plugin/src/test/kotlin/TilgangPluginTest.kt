@@ -111,7 +111,7 @@ class TilgangPluginTest {
                 "testApi/journalpost",
             ) {
                 authorizedPost<Unit, Journalpostinfo, Journalpostinfo>(
-                    { params, body -> requireNotNull(body?.journalpostId); 1L },
+                    { params, body -> requireNotNull(body.journalpostId); 1L },
                     { request: Journalpostinfo? -> request?.journalpostId.toString()},
                     Operasjon.SAKSBEHANDLE,
                 ) { _, dto ->
