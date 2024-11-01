@@ -112,7 +112,7 @@ class TilgangPluginTest {
             ) {
                 authorizedPost<Unit, Journalpostinfo, Journalpostinfo>(
                     { params, body -> requireNotNull(body.journalpostId); 1L },
-                    { request: Journalpostinfo? -> request?.journalpostId.toString()},
+                    { request: Journalpostinfo -> requireNotNull(request); request.journalpostId.toString() },
                     Operasjon.SAKSBEHANDLE,
                 ) { _, dto ->
                     respond(Journalpostinfo(1337L))

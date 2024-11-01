@@ -71,8 +71,8 @@ inline fun <reified TParams: Any, reified TRequest: Any>Route.installerTilgangPl
     install(DoubleReceive)
     install(buildTilgangTilJournalpostPlugin { call: ApplicationCall ->
         JournalpostTilgangRequest(
-            journalpostIdResolver.resolve(parseParams<TParams>(call.parameters), call.pareseGeneric()),
-            avklaringsbehovResolver?.resolve(call.pareseGeneric()),
+            journalpostIdResolver.resolve(parseParams<TParams>(call.parameters), call.parseGeneric()),
+            avklaringsbehovResolver?.resolve(call.parseGeneric()),
             operasjon
         )
     })
@@ -95,7 +95,6 @@ fun Route.installerTilgangPluginWithApprovedList(
 ) {
     install(buildTilgangPluginWithApprovedList(approvedList))
 }
-
 
 fun buildTilgangPluginWithApprovedList(approvedList: List<String>): RouteScopedPlugin<Unit> {
     return createRouteScopedPlugin(name = "ApprovedListPlugin") {
@@ -171,7 +170,7 @@ suspend inline fun <reified T : Behandlingsreferanse> ApplicationCall.parseBehan
 inline fun <reified T: Any> parseParams(params: Parameters) =
     DefaultJsonMapper.objectMapper().convertValue(params.entries().associate { it.key to it.value.first() }, T::class.java)
 
-suspend inline fun <reified T : Any> ApplicationCall.pareseGeneric(): T {
+suspend inline fun <reified T : Any> ApplicationCall.parseGeneric(): T {
     if (T::class == Unit::class) return Unit as T
     return DefaultJsonMapper.fromJson<T>(receiveText())
 }
