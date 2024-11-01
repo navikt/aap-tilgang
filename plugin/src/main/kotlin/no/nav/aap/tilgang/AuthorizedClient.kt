@@ -43,12 +43,23 @@ inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.a
 }
 
 inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.authorizedGet(
-    journalpostIdResolver: JournalpostIdResolver,
+    journalpostIdResolver: JournalpostIdResolver<TParams, Unit>,
     noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams) -> Unit
 ) {
-    ktorRoute.installerTilgangGetPlugin(journalpostIdResolver)
+    ktorRoute.installerTilgangPlugin(journalpostIdResolver)
     @Suppress("UnauthorizedGet")
     get<TParams, TResponse> { params -> body(params) }
+}
+
+inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest: Any> NormalOpenAPIRoute.authorizedPost(
+    journalpostIdResolver: JournalpostIdResolver<TParams, TRequest>,
+    avklaringsbehovResolver: AvklaringsbehovResolver<TRequest>,
+    operasjon: Operasjon,
+    noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams, TRequest) -> Unit
+) {
+    ktorRoute.installerTilgangPlugin(journalpostIdResolver, avklaringsbehovResolver, operasjon)
+    @Suppress("UnauthorizedPost")
+    post<TParams, TResponse, TRequest> { params, request -> body(params, request) }
 }
 
 inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.authorizedGet(

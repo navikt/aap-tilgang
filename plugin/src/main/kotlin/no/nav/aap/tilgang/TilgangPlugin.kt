@@ -1,6 +1,5 @@
 package no.nav.aap.tilgang
 
-import tilgang.Operasjon
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -16,6 +15,7 @@ import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
 import org.slf4j.LoggerFactory
 import tilgang.BehandlingTilgangRequest
 import tilgang.JournalpostTilgangRequest
+import tilgang.Operasjon
 import tilgang.SakTilgangRequest
 
 val log = LoggerFactory.getLogger("TilgangPlugin")
@@ -65,14 +65,15 @@ fun Route.installerTilgangGetPlugin(
     })
 }
 
-fun Route.installerTilgangGetPlugin(
-    resolver: JournalpostIdResolver
+inline fun <reified TParams: Any, reified TRequest: Any>Route.installerTilgangPlugin(
+    journalpostIdResolver: JournalpostIdResolver<TParams, TRequest>, avklaringsbehovResolver: AvklaringsbehovResolver<TRequest>? = null, operasjon: Operasjon = Operasjon.SE
 ) {
+    install(DoubleReceive)
     install(buildTilgangTilJournalpostPlugin { call: ApplicationCall ->
         JournalpostTilgangRequest(
-            resolver.resolve(call.parameters),
-            null,
-            Operasjon.SE
+            journalpostIdResolver.resolve(parseParams<TParams>(call.parameters), call.parseGeneric()),
+            avklaringsbehovResolver?.resolve(call.parseGeneric()),
+            operasjon
         )
     })
 }
@@ -94,7 +95,6 @@ fun Route.installerTilgangPluginWithApprovedList(
 ) {
     install(buildTilgangPluginWithApprovedList(approvedList))
 }
-
 
 fun buildTilgangPluginWithApprovedList(approvedList: List<String>): RouteScopedPlugin<Unit> {
     return createRouteScopedPlugin(name = "ApprovedListPlugin") {
@@ -166,6 +166,15 @@ suspend inline fun <reified T : Behandlingsreferanse> ApplicationCall.parseBehan
     val avklaringsbehovKode = referanseObject.hentAvklaringsbehovKode()
     return BehandlingTilgangRequest(referanse, avklaringsbehovKode, operasjon)
 }
+
+inline fun <reified T: Any> parseParams(params: Parameters) =
+    DefaultJsonMapper.objectMapper().convertValue(params.entries().associate { it.key to it.value.first() }, T::class.java)
+
+suspend inline fun <reified T : Any> ApplicationCall.parseGeneric(): T {
+    if (T::class == Unit::class) return Unit as T
+    return DefaultJsonMapper.fromJson<T>(receiveText())
+}
+
 
 suspend inline fun <reified T : Saksreferanse> ApplicationCall.parseSakFraRequestBody(
     operasjon: Operasjon
