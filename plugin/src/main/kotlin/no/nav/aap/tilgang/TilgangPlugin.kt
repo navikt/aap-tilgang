@@ -99,12 +99,12 @@ fun Route.installerTilgangPluginWithApprovedList(
 fun buildTilgangPluginWithApprovedList(approvedList: List<String>): RouteScopedPlugin<Unit> {
     return createRouteScopedPlugin(name = "ApprovedListPlugin") {
         on(AuthenticationChecked) { call ->
-            val azn = call.azn()
+            val azp = call.azp()
 
-            if (azn.name !in approvedList) {
-                call.respond(HttpStatusCode.Forbidden, "Ingen tilgang, $azn er ikke i approvedList")
+            if (azp.name !in approvedList) {
+                call.respond(HttpStatusCode.Forbidden, "Ingen tilgang, $azp er ikke i approvedList")
             } else {
-                log.info("Tilgang gitt til $azn, er i godkjentListe $approvedList")
+                log.info("Tilgang gitt til $azp, er i godkjentListe $approvedList")
             }
         }
     }
@@ -193,7 +193,7 @@ suspend inline fun <reified T : Journalpostreferanse> ApplicationCall.parseJourn
     return JournalpostTilgangRequest(referanse, avklaringsbehovKode, operasjon)
 }
 
-fun ApplicationCall.azn(): AzpName {
+fun ApplicationCall.azp(): AzpName {
     val azp = principal<JWTPrincipal>()?.getClaim("azp_name", String::class)
     if (azp == null) {
         error("azp mangler i AzureAD claims")

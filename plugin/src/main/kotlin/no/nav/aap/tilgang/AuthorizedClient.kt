@@ -4,6 +4,7 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.OpenAPIPipelineResponseContext
+import com.papsign.ktor.openapigen.route.route
 import tilgang.Operasjon
 
 inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : Saksreferanse> NormalOpenAPIRoute.authorizedSakPost(
@@ -51,7 +52,7 @@ inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.a
     get<TParams, TResponse> { params -> body(params) }
 }
 
-inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest: Any> NormalOpenAPIRoute.authorizedPost(
+inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : Any> NormalOpenAPIRoute.authorizedPost(
     journalpostIdResolver: JournalpostIdResolver<TParams, TRequest>,
     avklaringsbehovResolver: AvklaringsbehovResolver<TRequest>,
     operasjon: Operasjon,
@@ -96,4 +97,13 @@ inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : A
     ktorRoute.installerTilgangPluginWithApprovedList(approvedList.toList())
     @Suppress("UnauthorizedPost")
     post<TParams, TResponse, TRequest> { params, request -> body(params, request) }
+}
+
+inline fun NormalOpenAPIRoute.azpRoute(
+    path: String,
+    vararg approvedList: String,
+    crossinline fn: NormalOpenAPIRoute.() -> Unit
+) {
+    ktorRoute.installerTilgangPluginWithApprovedList(approvedList.toList())
+    route(path) { fn() }
 }
