@@ -1,5 +1,5 @@
 val ktorVersion = "3.0.1"
-val komponenterVersjon = "1.0.16"
+val komponenterVersjon = "1.0.50"
 
 plugins {
     id("aap-tilgang.conventions")
