@@ -35,6 +35,8 @@ data object AvklaringsbehovRolleRegel : Regel<AvklaringsbehovRolleInput> {
             Definisjon.FORESLÅ_VEDTAK -> erNaySaksbehandler
             Definisjon.KVALITETSSIKRING -> erNaySaksbehandler
             Definisjon.FATTE_VEDTAK -> erBeslutter
+            Definisjon.SKRIV_BREV -> erLokalSaksbehandler || erNaySaksbehandler
+            Definisjon.BESTILL_BREV -> erLokalSaksbehandler || erNaySaksbehandler
         }
     }
 
