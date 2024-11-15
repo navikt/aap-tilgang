@@ -57,7 +57,7 @@ class Fakes(azurePort: Int = 0): AutoCloseable {
         }
         routing {
             post("/token") {
-                val token = AzureTokenGen("tilgang", "tilgang").generate()
+                val token = AzureTokenGen("tilgangazure", "tilgang").generate()
                 call.respond(TestToken(access_token = token))
             }
             get("/jwks") {

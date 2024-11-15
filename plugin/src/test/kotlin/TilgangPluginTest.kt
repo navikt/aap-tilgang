@@ -17,7 +17,9 @@ import no.nav.aap.komponenter.httpklient.httpclient.get
 import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.OnBehalfOfTokenProvider
 import no.nav.aap.tilgang.*
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
@@ -51,7 +53,7 @@ class TilgangPluginTest {
                 return null
             }
         }
-        
+
         class Journalpostinfo(val journalpostId: Long): Journalpostreferanse {
             override fun hentJournalpostreferanse(): Long {
                 return journalpostId
@@ -65,6 +67,15 @@ class TilgangPluginTest {
             route("testApi/sak/{saksnummer}") {
                 authorizedGet<TestReferanse, Saksinfo>(
                     SakPathParam("saksnummer")
+                ) { req ->
+                    respond(Saksinfo(saksnummer = req.saksnummer))
+                }
+            }
+        }
+        fun NormalOpenAPIRoute.getTestRoute2() {
+            route("testApi/sak2/{saksnummer}") {
+                authorizedGet<TestReferanse, Saksinfo>(
+                    AuthorizetionGetPathConfig(sakPathParam = SakPathParam("saksnummer"))
                 ) { req ->
                     respond(Saksinfo(saksnummer = req.saksnummer))
                 }
@@ -88,6 +99,17 @@ class TilgangPluginTest {
             ) {
                 authorizedSakPost<Unit, Saksinfo, Saksinfo>(
                     Operasjon.SAKSBEHANDLE,
+                ) { _, dto ->
+                    respond(Saksinfo(saksnummer = uuid))
+                }
+            }
+        }
+        fun NormalOpenAPIRoute.postTestRouteSak2() {
+            route(
+                "testApi/sak2",
+            ) {
+                authorizedPost<Unit, Saksinfo, Saksinfo>(
+                    AuthorizetionPostPathConfig(Operasjon.SAKSBEHANDLE)
                 ) { _, dto ->
                     respond(Saksinfo(saksnummer = uuid))
                 }
@@ -128,8 +150,10 @@ class TilgangPluginTest {
             }
             apiRouting {
                 getTestRoute()
+                getTestRoute2()
                 getJournalpostTestRoute()
                 postTestRouteSak()
+                postTestRouteSak2()
                 postTestRouteBehandling()
                 postTestRouteJournalpost()
             }
@@ -172,6 +196,18 @@ class TilgangPluginTest {
     }
 
     @Test
+    fun `Skal kunne hente saksnummer fra path params2`() {
+        val randomUuid = UUID.randomUUID()
+        val res = client.get<Saksinfo>(
+            URI.create("http://localhost:8080/")
+                .resolve("testApi/sak2/$randomUuid"),
+            GetRequest()
+        )
+
+        assertThat(res?.saksnummer).isEqualTo(randomUuid)
+    }
+
+    @Test
     fun `Skal kunne hente journalpost fra path params`() {
         val randomUuid = UUID.randomUUID()
         val res = client.get<Saksinfo>(
@@ -188,6 +224,16 @@ class TilgangPluginTest {
         val res = client.post<_, Saksinfo>(
             URI.create("http://localhost:8080/")
                 .resolve("testApi/sak"),
+            PostRequest(Saksinfo(uuid))
+        )
+
+        assertThat(res?.saksnummer).isEqualTo(uuid)
+    }
+    @Test
+    fun `Skal kunne hente saksnummer 2 fra request body`() {
+        val res = client.post<_, Saksinfo>(
+            URI.create("http://localhost:8080/")
+                .resolve("testApi/sak2"),
             PostRequest(Saksinfo(uuid))
         )
 

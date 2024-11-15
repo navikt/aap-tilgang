@@ -11,7 +11,7 @@ import com.nimbusds.jwt.SignedJWT
 import org.intellij.lang.annotations.Language
 import java.time.LocalDateTime
 import java.time.ZoneId
-import java.util.*
+import java.util.Date
 
 internal class AzureTokenGen(private val issuer: String, private val audience: String) {
     private val rsaKey: RSAKey = JWKSet.parse(AZURE_JWKS).getKeyByKeyId("localhost-signer") as RSAKey

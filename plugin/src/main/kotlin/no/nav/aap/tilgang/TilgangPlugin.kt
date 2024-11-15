@@ -1,14 +1,21 @@
 package no.nav.aap.tilgang
 
-import io.ktor.http.*
-import io.ktor.server.application.*
-import io.ktor.server.auth.*
-import io.ktor.server.auth.jwt.*
-import io.ktor.server.plugins.doublereceive.*
-import io.ktor.server.request.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
-import io.ktor.server.util.*
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.Parameters
+import io.ktor.server.application.ApplicationCall
+import io.ktor.server.application.RouteScopedPlugin
+import io.ktor.server.application.createRouteScopedPlugin
+import io.ktor.server.application.pluginRegistry
+import io.ktor.server.auth.AuthenticationChecked
+import io.ktor.server.auth.jwt.JWTPrincipal
+import io.ktor.server.auth.principal
+import io.ktor.server.plugins.doublereceive.DoubleReceive
+import io.ktor.server.request.receiveText
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.RoutingNode
+import io.ktor.server.util.getOrFail
+import io.ktor.util.AttributeKey
 import no.nav.aap.komponenter.httpklient.auth.AzpName
 import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
@@ -18,11 +25,16 @@ import tilgang.JournalpostTilgangRequest
 import tilgang.Operasjon
 import tilgang.SakTilgangRequest
 
-val log = LoggerFactory.getLogger("TilgangPlugin")
+const val TILGANG_PLUGIN = "TilgangPlugin"
+
+val log = LoggerFactory.getLogger(TILGANG_PLUGIN)
 
 inline fun <reified T : Behandlingsreferanse> Route.installerTilgangTilBehandlingPostPlugin(
     operasjon: Operasjon,
 ) {
+    if ((this as RoutingNode).pluginRegistry.getOrNull(AttributeKey(TILGANG_PLUGIN)) != null) {
+        throw IllegalStateException("Fant allerede registeret tilgang plugin")
+    }
     install(DoubleReceive)
     install(buildTilgangTilBehandlingPlugin { call: ApplicationCall -> call.parseBehandlingFraRequestBody<T>(operasjon) })
 }
@@ -30,6 +42,9 @@ inline fun <reified T : Behandlingsreferanse> Route.installerTilgangTilBehandlin
 inline fun <reified T : Saksreferanse> Route.installerTilgangTilSakPostPlugin(
     operasjon: Operasjon,
 ) {
+    if ((this as RoutingNode).pluginRegistry.getOrNull(AttributeKey(TILGANG_PLUGIN)) != null) {
+        throw IllegalStateException("Fant allerede registeret tilgang plugin")
+    }
     install(DoubleReceive)
     install(buildTilgangTilSakPlugin { call: ApplicationCall -> call.parseSakFraRequestBody<T>(operasjon) })
 }
@@ -37,6 +52,9 @@ inline fun <reified T : Saksreferanse> Route.installerTilgangTilSakPostPlugin(
 inline fun <reified T : Journalpostreferanse> Route.installerTilgangTilJournalpostPlugin(
     operasjon: Operasjon,
 ) {
+    if ((this as RoutingNode).pluginRegistry.getOrNull(AttributeKey(TILGANG_PLUGIN)) != null) {
+        throw IllegalStateException("Fant allerede registeret tilgang plugin")
+    }
     install(DoubleReceive)
     install(buildTilgangTilJournalpostPlugin { call: ApplicationCall -> call.parseJournalpostFraRequestBody<T>(operasjon) })
 }
@@ -44,6 +62,9 @@ inline fun <reified T : Journalpostreferanse> Route.installerTilgangTilJournalpo
 fun Route.installerTilgangGetPlugin(
     behandlingPathParam: BehandlingPathParam
 ) {
+    if ((this as RoutingNode).pluginRegistry.getOrNull(AttributeKey(TILGANG_PLUGIN)) != null) {
+        throw IllegalStateException("Fant allerede registeret tilgang plugin")
+    }
     install(buildTilgangTilBehandlingPlugin { call: ApplicationCall ->
         BehandlingTilgangRequest(
             call.parameters.getOrFail(
@@ -51,12 +72,35 @@ fun Route.installerTilgangGetPlugin(
             ), null, Operasjon.SE
         )
     })
+}
 
+inline fun <reified T : TilgangReferanse> Route.installerTilgangPostPlugin(
+    pathConfig: AuthorizetionPostPathConfig,
+) {
+    if ((this as RoutingNode).pluginRegistry.getOrNull(AttributeKey(TILGANG_PLUGIN)) != null) {
+        throw IllegalStateException("Fant allerede registeret tilgang plugin")
+    }
+    install(DoubleReceive)
+    install(buildTilgangPlugin { call: ApplicationCall -> pathConfig.tilTilgangRequest<T>(call.parseGeneric()) })
+}
+
+fun Route.installerTilgangGetPlugin(
+    config: AuthorizetionGetPathConfig
+) {
+    if ((this as RoutingNode).pluginRegistry.getOrNull(AttributeKey(TILGANG_PLUGIN)) != null) {
+        throw IllegalStateException("Fant allerede registeret tilgang plugin")
+    }
+    install(buildTilgangPlugin { call: ApplicationCall ->
+        config.tilTilgangRequest(Operasjon.SE, call.parameters)
+    })
 }
 
 fun Route.installerTilgangGetPlugin(
     sakPathParam: SakPathParam
 ) {
+    if ((this as RoutingNode).pluginRegistry.getOrNull(AttributeKey(TILGANG_PLUGIN)) != null) {
+        throw IllegalStateException("Fant allerede registeret tilgang plugin")
+    }
     install(buildTilgangTilSakPlugin { call: ApplicationCall ->
         SakTilgangRequest(
             call.parameters.getOrFail(sakPathParam.param),
@@ -65,9 +109,14 @@ fun Route.installerTilgangGetPlugin(
     })
 }
 
-inline fun <reified TParams: Any, reified TRequest: Any>Route.installerTilgangPlugin(
-    journalpostIdResolver: JournalpostIdResolver<TParams, TRequest>, avklaringsbehovResolver: AvklaringsbehovResolver<TRequest>? = null, operasjon: Operasjon = Operasjon.SE
+inline fun <reified TParams : Any, reified TRequest : Any> Route.installerTilgangPlugin(
+    journalpostIdResolver: JournalpostIdResolver<TParams, TRequest>,
+    avklaringsbehovResolver: AvklaringsbehovResolver<TRequest>? = null,
+    operasjon: Operasjon = Operasjon.SE
 ) {
+    if ((this as RoutingNode).pluginRegistry.getOrNull(AttributeKey(TILGANG_PLUGIN)) != null) {
+        throw IllegalStateException("Fant allerede registeret tilgang plugin")
+    }
     install(DoubleReceive)
     install(buildTilgangTilJournalpostPlugin { call: ApplicationCall ->
         JournalpostTilgangRequest(
@@ -81,6 +130,9 @@ inline fun <reified TParams: Any, reified TRequest: Any>Route.installerTilgangPl
 fun Route.installerTilgangGetPlugin(
     journalpostPathParam: JournalpostPathParam
 ) {
+    if ((this as RoutingNode).pluginRegistry.getOrNull(AttributeKey(TILGANG_PLUGIN)) != null) {
+        throw IllegalStateException("Fant allerede registeret tilgang plugin")
+    }
     install(buildTilgangTilJournalpostPlugin { call: ApplicationCall ->
         JournalpostTilgangRequest(
             call.parameters.getOrFail(journalpostPathParam.param).toLong(),
@@ -93,11 +145,14 @@ fun Route.installerTilgangGetPlugin(
 fun Route.installerTilgangPluginWithApprovedList(
     approvedList: List<String>
 ) {
+    if ((this as RoutingNode).pluginRegistry.getOrNull(AttributeKey(TILGANG_PLUGIN)) != null) {
+        throw IllegalStateException("Fant allerede registeret tilgang plugin")
+    }
     install(buildTilgangPluginWithApprovedList(approvedList))
 }
 
 fun buildTilgangPluginWithApprovedList(approvedList: List<String>): RouteScopedPlugin<Unit> {
-    return createRouteScopedPlugin(name = "ApprovedListPlugin") {
+    return createRouteScopedPlugin(name = TILGANG_PLUGIN) {
         on(AuthenticationChecked) { call ->
             val azp = call.azp()
 
@@ -111,7 +166,7 @@ fun buildTilgangPluginWithApprovedList(approvedList: List<String>): RouteScopedP
 }
 
 inline fun buildTilgangTilBehandlingPlugin(crossinline parse: suspend (call: ApplicationCall) -> BehandlingTilgangRequest): RouteScopedPlugin<Unit> {
-    return createRouteScopedPlugin(name = "TilgangPlugin") {
+    return createRouteScopedPlugin(name = TILGANG_PLUGIN) {
         on(AuthenticationChecked) { call ->
             val input = parse(call)
             val harTilgang =
@@ -127,7 +182,7 @@ inline fun buildTilgangTilBehandlingPlugin(crossinline parse: suspend (call: App
 }
 
 inline fun buildTilgangTilSakPlugin(crossinline parse: suspend (call: ApplicationCall) -> SakTilgangRequest): RouteScopedPlugin<Unit> {
-    return createRouteScopedPlugin(name = "TilgangPlugin") {
+    return createRouteScopedPlugin(name = TILGANG_PLUGIN) {
         on(AuthenticationChecked) { call ->
             val input = parse(call)
             val harTilgang =
@@ -142,8 +197,22 @@ inline fun buildTilgangTilSakPlugin(crossinline parse: suspend (call: Applicatio
     }
 }
 
+inline fun buildTilgangPlugin(crossinline parse: suspend (call: ApplicationCall) -> AuthorizedRequest): RouteScopedPlugin<Unit> {
+    return createRouteScopedPlugin(name = TILGANG_PLUGIN) {
+        on(AuthenticationChecked) { call ->
+            val token = call.token()
+            val input = parse(call)
+            val harTilgang = TilgangService.harTilgang(input, call, token)
+
+            if (!harTilgang) {
+                call.respond(HttpStatusCode.Forbidden, "Ingen tilgang")
+            }
+        }
+    }
+}
+
 inline fun buildTilgangTilJournalpostPlugin(crossinline parse: suspend (call: ApplicationCall) -> JournalpostTilgangRequest): RouteScopedPlugin<Unit> {
-    return createRouteScopedPlugin(name = "TilgangPlugin") {
+    return createRouteScopedPlugin(name = TILGANG_PLUGIN) {
         on(AuthenticationChecked) { call ->
             val input = parse(call)
             val harTilgang =
@@ -167,8 +236,9 @@ suspend inline fun <reified T : Behandlingsreferanse> ApplicationCall.parseBehan
     return BehandlingTilgangRequest(referanse, avklaringsbehovKode, operasjon)
 }
 
-inline fun <reified T: Any> parseParams(params: Parameters) =
-    DefaultJsonMapper.objectMapper().convertValue(params.entries().associate { it.key to it.value.first() }, T::class.java)
+inline fun <reified T : Any> parseParams(params: Parameters) =
+    DefaultJsonMapper.objectMapper()
+        .convertValue(params.entries().associate { it.key to it.value.first() }, T::class.java)
 
 suspend inline fun <reified T : Any> ApplicationCall.parseGeneric(): T {
     if (T::class == Unit::class) return Unit as T
@@ -201,16 +271,18 @@ fun ApplicationCall.azp(): AzpName {
     return AzpName(azp)
 }
 
-interface Saksreferanse {
+interface Saksreferanse : TilgangReferanse {
     fun hentSaksreferanse(): String
 }
 
-interface Behandlingsreferanse {
+interface Behandlingsreferanse : TilgangReferanse {
     fun hentBehandlingsreferanse(): String
     fun hentAvklaringsbehovKode(): String?
 }
 
-interface Journalpostreferanse {
+interface Journalpostreferanse : TilgangReferanse {
     fun hentJournalpostreferanse(): Long
     fun hentAvklaringsbehovKode(): String?
 }
+
+sealed interface TilgangReferanse

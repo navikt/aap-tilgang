@@ -7,6 +7,7 @@ import com.papsign.ktor.openapigen.route.response.OpenAPIPipelineResponseContext
 import com.papsign.ktor.openapigen.route.route
 import tilgang.Operasjon
 
+@Deprecated(message = "Erstatt med pathConfig")
 inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : Saksreferanse> NormalOpenAPIRoute.authorizedSakPost(
     operasjon: Operasjon,
     noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams, TRequest) -> Unit
@@ -16,6 +17,7 @@ inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : S
     post<TParams, TResponse, TRequest> { params, request -> body(params, request) }
 }
 
+@Deprecated(message = "Erstatt med pathConfig")
 inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : Behandlingsreferanse> NormalOpenAPIRoute.authorizedBehandlingPost(
     operasjon: Operasjon,
     noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams, TRequest) -> Unit
@@ -25,6 +27,7 @@ inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : B
     post<TParams, TResponse, TRequest> { params, request -> body(params, request) }
 }
 
+@Deprecated(message = "Erstatt med pathConfig")
 inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : Journalpostreferanse> NormalOpenAPIRoute.authorizedJournalpostPost(
     operasjon: Operasjon,
     noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams, TRequest) -> Unit
@@ -34,6 +37,7 @@ inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : J
     post<TParams, TResponse, TRequest> { params, request -> body(params, request) }
 }
 
+@Deprecated(message = "Erstatt med pathConfig istedenfor pathParams")
 inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.authorizedGet(
     sakPathParam: SakPathParam,
     noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams) -> Unit
@@ -41,6 +45,24 @@ inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.a
     ktorRoute.installerTilgangGetPlugin(sakPathParam)
     @Suppress("UnauthorizedGet")
     get<TParams, TResponse> { params -> body(params) }
+}
+
+inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.authorizedGet(
+    pathConfig: AuthorizetionGetPathConfig,
+    noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams) -> Unit
+) {
+    ktorRoute.installerTilgangGetPlugin(pathConfig)
+    @Suppress("UnauthorizedGet")
+    get<TParams, TResponse> { params -> body(params) }
+}
+
+inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : TilgangReferanse> NormalOpenAPIRoute.authorizedPost(
+    pathConfig: AuthorizetionPostPathConfig,
+    noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams, TRequest) -> Unit
+) {
+    ktorRoute.installerTilgangPostPlugin<TRequest>(pathConfig)
+    @Suppress("UnauthorizedPost")
+    post<TParams, TResponse, TRequest> { params, request -> body(params, request) }
 }
 
 inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.authorizedGet(
@@ -63,6 +85,7 @@ inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : A
     post<TParams, TResponse, TRequest> { params, request -> body(params, request) }
 }
 
+@Deprecated(message = "Erstatt med pathConfig istedenfor pathParams")
 inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.authorizedGet(
     journalpostPathParam: JournalpostPathParam,
     noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams) -> Unit
@@ -72,6 +95,7 @@ inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.a
     get<TParams, TResponse> { params -> body(params) }
 }
 
+@Deprecated(message = "Erstatt med pathConfig istedenfor pathParams")
 inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.authorizedGet(
     behandlingPathParam: BehandlingPathParam,
     noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams) -> Unit
@@ -81,6 +105,7 @@ inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.a
     get<TParams, TResponse> { params -> body(params) }
 }
 
+@Deprecated(message = "Erstatt med pathConfig istedenfor pathParams")
 inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.authorizedGetWithApprovedList(
     vararg approvedList: String,
     noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams) -> Unit
