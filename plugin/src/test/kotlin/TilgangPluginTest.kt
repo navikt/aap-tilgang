@@ -44,6 +44,8 @@ class TilgangPluginTest {
             }
         }
 
+        class Saksinfo2(val saksnummer: UUID)
+
         class Behandlingsinfo(val behandlingsnummer: UUID) : Behandlingsreferanse {
             override fun hentBehandlingsreferanse(): String {
                 return behandlingsnummer.toString()
@@ -54,10 +56,11 @@ class TilgangPluginTest {
             }
         }
 
-        class Journalpostinfo(val journalpostId: Long): Journalpostreferanse {
+        class Journalpostinfo(val journalpostId: Long) : Journalpostreferanse {
             override fun hentJournalpostreferanse(): Long {
                 return journalpostId
             }
+
             override fun hentAvklaringsbehovKode(): String? {
                 return null
             }
@@ -72,6 +75,7 @@ class TilgangPluginTest {
                 }
             }
         }
+
         fun NormalOpenAPIRoute.getTestRoute2() {
             route("testApi/sak2/{saksnummer}") {
                 authorizedGet<TestReferanse, Saksinfo>(
@@ -85,7 +89,7 @@ class TilgangPluginTest {
         fun NormalOpenAPIRoute.getJournalpostTestRoute() {
             route("testApi/journalpost/{saksnummer}") {
                 authorizedGet<TestReferanse, Saksinfo>(
-                     { params, _ -> requireNotNull(params.saksnummer); 1L }
+                    { params, _ -> requireNotNull(params.saksnummer); 1L }
                 ) { req ->
                     respond(Saksinfo(saksnummer = req.saksnummer))
                 }
@@ -104,14 +108,17 @@ class TilgangPluginTest {
                 }
             }
         }
+
         fun NormalOpenAPIRoute.postTestRouteSak2() {
             route(
                 "testApi/sak2",
             ) {
-                authorizedPost<Unit, Saksinfo, Saksinfo>(
-                    AuthorizationBodyPathConfig(Operasjon.SAKSBEHANDLE)
+                authorizedPost<Unit, Saksinfo2, Saksinfo2>(
+                    AuthorizationBodyPathConfig(Operasjon.SAKSBEHANDLE) {
+                        TilgangReferanse.saksreferanse(it.saksnummer.toString())
+                    }
                 ) { _, dto ->
-                    respond(Saksinfo(saksnummer = uuid))
+                    respond(Saksinfo2(saksnummer = uuid))
                 }
             }
         }
@@ -120,10 +127,12 @@ class TilgangPluginTest {
             route(
                 "testApi/sak/put",
             ) {
-                authorizedPut<Unit, Saksinfo, Saksinfo>(
-                    AuthorizationBodyPathConfig(Operasjon.SAKSBEHANDLE)
+                authorizedPut<Unit, Saksinfo2, Saksinfo2>(
+                    AuthorizationBodyPathConfig(Operasjon.SAKSBEHANDLE) {
+                        TilgangReferanse.saksreferanse(it.saksnummer.toString())
+                    }
                 ) { _, dto ->
-                    respond(Saksinfo(saksnummer = uuid))
+                    respond(Saksinfo2(saksnummer = uuid))
                 }
             }
         }
