@@ -7,19 +7,23 @@ import tilgang.JournalpostTilgangRequest
 import tilgang.SakTilgangRequest
 
 object TilgangService {
-    fun harTilgang(parse: AuthorizedRequest,
-                            call: ApplicationCall,
-                            token: OidcToken): Boolean {
+    fun harTilgang(
+        authorizedRequest: AuthorizedRequest,
+        call: ApplicationCall,
+        token: OidcToken
+    ): Boolean {
         if (token.isClientCredentials()) {
             val azpName = call.azp()
-            return parse.approvedApplications.contains(azpName.name)
-        } else {
-            val request = parse.tilgangRequest
-            return when (request) {
-                is SakTilgangRequest -> TilgangGateway.harTilgangTilSak(request, token)
-                is BehandlingTilgangRequest -> TilgangGateway.harTilgangTilBehandling(request, token)
-                is JournalpostTilgangRequest -> TilgangGateway.harTilgangTilJournalpost(request, token)
-            }
+            return authorizedRequest.approvedApplications.contains(azpName.name)
+        }
+        if (authorizedRequest.applicationsOnly) {
+            return false
+        }
+        val request = authorizedRequest.tilgangRequest
+        return when (request) {
+            is SakTilgangRequest -> TilgangGateway.harTilgangTilSak(request, token)
+            is BehandlingTilgangRequest -> TilgangGateway.harTilgangTilBehandling(request, token)
+            is JournalpostTilgangRequest -> TilgangGateway.harTilgangTilJournalpost(request, token)
         }
     }
 }

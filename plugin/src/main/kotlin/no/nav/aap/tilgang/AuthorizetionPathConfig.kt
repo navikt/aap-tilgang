@@ -10,6 +10,7 @@ import tilgang.TilgangRequest
 
 data class AuthorizetionGetPathConfig(
     val approvedApplications: Set<String> = emptySet(),
+    val applicationsOnly: Boolean = false,
     val sakPathParam: SakPathParam? = null,
     val behandlingPathParam: BehandlingPathParam? = null,
     val journalpostPathParam: JournalpostPathParam? = null) {
@@ -17,12 +18,14 @@ data class AuthorizetionGetPathConfig(
     internal fun tilTilgangRequest(operasjon: Operasjon, parameters: Parameters): AuthorizedRequest {
         if (sakPathParam != null) {
             return AuthorizedRequest(
+                applicationsOnly,
                 approvedApplications,
                 SakTilgangRequest(saksnummer = parameters.getOrFail(sakPathParam.param), operasjon = operasjon)
             )
         }
         if (behandlingPathParam != null) {
             return AuthorizedRequest(
+                applicationsOnly,
                 approvedApplications, BehandlingTilgangRequest(
                     behandlingsreferanse = parameters.getOrFail(behandlingPathParam.param),
                     operasjon = operasjon,
@@ -32,6 +35,7 @@ data class AuthorizetionGetPathConfig(
         }
         if (journalpostPathParam != null) {
             return AuthorizedRequest(
+                applicationsOnly,
                 approvedApplications, JournalpostTilgangRequest(
                     journalpostId = parameters.getOrFail(journalpostPathParam.param).toLong(),
                     operasjon = operasjon,
@@ -45,19 +49,26 @@ data class AuthorizetionGetPathConfig(
 
 data class AuthorizetionPostPathConfig(
     val operasjon: Operasjon,
-    val approvedApplications: Set<String> = emptySet()) {
+    val approvedApplications: Set<String> = emptySet(),
+    val applicationsOnly: Boolean = false
+) {
 
     fun <TRequest> tilTilgangRequest(request: TRequest): AuthorizedRequest {
         when (request) {
             is Saksreferanse -> {
                 val referanse = request.hentSaksreferanse()
-                return AuthorizedRequest(approvedApplications, SakTilgangRequest(referanse, operasjon))
+                return AuthorizedRequest(
+                    applicationsOnly,
+                    approvedApplications,
+                    SakTilgangRequest(referanse, operasjon)
+                )
             }
 
             is Behandlingsreferanse -> {
                 val referanse = request.hentBehandlingsreferanse()
                 val avklaringsbehovKode = request.hentAvklaringsbehovKode()
                 return AuthorizedRequest(
+                    applicationsOnly,
                     approvedApplications,
                     BehandlingTilgangRequest(referanse, avklaringsbehovKode, operasjon)
                 )
@@ -67,6 +78,7 @@ data class AuthorizetionPostPathConfig(
                 val referanse = request.hentJournalpostreferanse()
                 val avklaringsbehovKode = request.hentAvklaringsbehovKode()
                 return AuthorizedRequest(
+                    applicationsOnly,
                     approvedApplications,
                     JournalpostTilgangRequest(referanse, avklaringsbehovKode, operasjon)
                 )
@@ -77,5 +89,6 @@ data class AuthorizetionPostPathConfig(
 }
 
 
-data class AuthorizedRequest(val approvedApplications: Set<String> = emptySet(),
+data class AuthorizedRequest(val applicationsOnly: Boolean,
+                             val approvedApplications: Set<String> = emptySet(),
                              val tilgangRequest: TilgangRequest)
