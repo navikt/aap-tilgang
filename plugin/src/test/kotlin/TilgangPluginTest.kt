@@ -15,11 +15,11 @@ import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.error.DefaultResponseHandler
 import no.nav.aap.komponenter.httpklient.httpclient.get
 import no.nav.aap.komponenter.httpklient.httpclient.post
+import no.nav.aap.komponenter.httpklient.httpclient.put
 import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
+import no.nav.aap.komponenter.httpklient.httpclient.request.PutRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.OnBehalfOfTokenProvider
 import no.nav.aap.tilgang.*
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
@@ -75,7 +75,7 @@ class TilgangPluginTest {
         fun NormalOpenAPIRoute.getTestRoute2() {
             route("testApi/sak2/{saksnummer}") {
                 authorizedGet<TestReferanse, Saksinfo>(
-                    AuthorizetionGetPathConfig(sakPathParam = SakPathParam("saksnummer"))
+                    AuthorizationParamPathConfig(sakPathParam = SakPathParam("saksnummer"))
                 ) { req ->
                     respond(Saksinfo(saksnummer = req.saksnummer))
                 }
@@ -109,7 +109,19 @@ class TilgangPluginTest {
                 "testApi/sak2",
             ) {
                 authorizedPost<Unit, Saksinfo, Saksinfo>(
-                    AuthorizetionPostPathConfig(Operasjon.SAKSBEHANDLE)
+                    AuthorizationBodyPathConfig(Operasjon.SAKSBEHANDLE)
+                ) { _, dto ->
+                    respond(Saksinfo(saksnummer = uuid))
+                }
+            }
+        }
+
+        fun NormalOpenAPIRoute.putTestRouteSak() {
+            route(
+                "testApi/sak/put",
+            ) {
+                authorizedPut<Unit, Saksinfo, Saksinfo>(
+                    AuthorizationBodyPathConfig(Operasjon.SAKSBEHANDLE)
                 ) { _, dto ->
                     respond(Saksinfo(saksnummer = uuid))
                 }
@@ -154,6 +166,7 @@ class TilgangPluginTest {
                 getJournalpostTestRoute()
                 postTestRouteSak()
                 postTestRouteSak2()
+                putTestRouteSak()
                 postTestRouteBehandling()
                 postTestRouteJournalpost()
             }
@@ -229,12 +242,24 @@ class TilgangPluginTest {
 
         assertThat(res?.saksnummer).isEqualTo(uuid)
     }
+
     @Test
     fun `Skal kunne hente saksnummer 2 fra request body`() {
         val res = client.post<_, Saksinfo>(
             URI.create("http://localhost:8080/")
                 .resolve("testApi/sak2"),
             PostRequest(Saksinfo(uuid))
+        )
+
+        assertThat(res?.saksnummer).isEqualTo(uuid)
+    }
+
+    @Test
+    fun `Skal kunne hente saksnummer fra request body med put`() {
+        val res = client.put<_, Saksinfo>(
+            URI.create("http://localhost:8080/")
+                .resolve("testApi/sak/put"),
+            PutRequest(Saksinfo(uuid))
         )
 
         assertThat(res?.saksnummer).isEqualTo(uuid)

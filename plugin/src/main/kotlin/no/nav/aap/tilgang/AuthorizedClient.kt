@@ -3,6 +3,7 @@ package no.nav.aap.tilgang
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.path.normal.post
+import com.papsign.ktor.openapigen.route.path.normal.put
 import com.papsign.ktor.openapigen.route.response.OpenAPIPipelineResponseContext
 import com.papsign.ktor.openapigen.route.route
 import tilgang.Operasjon
@@ -48,21 +49,30 @@ inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.a
 }
 
 inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.authorizedGet(
-    pathConfig: AuthorizetionGetPathConfig,
+    pathConfig: AuthorizationParamPathConfig,
     noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams) -> Unit
 ) {
-    ktorRoute.installerTilgangGetPlugin(pathConfig)
+    ktorRoute.installerTilgangParamPlugin(pathConfig)
     @Suppress("UnauthorizedGet")
     get<TParams, TResponse> { params -> body(params) }
 }
 
 inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : TilgangReferanse> NormalOpenAPIRoute.authorizedPost(
-    pathConfig: AuthorizetionPostPathConfig,
+    pathConfig: AuthorizationBodyPathConfig,
     noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams, TRequest) -> Unit
 ) {
-    ktorRoute.installerTilgangPostPlugin<TRequest>(pathConfig)
+    ktorRoute.installerTilgangBodyPlugin<TRequest>(pathConfig)
     @Suppress("UnauthorizedPost")
     post<TParams, TResponse, TRequest> { params, request -> body(params, request) }
+}
+
+inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : TilgangReferanse> NormalOpenAPIRoute.authorizedPut(
+    pathConfig: AuthorizationBodyPathConfig,
+    noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams, TRequest) -> Unit
+) {
+    ktorRoute.installerTilgangBodyPlugin<TRequest>(pathConfig)
+    @Suppress("UnauthorizedPut")
+    put<TParams, TResponse, TRequest> { params, request -> body(params, request) }
 }
 
 inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.authorizedGet(

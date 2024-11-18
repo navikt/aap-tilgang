@@ -74,8 +74,8 @@ fun Route.installerTilgangGetPlugin(
     })
 }
 
-inline fun <reified T : TilgangReferanse> Route.installerTilgangPostPlugin(
-    pathConfig: AuthorizetionPostPathConfig,
+inline fun <reified T : TilgangReferanse> Route.installerTilgangBodyPlugin(
+    pathConfig: AuthorizationBodyPathConfig,
 ) {
     if ((this as RoutingNode).pluginRegistry.getOrNull(AttributeKey(TILGANG_PLUGIN)) != null) {
         throw IllegalStateException("Fant allerede registeret tilgang plugin")
@@ -84,8 +84,8 @@ inline fun <reified T : TilgangReferanse> Route.installerTilgangPostPlugin(
     install(buildTilgangPlugin { call: ApplicationCall -> pathConfig.tilTilgangRequest<T>(call.parseGeneric()) })
 }
 
-fun Route.installerTilgangGetPlugin(
-    config: AuthorizetionGetPathConfig
+fun Route.installerTilgangParamPlugin(
+    config: AuthorizationParamPathConfig
 ) {
     if ((this as RoutingNode).pluginRegistry.getOrNull(AttributeKey(TILGANG_PLUGIN)) != null) {
         throw IllegalStateException("Fant allerede registeret tilgang plugin")

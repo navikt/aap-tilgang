@@ -8,7 +8,7 @@ import tilgang.Operasjon
 import tilgang.SakTilgangRequest
 import tilgang.TilgangRequest
 
-data class AuthorizetionGetPathConfig(
+data class AuthorizationParamPathConfig(
     val approvedApplications: Set<String> = emptySet(),
     val applicationsOnly: Boolean = false,
     val sakPathParam: SakPathParam? = null,
@@ -47,7 +47,7 @@ data class AuthorizetionGetPathConfig(
     }
 }
 
-data class AuthorizetionPostPathConfig(
+data class AuthorizationBodyPathConfig(
     val operasjon: Operasjon,
     val approvedApplications: Set<String> = emptySet(),
     val applicationsOnly: Boolean = false
