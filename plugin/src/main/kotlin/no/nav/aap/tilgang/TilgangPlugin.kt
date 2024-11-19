@@ -298,7 +298,6 @@ sealed interface TilgangReferanse {
 
         fun behandlingsreferanse(referanse: UUID, avklaringsbehovkode: String?): Behandlingsreferanse {
             return object : Behandlingsreferanse {
-
                 override fun hentBehandlingsreferanse(): String {
                     return referanse.toString()
                 }
