@@ -75,14 +75,14 @@ fun Route.installerTilgangGetPlugin(
     })
 }
 
-inline fun <reified T> Route.installerTilgangBodyPlugin(
-    pathConfig: AuthorizationBodyPathConfig<T>,
+inline fun <reified T: TilgangReferanse> Route.installerTilgangBodyPlugin(
+    pathConfig: AuthorizationBodyPathConfig,
 ) {
     if ((this as RoutingNode).pluginRegistry.getOrNull(AttributeKey(TILGANG_PLUGIN)) != null) {
         throw IllegalStateException("Fant allerede registeret tilgang plugin")
     }
     install(DoubleReceive)
-    install(buildTilgangPlugin { call: ApplicationCall -> pathConfig.tilTilgangRequest(call.parseGeneric()) })
+    install(buildTilgangPlugin { call: ApplicationCall -> pathConfig.tilTilgangRequest(call.parseGeneric<T>()) })
 }
 
 fun Route.installerTilgangParamPlugin(
@@ -286,38 +286,4 @@ interface Journalpostreferanse : TilgangReferanse {
     fun hentAvklaringsbehovKode(): String?
 }
 
-sealed interface TilgangReferanse {
-    companion object {
-        fun saksreferanse(referanse: String): Saksreferanse {
-            return object : Saksreferanse {
-                override fun hentSaksreferanse(): String {
-                    return referanse
-                }
-            }
-        }
-
-        fun behandlingsreferanse(referanse: UUID, avklaringsbehovkode: String?): Behandlingsreferanse {
-            return object : Behandlingsreferanse {
-                override fun hentBehandlingsreferanse(): String {
-                    return referanse.toString()
-                }
-
-                override fun hentAvklaringsbehovKode(): String? {
-                    return avklaringsbehovkode
-                }
-            }
-        }
-
-        fun journalpostreferanse(referanse: Long, avklaringsbehovkode: String?): Journalpostreferanse {
-            return object : Journalpostreferanse {
-                override fun hentJournalpostreferanse(): Long {
-                    return referanse
-                }
-
-                override fun hentAvklaringsbehovKode(): String? {
-                    return avklaringsbehovkode
-                }
-            }
-        }
-    }
-}
+sealed interface TilgangReferanse

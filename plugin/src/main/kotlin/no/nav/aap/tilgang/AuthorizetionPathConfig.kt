@@ -47,18 +47,16 @@ data class AuthorizationParamPathConfig(
     }
 }
 
-data class AuthorizationBodyPathConfig<TRequest>(
+data class AuthorizationBodyPathConfig(
     val operasjon: Operasjon,
     val approvedApplications: Set<String> = emptySet(),
-    val applicationsOnly: Boolean = false,
-    val resolveTilgangReferanse: (TRequest) -> TilgangReferanse
+    val applicationsOnly: Boolean = false
 ) {
 
-    fun tilTilgangRequest(request: TRequest): AuthorizedRequest {
-        val tilgangReferanse = resolveTilgangReferanse(request)
-        when (tilgangReferanse) {
+    fun tilTilgangRequest(request: TilgangReferanse): AuthorizedRequest {
+        when (request) {
             is Saksreferanse -> {
-                val referanse = tilgangReferanse.hentSaksreferanse()
+                val referanse = request.hentSaksreferanse()
                 return AuthorizedRequest(
                     applicationsOnly,
                     approvedApplications,
@@ -67,8 +65,8 @@ data class AuthorizationBodyPathConfig<TRequest>(
             }
 
             is Behandlingsreferanse -> {
-                val referanse = tilgangReferanse.hentBehandlingsreferanse()
-                val avklaringsbehovKode = tilgangReferanse.hentAvklaringsbehovKode()
+                val referanse = request.hentBehandlingsreferanse()
+                val avklaringsbehovKode = request.hentAvklaringsbehovKode()
                 return AuthorizedRequest(
                     applicationsOnly,
                     approvedApplications,
@@ -77,8 +75,8 @@ data class AuthorizationBodyPathConfig<TRequest>(
             }
 
             is Journalpostreferanse -> {
-                val referanse = tilgangReferanse.hentJournalpostreferanse()
-                val avklaringsbehovKode = tilgangReferanse.hentAvklaringsbehovKode()
+                val referanse = request.hentJournalpostreferanse()
+                val avklaringsbehovKode = request.hentAvklaringsbehovKode()
                 return AuthorizedRequest(
                     applicationsOnly,
                     approvedApplications,

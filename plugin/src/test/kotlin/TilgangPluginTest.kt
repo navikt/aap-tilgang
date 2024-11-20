@@ -44,8 +44,6 @@ class TilgangPluginTest {
             }
         }
 
-        class Saksinfo2(val saksnummer: UUID)
-
         class Behandlingsinfo(val behandlingsnummer: UUID) : Behandlingsreferanse {
             override fun hentBehandlingsreferanse(): String {
                 return behandlingsnummer.toString()
@@ -113,12 +111,10 @@ class TilgangPluginTest {
             route(
                 "testApi/sak2",
             ) {
-                authorizedPost<Unit, Saksinfo2, Saksinfo2>(
-                    AuthorizationBodyPathConfig(Operasjon.SAKSBEHANDLE) {
-                        TilgangReferanse.saksreferanse(it.saksnummer.toString())
-                    }
+                authorizedPost<Unit, Saksinfo, Saksinfo>(
+                    AuthorizationBodyPathConfig(Operasjon.SAKSBEHANDLE)
                 ) { _, dto ->
-                    respond(Saksinfo2(saksnummer = uuid))
+                    respond(Saksinfo(saksnummer = uuid))
                 }
             }
         }
@@ -127,12 +123,10 @@ class TilgangPluginTest {
             route(
                 "testApi/sak/put",
             ) {
-                authorizedPut<Unit, Saksinfo2, Saksinfo2>(
-                    AuthorizationBodyPathConfig(Operasjon.SAKSBEHANDLE) {
-                        TilgangReferanse.saksreferanse(it.saksnummer.toString())
-                    }
+                authorizedPut<Unit, Saksinfo, Saksinfo>(
+                    AuthorizationBodyPathConfig(Operasjon.SAKSBEHANDLE)
                 ) { _, dto ->
-                    respond(Saksinfo2(saksnummer = uuid))
+                    respond(Saksinfo(saksnummer = uuid))
                 }
             }
         }
