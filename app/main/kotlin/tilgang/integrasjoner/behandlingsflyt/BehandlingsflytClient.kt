@@ -1,9 +1,12 @@
 package tilgang.integrasjoner.behandlingsflyt
 
-import io.ktor.client.call.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
+import io.ktor.client.call.body
+import io.ktor.client.request.bearerAuth
+import io.ktor.client.request.get
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureConfig
 import org.slf4j.LoggerFactory
@@ -28,8 +31,8 @@ class BehandlingsflytClient(
     private val httpClient = HttpClientFactory.create()
     private val azureTokenProvider = AzureAdTokenProvider(azureConfig, behandlingsflytConfig.scope)
 
-    suspend fun hentIdenterForSak(currentToken: String, saksnummer: String): IdenterRespons {
-        val token = azureTokenProvider.getOnBehalfOfToken(currentToken)
+    suspend fun hentIdenterForSak(saksnummer: String): IdenterRespons {
+        val token = azureTokenProvider.getClientCredentialToken()
         if (redis.exists(Key(IDENTER_SAK_PREFIX, saksnummer))) {
             prometheus.cacheHit(BEHANDLINGSFLYT).increment()
             return redis[Key(IDENTER_SAK_PREFIX, saksnummer)]!!.deserialize()
@@ -57,14 +60,14 @@ class BehandlingsflytClient(
         }
     }
 
-    suspend fun hentIdenterForBehandling(currentToken: String, behandlingsnummer: String): IdenterRespons {
+    suspend fun hentIdenterForBehandling(behandlingsnummer: String): IdenterRespons {
         if (redis.exists(Key(IDENTER_BEHANDLING_PREFIX, behandlingsnummer))) {
             prometheus.cacheHit(BEHANDLINGSFLYT).increment()
             return redis[Key(IDENTER_BEHANDLING_PREFIX, behandlingsnummer)]!!.deserialize()
         }
         prometheus.cacheMiss(BEHANDLINGSFLYT).increment()
 
-        val token = azureTokenProvider.getOnBehalfOfToken(currentToken)
+        val token = azureTokenProvider.getClientCredentialToken()
         val url = "${behandlingsflytConfig.baseUrl}/pip/api/behandling/${behandlingsnummer}/identer"
         log.info("Kaller behandlingsflyt med URL: $url")
 

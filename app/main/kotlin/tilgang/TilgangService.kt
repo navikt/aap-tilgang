@@ -1,7 +1,6 @@
 package tilgang
 
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.postmottak.kontrakt.avklaringsbehov.Definisjon as PostmottakDefinisjon
 import no.nav.aap.postmottak.saf.graphql.SafGraphqlClient
 import no.nav.aap.postmottak.saf.graphql.SafJournalpost
 import org.slf4j.LoggerFactory
@@ -9,6 +8,7 @@ import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytClient
 import tilgang.integrasjoner.behandlingsflyt.IdenterRespons
 import tilgang.regler.RegelInput
 import tilgang.regler.RegelService
+import no.nav.aap.postmottak.kontrakt.avklaringsbehov.Definisjon as PostmottakDefinisjon
 
 class TilgangService(
     private val safClient: SafGraphqlClient,
@@ -24,7 +24,7 @@ class TilgangService(
         token: String,
         callId: String
     ): Boolean {
-        val identer = behandlingsflytClient.hentIdenterForSak(token, req.saksnummer)
+        val identer = behandlingsflytClient.hentIdenterForSak(req.saksnummer)
         val regelInput = RegelInput(
             callId = callId,
             ansattIdent = ansattIdent,
@@ -45,7 +45,7 @@ class TilgangService(
         token: String,
         callId: String
     ): Boolean {
-        val identer = behandlingsflytClient.hentIdenterForBehandling(token, req.behandlingsreferanse)
+        val identer = behandlingsflytClient.hentIdenterForBehandling(req.behandlingsreferanse)
         val avklaringsbehov =
             if (req.avklaringsbehovKode != null) Definisjon.forKode(req.avklaringsbehovKode!!) else null
 
@@ -71,7 +71,7 @@ class TilgangService(
     ): Boolean {
         val journalpostInfo: SafJournalpost = safClient.hentJournalpostInfo(req.journalpostId, callId)
         val identer = finnIdenterForJournalpost(journalpostInfo, token)
-        
+
         val avklaringsbehov =
             if (req.avklaringsbehovKode != null) PostmottakDefinisjon.forKode(req.avklaringsbehovKode!!) else null
 
@@ -87,11 +87,11 @@ class TilgangService(
         )
         return regelService.vurderTilgang(regelInput)
     }
-    
+
     private suspend fun finnIdenterForJournalpost(journalpost: SafJournalpost, token: String): IdenterRespons {
         val saksnummer = journalpost.sak?.fagsakId
         if(saksnummer != null) {
-            return behandlingsflytClient.hentIdenterForSak(currentToken = token, saksnummer)
+            return behandlingsflytClient.hentIdenterForSak(saksnummer)
         } else {
             val søkerIdent = journalpost.bruker?.id
             requireNotNull(søkerIdent)
