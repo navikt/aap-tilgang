@@ -6,6 +6,10 @@ import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.path.normal.put
 import com.papsign.ktor.openapigen.route.response.OpenAPIPipelineResponseContext
 import com.papsign.ktor.openapigen.route.route
+import no.nav.aap.tilgang.plugin.kontrakt.Behandlingsreferanse
+import no.nav.aap.tilgang.plugin.kontrakt.Journalpostreferanse
+import no.nav.aap.tilgang.plugin.kontrakt.Saksreferanse
+import no.nav.aap.tilgang.plugin.kontrakt.TilgangReferanse
 import tilgang.Operasjon
 
 @Deprecated(message = "Erstatt med pathConfig")

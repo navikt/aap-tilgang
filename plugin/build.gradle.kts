@@ -39,6 +39,7 @@ publishing {
 
 dependencies {
     implementation(project(":api-kontrakt"))
+    implementation(project(":plugin-kontrakt"))
 
     implementation("no.nav.aap.kelvin:httpklient:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:infrastructure:$komponenterVersjon")

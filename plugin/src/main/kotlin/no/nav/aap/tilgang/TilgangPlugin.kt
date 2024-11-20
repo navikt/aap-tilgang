@@ -19,12 +19,15 @@ import io.ktor.util.AttributeKey
 import no.nav.aap.komponenter.httpklient.auth.AzpName
 import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
+import no.nav.aap.tilgang.plugin.kontrakt.Behandlingsreferanse
+import no.nav.aap.tilgang.plugin.kontrakt.Journalpostreferanse
+import no.nav.aap.tilgang.plugin.kontrakt.Saksreferanse
+import no.nav.aap.tilgang.plugin.kontrakt.TilgangReferanse
 import org.slf4j.LoggerFactory
 import tilgang.BehandlingTilgangRequest
 import tilgang.JournalpostTilgangRequest
 import tilgang.Operasjon
 import tilgang.SakTilgangRequest
-import java.util.UUID
 
 const val TILGANG_PLUGIN = "TilgangPlugin"
 
@@ -271,19 +274,3 @@ fun ApplicationCall.azp(): AzpName {
     }
     return AzpName(azp)
 }
-
-interface Saksreferanse : TilgangReferanse {
-    fun hentSaksreferanse(): String
-}
-
-interface Behandlingsreferanse : TilgangReferanse {
-    fun hentBehandlingsreferanse(): String
-    fun hentAvklaringsbehovKode(): String?
-}
-
-interface Journalpostreferanse : TilgangReferanse {
-    fun hentJournalpostreferanse(): Long
-    fun hentAvklaringsbehovKode(): String?
-}
-
-sealed interface TilgangReferanse

@@ -2,6 +2,10 @@ package no.nav.aap.tilgang
 
 import io.ktor.http.Parameters
 import io.ktor.server.util.getOrFail
+import no.nav.aap.tilgang.plugin.kontrakt.Behandlingsreferanse
+import no.nav.aap.tilgang.plugin.kontrakt.Journalpostreferanse
+import no.nav.aap.tilgang.plugin.kontrakt.Saksreferanse
+import no.nav.aap.tilgang.plugin.kontrakt.TilgangReferanse
 import tilgang.BehandlingTilgangRequest
 import tilgang.JournalpostTilgangRequest
 import tilgang.Operasjon
