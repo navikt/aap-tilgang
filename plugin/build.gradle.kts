@@ -38,8 +38,8 @@ publishing {
 }
 
 dependencies {
-    implementation(project(":api-kontrakt"))
-    implementation(project(":plugin-kontrakt"))
+    api(project(":api-kontrakt"))
+    api(project(":plugin-kontrakt"))
 
     implementation("no.nav.aap.kelvin:httpklient:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:infrastructure:$komponenterVersjon")
