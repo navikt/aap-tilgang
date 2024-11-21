@@ -17,7 +17,8 @@ data class AuthorizationParamPathConfig(
     val applicationsOnly: Boolean = false,
     val sakPathParam: SakPathParam? = null,
     val behandlingPathParam: BehandlingPathParam? = null,
-    val journalpostPathParam: JournalpostPathParam? = null) {
+    val journalpostPathParam: JournalpostPathParam? = null
+) {
 
     internal fun tilTilgangRequest(operasjon: Operasjon, parameters: Parameters): AuthorizedRequest {
         if (sakPathParam != null) {
@@ -61,46 +62,53 @@ data class AuthorizationBodyPathConfig(
     val applicationsOnly: Boolean = false
 ) {
 
-    fun tilTilgangRequest(request: TilgangReferanse): AuthorizedRequest {
+    fun tilTilgangRequest(request: Any): AuthorizedRequest {
         when (request) {
-            is Saksreferanse -> {
-                val referanse = request.hentSaksreferanse()
-                return AuthorizedRequest(
-                    applicationsOnly,
-                    approvedApplications,
-                    SakTilgangRequest(referanse, operasjon)
-                )
-            }
+            is TilgangReferanse ->
+                when (request) {
+                    is Saksreferanse -> {
+                        val referanse = request.hentSaksreferanse()
+                        return AuthorizedRequest(
+                            applicationsOnly,
+                            approvedApplications,
+                            SakTilgangRequest(referanse, operasjon)
+                        )
+                    }
 
-            is Behandlingsreferanse -> {
-                val referanse = request.hentBehandlingsreferanse()
-                val avklaringsbehovKode = request.hentAvklaringsbehovKode()
-                return AuthorizedRequest(
-                    applicationsOnly,
-                    approvedApplications,
-                    BehandlingTilgangRequest(referanse, avklaringsbehovKode, operasjon)
-                )
-            }
+                    is Behandlingsreferanse -> {
+                        val referanse = request.hentBehandlingsreferanse()
+                        val avklaringsbehovKode = request.hentAvklaringsbehovKode()
+                        return AuthorizedRequest(
+                            applicationsOnly,
+                            approvedApplications,
+                            BehandlingTilgangRequest(referanse, avklaringsbehovKode, operasjon)
+                        )
+                    }
 
-            is Journalpostreferanse -> {
-                val referanse = request.hentJournalpostreferanse()
-                val avklaringsbehovKode = request.hentAvklaringsbehovKode()
-                return AuthorizedRequest(
-                    applicationsOnly,
-                    approvedApplications,
-                    JournalpostTilgangRequest(referanse, avklaringsbehovKode, operasjon)
-                )
-            }
+                    is Journalpostreferanse -> {
+                        val referanse = request.hentJournalpostreferanse()
+                        val avklaringsbehovKode = request.hentAvklaringsbehovKode()
+                        return AuthorizedRequest(
+                            applicationsOnly,
+                            approvedApplications,
+                            JournalpostTilgangRequest(referanse, avklaringsbehovKode, operasjon)
+                        )
+                    }
+                }
+
+            else -> return AuthorizedRequest(
+                applicationsOnly = applicationsOnly,
+                approvedApplications = approvedApplications,
+                tilgangRequest = null
+            )
+
         }
-        return AuthorizedRequest(
-            applicationsOnly = applicationsOnly,
-            approvedApplications = approvedApplications,
-            tilgangRequest = null
-        )
     }
 }
 
 
-data class AuthorizedRequest(val applicationsOnly: Boolean,
-                             val approvedApplications: Set<String> = emptySet(),
-                             val tilgangRequest: TilgangRequest?)
+data class AuthorizedRequest(
+    val applicationsOnly: Boolean,
+    val approvedApplications: Set<String> = emptySet(),
+    val tilgangRequest: TilgangRequest?
+)

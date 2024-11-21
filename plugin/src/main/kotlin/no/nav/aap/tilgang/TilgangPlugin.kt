@@ -78,7 +78,7 @@ fun Route.installerTilgangGetPlugin(
     })
 }
 
-inline fun <reified T: TilgangReferanse> Route.installerTilgangBodyPlugin(
+inline fun <reified T: Any> Route.installerTilgangBodyPlugin(
     pathConfig: AuthorizationBodyPathConfig,
 ) {
     if ((this as RoutingNode).pluginRegistry.getOrNull(AttributeKey(TILGANG_PLUGIN)) != null) {
