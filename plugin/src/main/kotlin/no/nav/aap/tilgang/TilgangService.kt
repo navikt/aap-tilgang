@@ -19,7 +19,9 @@ object TilgangService {
         if (authorizedRequest.applicationsOnly) {
             return false
         }
-        val request = authorizedRequest.tilgangRequest
+        val request = requireNotNull(authorizedRequest.tilgangRequest) {
+            "Kan ikke utlede tilgangRequest for OBO-token."
+        }
         return when (request) {
             is SakTilgangRequest -> TilgangGateway.harTilgangTilSak(request, token)
             is BehandlingTilgangRequest -> TilgangGateway.harTilgangTilBehandling(request, token)

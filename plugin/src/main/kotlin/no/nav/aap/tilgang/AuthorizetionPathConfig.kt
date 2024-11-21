@@ -47,7 +47,11 @@ data class AuthorizationParamPathConfig(
                 )
             )
         }
-        throw IllegalArgumentException("Klarer ikke avgjøre hva slags type request dette er")
+        return AuthorizedRequest(
+            applicationsOnly = applicationsOnly,
+            approvedApplications = approvedApplications,
+            tilgangRequest = null
+        )
     }
 }
 
@@ -88,11 +92,15 @@ data class AuthorizationBodyPathConfig(
                 )
             }
         }
-        throw IllegalArgumentException("Klarer ikke avgjøre hva slags type request dette er")
+        return AuthorizedRequest(
+            applicationsOnly = applicationsOnly,
+            approvedApplications = approvedApplications,
+            tilgangRequest = null
+        )
     }
 }
 
 
 data class AuthorizedRequest(val applicationsOnly: Boolean,
                              val approvedApplications: Set<String> = emptySet(),
-                             val tilgangRequest: TilgangRequest)
+                             val tilgangRequest: TilgangRequest?)
