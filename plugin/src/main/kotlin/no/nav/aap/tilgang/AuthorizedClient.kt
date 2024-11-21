@@ -61,7 +61,7 @@ inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.a
     get<TParams, TResponse> { params -> body(params) }
 }
 
-inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : TilgangReferanse> NormalOpenAPIRoute.authorizedPost(
+inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : Any> NormalOpenAPIRoute.authorizedPost(
     pathConfig: AuthorizationBodyPathConfig,
     noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams, TRequest) -> Unit
 ) {
@@ -70,7 +70,7 @@ inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : T
     post<TParams, TResponse, TRequest> { params, request -> body(params, request) }
 }
 
-inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : TilgangReferanse> NormalOpenAPIRoute.authorizedPut(
+inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : Any> NormalOpenAPIRoute.authorizedPut(
     pathConfig: AuthorizationBodyPathConfig,
     noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams, TRequest) -> Unit
 ) {

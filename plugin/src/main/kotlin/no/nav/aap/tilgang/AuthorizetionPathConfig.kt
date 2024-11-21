@@ -5,7 +5,6 @@ import io.ktor.server.util.getOrFail
 import no.nav.aap.tilgang.plugin.kontrakt.Behandlingsreferanse
 import no.nav.aap.tilgang.plugin.kontrakt.Journalpostreferanse
 import no.nav.aap.tilgang.plugin.kontrakt.Saksreferanse
-import no.nav.aap.tilgang.plugin.kontrakt.TilgangReferanse
 import tilgang.BehandlingTilgangRequest
 import tilgang.JournalpostTilgangRequest
 import tilgang.Operasjon
@@ -61,7 +60,7 @@ data class AuthorizationBodyPathConfig(
     val applicationsOnly: Boolean = false
 ) {
 
-    fun tilTilgangRequest(request: TilgangReferanse): AuthorizedRequest {
+    fun tilTilgangRequest(request: Any): AuthorizedRequest {
         when (request) {
             is Saksreferanse -> {
                 val referanse = request.hentSaksreferanse()
