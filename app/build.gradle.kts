@@ -32,7 +32,7 @@ dependencies {
     implementation("io.ktor:ktor-client-core:$ktorVersion")
     implementation("io.ktor:ktor-client-logging:$ktorVersion")
 
-    implementation("no.nav:ktor-openapi-generator:1.0.46")
+    implementation("no.nav:ktor-openapi-generator:1.0.50")
     implementation("no.nav.aap.kelvin:server:1.0.67")
     implementation("io.micrometer:micrometer-registry-prometheus:1.14.1")
     implementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
