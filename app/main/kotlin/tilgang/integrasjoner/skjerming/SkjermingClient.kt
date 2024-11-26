@@ -1,9 +1,13 @@
 package tilgang.integrasjoner.skjerming
 
-import io.ktor.client.call.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
+import io.ktor.client.call.body
+import io.ktor.client.request.bearerAuth
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureConfig
 import tilgang.LOGGER
@@ -33,7 +37,7 @@ open class SkjermingClient(
 
     open suspend fun isSkjermet(identer: IdenterRespons): Boolean {
         val azureToken = azureTokenProvider.getClientCredentialToken()
-        
+
         if (redis.exists(Key(SKJERMING_PREFIX, identer.søker.first()))) {
             prometheus.cacheHit(SKJERMING_PREFIX).increment()
             return redis[Key(SKJERMING_PREFIX, identer.søker.first())]!!.deserialize()
@@ -41,8 +45,8 @@ open class SkjermingClient(
         prometheus.cacheMiss(SKJERMING_PREFIX).increment()
 
         val url = "${skjermingConfig.baseUrl}/skjermetBulk"
-        val alleRelaterteSøkerIdenter = identer.søker + identer.barn
-        
+        val alleRelaterteSøkerIdenter = (identer.søker + identer.barn).distinct()
+
         val response = httpClient.post(url) {
             contentType(ContentType.Application.Json)
             bearerAuth(azureToken)
