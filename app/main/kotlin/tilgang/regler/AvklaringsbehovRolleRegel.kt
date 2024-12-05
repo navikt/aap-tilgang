@@ -20,7 +20,7 @@ data object AvklaringsbehovRolleRegel : Regel<AvklaringsbehovRolleInput> {
         val erBeslutter = erBeslutter(roller)
 
         return when (avklaringsbehov) {
-            Definisjon.MANUELT_SATT_PÅ_VENT -> erLokalSaksbehandler || erNaySaksbehandler
+            Definisjon.MANUELT_SATT_PÅ_VENT, Definisjon.BESTILL_LEGEERKLÆRING -> erLokalSaksbehandler || erNaySaksbehandler
             Definisjon.AVKLAR_STUDENT -> erNaySaksbehandler
             Definisjon.AVKLAR_SYKDOM -> erLokalSaksbehandler
             Definisjon.AVKLAR_BISTANDSBEHOV -> erLokalSaksbehandler
@@ -34,6 +34,8 @@ data object AvklaringsbehovRolleRegel : Regel<AvklaringsbehovRolleInput> {
             Definisjon.AVKLAR_SAMORDNING_GRADERING -> erNaySaksbehandler
             Definisjon.FORESLÅ_VEDTAK -> erNaySaksbehandler
             Definisjon.KVALITETSSIKRING -> erNaySaksbehandler
+            Definisjon.FASTSETT_YRKESSKADEINNTEKT -> erNaySaksbehandler
+            Definisjon.AVKLAR_YRKESSKADE -> erNaySaksbehandler
             Definisjon.FATTE_VEDTAK -> erBeslutter
             Definisjon.SKRIV_BREV -> erLokalSaksbehandler || erNaySaksbehandler // TODO: Avklar hvem som skal kunne løse brev-behovene
             Definisjon.BESTILL_BREV -> erLokalSaksbehandler || erNaySaksbehandler
