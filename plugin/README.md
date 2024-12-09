@@ -11,4 +11,10 @@ Route scoped plugin for å intercepte http-kall og kalle `tilgang`. Attributter 
 Klienten som kaller `tilgang`-tjenesten. Denne brukes av `TilgangPlugin`, men kan også tas i bruk direkte i de tilfellene det er mer hensiktsmessig.
 
 ## TilgangInspections
-Det er skrevet custom inspections for å gi advarsel dersom `get` og `post` brukes direkte. I de fleste tilfeller ønsker vi å bruke de tilsvarende <i>autoriserte</i> funksjonene, som vi finner i `AuthorizedClient`. Det anbefales å importere denne inspeksjonsfilen i IDE-en.    
+Det er skrevet custom inspections for å gi advarsel dersom `get` og `post` brukes direkte. I de fleste tilfeller ønsker vi å bruke de tilsvarende <i>autoriserte</i> funksjonene, som vi finner i `AuthorizedClient`. Det anbefales å importere denne inspeksjonsfilen i IDE-en.
+
+## Bumpe Gradle wrapper
+
+```bash
+./gradlew wrapper --gradle-version=8.11
+```
