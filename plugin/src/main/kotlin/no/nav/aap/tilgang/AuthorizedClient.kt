@@ -23,31 +23,49 @@ val tilgangkontrollertTag = TagModule(listOf(Tags.Tilgangkontrollert))
 @Deprecated(message = "Erstatt med pathConfig")
 inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : Saksreferanse> NormalOpenAPIRoute.authorizedSakPost(
     operasjon: Operasjon,
+    vararg modules: RouteOpenAPIModule,
     noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams, TRequest) -> Unit
 ) {
     ktorRoute.installerTilgangTilSakPostPlugin<TRequest>(operasjon)
     @Suppress("UnauthorizedPost")
-    post<TParams, TResponse, TRequest>(tilgangkontrollertTag) { params, request -> body(params, request) }
+    post<TParams, TResponse, TRequest>(*modules, tilgangkontrollertTag) { params, request ->
+        body(
+            params,
+            request
+        )
+    }
 }
 
 @Deprecated(message = "Erstatt med pathConfig")
 inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : Behandlingsreferanse> NormalOpenAPIRoute.authorizedBehandlingPost(
     operasjon: Operasjon,
+    vararg modules: RouteOpenAPIModule,
     noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams, TRequest) -> Unit
 ) {
     ktorRoute.installerTilgangTilBehandlingPostPlugin<TRequest>(operasjon)
     @Suppress("UnauthorizedPost")
-    post<TParams, TResponse, TRequest>(tilgangkontrollertTag) { params, request -> body(params, request) }
+    post<TParams, TResponse, TRequest>(*modules, tilgangkontrollertTag) { params, request ->
+        body(
+            params,
+            request
+        )
+    }
 }
 
 @Deprecated(message = "Erstatt med pathConfig")
 inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : Journalpostreferanse> NormalOpenAPIRoute.authorizedJournalpostPost(
     operasjon: Operasjon,
+    vararg modules: RouteOpenAPIModule,
     noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams, TRequest) -> Unit
 ) {
     ktorRoute.installerTilgangTilJournalpostPlugin<TRequest>(operasjon)
     @Suppress("UnauthorizedPost")
-    post<TParams, TResponse, TRequest>(tilgangkontrollertTag) { params, request -> body(params, request) }
+    post<TParams, TResponse, TRequest>(*modules, tilgangkontrollertTag) { params, request ->
+        body(
+            params,
+            request
+        )
+    }
 }
 
 @Deprecated(message = "Erstatt med pathConfig istedenfor pathParams")
@@ -73,20 +91,32 @@ inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.a
 
 inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : Any> NormalOpenAPIRoute.authorizedPost(
     pathConfig: AuthorizationBodyPathConfig,
+    vararg modules: RouteOpenAPIModule,
     noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams, TRequest) -> Unit
 ) {
     ktorRoute.installerTilgangBodyPlugin<TRequest>(pathConfig)
     @Suppress("UnauthorizedPost")
-    post<TParams, TResponse, TRequest>(tilgangkontrollertTag) { params, request -> body(params, request) }
+    post<TParams, TResponse, TRequest>(tilgangkontrollertTag, *modules) { params, request ->
+        body(
+            params,
+            request
+        )
+    }
 }
 
 inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : Any> NormalOpenAPIRoute.authorizedPut(
     pathConfig: AuthorizationBodyPathConfig,
+    vararg modules: RouteOpenAPIModule,
     noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams, TRequest) -> Unit
 ) {
     ktorRoute.installerTilgangBodyPlugin<TRequest>(pathConfig)
     @Suppress("UnauthorizedPut")
-    put<TParams, TResponse, TRequest>(tilgangkontrollertTag) { params, request -> body(params, request) }
+    put<TParams, TResponse, TRequest>(tilgangkontrollertTag, *modules) { params, request ->
+        body(
+            params,
+            request
+        )
+    }
 }
 
 inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.authorizedGet(
@@ -103,11 +133,17 @@ inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : A
     journalpostIdResolver: JournalpostIdResolver<TParams, TRequest>,
     avklaringsbehovResolver: AvklaringsbehovResolver<TRequest>,
     operasjon: Operasjon,
+    vararg modules: RouteOpenAPIModule,
     noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams, TRequest) -> Unit
 ) {
     ktorRoute.installerTilgangPlugin(journalpostIdResolver, avklaringsbehovResolver, operasjon)
     @Suppress("UnauthorizedPost")
-    post<TParams, TResponse, TRequest>(tilgangkontrollertTag) { params, request -> body(params, request) }
+    post<TParams, TResponse, TRequest>(tilgangkontrollertTag, *modules) { params, request ->
+        body(
+            params,
+            request
+        )
+    }
 }
 
 @Deprecated(message = "Erstatt med pathConfig istedenfor pathParams")
@@ -140,16 +176,23 @@ inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.a
 ) {
     ktorRoute.installerTilgangPluginWithApprovedList(approvedList.toList())
     @Suppress("UnauthorizedGet")
-    get<TParams, TResponse>(*modules.toTypedArray(), tilgangkontrollertTag) { params -> body(params) }
+    get<TParams, TResponse>(
+        *modules.toTypedArray(),
+        tilgangkontrollertTag
+    ) { params -> body(params) }
 }
 
 inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : Any> NormalOpenAPIRoute.authorizedPostWithApprovedList(
     vararg approvedList: String,
+    modules: List<RouteOpenAPIModule>,
     noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams, TRequest) -> Unit
 ) {
     ktorRoute.installerTilgangPluginWithApprovedList(approvedList.toList())
     @Suppress("UnauthorizedPost")
-    post<TParams, TResponse, TRequest>(tilgangkontrollertTag) { params, request -> body(params, request) }
+    post<TParams, TResponse, TRequest>(
+        tilgangkontrollertTag,
+        *modules.toTypedArray()
+    ) { params, request -> body(params, request) }
 }
 
 inline fun NormalOpenAPIRoute.azpRoute(
