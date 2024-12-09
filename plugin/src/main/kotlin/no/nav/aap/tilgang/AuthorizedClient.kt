@@ -184,7 +184,7 @@ inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.a
 
 inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : Any> NormalOpenAPIRoute.authorizedPostWithApprovedList(
     vararg approvedList: String,
-    modules: List<RouteOpenAPIModule>,
+    modules: List<RouteOpenAPIModule> = listOf(),
     noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams, TRequest) -> Unit
 ) {
     ktorRoute.installerTilgangPluginWithApprovedList(approvedList.toList())
