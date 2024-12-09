@@ -1,6 +1,8 @@
 package no.nav.aap.tilgang
 
+import com.papsign.ktor.openapigen.APITag
 import com.papsign.ktor.openapigen.modules.RouteOpenAPIModule
+import com.papsign.ktor.openapigen.route.TagModule
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.path.normal.post
@@ -10,8 +12,13 @@ import com.papsign.ktor.openapigen.route.route
 import no.nav.aap.tilgang.plugin.kontrakt.Behandlingsreferanse
 import no.nav.aap.tilgang.plugin.kontrakt.Journalpostreferanse
 import no.nav.aap.tilgang.plugin.kontrakt.Saksreferanse
-import no.nav.aap.tilgang.plugin.kontrakt.TilgangReferanse
 import tilgang.Operasjon
+
+enum class Tags(override val description: String) : APITag {
+    Tilgangkontrollert("Dette endepunktet er tilgangkontrollert.")
+}
+
+val tilgangkontrollertTag = TagModule(listOf(Tags.Tilgangkontrollert))
 
 @Deprecated(message = "Erstatt med pathConfig")
 inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : Saksreferanse> NormalOpenAPIRoute.authorizedSakPost(
@@ -20,7 +27,7 @@ inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : S
 ) {
     ktorRoute.installerTilgangTilSakPostPlugin<TRequest>(operasjon)
     @Suppress("UnauthorizedPost")
-    post<TParams, TResponse, TRequest> { params, request -> body(params, request) }
+    post<TParams, TResponse, TRequest>(tilgangkontrollertTag) { params, request -> body(params, request) }
 }
 
 @Deprecated(message = "Erstatt med pathConfig")
@@ -30,7 +37,7 @@ inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : B
 ) {
     ktorRoute.installerTilgangTilBehandlingPostPlugin<TRequest>(operasjon)
     @Suppress("UnauthorizedPost")
-    post<TParams, TResponse, TRequest> { params, request -> body(params, request) }
+    post<TParams, TResponse, TRequest>(tilgangkontrollertTag) { params, request -> body(params, request) }
 }
 
 @Deprecated(message = "Erstatt med pathConfig")
@@ -40,7 +47,7 @@ inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : J
 ) {
     ktorRoute.installerTilgangTilJournalpostPlugin<TRequest>(operasjon)
     @Suppress("UnauthorizedPost")
-    post<TParams, TResponse, TRequest> { params, request -> body(params, request) }
+    post<TParams, TResponse, TRequest>(tilgangkontrollertTag) { params, request -> body(params, request) }
 }
 
 @Deprecated(message = "Erstatt med pathConfig istedenfor pathParams")
@@ -51,7 +58,7 @@ inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.a
 ) {
     ktorRoute.installerTilgangGetPlugin(sakPathParam)
     @Suppress("UnauthorizedGet")
-    get<TParams, TResponse>(*modules) { params -> body(params) }
+    get<TParams, TResponse>(*modules, tilgangkontrollertTag) { params -> body(params) }
 }
 
 inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.authorizedGet(
@@ -61,7 +68,7 @@ inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.a
 ) {
     ktorRoute.installerTilgangParamPlugin(pathConfig)
     @Suppress("UnauthorizedGet")
-    get<TParams, TResponse>(*modules) { params -> body(params) }
+    get<TParams, TResponse>(*modules, tilgangkontrollertTag) { params -> body(params) }
 }
 
 inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : Any> NormalOpenAPIRoute.authorizedPost(
@@ -70,7 +77,7 @@ inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : A
 ) {
     ktorRoute.installerTilgangBodyPlugin<TRequest>(pathConfig)
     @Suppress("UnauthorizedPost")
-    post<TParams, TResponse, TRequest> { params, request -> body(params, request) }
+    post<TParams, TResponse, TRequest>(tilgangkontrollertTag) { params, request -> body(params, request) }
 }
 
 inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : Any> NormalOpenAPIRoute.authorizedPut(
@@ -79,7 +86,7 @@ inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : A
 ) {
     ktorRoute.installerTilgangBodyPlugin<TRequest>(pathConfig)
     @Suppress("UnauthorizedPut")
-    put<TParams, TResponse, TRequest> { params, request -> body(params, request) }
+    put<TParams, TResponse, TRequest>(tilgangkontrollertTag) { params, request -> body(params, request) }
 }
 
 inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.authorizedGet(
@@ -89,7 +96,7 @@ inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.a
 ) {
     ktorRoute.installerTilgangPlugin(journalpostIdResolver)
     @Suppress("UnauthorizedGet")
-    get<TParams, TResponse>(*modules) { params -> body(params) }
+    get<TParams, TResponse>(*modules, tilgangkontrollertTag) { params -> body(params) }
 }
 
 inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : Any> NormalOpenAPIRoute.authorizedPost(
@@ -100,7 +107,7 @@ inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : A
 ) {
     ktorRoute.installerTilgangPlugin(journalpostIdResolver, avklaringsbehovResolver, operasjon)
     @Suppress("UnauthorizedPost")
-    post<TParams, TResponse, TRequest> { params, request -> body(params, request) }
+    post<TParams, TResponse, TRequest>(tilgangkontrollertTag) { params, request -> body(params, request) }
 }
 
 @Deprecated(message = "Erstatt med pathConfig istedenfor pathParams")
@@ -111,7 +118,7 @@ inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.a
 ) {
     ktorRoute.installerTilgangGetPlugin(journalpostPathParam)
     @Suppress("UnauthorizedGet")
-    get<TParams, TResponse>(*modules) { params -> body(params) }
+    get<TParams, TResponse>(*modules, tilgangkontrollertTag) { params -> body(params) }
 }
 
 @Deprecated(message = "Erstatt med pathConfig istedenfor pathParams")
@@ -122,7 +129,7 @@ inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.a
 ) {
     ktorRoute.installerTilgangGetPlugin(behandlingPathParam)
     @Suppress("UnauthorizedGet")
-    get<TParams, TResponse>(*modules) { params -> body(params) }
+    get<TParams, TResponse>(*modules, tilgangkontrollertTag) { params -> body(params) }
 }
 
 @Deprecated(message = "Erstatt med pathConfig istedenfor pathParams")
@@ -133,7 +140,7 @@ inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.a
 ) {
     ktorRoute.installerTilgangPluginWithApprovedList(approvedList.toList())
     @Suppress("UnauthorizedGet")
-    get<TParams, TResponse>(*modules.toTypedArray()) { params -> body(params) }
+    get<TParams, TResponse>(*modules.toTypedArray(), tilgangkontrollertTag) { params -> body(params) }
 }
 
 inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : Any> NormalOpenAPIRoute.authorizedPostWithApprovedList(
@@ -142,7 +149,7 @@ inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : A
 ) {
     ktorRoute.installerTilgangPluginWithApprovedList(approvedList.toList())
     @Suppress("UnauthorizedPost")
-    post<TParams, TResponse, TRequest> { params, request -> body(params, request) }
+    post<TParams, TResponse, TRequest>(tilgangkontrollertTag) { params, request -> body(params, request) }
 }
 
 inline fun NormalOpenAPIRoute.azpRoute(
