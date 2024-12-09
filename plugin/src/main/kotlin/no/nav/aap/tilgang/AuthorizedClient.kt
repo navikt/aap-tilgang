@@ -1,5 +1,6 @@
 package no.nav.aap.tilgang
 
+import com.papsign.ktor.openapigen.modules.RouteOpenAPIModule
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.path.normal.post
@@ -45,20 +46,22 @@ inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : J
 @Deprecated(message = "Erstatt med pathConfig istedenfor pathParams")
 inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.authorizedGet(
     sakPathParam: SakPathParam,
+    vararg modules: RouteOpenAPIModule,
     noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams) -> Unit
 ) {
     ktorRoute.installerTilgangGetPlugin(sakPathParam)
     @Suppress("UnauthorizedGet")
-    get<TParams, TResponse> { params -> body(params) }
+    get<TParams, TResponse>(*modules) { params -> body(params) }
 }
 
 inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.authorizedGet(
     pathConfig: AuthorizationParamPathConfig,
+    vararg modules: RouteOpenAPIModule,
     noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams) -> Unit
 ) {
     ktorRoute.installerTilgangParamPlugin(pathConfig)
     @Suppress("UnauthorizedGet")
-    get<TParams, TResponse> { params -> body(params) }
+    get<TParams, TResponse>(*modules) { params -> body(params) }
 }
 
 inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : Any> NormalOpenAPIRoute.authorizedPost(
@@ -81,11 +84,12 @@ inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : A
 
 inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.authorizedGet(
     journalpostIdResolver: JournalpostIdResolver<TParams, Unit>,
+    vararg modules: RouteOpenAPIModule,
     noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams) -> Unit
 ) {
     ktorRoute.installerTilgangPlugin(journalpostIdResolver)
     @Suppress("UnauthorizedGet")
-    get<TParams, TResponse> { params -> body(params) }
+    get<TParams, TResponse>(*modules) { params -> body(params) }
 }
 
 inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : Any> NormalOpenAPIRoute.authorizedPost(
@@ -102,31 +106,34 @@ inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : A
 @Deprecated(message = "Erstatt med pathConfig istedenfor pathParams")
 inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.authorizedGet(
     journalpostPathParam: JournalpostPathParam,
+    vararg modules: RouteOpenAPIModule,
     noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams) -> Unit
 ) {
     ktorRoute.installerTilgangGetPlugin(journalpostPathParam)
     @Suppress("UnauthorizedGet")
-    get<TParams, TResponse> { params -> body(params) }
+    get<TParams, TResponse>(*modules) { params -> body(params) }
 }
 
 @Deprecated(message = "Erstatt med pathConfig istedenfor pathParams")
 inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.authorizedGet(
     behandlingPathParam: BehandlingPathParam,
+    vararg modules: RouteOpenAPIModule,
     noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams) -> Unit
 ) {
     ktorRoute.installerTilgangGetPlugin(behandlingPathParam)
     @Suppress("UnauthorizedGet")
-    get<TParams, TResponse> { params -> body(params) }
+    get<TParams, TResponse>(*modules) { params -> body(params) }
 }
 
 @Deprecated(message = "Erstatt med pathConfig istedenfor pathParams")
 inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.authorizedGetWithApprovedList(
     vararg approvedList: String,
+    modules: List<RouteOpenAPIModule> = listOf(),
     noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams) -> Unit
 ) {
     ktorRoute.installerTilgangPluginWithApprovedList(approvedList.toList())
     @Suppress("UnauthorizedGet")
-    get<TParams, TResponse> { params -> body(params) }
+    get<TParams, TResponse>(*modules.toTypedArray()) { params -> body(params) }
 }
 
 inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : Any> NormalOpenAPIRoute.authorizedPostWithApprovedList(
