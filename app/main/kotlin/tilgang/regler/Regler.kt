@@ -2,23 +2,33 @@ package tilgang.regler
 
 import org.slf4j.LoggerFactory
 import tilgang.Operasjon
-import tilgang.enhet.EnhetService
-import tilgang.geo.GeoService
+import tilgang.service.EnhetService
+import tilgang.service.GeoService
 import tilgang.integrasjoner.nom.INOMClient
 import tilgang.integrasjoner.pdl.IPdlGraphQLClient
 import tilgang.integrasjoner.skjerming.SkjermingClient
+import tilgang.service.AdressebeskyttelseService
+import tilgang.service.SkjermingService
 
 private val logger = LoggerFactory.getLogger(RegelService::class.java)
 
-class RegelService(geoService: GeoService, enhetService: EnhetService, pdlService: IPdlGraphQLClient, skjermetClient: SkjermingClient, nomClient: INOMClient){
+class RegelService(
+    geoService: GeoService,
+    enhetService: EnhetService,
+    pdlService: IPdlGraphQLClient,
+    skjermetClient: SkjermingClient,
+    nomClient: INOMClient,
+    skjermingService: SkjermingService,
+    adressebeskyttelseService: AdressebeskyttelseService
+) {
     private val reglerForOperasjon = mapOf(
         Operasjon.SE to listOf(
             RegelMedInputgenerator(LeseRolleRegel, RolleInputGenerator),
             RegelMedInputgenerator(EgenSakRegel, EgenSakInputGenerator(nomClient)),
-            RegelMedInputgenerator(AdressebeskyttelseRegel, AdressebeskyttelseInputGenerator(pdlService)),
+            RegelMedInputgenerator(AdressebeskyttelseRegel, AdressebeskyttelseInputGenerator(pdlService, adressebeskyttelseService)),
             // TODO: Aktiver når vi har georoller
             // RegelMedInputgenerator(GeoRegel, GeoInputGenerator(geoService, pdlService)),
-            RegelMedInputgenerator(EgenAnsattRegel, EgenAnsattInputGenerator(skjermetClient))
+            RegelMedInputgenerator(EgenAnsattRegel, EgenAnsattInputGenerator(skjermetClient, skjermingService))
         ),
         Operasjon.DRIFTE to listOf(
             RegelMedInputgenerator(DriftRolleRegel, RolleInputGenerator),
@@ -30,12 +40,12 @@ class RegelService(geoService: GeoService, enhetService: EnhetService, pdlServic
         Operasjon.SAKSBEHANDLE to listOf(
             RegelMedInputgenerator(AvklaringsbehovRolleRegel, AvklaringsbehovInputGenerator),
             RegelMedInputgenerator(EgenSakRegel, EgenSakInputGenerator(nomClient)),
-            RegelMedInputgenerator(AdressebeskyttelseRegel, AdressebeskyttelseInputGenerator(pdlService)),
+            RegelMedInputgenerator(AdressebeskyttelseRegel, AdressebeskyttelseInputGenerator(pdlService, adressebeskyttelseService)),
             // TODO: Aktiver når vi har georoller
             // RegelMedInputgenerator(GeoRegel, GeoInputGenerator(geoService, pdlService)),
             // TODO: Enhetsregelen gir kun mening hvis saker er knyttet mot enhet, noe de p.d. ikke er
             //RegelMedInputgenerator(EnhetRegel, EnhetInputGenerator(enhetService)),
-            RegelMedInputgenerator(EgenAnsattRegel, EgenAnsattInputGenerator(skjermetClient))
+            RegelMedInputgenerator(EgenAnsattRegel, EgenAnsattInputGenerator(skjermetClient, skjermingService))
         )
     )
 

@@ -13,13 +13,8 @@ data class Config(
         Role(Rolle.SAKSBEHANDLER, UUID.fromString(getEnvVar("AAP_SAKSBEHANDLER"))),
         Role(Rolle.BESLUTTER, UUID.fromString(getEnvVar("AAP_BESLUTTER"))),
         Role(Rolle.LES, UUID.fromString(getEnvVar("AAP_LES"))),
-        // Role(Rolle.AVDELINGSLEDER, UUID.fromString(getEnvVar("AAP_AVDELINGSLEDER"))),
+        // Role(Rolle.AVDELINGSLEDER, UUID.fromString(getEnvVar("AAP_AVDELINGSLEDER"))), //TODO: Les inn disse
         // Role(Rolle.UTVIKLER, UUID.fromString(getEnvVar("AAP_UTVIKLER"))),
-        Role(Rolle.STRENGT_FORTROLIG_ADRESSE, UUID.fromString(getEnvVar("STRENGT_FORTROLIG_ADRESSE"))),
-        Role(
-            Rolle.FORTROLIG_ADRESSE, UUID.fromString(getEnvVar("FORTROLIG_ADRESSE"))
-        )
-        // TODO: Skjermet/Egne ansatte
     ),
     val pdlConfig: PdlConfig = PdlConfig(),
     val msGraphConfig: MsGraphConfig = MsGraphConfig(),
@@ -71,15 +66,3 @@ data class RedisConfig(
     val username: String = getEnvVar("REDIS_USERNAME_TILGANG"),
     val password: String = getEnvVar("REDIS_PASSWORD_TILGANG"),
 )
-
-enum class Rolle {
-    VEILEDER,
-    SAKSBEHANDLER,
-    BESLUTTER,
-    LES,
-    AVDELINGSLEDER,
-    UTVIKLER,
-    STRENGT_FORTROLIG_ADRESSE,
-    FORTROLIG_ADRESSE,
-    KAN_BEHANDLE_SKJERMET,
-}

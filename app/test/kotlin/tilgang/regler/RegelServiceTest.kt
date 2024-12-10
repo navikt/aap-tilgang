@@ -10,8 +10,8 @@ import org.junit.jupiter.params.provider.EnumSource
 import tilgang.Fakes
 import tilgang.Operasjon
 import tilgang.SkjermingConfig
-import tilgang.enhet.EnhetService
-import tilgang.geo.GeoService
+import tilgang.service.EnhetService
+import tilgang.service.GeoService
 import tilgang.integrasjoner.behandlingsflyt.IdenterRespons
 import tilgang.integrasjoner.msgraph.Group
 import tilgang.integrasjoner.msgraph.IMsGraphClient
@@ -22,6 +22,8 @@ import tilgang.integrasjoner.pdl.IPdlGraphQLClient
 import tilgang.integrasjoner.pdl.PdlGeoType
 import tilgang.integrasjoner.pdl.PersonResultat
 import tilgang.integrasjoner.skjerming.SkjermingClient
+import tilgang.service.AdressebeskyttelseService
+import tilgang.service.SkjermingService
 import java.net.URI
 import java.util.*
 
@@ -32,7 +34,7 @@ class RegelServiceTest {
         Fakes().use {
             val graphClient = object : IMsGraphClient {
                 override suspend fun hentAdGrupper(currentToken: String, ident: String): MemberOf {
-                    return MemberOf(groups = listOf(Group(id = "0", name = "000-GA-GEO-abc")))
+                    return MemberOf(groups = listOf(Group(id = UUID.randomUUID(), name = "000-GA-GEO-abc")))
                 }
             }
 
@@ -73,7 +75,18 @@ class RegelServiceTest {
                     return "T131785"
                 }
             }
-            val regelService = RegelService(geoService, enhetService, pdlService, skjermingClient, nomClient)
+
+            val skjermingService = SkjermingService(graphClient)
+
+            val regelService = RegelService(
+                geoService,
+                enhetService,
+                pdlService,
+                skjermingClient,
+                nomClient,
+                skjermingService,
+                AdressebeskyttelseService(graphClient)
+            )
 
             runBlocking {
                 val svar = regelService.vurderTilgang(

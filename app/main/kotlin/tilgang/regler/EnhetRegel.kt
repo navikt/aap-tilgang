@@ -1,7 +1,7 @@
 package tilgang.regler
 
-import tilgang.enhet.EnhetRolle
-import tilgang.enhet.EnhetService
+import tilgang.service.EnhetRolle
+import tilgang.service.EnhetService
 
 data object EnhetRegel : Regel<EnhetInput> {
     override fun vurder(input: EnhetInput): Boolean {

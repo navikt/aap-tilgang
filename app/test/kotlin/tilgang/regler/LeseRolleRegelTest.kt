@@ -11,8 +11,6 @@ class LeseRolleRegelTest {
             LeseRolleRegel.vurder(
                 listOf(
                     Rolle.UTVIKLER,
-                    Rolle.FORTROLIG_ADRESSE,
-                    Rolle.STRENGT_FORTROLIG_ADRESSE
                 )
             )
         )

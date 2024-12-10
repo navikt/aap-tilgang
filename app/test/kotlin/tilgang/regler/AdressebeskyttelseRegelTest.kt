@@ -1,12 +1,23 @@
 package tilgang.regler
 
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
-import tilgang.Rolle
+import tilgang.service.AdressebeskyttelseGruppe
 import tilgang.integrasjoner.pdl.Gradering
 import tilgang.integrasjoner.pdl.PersonResultat
+import java.util.*
 
 class AdressebeskyttelseRegelTest {
+    companion object {
+        @JvmStatic
+        @BeforeAll
+        fun beforeAll() {
+            System.setProperty("fortrolig.adresse.ad", UUID.randomUUID().toString())
+            System.setProperty("strengt.fortrolig.adresse.ad", UUID.randomUUID().toString())
+        }
+    }
+    
     @Test
     fun `Saksbehandler uten fortrolige-roller skal ikke kunne lese fortrolige adresser`() {
         val personListe1 = listOf(
@@ -19,7 +30,7 @@ class AdressebeskyttelseRegelTest {
         assertFalse(
             AdressebeskyttelseRegel.vurder(
                 AdressebeskyttelseInput(
-                    listOf(Rolle.VEILEDER, Rolle.SAKSBEHANDLER),
+                    emptyList(),
                     personListe1
                 )
             )
@@ -27,7 +38,7 @@ class AdressebeskyttelseRegelTest {
         assertFalse(
             AdressebeskyttelseRegel.vurder(
                 AdressebeskyttelseInput(
-                    listOf(Rolle.VEILEDER, Rolle.SAKSBEHANDLER),
+                    emptyList(),
                     personListe2
                 )
             )
@@ -35,7 +46,7 @@ class AdressebeskyttelseRegelTest {
         assertFalse(
             AdressebeskyttelseRegel.vurder(
                 AdressebeskyttelseInput(
-                    listOf(Rolle.VEILEDER, Rolle.SAKSBEHANDLER),
+                    emptyList(),
                     personListe3
                 )
             )
@@ -53,8 +64,7 @@ class AdressebeskyttelseRegelTest {
             AdressebeskyttelseRegel.vurder(
                 AdressebeskyttelseInput(
                     listOf(
-                        Rolle.SAKSBEHANDLER,
-                        Rolle.STRENGT_FORTROLIG_ADRESSE
+                        AdressebeskyttelseGruppe.STRENGT_FORTROLIG_ADRESSE
                     ), personer
                 )
             )
@@ -70,8 +80,7 @@ class AdressebeskyttelseRegelTest {
             AdressebeskyttelseRegel.vurder(
                 AdressebeskyttelseInput(
                     listOf(
-                        Rolle.SAKSBEHANDLER,
-                        Rolle.STRENGT_FORTROLIG_ADRESSE
+                        AdressebeskyttelseGruppe.STRENGT_FORTROLIG_ADRESSE
                     ), personer
                 )
             )
@@ -90,8 +99,7 @@ class AdressebeskyttelseRegelTest {
             AdressebeskyttelseRegel.vurder(
                 AdressebeskyttelseInput(
                     listOf(
-                        Rolle.VEILEDER,
-                        Rolle.FORTROLIG_ADRESSE
+                        AdressebeskyttelseGruppe.FORTROLIG_ADRESSE
                     ), personListe1
                 )
             )
@@ -100,8 +108,7 @@ class AdressebeskyttelseRegelTest {
             AdressebeskyttelseRegel.vurder(
                 AdressebeskyttelseInput(
                     listOf(
-                        Rolle.VEILEDER,
-                        Rolle.FORTROLIG_ADRESSE
+                        AdressebeskyttelseGruppe.FORTROLIG_ADRESSE
                     ), personListe2
                 )
             )

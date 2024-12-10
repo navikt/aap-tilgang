@@ -1,8 +1,8 @@
 package tilgang.regler
 
-import tilgang.geo.GeoRolle
-import tilgang.geo.GeoService
-import tilgang.geo.GeoType
+import tilgang.service.GeoRolle
+import tilgang.service.GeoService
+import tilgang.service.GeoType
 import tilgang.integrasjoner.pdl.HentGeografiskTilknytningResult
 import tilgang.integrasjoner.pdl.IPdlGraphQLClient
 import tilgang.integrasjoner.pdl.PdlGeoType

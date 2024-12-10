@@ -15,8 +15,6 @@ class AvdelingslederRolleRegelTest {
                     Rolle.BESLUTTER,
                     Rolle.VEILEDER,
                     Rolle.LES,
-                    Rolle.STRENGT_FORTROLIG_ADRESSE,
-                    Rolle.FORTROLIG_ADRESSE,
                     Rolle.SAKSBEHANDLER
                 )
             )

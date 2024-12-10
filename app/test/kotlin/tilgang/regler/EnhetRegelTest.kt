@@ -2,7 +2,7 @@ package tilgang.regler
 
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
-import tilgang.enhet.EnhetRolle
+import tilgang.service.EnhetRolle
 
 class EnhetRegelTest {
     @Test

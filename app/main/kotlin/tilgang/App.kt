@@ -17,8 +17,8 @@ import no.nav.aap.komponenter.server.commonKtorModule
 import no.nav.aap.postmottak.saf.graphql.SafGraphqlClient
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import tilgang.enhet.EnhetService
-import tilgang.geo.GeoService
+import tilgang.service.EnhetService
+import tilgang.service.GeoService
 import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytClient
 import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytException
 import tilgang.integrasjoner.msgraph.MsGraphClient
@@ -35,6 +35,8 @@ import tilgang.redis.Redis
 import tilgang.regler.RegelService
 import tilgang.routes.actuator
 import tilgang.routes.tilgang
+import tilgang.service.AdressebeskyttelseService
+import tilgang.service.SkjermingService
 
 val LOGGER: Logger = LoggerFactory.getLogger("aap-tilgang")
 
@@ -57,8 +59,17 @@ fun Application.api(
     val enhetService = EnhetService(msGraph)
     val skjermingClient =
         SkjermingClient(config.azureConfig, config.skjermingConfig, redis, prometheus)
+    val skjermingService = SkjermingService(msGraph)
     val nomClient = NOMClient(config.azureConfig, redis, config.nomConfig, prometheus)
-    val regelService = RegelService(geoService, enhetService, pdl, skjermingClient, nomClient)
+    val regelService = RegelService(
+        geoService,
+        enhetService,
+        pdl,
+        skjermingClient,
+        nomClient,
+        skjermingService,
+        AdressebeskyttelseService(msGraph)
+    )
     val tilgangService = TilgangService(saf, behandlingsflyt, regelService)
 
     install(StatusPages) {

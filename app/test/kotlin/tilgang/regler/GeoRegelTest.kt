@@ -1,12 +1,11 @@
 package tilgang.regler
 
 import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
-import tilgang.geo.GeoRolle
-import tilgang.geo.GeoType
+import tilgang.service.GeoRolle
+import tilgang.service.GeoType
 import tilgang.integrasjoner.pdl.HentGeografiskTilknytningResult
 import tilgang.integrasjoner.pdl.PdlGeoType
 

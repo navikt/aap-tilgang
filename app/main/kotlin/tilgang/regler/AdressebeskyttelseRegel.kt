@@ -1,6 +1,7 @@
 package tilgang.regler
 
-import tilgang.Rolle
+import tilgang.service.AdressebeskyttelseGruppe
+import tilgang.service.AdressebeskyttelseService
 import tilgang.integrasjoner.pdl.Gradering
 import tilgang.integrasjoner.pdl.IPdlGraphQLClient
 import tilgang.integrasjoner.pdl.PersonResultat
@@ -10,16 +11,16 @@ data object AdressebeskyttelseRegel : Regel<AdressebeskyttelseInput> {
         return sjekkAdressebeskyttelse(input.roller, input.personer)
     }
 
-    private fun sjekkAdressebeskyttelse(roller: List<Rolle>, personer: List<PersonResultat>): Boolean {
+    private fun sjekkAdressebeskyttelse(
+        roller: List<AdressebeskyttelseGruppe>,
+        personer: List<PersonResultat>
+    ): Boolean {
         val adresseBeskyttelse = personer.flatMap { it.adressebeskyttelse }
 
-        return adresseBeskyttelse.isEmpty() 
+        return adresseBeskyttelse.isEmpty()
                 || adresseBeskyttelse.all { it === Gradering.UGRADERT }
-                || (Rolle.STRENGT_FORTROLIG_ADRESSE in roller && finnStrengeste(adresseBeskyttelse) in listOf(
-            Gradering.STRENGT_FORTROLIG,
-            Gradering.STRENGT_FORTROLIG_UTLAND
-        ))
-                || (Rolle.FORTROLIG_ADRESSE in roller && finnStrengeste(adresseBeskyttelse) === Gradering.FORTROLIG)
+                || (AdressebeskyttelseGruppe.STRENGT_FORTROLIG_ADRESSE in roller && finnStrengeste(adresseBeskyttelse) in listOf(Gradering.STRENGT_FORTROLIG, Gradering.STRENGT_FORTROLIG_UTLAND))
+                || AdressebeskyttelseGruppe.FORTROLIG_ADRESSE in roller && finnStrengeste(adresseBeskyttelse) === Gradering.FORTROLIG
     }
 
     private fun finnStrengeste(adresseBeskyttelser: List<Gradering>): Gradering {
@@ -32,9 +33,12 @@ data object AdressebeskyttelseRegel : Regel<AdressebeskyttelseInput> {
     }
 }
 
-data class AdressebeskyttelseInput(val roller: List<Rolle>, val personer: List<PersonResultat>)
+data class AdressebeskyttelseInput(val roller: List<AdressebeskyttelseGruppe>, val personer: List<PersonResultat>)
 
-class AdressebeskyttelseInputGenerator(private val pdlService: IPdlGraphQLClient) :
+class AdressebeskyttelseInputGenerator(
+    private val pdlService: IPdlGraphQLClient,
+    private val adressebeskyttelseService: AdressebeskyttelseService
+) :
     InputGenerator<AdressebeskyttelseInput> {
     override suspend fun generer(input: RegelInput): AdressebeskyttelseInput {
         val personer = requireNotNull(
@@ -43,7 +47,7 @@ class AdressebeskyttelseInputGenerator(private val pdlService: IPdlGraphQLClient
                 input.callId
             )
         )
-        return AdressebeskyttelseInput(input.roller, personer)
+        val roller = adressebeskyttelseService.hentAdressebeskyttelseRoller(input.currentToken, input.ansattIdent)
+        return AdressebeskyttelseInput(roller, personer)
     }
-
 }

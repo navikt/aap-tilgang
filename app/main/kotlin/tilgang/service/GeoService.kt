@@ -1,4 +1,4 @@
-package tilgang.geo
+package tilgang.service
 
 import tilgang.integrasjoner.msgraph.IMsGraphClient
 

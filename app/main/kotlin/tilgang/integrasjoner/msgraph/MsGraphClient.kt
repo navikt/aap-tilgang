@@ -16,6 +16,7 @@ import tilgang.redis.Key
 import tilgang.redis.Redis
 import tilgang.redis.Redis.Companion.deserialize
 import tilgang.redis.Redis.Companion.serialize
+import java.util.*
 
 interface IMsGraphClient {
     suspend fun hentAdGrupper(currentToken: String, ident: String): MemberOf
@@ -70,7 +71,7 @@ data class MemberOf(
 
 data class Group(
     @JsonProperty("id")
-    val id: String,
+    val id: UUID,
     @JsonProperty("mailNickname")
     val name: String
 )

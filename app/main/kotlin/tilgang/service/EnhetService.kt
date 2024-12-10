@@ -1,4 +1,4 @@
-package tilgang.enhet
+package tilgang.service
 
 import tilgang.integrasjoner.msgraph.IMsGraphClient
 

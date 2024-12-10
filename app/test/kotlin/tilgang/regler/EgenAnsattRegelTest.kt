@@ -8,25 +8,25 @@ class EgenAnsattRegelTest {
 
     @Test
     fun `Egen ansatt med SKJERMET-rolle skal ha tilgang`() {
-        val input = EgenAnsattInput(true, listOf(Rolle.KAN_BEHANDLE_SKJERMET))
+        val input = EgenAnsattInput(true, true)
         assertTrue(EgenAnsattRegel.vurder(input))
     }
 
     @Test
     fun `Egen ansatt uten SKJERMET-rolle skal ikke ha tilgang`() {
-        val input = EgenAnsattInput(true, listOf(Rolle.VEILEDER))
+        val input = EgenAnsattInput(true, false)
         assertTrue(!EgenAnsattRegel.vurder(input))
     }
 
     @Test
     fun `Ikke-ansatt skal ha tilgang`() {
-        val input = EgenAnsattInput(false, listOf(Rolle.VEILEDER))
+        val input = EgenAnsattInput(false, false)
         assertTrue(EgenAnsattRegel.vurder(input))
     }
 
     @Test
     fun `Ikke-ansatt med SKJERMET-rolle skal ha tilgang`() {
-        val input = EgenAnsattInput(false, listOf(Rolle.KAN_BEHANDLE_SKJERMET))
+        val input = EgenAnsattInput(false, true)
         assertTrue(EgenAnsattRegel.vurder(input))
     }
 }

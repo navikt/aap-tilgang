@@ -16,8 +16,6 @@ class DriftRolleRegelTest {
                     Rolle.VEILEDER,
                     Rolle.AVDELINGSLEDER,
                     Rolle.BESLUTTER,
-                    Rolle.FORTROLIG_ADRESSE,
-                    Rolle.STRENGT_FORTROLIG_ADRESSE
                 )
             )
         )
