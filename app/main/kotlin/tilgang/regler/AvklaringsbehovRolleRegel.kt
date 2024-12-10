@@ -19,9 +19,7 @@ data object AvklaringsbehovRolleRegel : Regel<AvklaringsbehovRolleInput> {
     }
 
     private fun kanAvklareBehov(avklaringsbehov: PostmottakDefinisjon, roller: List<Rolle>): Boolean {
-        return when (avklaringsbehov) {
-            else -> Rolle.SAKSBEHANDLER in roller
-        }
+        return avklaringsbehov.løsesAv.any { it in roller }
     }
 }
 
