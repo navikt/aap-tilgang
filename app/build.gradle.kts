@@ -9,6 +9,7 @@ val ktorVersion = "3.0.2"
 val aapLibVersion = "3.7.145"
 val behandlingsflytVersjon = "0.0.68"
 val postmottakVersjon = "0.0.19"
+val komponenterVersjon = "1.0.81"
 
 application {
     mainClass.set("tilgang.AppKt")
@@ -33,7 +34,7 @@ dependencies {
     implementation("io.ktor:ktor-client-logging:$ktorVersion")
 
     implementation("no.nav:ktor-openapi-generator:1.0.50")
-    implementation("no.nav.aap.kelvin:server:1.0.81")
+    implementation("no.nav.aap.kelvin:server:$komponenterVersjon")
     implementation("io.micrometer:micrometer-registry-prometheus:1.14.1")
     implementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.2")
