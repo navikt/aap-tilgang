@@ -22,7 +22,6 @@ import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
 import no.nav.aap.tilgang.plugin.kontrakt.Behandlingsreferanse
 import no.nav.aap.tilgang.plugin.kontrakt.Journalpostreferanse
 import no.nav.aap.tilgang.plugin.kontrakt.Saksreferanse
-import no.nav.aap.tilgang.plugin.kontrakt.TilgangReferanse
 import org.slf4j.LoggerFactory
 import tilgang.BehandlingTilgangRequest
 import tilgang.JournalpostTilgangRequest

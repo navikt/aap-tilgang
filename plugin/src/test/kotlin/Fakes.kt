@@ -42,13 +42,30 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
         }
         routing {
             post("/token") {
-                val token = AzureTokenGen("behandlingsflyt", "behandlingsflyt").generate()
+                val body = call.receiveText()
+                val token = AzureTokenGen("behandlingsflyt", "behandlingsflyt")
+                    .generate(body.contains("grant_type=client_credentials"))
                 call.respond(TestToken(access_token = token))
             }
             get("/jwks") {
                 call.respond(AZURE_JWKS)
             }
         }
+    }
+
+    private val tilgangTilSak = mutableMapOf<String, Boolean>()
+    fun gittTilgangTilSak(sak: String, tilgang: Boolean) {
+        tilgangTilSak[sak] = tilgang
+    }
+
+    private val tilgangTilBehandling = mutableMapOf<String, Boolean>()
+    fun gittTilgangTilBehandling(behandling: String, tilgang: Boolean) {
+        tilgangTilBehandling[behandling] = tilgang
+    }
+
+    private val tilgangTilJournalpost = mutableMapOf<Long, Boolean>()
+    fun gittTilgangTilJournalpost(journalpost: Long, tilgang: Boolean) {
+        tilgangTilJournalpost[journalpost] = tilgang
     }
 
     private fun Application.tilgangFake() {
@@ -69,15 +86,15 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
             post("/tilgang/sak") {
                 // TODO: Test kontrakten på en litt mer fornuftig måte
                 val req = call.receive<SakTilgangRequest>()
-                call.respond(TilgangResponse(true))
+                call.respond(TilgangResponse(tilgangTilSak[req.saksnummer] == true))
             }
             post("/tilgang/behandling") {
                 val req = call.receive<BehandlingTilgangRequest>()
-                call.respond(TilgangResponse(true))
+                call.respond(TilgangResponse(tilgangTilBehandling[req.behandlingsreferanse] == true))
             }
             post("/tilgang/journalpost") {
                 val req = call.receive<JournalpostTilgangRequest>()
-                call.respond(TilgangResponse(true))
+                call.respond(TilgangResponse(tilgangTilJournalpost[req.journalpostId] == true))
             }
         }
     }
@@ -128,8 +145,8 @@ internal class AzureTokenGen(private val issuer: String, private val audience: S
         return signedJWT
     }
 
-    private fun claims(): JWTClaimsSet {
-        return JWTClaimsSet
+    private fun claims(isApp: Boolean): JWTClaimsSet {
+        val builder = JWTClaimsSet
             .Builder()
             .subject(UUID.randomUUID().toString())
             .issuer(issuer)
@@ -137,15 +154,20 @@ internal class AzureTokenGen(private val issuer: String, private val audience: S
             .expirationTime(LocalDateTime.now().plusHours(4).toDate())
             .claim("NAVident", "Lokalsaksbehandler")
             .claim("azp_name", "azp")
-            .build()
+
+        if (isApp) {
+            builder.claim("idtyp", "app")
+        }
+
+        return builder.build()
     }
 
     private fun LocalDateTime.toDate(): Date {
         return Date.from(this.atZone(ZoneId.systemDefault()).toInstant())
     }
 
-    fun generate(): String {
-        return signed(claims()).serialize()
+    fun generate(isApp: Boolean): String {
+        return signed(claims(isApp)).serialize()
     }
 }
 
