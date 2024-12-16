@@ -1,6 +1,7 @@
 package no.nav.aap.tilgang.plugin.kontrakt
 
 interface Journalpostreferanse : TilgangReferanse {
-    fun hentJournalpostreferanse(): Long
+    fun journalpostIdResolverInput(): String
+    fun journalpostIdResolver(): JournalpostIdResolver
     fun hentAvklaringsbehovKode(): String?
 }

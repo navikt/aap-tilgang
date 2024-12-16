@@ -3,6 +3,7 @@ package no.nav.aap.tilgang
 import io.ktor.http.Parameters
 import io.ktor.server.util.getOrFail
 import no.nav.aap.tilgang.plugin.kontrakt.Behandlingsreferanse
+import no.nav.aap.tilgang.plugin.kontrakt.JournalpostIdResolver
 import no.nav.aap.tilgang.plugin.kontrakt.Journalpostreferanse
 import no.nav.aap.tilgang.plugin.kontrakt.Saksreferanse
 import no.nav.aap.tilgang.plugin.kontrakt.TilgangReferanse
@@ -39,10 +40,12 @@ data class AuthorizationParamPathConfig(
             )
         }
         if (journalpostPathParam != null) {
+            val journalpostId =
+                journalpostPathParam.resolver.resolve(parameters.getOrFail(journalpostPathParam.param))
             return AuthorizedRequest(
                 applicationsOnly,
                 approvedApplications, JournalpostTilgangRequest(
-                    journalpostId = parameters.getOrFail(journalpostPathParam.param).toLong(),
+                    journalpostId = journalpostId,
                     operasjon = operasjon,
                     avklaringsbehovKode = null
                 )
@@ -59,7 +62,8 @@ data class AuthorizationParamPathConfig(
 data class AuthorizationBodyPathConfig(
     val operasjon: Operasjon,
     val approvedApplications: Set<String> = emptySet(),
-    val applicationsOnly: Boolean = false
+    val applicationsOnly: Boolean = false,
+    val journalpostIdResolver: JournalpostIdResolver? = null
 ) {
 
     fun tilTilgangRequest(request: Any): AuthorizedRequest {
@@ -86,7 +90,8 @@ data class AuthorizationBodyPathConfig(
                     }
 
                     is Journalpostreferanse -> {
-                        val referanse = request.hentJournalpostreferanse()
+                        val referanse =
+                            requireNotNull(journalpostIdResolver).resolve(request.journalpostIdResolverInput())
                         val avklaringsbehovKode = request.hentAvklaringsbehovKode()
                         return AuthorizedRequest(
                             applicationsOnly,

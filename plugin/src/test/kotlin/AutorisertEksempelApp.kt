@@ -1,4 +1,5 @@
 import TilgangPluginTest.Companion.IngenReferanse
+import TilgangPluginTest.Companion.Journalpostinfo
 import TilgangPluginTest.Companion.Saksinfo
 import TilgangPluginTest.Companion.TestReferanse
 import TilgangPluginTest.Companion.uuid
@@ -16,16 +17,44 @@ import no.nav.aap.komponenter.server.AZURE
 import no.nav.aap.komponenter.server.commonKtorModule
 import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
+import no.nav.aap.tilgang.JournalpostPathParam
 import no.nav.aap.tilgang.SakPathParam
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
+import no.nav.aap.tilgang.plugin.kontrakt.JournalpostIdResolver
 import tilgang.Operasjon
+import kotlin.random.Random
 
 fun Application.autorisertEksempelApp() {
     commonKtorModule(PrometheusMeterRegistry(PrometheusConfig.DEFAULT), AzureConfig(), InfoModel())
     routing {
         authenticate(AZURE) {
             apiRouting {
+                route("testApi/journalpost") {
+                    route("{behandlingReferanse}") {
+                        authorizedGet<Journalpostinfo, Long>(
+                            AuthorizationParamPathConfig(
+                                journalpostPathParam = JournalpostPathParam(
+                                    "behandlingReferanse",
+                                    JournalpostIdResolver {
+                                        Random.nextLong()
+                                    })
+                            )
+                        ) { req ->
+                            respond(req.journalpostIdResolver().resolve(req.journalpostIdResolverInput()))
+                        }
+                    }
+                    route("post") {
+                        authorizedPost<Unit, Long, Journalpostinfo>(
+                            AuthorizationBodyPathConfig(
+                                operasjon = Operasjon.SAKSBEHANDLE,
+                                approvedApplications = setOf("azp")
+                            )
+                        ) { _, dto ->
+                            respond(dto.journalpostIdResolver().resolve(dto.journalpostIdResolverInput()))
+                        }
+                    }
+                }
                 route("testApi/authorizedGet/{saksnummer}") {
                     route("on-behalf-of") {
                         authorizedGet<TestReferanse, Saksinfo>(
