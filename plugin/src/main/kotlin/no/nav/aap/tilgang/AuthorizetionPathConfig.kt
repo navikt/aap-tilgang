@@ -63,7 +63,7 @@ data class AuthorizationBodyPathConfig(
     val operasjon: Operasjon,
     val approvedApplications: Set<String> = emptySet(),
     val applicationsOnly: Boolean = false,
-    val journalpostIdResolver: JournalpostIdResolver? = null
+    val journalpostIdResolver: JournalpostIdResolver? = DefaultJournalpostIdResolver()
 ) {
 
     fun tilTilgangRequest(request: Any): AuthorizedRequest {
