@@ -195,4 +195,18 @@ class TilgangPluginTest {
         assertThat(res1?.saksnummer).isEqualTo(uuid)
         assertThat(res2?.saksnummer).isEqualTo(uuid)
     }
+    
+    @Test
+    fun `post støtter path params`() {
+        val behandlingsRef = "123"
+        val journalpostId = 456L
+        fakes.gittTilgangTilJournalpost(journalpostId, true)
+        val res = clientForOBO.post<_, IngenReferanse>(
+            URI.create("http://localhost:8082/")
+                .resolve("testApi/pathForPost/$behandlingsRef"),
+            PostRequest(IngenReferanse("test"), currentToken = getOboToken())
+        )
+
+        assertThat(res?.noe).isEqualTo("test")
+    }
 }

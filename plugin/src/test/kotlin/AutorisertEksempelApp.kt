@@ -29,6 +29,22 @@ fun Application.autorisertEksempelApp() {
     routing {
         authenticate(AZURE) {
             apiRouting {
+                route("testApi/pathForPost/{behandlingReferanse}") {
+                    authorizedPost<Journalpostinfo, IngenReferanse, IngenReferanse>(
+                        AuthorizationParamPathConfig(
+                            operasjon = Operasjon.SAKSBEHANDLE,
+                            avklaringsbehovKode = "1337",
+                            journalpostPathParam = JournalpostPathParam(
+                                "behandlingReferanse",
+                            )
+                            { 456 }
+                        )
+                    ) { _, dto ->
+                        respond(
+                            dto
+                        )
+                    }
+                }
                 route("testApi/journalpost") {
                     route("{behandlingReferanse}") {
                         authorizedGet<Journalpostinfo, Long>(

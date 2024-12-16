@@ -14,6 +14,8 @@ import tilgang.SakTilgangRequest
 import tilgang.TilgangRequest
 
 data class AuthorizationParamPathConfig(
+    val operasjon: Operasjon = Operasjon.SE,
+    val avklaringsbehovKode: String? = null,
     val approvedApplications: Set<String> = emptySet(),
     val applicationsOnly: Boolean = false,
     val sakPathParam: SakPathParam? = null,
@@ -21,7 +23,11 @@ data class AuthorizationParamPathConfig(
     val journalpostPathParam: JournalpostPathParam? = null
 ) {
 
-    internal fun tilTilgangRequest(operasjon: Operasjon, parameters: Parameters): AuthorizedRequest {
+    internal fun tilTilgangRequest(parameters: Parameters): AuthorizedRequest {
+        require(operasjon != Operasjon.SAKSBEHANDLE || avklaringsbehovKode != null) {
+            "Avklaringsbehovkode må være satt for operasjon SAKSBEHANDLE"
+        }
+
         if (sakPathParam != null) {
             return AuthorizedRequest(
                 applicationsOnly,
@@ -35,7 +41,7 @@ data class AuthorizationParamPathConfig(
                 approvedApplications, BehandlingTilgangRequest(
                     behandlingsreferanse = parameters.getOrFail(behandlingPathParam.param),
                     operasjon = operasjon,
-                    avklaringsbehovKode = null
+                    avklaringsbehovKode = avklaringsbehovKode
                 )
             )
         }
@@ -47,7 +53,7 @@ data class AuthorizationParamPathConfig(
                 approvedApplications, JournalpostTilgangRequest(
                     journalpostId = journalpostId,
                     operasjon = operasjon,
-                    avklaringsbehovKode = null
+                    avklaringsbehovKode = avklaringsbehovKode
                 )
             )
         }

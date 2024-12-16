@@ -40,6 +40,21 @@ inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : A
     }
 }
 
+inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : Any> NormalOpenAPIRoute.authorizedPost(
+    pathConfig: AuthorizationParamPathConfig,
+    vararg modules: RouteOpenAPIModule,
+    noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams, TRequest) -> Unit
+) {
+    ktorRoute.installerTilgangParamPlugin(pathConfig)
+    @Suppress("UnauthorizedPost")
+    post<TParams, TResponse, TRequest>(tilgangkontrollertTag, *modules) { params, request ->
+        body(
+            params,
+            request
+        )
+    }
+}
+
 inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : Any> NormalOpenAPIRoute.authorizedPut(
     pathConfig: AuthorizationBodyPathConfig,
     vararg modules: RouteOpenAPIModule,

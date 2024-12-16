@@ -41,7 +41,7 @@ fun Route.installerTilgangParamPlugin(
         throw IllegalStateException("Fant allerede registeret tilgang plugin")
     }
     install(buildTilgangPlugin { call: ApplicationCall ->
-        config.tilTilgangRequest(Operasjon.SE, call.parameters)
+        config.tilTilgangRequest(call.parameters)
     })
 }
 
