@@ -18,7 +18,6 @@ import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.OnBehalfOfTokenProvider
 import no.nav.aap.tilgang.*
-import no.nav.aap.tilgang.plugin.kontrakt.JournalpostIdResolver
 import no.nav.aap.tilgang.plugin.kontrakt.Journalpostreferanse
 import no.nav.aap.tilgang.plugin.kontrakt.Saksreferanse
 import org.assertj.core.api.Assertions.assertThat
@@ -27,7 +26,6 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.net.URI
 import java.util.*
-import kotlin.random.Random
 
 class TilgangPluginTest {
     companion object {
@@ -67,12 +65,6 @@ class TilgangPluginTest {
         data class Journalpostinfo(@PathParam("behandlingReferanse") val behandlingReferanse: String) : Journalpostreferanse {
             override fun journalpostIdResolverInput(): String {
                 return behandlingReferanse
-            }
-
-            override fun journalpostIdResolver(): JournalpostIdResolver {
-                return JournalpostIdResolver {
-                    Random.nextLong()
-                }
             }
 
             override fun hentAvklaringsbehovKode(): String? {

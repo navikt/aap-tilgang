@@ -9,7 +9,7 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.server.application.Application
 import io.ktor.server.auth.authenticate
-import io.ktor.server.routing.routing
+import io.ktor.server.routing.*
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureConfig
@@ -21,7 +21,6 @@ import no.nav.aap.tilgang.JournalpostPathParam
 import no.nav.aap.tilgang.SakPathParam
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
-import no.nav.aap.tilgang.plugin.kontrakt.JournalpostIdResolver
 import tilgang.Operasjon
 import kotlin.random.Random
 
@@ -36,12 +35,11 @@ fun Application.autorisertEksempelApp() {
                             AuthorizationParamPathConfig(
                                 journalpostPathParam = JournalpostPathParam(
                                     "behandlingReferanse",
-                                    JournalpostIdResolver {
-                                        Random.nextLong()
-                                    })
+                                )
+                                { Random.nextLong() }
                             )
                         ) { req ->
-                            respond(req.journalpostIdResolver().resolve(req.journalpostIdResolverInput()))
+                            respond(Random.nextLong())
                         }
                     }
                     route("post") {
@@ -51,7 +49,9 @@ fun Application.autorisertEksempelApp() {
                                 approvedApplications = setOf("azp")
                             )
                         ) { _, dto ->
-                            respond(dto.journalpostIdResolver().resolve(dto.journalpostIdResolverInput()))
+                            respond(
+                                Random.nextLong()
+                            )
                         }
                     }
                 }
