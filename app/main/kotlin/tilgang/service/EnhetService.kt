@@ -1,10 +1,11 @@
 package tilgang.service
 
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import tilgang.integrasjoner.msgraph.IMsGraphClient
 
 class EnhetService(private val msGraphClient: IMsGraphClient) {
 
-    fun hentEnhetRoller(currentToken: String, ident: String): List<EnhetRolle> {
+    fun hentEnhetRoller(currentToken: OidcToken, ident: String): List<EnhetRolle> {
         return msGraphClient.hentAdGrupper(currentToken, ident).groups
             .filter { it.name.startsWith(ENHET_GROUP_PREFIX) }
             .map { parseEnhetRolle(it.name) }

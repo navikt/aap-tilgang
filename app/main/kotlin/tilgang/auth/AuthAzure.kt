@@ -3,6 +3,7 @@ package tilgang.auth
 import com.papsign.ktor.openapigen.route.response.OpenAPIPipelineContext
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 
 internal fun OpenAPIPipelineContext.roller(): List<String> {
     val roller = requireNotNull(pipeline.call.principal<JWTPrincipal>()) {
@@ -16,11 +17,5 @@ internal fun OpenAPIPipelineContext.ident(): String {
         "principal mangler i ktor auth"
     }.getClaim("NAVident", String::class)
         ?: error("Ident mangler i token claims")
-}
-
-internal fun OpenAPIPipelineContext.token(): String {
-    return requireNotNull(pipeline.call.request.headers["Authorization"]) {
-        "Authorization header mangler"
-    }.split(" ")[1]
 }
 

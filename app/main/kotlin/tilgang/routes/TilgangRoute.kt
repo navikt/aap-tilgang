@@ -8,10 +8,10 @@ import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
 import io.ktor.server.request.*
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
+import no.nav.aap.komponenter.httpklient.auth.token
 import tilgang.*
 import tilgang.auth.ident
 import tilgang.auth.roller
-import tilgang.auth.token
 import tilgang.metrics.httpCallCounter
 import tilgang.regler.parseRoller
 

@@ -3,9 +3,11 @@ package tilgang.regler
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
+import tilgang.AzureTokenGen
 import tilgang.fakes.Fakes
 import tilgang.Operasjon
 import tilgang.service.EnhetService
@@ -30,7 +32,7 @@ class RegelServiceTest {
     fun `skal alltid gi false når roller er tom array`(avklaringsbehov: Definisjon) {
         Fakes().use {
             val graphClient = object : IMsGraphClient {
-                override fun hentAdGrupper(currentToken: String, ident: String): MemberOf {
+                override fun hentAdGrupper(currentToken: OidcToken, ident: String): MemberOf {
                     return MemberOf(groups = listOf(Group(id = UUID.randomUUID(), name = "000-GA-GEO-abc")))
                 }
             }
@@ -79,13 +81,14 @@ class RegelServiceTest {
                 AdressebeskyttelseService(graphClient)
             )
 
+            val token = AzureTokenGen("tilgangazure", "tilgang").generate()
             val svar = regelService.vurderTilgang(
                 RegelInput(
                     callId = UUID.randomUUID().toString(),
                     ansattIdent = "123",
                     avklaringsbehovFraBehandlingsflyt = avklaringsbehov,
                     avklaringsbehovFraPostmottak = null,
-                    currentToken = "xxx",
+                    currentToken = OidcToken(token),
                     søkerIdenter = IdenterRespons(søker = listOf("423"), barn = listOf()),
                     operasjon = Operasjon.SAKSBEHANDLE,
                     roller = listOf()

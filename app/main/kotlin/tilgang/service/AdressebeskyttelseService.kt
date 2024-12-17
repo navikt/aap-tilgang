@@ -1,12 +1,13 @@
 package tilgang.service
 
 import no.nav.aap.komponenter.config.requiredConfigForKey
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import tilgang.integrasjoner.msgraph.IMsGraphClient
 import java.util.*
 
 class AdressebeskyttelseService(private val msGraphClient: IMsGraphClient) {
     fun hentAdressebeskyttelseRoller(
-        currentToken: String, oboIdent: String
+        currentToken: OidcToken, oboIdent: String
     ): List<AdressebeskyttelseGruppe> {
         return msGraphClient.hentAdGrupper(currentToken, oboIdent).groups
             .filter { gruppe -> gruppe.id in AdressebeskyttelseGruppe.entries.map { it.gruppeId } }
