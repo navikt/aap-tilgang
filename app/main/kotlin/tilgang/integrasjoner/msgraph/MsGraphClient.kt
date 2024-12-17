@@ -26,7 +26,7 @@ class MsGraphClient(
     private val redis: Redis,
     private val prometheus: PrometheusMeterRegistry
 ) : IMsGraphClient {
-    private val baseUrl = URI.create(requiredConfigForKey("ms.graph.base.url"))
+    private val baseUrl = URI.create(requiredConfigForKey("ms.graph.base.url")).resolve("/v1.0")
     
     private val clientConfig = ClientConfig(
         scope = requiredConfigForKey("ms.graph.scope")
