@@ -9,7 +9,7 @@ val ktorVersion = "3.0.2"
 val aapLibVersion = "3.7.145"
 val behandlingsflytVersjon = "0.0.71"
 val postmottakVersjon = "0.0.20"
-val komponenterVersjon = "1.0.89"
+val komponenterVersjon = "1.0.91"
 
 application {
     mainClass.set("tilgang.AppKt")
