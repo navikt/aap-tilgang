@@ -26,7 +26,7 @@ class MsGraphClient(
     private val redis: Redis,
     private val prometheus: PrometheusMeterRegistry
 ) : IMsGraphClient {
-    private val baseUrl = URI.create(requiredConfigForKey("ms.graph.base.url")).resolve("/v1.0")
+    private val baseUrl = URI.create(requiredConfigForKey("ms.graph.base.url"))
     
     private val clientConfig = ClientConfig(
         scope = requiredConfigForKey("ms.graph.scope")
@@ -43,7 +43,7 @@ class MsGraphClient(
         }
         prometheus.cacheMiss(MSGRAPH_PREFIX).increment()
         
-        val url = baseUrl.resolve("/me/memberOf")
+        val url = baseUrl.resolve("me/memberOf")
         val respons = httpClient.get<MemberOf>(url, GetRequest(currentToken = currentToken)) ?: MemberOf()
         redis.set(Key(MSGRAPH_PREFIX, ident), respons.serialize())
         return respons
