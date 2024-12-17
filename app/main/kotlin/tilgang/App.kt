@@ -23,8 +23,8 @@ import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytClient
 import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytException
 import tilgang.integrasjoner.msgraph.MsGraphClient
 import tilgang.integrasjoner.msgraph.MsGraphException
-import tilgang.integrasjoner.nom.NOMClient
-import tilgang.integrasjoner.nom.NOMException
+import tilgang.integrasjoner.nom.NomClient
+import tilgang.integrasjoner.nom.NomException
 import tilgang.integrasjoner.pdl.PdlException
 import tilgang.integrasjoner.pdl.PdlGraphQLClient
 import tilgang.integrasjoner.saf.SafException
@@ -46,29 +46,20 @@ fun main() {
 }
 
 fun Application.api(
-    config: Config = Config(),
-    redis: Redis = Redis(config.redis)
+    config: Config = Config(), redis: Redis = Redis(config.redis)
 ) {
     val prometheus = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
-    val pdl = PdlGraphQLClient(config.azureConfig, config.pdlConfig, redis, prometheus)
-    val msGraph = MsGraphClient(config.azureConfig, config.msGraphConfig, redis, prometheus)
-    val behandlingsflyt =
-        BehandlingsflytClient(config.azureConfig, config.behandlingsflytConfig, redis, prometheus)
-    val saf = SafGraphqlClient(config.azureConfig, config.safConfig, redis, prometheus)
+    val pdl = PdlGraphQLClient(redis, prometheus)
+    val msGraph = MsGraphClient(redis, prometheus)
+    val behandlingsflyt = BehandlingsflytClient(redis, prometheus)
+    val saf = SafGraphqlClient(redis, prometheus)
     val geoService = GeoService(msGraph)
     val enhetService = EnhetService(msGraph)
-    val skjermingClient =
-        SkjermingClient(config.azureConfig, config.skjermingConfig, redis, prometheus)
+    val skjermingClient = SkjermingClient(redis, prometheus)
     val skjermingService = SkjermingService(msGraph)
-    val nomClient = NOMClient(config.azureConfig, redis, config.nomConfig, prometheus)
+    val nomClient = NomClient(redis, prometheus)
     val regelService = RegelService(
-        geoService,
-        enhetService,
-        pdl,
-        skjermingClient,
-        nomClient,
-        skjermingService,
-        AdressebeskyttelseService(msGraph)
+        geoService, enhetService, pdl, skjermingClient, nomClient, skjermingService, AdressebeskyttelseService(msGraph)
     )
     val tilgangService = TilgangService(saf, behandlingsflyt, regelService)
 
@@ -77,64 +68,55 @@ fun Application.api(
             LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause)
             prometheus.uhåndtertExceptionTeller(cause.javaClass.name).increment()
             call.respondText(
-                text = "Feil i PDL: ${cause.message}",
-                status = HttpStatusCode.InternalServerError
+                text = "Feil i PDL: ${cause.message}", status = HttpStatusCode.InternalServerError
             )
         }
         exception<MsGraphException> { call, cause ->
             LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause)
             prometheus.uhåndtertExceptionTeller(cause.javaClass.name).increment()
             call.respondText(
-                text = "Feil i Microsoft Graph: ${cause.message}",
-                status = HttpStatusCode.InternalServerError
+                text = "Feil i Microsoft Graph: ${cause.message}", status = HttpStatusCode.InternalServerError
             )
         }
         exception<BehandlingsflytException> { call, cause ->
             LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause)
             prometheus.uhåndtertExceptionTeller(cause.javaClass.name).increment()
             call.respondText(
-                text = "Feil i behandlingsflyt: ${cause.message}",
-                status = HttpStatusCode.InternalServerError
+                text = "Feil i behandlingsflyt: ${cause.message}", status = HttpStatusCode.InternalServerError
             )
         }
         exception<SafException> { call, cause ->
             LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause)
             prometheus.uhåndtertExceptionTeller(cause.javaClass.name).increment()
             call.respondText(
-                text = "Feil i SAF: ${cause.message}",
-                status = HttpStatusCode.InternalServerError
+                text = "Feil i SAF: ${cause.message}", status = HttpStatusCode.InternalServerError
             )
         }
-        exception<NOMException> { call, cause ->
+        exception<NomException> { call, cause ->
             LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause)
             prometheus.uhåndtertExceptionTeller(cause.javaClass.name).increment()
             call.respondText(
-                text = "Feil i NOM: ${cause.message}",
-                status = HttpStatusCode.InternalServerError
+                text = "Feil i NOM: ${cause.message}", status = HttpStatusCode.InternalServerError
             )
         }
         exception<SkjermingException> { call, cause ->
             LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause)
             prometheus.uhåndtertExceptionTeller(cause.javaClass.name).increment()
             call.respondText(
-                text = "Feil i skjerming: ${cause.message}",
-                status = HttpStatusCode.InternalServerError
+                text = "Feil i skjerming: ${cause.message}", status = HttpStatusCode.InternalServerError
             )
         }
         exception<Throwable> { call, cause ->
             LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause)
             prometheus.uhåndtertExceptionTeller(cause.javaClass.name).increment()
             call.respondText(
-                text = "Feil i tjeneste: ${cause.message}",
-                status = HttpStatusCode.InternalServerError
+                text = "Feil i tjeneste: ${cause.message}", status = HttpStatusCode.InternalServerError
             )
         }
     }
 
     commonKtorModule(
-        prometheus,
-        azureConfig = config.azureConfig,
-        infoModel = InfoModel(title = "AAP - Tilgang")
+        prometheus, azureConfig = config.azureConfig, infoModel = InfoModel(title = "AAP - Tilgang")
     )
 
     routing {

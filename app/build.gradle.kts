@@ -36,6 +36,7 @@ dependencies {
     implementation("no.nav:ktor-openapi-generator:1.0.50")
     implementation("no.nav.aap.kelvin:server:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:infrastructure:$komponenterVersjon")
+    implementation("no.nav.aap.kelvin:httpklient:$komponenterVersjon")
     implementation("io.micrometer:micrometer-registry-prometheus:1.14.2")
     implementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.2")

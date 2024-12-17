@@ -4,7 +4,7 @@ import org.slf4j.LoggerFactory
 import tilgang.Operasjon
 import tilgang.service.EnhetService
 import tilgang.service.GeoService
-import tilgang.integrasjoner.nom.INOMClient
+import tilgang.integrasjoner.nom.INomClient
 import tilgang.integrasjoner.pdl.IPdlGraphQLClient
 import tilgang.integrasjoner.skjerming.SkjermingClient
 import tilgang.service.AdressebeskyttelseService
@@ -17,7 +17,7 @@ class RegelService(
     enhetService: EnhetService,
     pdlService: IPdlGraphQLClient,
     skjermetClient: SkjermingClient,
-    nomClient: INOMClient,
+    nomClient: INomClient,
     skjermingService: SkjermingService,
     adressebeskyttelseService: AdressebeskyttelseService
 ) {

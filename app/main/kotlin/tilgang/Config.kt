@@ -16,44 +16,7 @@ data class Config(
         // Role(Rolle.AVDELINGSLEDER, UUID.fromString(getEnvVar("AAP_AVDELINGSLEDER"))), //TODO: Les inn disse
         // Role(Rolle.UTVIKLER, UUID.fromString(getEnvVar("AAP_UTVIKLER"))),
     ),
-    val pdlConfig: PdlConfig = PdlConfig(),
-    val msGraphConfig: MsGraphConfig = MsGraphConfig(),
-    val behandlingsflytConfig: BehandlingsflytConfig = BehandlingsflytConfig(),
-    val safConfig: SafConfig = SafConfig(),
-    val skjermingConfig: SkjermingConfig = SkjermingConfig(),
-    val nomConfig: NOMConfig = NOMConfig(),
     val redis: RedisConfig = RedisConfig()
-)
-
-data class PdlConfig(
-    val baseUrl: String = getEnvVar("PDL_BASE_URL"),
-    val audience: String = getEnvVar("PDL_AUDIENCE"),
-    val scope: String = getEnvVar("PDL_SCOPE")
-)
-
-data class SafConfig(
-    val baseUrl: String = getEnvVar("SAF_BASE_URL"),
-    val scope: String = getEnvVar("SAF_SCOPE")
-)
-
-data class MsGraphConfig(
-    val baseUrl: String = getEnvVar("MS_GRAPH_BASE_URL"),
-    val scope: String = getEnvVar("MS_GRAPH_SCOPE")
-)
-
-data class BehandlingsflytConfig(
-    val baseUrl: String = getEnvVar("BEHANDLINGSFLYT_BASE_URL"),
-    val scope: String = getEnvVar("BEHANDLINGSFLYT_SCOPE")
-)
-
-data class SkjermingConfig(
-    val baseUrl: String = getEnvVar("SKJERMING_BASE_URL"),
-    val scope: String = getEnvVar("SKJERMING_SCOPE")
-)
-
-data class NOMConfig(
-    val baseUrl: String = getEnvVar("NOM_BASE_URL"),
-    val scope: String = getEnvVar("NOM_SCOPE")
 )
 
 data class Role(

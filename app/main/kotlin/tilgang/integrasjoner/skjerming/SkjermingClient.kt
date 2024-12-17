@@ -1,19 +1,12 @@
 package tilgang.integrasjoner.skjerming
 
-import io.ktor.client.call.body
-import io.ktor.client.request.bearerAuth
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.ContentType
-import io.ktor.http.HttpStatusCode
-import io.ktor.http.contentType
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureConfig
-import tilgang.LOGGER
-import tilgang.SkjermingConfig
-import tilgang.auth.AzureAdTokenProvider
-import tilgang.http.HttpClientFactory
+import no.nav.aap.komponenter.config.requiredConfigForKey
+import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
+import no.nav.aap.komponenter.httpklient.httpclient.RestClient
+import no.nav.aap.komponenter.httpklient.httpclient.post
+import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import tilgang.integrasjoner.behandlingsflyt.IdenterRespons
 import tilgang.metrics.cacheHit
 import tilgang.metrics.cacheMiss
@@ -21,48 +14,38 @@ import tilgang.redis.Key
 import tilgang.redis.Redis
 import tilgang.redis.Redis.Companion.deserialize
 import tilgang.redis.Redis.Companion.serialize
-
+import java.net.URI
 
 open class SkjermingClient(
-    azureConfig: AzureConfig,
-    private val skjermingConfig: SkjermingConfig,
     private val redis: Redis,
     private val prometheus: PrometheusMeterRegistry
 ) {
-    private val azureTokenProvider = AzureAdTokenProvider(
-        azureConfig,
-        skjermingConfig.scope
-    ).also { LOGGER.info("azure scope: ${skjermingConfig.scope}") }
-    val httpClient = HttpClientFactory.create()
+    private val baseUrl = URI.create(requiredConfigForKey("skjerming.base.url"))
+    private val config = ClientConfig(
+        scope = requiredConfigForKey("skjerming.scope")
+    )
+    private val httpClient = RestClient.withDefaultResponseHandler(
+        config = config,
+        tokenProvider = ClientCredentialsTokenProvider
+    )
 
     open suspend fun isSkjermet(identer: IdenterRespons): Boolean {
-        val azureToken = azureTokenProvider.getClientCredentialToken()
-
         if (redis.exists(Key(SKJERMING_PREFIX, identer.søker.first()))) {
             prometheus.cacheHit(SKJERMING_PREFIX).increment()
             return redis[Key(SKJERMING_PREFIX, identer.søker.first())]!!.deserialize()
         }
         prometheus.cacheMiss(SKJERMING_PREFIX).increment()
 
-        val url = "${skjermingConfig.baseUrl}/skjermetBulk"
+        val url = baseUrl.resolve("/skjermetBulk")
         val alleRelaterteSøkerIdenter = (identer.søker + identer.barn).distinct()
 
-        val response = httpClient.post(url) {
-            contentType(ContentType.Application.Json)
-            bearerAuth(azureToken)
-            setBody(SkjermetDataBulkRequestDTO(alleRelaterteSøkerIdenter))
-        }
-        return when (response.status) {
-            HttpStatusCode.OK -> {
-                val result = response.body<Map<String, Boolean>>()
-                val eksistererSkjermet = result.values.any { identIsSkjermet -> identIsSkjermet }
-                redis.set(Key(SKJERMING_PREFIX, identer.søker.first()), eksistererSkjermet.serialize())
-                eksistererSkjermet
-            }
+        val response: Map<String, Boolean> =
+            httpClient.post(url, PostRequest(SkjermetDataBulkRequestDTO(alleRelaterteSøkerIdenter)))
+                ?: throw SkjermingException("Feil ved henting av skjerming")
 
-            else -> throw SkjermingException("Feil ved henting av skjerming for ident: ${response.status} : ${response.bodyAsText()}")
-        }
-
+        val eksistererSkjermet = response.values.any { identIsSkjermet -> identIsSkjermet }
+        redis.set(Key(SKJERMING_PREFIX, identer.søker.first()), eksistererSkjermet.serialize())
+        return eksistererSkjermet
     }
 
     companion object {

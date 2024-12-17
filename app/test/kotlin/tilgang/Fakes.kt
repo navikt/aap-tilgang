@@ -27,6 +27,18 @@ class Fakes(azurePort: Int = 0): AutoCloseable {
         System.setProperty("azure.app.client.secret", "")
         System.setProperty("azure.openid.config.jwks.uri", "http://localhost:${azure.port()}/jwks")
         System.setProperty("azure.openid.config.issuer", "tilgang")
+
+        // TODO: Lag fakes for disse
+        System.setProperty("saf.base.url", "test")
+        System.setProperty("saf.scope", "saf")
+        System.setProperty("nom.scope", "nom")
+        System.setProperty("nom.base.url", "test")
+        System.setProperty("skjerming.scope", "skjerming")
+        System.setProperty("skjerming.base.url", "test")
+        System.setProperty("behandlingsflyt.scope", "behandlingsflyt")
+        System.setProperty("behandlingsflyt.base.url", "test")
+        System.setProperty("ms.graph.scope", "msgraph")
+        System.setProperty("ms.graph.base.url", "test")
     }
 
     fun azurePort(): Int {

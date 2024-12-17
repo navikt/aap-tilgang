@@ -2,11 +2,11 @@ package tilgang.integrasjoner.nom
 
 import tilgang.graphql.asQuery
 
-internal data class NOMRequest(val query: String, val variables: Variables) {
+internal data class NomRequest(val query: String, val variables: Variables) {
     data class Variables(val personident: String)
 
     companion object {
-        fun hentNavIdentFraPersonIdent(personident: String) = NOMRequest(
+        fun hentNavIdentFraPersonIdent(personident: String) = NomRequest(
             query = RESSURS_PERSONNUMMER_TIL_NAVIDENT_QUERY.asQuery(),
             variables = Variables(personident = personident),
         )

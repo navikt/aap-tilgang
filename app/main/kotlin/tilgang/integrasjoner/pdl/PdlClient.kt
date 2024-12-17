@@ -1,20 +1,20 @@
 package tilgang.integrasjoner.pdl
 
-import io.ktor.client.call.*
-import io.ktor.client.request.*
-import io.ktor.http.*
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureConfig
-import tilgang.LOGGER
-import tilgang.PdlConfig
-import tilgang.auth.AzureAdTokenProvider
-import tilgang.http.HttpClientFactory
+import no.nav.aap.komponenter.config.requiredConfigForKey
+import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
+import no.nav.aap.komponenter.httpklient.httpclient.Header
+import no.nav.aap.komponenter.httpklient.httpclient.RestClient
+import no.nav.aap.komponenter.httpklient.httpclient.post
+import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import tilgang.metrics.cacheHit
 import tilgang.metrics.cacheMiss
 import tilgang.redis.Key
 import tilgang.redis.Redis
 import tilgang.redis.Redis.Companion.deserialize
 import tilgang.redis.Redis.Companion.serialize
+import java.net.URI
 
 interface IPdlGraphQLClient {
     suspend fun hentPersonBolk(personidenter: List<String>, callId: String): List<PersonResultat>?
@@ -23,20 +23,20 @@ interface IPdlGraphQLClient {
 }
 
 class PdlGraphQLClient(
-    azureConfig: AzureConfig,
-    private val pdlConfig: PdlConfig,
     private val redis: Redis,
     private val prometheus: PrometheusMeterRegistry
 ) : IPdlGraphQLClient {
-    private val httpClient = HttpClientFactory.create()
-    private val azureTokenProvider = AzureAdTokenProvider(
-        azureConfig,
-        pdlConfig.scope
-    ).also { LOGGER.info("azure scope: ${pdlConfig.scope}") }
+    private val baseUrl = URI.create(requiredConfigForKey("pdl.base.url"))
+    private val clientConfig = ClientConfig(
+        scope = requiredConfigForKey("pdl.scope"),
+    )
+    private val httpClient =  RestClient(
+        config = clientConfig,
+        tokenProvider = ClientCredentialsTokenProvider,
+        responseHandler = PdlResponseHandler()
+    )
 
     override suspend fun hentPersonBolk(personidenter: List<String>, callId: String): List<PersonResultat>? {
-        val azureToken = azureTokenProvider.getClientCredentialToken()
-
         val personBolkResult: List<PersonResultat> = personidenter.filter {
             redis.exists(Key(PERSON_BOLK_PREFIX, it))
         }.map {
@@ -54,7 +54,7 @@ class PdlGraphQLClient(
         
         prometheus.cacheMiss(PERSON_BOLK_PREFIX).increment(manglendePersonidenter.size.toDouble())
 
-        val result = query(azureToken, PdlRequest.hentPersonBolk(manglendePersonidenter), callId)
+        val result = query(PdlRequest.hentPersonBolk(manglendePersonidenter), callId)
         val nyePersoner = result.getOrThrow().data?.hentPersonBolk?.map {
             val nyPerson = PersonResultat(
                 it.ident,
@@ -69,37 +69,28 @@ class PdlGraphQLClient(
     }
 
     override suspend fun hentGeografiskTilknytning(ident: String, callId: String): HentGeografiskTilknytningResult {
-        val azureToken = azureTokenProvider.getClientCredentialToken()
-
         if (redis.exists(Key(GEO_PREFIX, ident))) {
             prometheus.cacheHit(GEO_PREFIX).increment()
             return redis[Key(GEO_PREFIX, ident)]!!.deserialize()
         } //TODO: denne kan teknisk sett unngå token credentials, kan vi doppe den, eller burde vi dobbelsjekke
         prometheus.cacheMiss(GEO_PREFIX).increment()
 
-        val result = query(azureToken, PdlRequest.hentGeografiskTilknytning(ident), callId)
+        val result = query(PdlRequest.hentGeografiskTilknytning(ident), callId)
         val geoTilknytning = result.getOrThrow().data?.hentGeografiskTilknytning!!
         redis.set(Key(GEO_PREFIX, ident), geoTilknytning.serialize())
         return geoTilknytning
     }
 
-    private suspend fun query(accessToken: String, query: PdlRequest, callId: String): Result<PdlResponse> {
-        val request = httpClient.post(pdlConfig.baseUrl) {
-            accept(ContentType.Application.Json)
-            header("Nav-Call-Id", callId)
-            header("TEMA", "AAP")
-            header("Behandlingsnummer", BEHANDLINGSNUMMER_AAP_SAKSBEHANDLING)
-            bearerAuth(accessToken)
-            contentType(ContentType.Application.Json)
-            setBody(query)
-        }
-        return runCatching {
-            val respons = request.body<PdlResponse>()
-            if (respons.errors != null) {
-                throw PdlException("Feil mot PDL: ${respons.errors}")
-            }
-            respons
-        }
+    private fun query(query: PdlRequest, callId: String): Result<PdlResponse> {
+        val request = PostRequest(
+            query, additionalHeaders = listOf(
+                Header("Accept", "application/json"),
+                Header("Nav-Call-Id", callId),
+                Header("TEMA", "AAP"),
+                Header("Behandlingsnummer", BEHANDLINGSNUMMER_AAP_SAKSBEHANDLING)
+            )
+        )
+        return requireNotNull(httpClient.post(uri = baseUrl, request))
     }
 
     companion object {

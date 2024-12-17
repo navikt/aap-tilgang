@@ -9,14 +9,13 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import tilgang.Fakes
 import tilgang.Operasjon
-import tilgang.SkjermingConfig
 import tilgang.service.EnhetService
 import tilgang.service.GeoService
 import tilgang.integrasjoner.behandlingsflyt.IdenterRespons
 import tilgang.integrasjoner.msgraph.Group
 import tilgang.integrasjoner.msgraph.IMsGraphClient
 import tilgang.integrasjoner.msgraph.MemberOf
-import tilgang.integrasjoner.nom.INOMClient
+import tilgang.integrasjoner.nom.INomClient
 import tilgang.integrasjoner.pdl.HentGeografiskTilknytningResult
 import tilgang.integrasjoner.pdl.IPdlGraphQLClient
 import tilgang.integrasjoner.pdl.PdlGeoType
@@ -24,7 +23,6 @@ import tilgang.integrasjoner.pdl.PersonResultat
 import tilgang.integrasjoner.skjerming.SkjermingClient
 import tilgang.service.AdressebeskyttelseService
 import tilgang.service.SkjermingService
-import java.net.URI
 import java.util.*
 
 class RegelServiceTest {
@@ -32,6 +30,8 @@ class RegelServiceTest {
     @EnumSource(Definisjon::class)
     fun `skal alltid gi false når roller er tom array`(avklaringsbehov: Definisjon) {
         Fakes().use {
+            
+            
             val graphClient = object : IMsGraphClient {
                 override suspend fun hentAdGrupper(currentToken: String, ident: String): MemberOf {
                     return MemberOf(groups = listOf(Group(id = UUID.randomUUID(), name = "000-GA-GEO-abc")))
@@ -59,18 +59,11 @@ class RegelServiceTest {
                 }
             }
             val enhetService = EnhetService(graphClient)
-            val skjermingClient = object : SkjermingClient(
-                no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureConfig(
-                    clientId = "",
-                    clientSecret = "",
-                    tokenEndpoint = URI.create("http://localhost:1234").resolve("/token"),
-                    jwksUri = URI.create("http://localhost:1234").resolve("/jwks").toString(),
-                    issuer = ""
-                ), SkjermingConfig("skjerming_base_url", "skjerming_scope"), it.redis, prometheus
+            val skjermingClient = object : SkjermingClient(it.redis, prometheus
             ) {
             }
 
-            val nomClient = object : INOMClient {
+            val nomClient = object : INomClient {
                 override suspend fun personNummerTilNavIdent(søkerIdent: String, callId: String): String {
                     return "T131785"
                 }

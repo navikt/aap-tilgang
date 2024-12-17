@@ -1,6 +1,6 @@
 package tilgang.regler
 
-import tilgang.integrasjoner.nom.INOMClient
+import tilgang.integrasjoner.nom.INomClient
 
 data object EgenSakRegel : Regel<EgenSakInput> {
     override fun vurder(input: EgenSakInput): Boolean {
@@ -8,7 +8,7 @@ data object EgenSakRegel : Regel<EgenSakInput> {
     }
 }
 
-class EgenSakInputGenerator(private val nomClient: INOMClient) : InputGenerator<EgenSakInput> {
+class EgenSakInputGenerator(private val nomClient: INomClient) : InputGenerator<EgenSakInput> {
     override suspend fun generer(input: RegelInput): EgenSakInput {
         val søkerIdent = input.søkerIdenter.søker.first()
         val navIdentFraNOM = nomClient.personNummerTilNavIdent(søkerIdent, input.callId)
