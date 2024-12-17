@@ -7,6 +7,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.get
 import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.OnBehalfOfTokenProvider
 import tilgang.metrics.cacheHit
 import tilgang.metrics.cacheMiss
@@ -18,7 +19,7 @@ import java.net.URI
 import java.util.*
 
 interface IMsGraphClient {
-    fun hentAdGrupper(currentToken: String, ident: String): MemberOf
+    fun hentAdGrupper(currentToken: OidcToken, ident: String): MemberOf
 }
 
 class MsGraphClient(
@@ -35,7 +36,7 @@ class MsGraphClient(
         tokenProvider = OnBehalfOfTokenProvider,
     )
 
-    override fun hentAdGrupper(currentToken: String, ident: String): MemberOf {
+    override fun hentAdGrupper(currentToken: OidcToken, ident: String): MemberOf {
         if (redis.exists(Key(MSGRAPH_PREFIX, ident))) {
             prometheus.cacheHit(MSGRAPH_PREFIX).increment()
             return redis[Key(MSGRAPH_PREFIX, ident)]!!.deserialize()
@@ -43,7 +44,7 @@ class MsGraphClient(
         prometheus.cacheMiss(MSGRAPH_PREFIX).increment()
         
         val url = baseUrl.resolve("/me/memberOf")
-        val respons = httpClient.get<MemberOf>(url, GetRequest()) ?: MemberOf()
+        val respons = httpClient.get<MemberOf>(url, GetRequest(currentToken = currentToken)) ?: MemberOf()
         redis.set(Key(MSGRAPH_PREFIX, ident), respons.serialize())
         return respons
     }
