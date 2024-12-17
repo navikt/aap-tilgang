@@ -5,7 +5,7 @@ import tilgang.integrasjoner.msgraph.IMsGraphClient
 import java.util.*
 
 class AdressebeskyttelseService(private val msGraphClient: IMsGraphClient) {
-    suspend fun hentAdressebeskyttelseRoller(
+    fun hentAdressebeskyttelseRoller(
         currentToken: String, oboIdent: String
     ): List<AdressebeskyttelseGruppe> {
         return msGraphClient.hentAdGrupper(currentToken, oboIdent).groups

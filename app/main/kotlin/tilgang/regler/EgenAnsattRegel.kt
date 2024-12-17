@@ -17,7 +17,7 @@ class EgenAnsattInputGenerator(
     private val skjermingClient: SkjermingClient,
     private val skjermingService: SkjermingService
 ) : InputGenerator<EgenAnsattInput> {
-    override suspend fun generer(input: RegelInput): EgenAnsattInput {
+    override fun generer(input: RegelInput): EgenAnsattInput {
         val finnesAnsattIFamilie = skjermingClient.isSkjermet(input.søkerIdenter)
         val harSkjermedePersonerRolle =
             skjermingService.harSkjermedePersonerRolle(input.currentToken, input.ansattIdent)

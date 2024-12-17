@@ -29,7 +29,7 @@ open class SkjermingClient(
         tokenProvider = ClientCredentialsTokenProvider
     )
 
-    open suspend fun isSkjermet(identer: IdenterRespons): Boolean {
+    open fun isSkjermet(identer: IdenterRespons): Boolean {
         if (redis.exists(Key(SKJERMING_PREFIX, identer.søker.first()))) {
             prometheus.cacheHit(SKJERMING_PREFIX).increment()
             return redis[Key(SKJERMING_PREFIX, identer.søker.first())]!!.deserialize()

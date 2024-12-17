@@ -49,7 +49,7 @@ class RegelService(
         )
     )
 
-    suspend fun vurderTilgang(
+    fun vurderTilgang(
         input: RegelInput
     ): Boolean {
         return this.reglerForOperasjon[input.operasjon]!!.all {

@@ -18,7 +18,7 @@ import java.net.URI
 import java.util.*
 
 interface IMsGraphClient {
-    suspend fun hentAdGrupper(currentToken: String, ident: String): MemberOf
+    fun hentAdGrupper(currentToken: String, ident: String): MemberOf
 }
 
 class MsGraphClient(
@@ -35,7 +35,7 @@ class MsGraphClient(
         tokenProvider = OnBehalfOfTokenProvider,
     )
 
-    override suspend fun hentAdGrupper(currentToken: String, ident: String): MemberOf {
+    override fun hentAdGrupper(currentToken: String, ident: String): MemberOf {
         if (redis.exists(Key(MSGRAPH_PREFIX, ident))) {
             prometheus.cacheHit(MSGRAPH_PREFIX).increment()
             return redis[Key(MSGRAPH_PREFIX, ident)]!!.deserialize()

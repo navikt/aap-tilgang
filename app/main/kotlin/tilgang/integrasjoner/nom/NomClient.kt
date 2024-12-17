@@ -17,7 +17,7 @@ import tilgang.redis.Redis.Companion.serialize
 import java.net.URI
 
 interface INomClient {
-    suspend fun personNummerTilNavIdent(søkerIdent: String, callId: String): String
+    fun personNummerTilNavIdent(søkerIdent: String, callId: String): String
 }
 
 open class NomClient(
@@ -33,7 +33,7 @@ open class NomClient(
     )
     private val baseUrl = URI.create(requiredConfigForKey("nom.base.url"))
 
-    override suspend fun personNummerTilNavIdent(søkerIdent: String, callId: String): String {
+    override fun personNummerTilNavIdent(søkerIdent: String, callId: String): String {
         if (redis.exists(Key(NOM_PREFIX, søkerIdent))) {
             prometheus.cacheHit(NOM_PREFIX).increment()
             return redis[Key(NOM_PREFIX, søkerIdent)]!!.deserialize()

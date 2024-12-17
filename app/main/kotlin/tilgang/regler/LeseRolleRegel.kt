@@ -9,7 +9,7 @@ data object LeseRolleRegel : Regel<List<Rolle>> {
 }
 
 data object RolleInputGenerator: InputGenerator<List<Rolle>> {
-    override suspend fun generer(input: RegelInput): List<Rolle> {
+    override fun generer(input: RegelInput): List<Rolle> {
         return input.roller
     }
 }

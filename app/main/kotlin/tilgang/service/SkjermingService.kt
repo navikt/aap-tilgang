@@ -5,7 +5,7 @@ import tilgang.integrasjoner.msgraph.IMsGraphClient
 import java.util.*
 
 class SkjermingService(private val msGraphClient: IMsGraphClient) {
-    suspend fun harSkjermedePersonerRolle(
+    fun harSkjermedePersonerRolle(
         currentToken: String, oboIdent: String
     ): Boolean {
         val gruppeId = UUID.fromString(requiredConfigForKey("skjermede.personer.ad"))

@@ -2,7 +2,6 @@ package tilgang.regler
 
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
-import kotlinx.coroutines.runBlocking
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.params.ParameterizedTest
@@ -30,10 +29,8 @@ class RegelServiceTest {
     @EnumSource(Definisjon::class)
     fun `skal alltid gi false når roller er tom array`(avklaringsbehov: Definisjon) {
         Fakes().use {
-            
-            
             val graphClient = object : IMsGraphClient {
-                override suspend fun hentAdGrupper(currentToken: String, ident: String): MemberOf {
+                override fun hentAdGrupper(currentToken: String, ident: String): MemberOf {
                     return MemberOf(groups = listOf(Group(id = UUID.randomUUID(), name = "000-GA-GEO-abc")))
                 }
             }
@@ -59,12 +56,13 @@ class RegelServiceTest {
                 }
             }
             val enhetService = EnhetService(graphClient)
-            val skjermingClient = object : SkjermingClient(it.redis, prometheus
+            val skjermingClient = object : SkjermingClient(
+                it.redis, prometheus
             ) {
             }
 
             val nomClient = object : INomClient {
-                override suspend fun personNummerTilNavIdent(søkerIdent: String, callId: String): String {
+                override fun personNummerTilNavIdent(søkerIdent: String, callId: String): String {
                     return "T131785"
                 }
             }
@@ -81,21 +79,19 @@ class RegelServiceTest {
                 AdressebeskyttelseService(graphClient)
             )
 
-            runBlocking {
-                val svar = regelService.vurderTilgang(
-                    RegelInput(
-                        callId = UUID.randomUUID().toString(),
-                        ansattIdent = "123",
-                        avklaringsbehovFraBehandlingsflyt = avklaringsbehov,
-                        avklaringsbehovFraPostmottak = null,
-                        currentToken = "xxx",
-                        søkerIdenter = IdenterRespons(søker = listOf("423"), barn = listOf()),
-                        operasjon = Operasjon.SAKSBEHANDLE,
-                        roller = listOf()
-                    )
+            val svar = regelService.vurderTilgang(
+                RegelInput(
+                    callId = UUID.randomUUID().toString(),
+                    ansattIdent = "123",
+                    avklaringsbehovFraBehandlingsflyt = avklaringsbehov,
+                    avklaringsbehovFraPostmottak = null,
+                    currentToken = "xxx",
+                    søkerIdenter = IdenterRespons(søker = listOf("423"), barn = listOf()),
+                    operasjon = Operasjon.SAKSBEHANDLE,
+                    roller = listOf()
                 )
-                Assertions.assertFalse(svar)
-            }
+            )
+            Assertions.assertFalse(svar)
         }
     }
 }

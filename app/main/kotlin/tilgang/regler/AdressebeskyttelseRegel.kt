@@ -40,7 +40,7 @@ class AdressebeskyttelseInputGenerator(
     private val adressebeskyttelseService: AdressebeskyttelseService
 ) :
     InputGenerator<AdressebeskyttelseInput> {
-    override suspend fun generer(input: RegelInput): AdressebeskyttelseInput {
+    override fun generer(input: RegelInput): AdressebeskyttelseInput {
         val personer = requireNotNull(
             pdlService.hentPersonBolk(
                 input.søkerIdenter.søker.union(input.søkerIdenter.barn).toList(),

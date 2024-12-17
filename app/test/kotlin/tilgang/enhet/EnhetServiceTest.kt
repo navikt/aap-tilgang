@@ -13,7 +13,7 @@ class EnhetServiceTest {
     @Test
     fun `lister kun opp enhets-roller`() {
         val graphClient = object : IMsGraphClient {
-            override suspend fun hentAdGrupper(currentToken: String, ident: String): MemberOf {
+            override fun hentAdGrupper(currentToken: String, ident: String): MemberOf {
                 return MemberOf(
                     groups = listOf(
                         Group(name = "0000-GA-ENHET_12345", id = UUID.randomUUID()),
