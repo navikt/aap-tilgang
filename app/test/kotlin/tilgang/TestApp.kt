@@ -3,6 +3,7 @@ package tilgang
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import tilgang.fakes.Fakes
 import java.net.URI
 
 fun main() {
@@ -27,6 +28,7 @@ fun main() {
                 // Kan fylles inn med ekte verdier om disse fakes i Fakes
             )
         )
+        module(fakes)
     }.start(wait = true)
 }
 

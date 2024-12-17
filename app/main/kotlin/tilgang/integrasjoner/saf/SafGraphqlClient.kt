@@ -35,7 +35,7 @@ class SafGraphqlClient(
         tokenProvider = ClientCredentialsTokenProvider,
         responseHandler = SafResponseHandler()
     )
-    
+
     companion object {
         private const val JOURNALPOST_PREFIX = "journalpost"
     }
@@ -51,7 +51,7 @@ class SafGraphqlClient(
         val response = runBlocking { query(request, callId) }
 
         val journalpost: SafJournalpost =
-            response.getOrThrow().data?.journalpost ?: error("Fant ikke journalpost for $journalpostId")
+            response.data?.journalpost ?: error("Fant ikke journalpost for $journalpostId")
         redis.set(Key(JOURNALPOST_PREFIX, journalpostId.toString()), journalpost.serialize())
 
         if (journalpost.bruker?.type != BrukerIdType.FNR) {
@@ -61,14 +61,12 @@ class SafGraphqlClient(
         return journalpost
     }
 
-    private fun query(query: SafRequest, callId: String): Result<SafRespons> {
+    private fun query(query: SafRequest, callId: String): SafRespons {
         val request = PostRequest(
             query, additionalHeaders = listOf(
                 Header("Accept", "application/json"),
-                Header("Nav-Call-Id", callId),
-
-
-                )
+                Header("Nav-Call-Id", callId)
+            )
         )
         return requireNotNull(httpClient.post(baseUrl, request))
     }

@@ -1,6 +1,6 @@
 package tilgang.integrasjoner.pdl
 
-import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
+import io.micrometer.core.instrument.MeterRegistry
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.Header
@@ -17,26 +17,26 @@ import tilgang.redis.Redis.Companion.serialize
 import java.net.URI
 
 interface IPdlGraphQLClient {
-    suspend fun hentPersonBolk(personidenter: List<String>, callId: String): List<PersonResultat>?
+    fun hentPersonBolk(personidenter: List<String>, callId: String): List<PersonResultat>?
 
-    suspend fun hentGeografiskTilknytning(ident: String, callId: String): HentGeografiskTilknytningResult?
+    fun hentGeografiskTilknytning(ident: String, callId: String): HentGeografiskTilknytningResult?
 }
 
 class PdlGraphQLClient(
     private val redis: Redis,
-    private val prometheus: PrometheusMeterRegistry
+    private val prometheus: MeterRegistry
 ) : IPdlGraphQLClient {
     private val baseUrl = URI.create(requiredConfigForKey("pdl.base.url"))
     private val clientConfig = ClientConfig(
         scope = requiredConfigForKey("pdl.scope"),
     )
-    private val httpClient =  RestClient(
+    private val httpClient = RestClient(
         config = clientConfig,
         tokenProvider = ClientCredentialsTokenProvider,
         responseHandler = PdlResponseHandler()
     )
 
-    override suspend fun hentPersonBolk(personidenter: List<String>, callId: String): List<PersonResultat>? {
+    override fun hentPersonBolk(personidenter: List<String>, callId: String): List<PersonResultat>? {
         val personBolkResult: List<PersonResultat> = personidenter.filter {
             redis.exists(Key(PERSON_BOLK_PREFIX, it))
         }.map {
@@ -47,15 +47,15 @@ class PdlGraphQLClient(
         val manglendePersonidenter = personidenter.filter {
             !redis.exists(Key(PERSON_BOLK_PREFIX, it))
         }
-        
+
         if (manglendePersonidenter.isEmpty()) {
             return personBolkResult
         }
-        
+
         prometheus.cacheMiss(PERSON_BOLK_PREFIX).increment(manglendePersonidenter.size.toDouble())
 
         val result = query(PdlRequest.hentPersonBolk(manglendePersonidenter), callId)
-        val nyePersoner = result.getOrThrow().data?.hentPersonBolk?.map {
+        val nyePersoner = result.data?.hentPersonBolk?.map {
             val nyPerson = PersonResultat(
                 it.ident,
                 it.person?.adressebeskyttelse?.map { it.gradering } ?: emptyList(),
@@ -68,7 +68,7 @@ class PdlGraphQLClient(
         return nyePersoner?.toList()
     }
 
-    override suspend fun hentGeografiskTilknytning(ident: String, callId: String): HentGeografiskTilknytningResult {
+    override fun hentGeografiskTilknytning(ident: String, callId: String): HentGeografiskTilknytningResult {
         if (redis.exists(Key(GEO_PREFIX, ident))) {
             prometheus.cacheHit(GEO_PREFIX).increment()
             return redis[Key(GEO_PREFIX, ident)]!!.deserialize()
@@ -76,12 +76,12 @@ class PdlGraphQLClient(
         prometheus.cacheMiss(GEO_PREFIX).increment()
 
         val result = query(PdlRequest.hentGeografiskTilknytning(ident), callId)
-        val geoTilknytning = result.getOrThrow().data?.hentGeografiskTilknytning!!
+        val geoTilknytning = result.data?.hentGeografiskTilknytning!!
         redis.set(Key(GEO_PREFIX, ident), geoTilknytning.serialize())
         return geoTilknytning
     }
 
-    private fun query(query: PdlRequest, callId: String): Result<PdlResponse> {
+    private fun query(query: PdlRequest, callId: String): PdlResponse {
         val request = PostRequest(
             query, additionalHeaders = listOf(
                 Header("Accept", "application/json"),

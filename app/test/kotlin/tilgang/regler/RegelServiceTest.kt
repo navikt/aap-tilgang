@@ -7,7 +7,7 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
-import tilgang.Fakes
+import tilgang.fakes.Fakes
 import tilgang.Operasjon
 import tilgang.service.EnhetService
 import tilgang.service.GeoService
@@ -42,11 +42,11 @@ class RegelServiceTest {
             val prometheus = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
 
             val pdlService = object : IPdlGraphQLClient {
-                override suspend fun hentPersonBolk(personidenter: List<String>, callId: String): List<PersonResultat> {
+                override fun hentPersonBolk(personidenter: List<String>, callId: String): List<PersonResultat> {
                     return personidenter.map { PersonResultat(ident = it, adressebeskyttelse = listOf(), code = "XXX") }
                 }
 
-                override suspend fun hentGeografiskTilknytning(
+                override fun hentGeografiskTilknytning(
                     ident: String,
                     callId: String
                 ): HentGeografiskTilknytningResult {

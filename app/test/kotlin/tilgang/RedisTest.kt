@@ -3,6 +3,7 @@ package tilgang
 import org.junit.jupiter.api.Test
 import tilgang.redis.Key
 import org.junit.jupiter.api.Assertions.*
+import tilgang.fakes.Fakes
 import tilgang.integrasjoner.behandlingsflyt.IdenterRespons
 import tilgang.redis.Redis.Companion.deserialize
 import tilgang.redis.Redis.Companion.serialize

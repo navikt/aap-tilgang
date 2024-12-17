@@ -88,7 +88,7 @@ class TilgangService(
         return regelService.vurderTilgang(regelInput)
     }
 
-    private suspend fun finnIdenterForJournalpost(journalpost: SafJournalpost, token: String): IdenterRespons {
+    private fun finnIdenterForJournalpost(journalpost: SafJournalpost, token: String): IdenterRespons {
         val saksnummer = journalpost.sak?.fagsakId
         if(saksnummer != null) {
             return behandlingsflytClient.hentIdenterForSak(saksnummer)
