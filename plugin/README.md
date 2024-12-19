@@ -19,7 +19,9 @@ de fleste tilfeller ønsker vi å bruke de tilsvarende <i>autoriserte</i> funksj
 Det anbefales å importere denne inspeksjonsfilen i IDE-en.
 
 ## TilgangInspections
-Det er skrevet custom inspections for å gi advarsel dersom `get` og `post` brukes direkte. I de fleste tilfeller ønsker vi å bruke de tilsvarende <i>autoriserte</i> funksjonene, som vi finner i `AuthorizedClient`. Det anbefales å importere denne inspeksjonsfilen i IDE-en.
+Det er skrevet [custom inspections](https://www.jetbrains.com/help/idea/creating-custom-inspections.html) for å gi advarsel dersom `get` og `post` brukes direkte. I de fleste tilfeller ønsker vi å bruke de tilsvarende <i>autoriserte</i> funksjonene, som vi finner i `AuthorizedClient`. Det anbefales å importere inspeksjonsfilen `TilgangInspections.xml` i IDE-en:
+`Settings > Editor > Inspections > Import Profile > Velg TilgangInspections.xml`
+P.d. støtter ikke inspeksjonen generics i TParams, TRequest og TResponse, så vær obs på typene her.
 
 ## Bumpe Gradle wrapper
 
