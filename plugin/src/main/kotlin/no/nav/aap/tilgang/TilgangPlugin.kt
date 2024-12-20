@@ -16,9 +16,8 @@ import io.ktor.server.routing.RoutingNode
 import io.ktor.util.AttributeKey
 import no.nav.aap.komponenter.httpklient.auth.AzpName
 import no.nav.aap.komponenter.httpklient.auth.token
-import no.nav.aap.komponenter.httpklient.json.DefaultJsonMapper
+import no.nav.aap.komponenter.json.DefaultJsonMapper
 import org.slf4j.LoggerFactory
-import tilgang.Operasjon
 
 const val TILGANG_PLUGIN = "TilgangPlugin"
 
@@ -58,7 +57,6 @@ inline fun buildTilgangPlugin(crossinline parse: suspend (call: ApplicationCall)
         }
     }
 }
-
 
 suspend inline fun <reified T : Any> ApplicationCall.parseGeneric(): T {
     if (T::class == Unit::class) return Unit as T

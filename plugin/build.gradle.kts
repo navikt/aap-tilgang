@@ -1,5 +1,5 @@
 val ktorVersion = "3.0.2"
-val komponenterVersjon = "1.0.93"
+val komponenterVersjon = "1.0.98"
 
 plugins {
     id("aap-tilgang.conventions")
@@ -41,8 +41,9 @@ dependencies {
     api(project(":api-kontrakt"))
     api(project(":plugin-kontrakt"))
 
-    implementation("no.nav.aap.kelvin:httpklient:$komponenterVersjon")
-    implementation("no.nav.aap.kelvin:infrastructure:$komponenterVersjon")
+    compileOnly("no.nav.aap.kelvin:httpklient:$komponenterVersjon")
+    compileOnly("no.nav.aap.kelvin:json:$komponenterVersjon")
+    compileOnly("no.nav.aap.kelvin:infrastructure:$komponenterVersjon")
 
     implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
     implementation("ch.qos.logback:logback-classic:1.5.14")
@@ -64,6 +65,9 @@ dependencies {
     implementation("io.ktor:ktor-server-double-receive:$ktorVersion")
 
     testImplementation("no.nav.aap.kelvin:server:$komponenterVersjon")
+    testImplementation("no.nav.aap.kelvin:httpklient:$komponenterVersjon")
+    testImplementation("no.nav.aap.kelvin:json:$komponenterVersjon")
+    testImplementation("no.nav.aap.kelvin:infrastructure:$komponenterVersjon")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.11.3")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.11.3")
     testImplementation("org.assertj:assertj-core:3.26.3")
