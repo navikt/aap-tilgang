@@ -5,10 +5,11 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.request.*
-import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
+import no.nav.aap.komponenter.httpklient.httpclient.Header
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.error.DefaultResponseHandler
+import no.nav.aap.komponenter.httpklient.httpclient.error.ManglerTilgangException
 import no.nav.aap.komponenter.httpklient.httpclient.get
 import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
@@ -24,12 +25,14 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import java.net.URI
 import java.util.*
 
 class TilgangPluginTest {
     companion object {
-        private val fakes = Fakes(azurePort = 8081)
+        private val azureTokenGen = AzureTokenGen("behandlingsflyt", "behandlingsflyt")
+        private val fakes = Fakes(azurePort = 8081, azureTokenGen)
 
         private val clientForClientCredentials = RestClient(
             config = ClientConfig(scope = "behandlingsflyt"),
@@ -40,20 +43,14 @@ class TilgangPluginTest {
             config = ClientConfig(scope = "behandlingsflyt"),
             tokenProvider = OnBehalfOfTokenProvider,
         )
+        private val clientUtenTokenProvider = RestClient(
+            config = ClientConfig(scope = "behandlingsflyt"),
+            tokenProvider = NoTokenTokenProvider(),
+            responseHandler = DefaultResponseHandler()
+        )
 
-        private var oboToken: OidcToken? = null
-        private fun getOboToken(): OidcToken {
-            val client = RestClient(
-                config = ClientConfig(scope = "behandlingsflyt"),
-                tokenProvider = NoTokenTokenProvider(),
-                responseHandler = DefaultResponseHandler()
-            )
-            return oboToken ?: OidcToken(
-                client.post<Unit, TestToken>(
-                    URI.create(requiredConfigForKey("azure.openid.config.token.endpoint")),
-                    PostRequest(Unit)
-                )!!.access_token
-            )
+        private fun generateToken(isApp: Boolean, roles: List<String> = emptyList()): OidcToken {
+            return OidcToken(azureTokenGen.generate(isApp, roles))
         }
 
         class Saksinfo(val saksnummer: UUID) : Saksreferanse {
@@ -62,7 +59,8 @@ class TilgangPluginTest {
             }
         }
 
-        data class Journalpostinfo(@PathParam("behandlingReferanse") val behandlingReferanse: String) : Journalpostreferanse {
+        data class Journalpostinfo(@PathParam("behandlingReferanse") val behandlingReferanse: String) :
+            Journalpostreferanse {
             override fun journalpostIdResolverInput(): String {
                 return behandlingReferanse
             }
@@ -115,23 +113,50 @@ class TilgangPluginTest {
         val res = clientForOBO.get<Saksinfo>(
             URI.create("http://localhost:8082/")
                 .resolve("testApi/authorizedGet/$randomUuid/on-behalf-of"),
-            GetRequest(currentToken = getOboToken())
+            GetRequest(currentToken = generateToken(isApp = false))
         )
 
         assertThat(res?.saksnummer).isEqualTo(randomUuid)
     }
 
     @Test
-    fun `get route som støtter client-credentials gir tilgang med client-credentials token uten at tilgang-tjenesten kalles`() {
+    fun `get route som støtter client-credentials med approvedApplications gir tilgang med client-credentials token uten at tilgang-tjenesten kalles`() {
         val randomUuid = UUID.randomUUID()
         val res = clientForClientCredentials.get<Saksinfo>(
             URI.create("http://localhost:8082/")
-                .resolve("testApi/authorizedGet/$randomUuid/client-credentials"),
+                .resolve("testApi/authorizedGet/$randomUuid/client-credentials-approved-applications"),
             GetRequest()
         )
 
         assertThat(res?.saksnummer).isEqualTo(randomUuid)
     }
+
+    @Test
+    fun `get route som støtter client-credentials med rolle gir tilgang med riktig rolle`() {
+        val randomUuid = UUID.randomUUID()
+        val token = generateToken(isApp = true, roles = listOf("tilgang-rolle"))
+        val res = clientUtenTokenProvider.get<Saksinfo>(
+            URI.create("http://localhost:8082/")
+                .resolve("testApi/authorizedGet/$randomUuid/client-credentials-application-role"),
+            GetRequest(additionalHeaders = listOf(Header("Authorization", "Bearer ${token.token()}")))
+        )
+
+        assertThat(res?.saksnummer).isEqualTo(randomUuid)
+    }
+
+    @Test
+    fun `get route som støtter client-credentials med rolle gir ikke tilgang med feil rolle`() {
+        val randomUuid = UUID.randomUUID()
+        val token = generateToken(isApp = true, roles = listOf("feil-rolle"))
+        assertThrows<ManglerTilgangException> {
+            clientUtenTokenProvider.get<Saksinfo>(
+                URI.create("http://localhost:8082/")
+                    .resolve("testApi/authorizedGet/$randomUuid/client-credentials-application-role"),
+                GetRequest(additionalHeaders = listOf(Header("Authorization", "Bearer ${token.token()}")))
+            )
+        }
+    }
+
 
     @Test
     fun `get route som støtter on-behalf-of og client-credentials gir tilgang med on-behalf-of token og client-credentials token`() {
@@ -140,7 +165,7 @@ class TilgangPluginTest {
         val res1 = clientForOBO.get<Saksinfo>(
             URI.create("http://localhost:8082/")
                 .resolve("testApi/authorizedGet/$randomUuid/client-credentials-and-on-behalf-of"),
-            GetRequest(currentToken = getOboToken())
+            GetRequest(currentToken = generateToken(isApp = false))
         )
         val res2 = clientForClientCredentials.get<Saksinfo>(
             URI.create("http://localhost:8082/")
@@ -159,7 +184,7 @@ class TilgangPluginTest {
         val res = clientForOBO.post<_, Saksinfo>(
             URI.create("http://localhost:8082/")
                 .resolve("testApi/authorizedPost/on-behalf-of"),
-            PostRequest(Saksinfo(randomUuid), currentToken = getOboToken())
+            PostRequest(Saksinfo(randomUuid), currentToken = generateToken(isApp = false))
         )
 
         assertThat(res?.saksnummer).isEqualTo(uuid)
@@ -170,8 +195,8 @@ class TilgangPluginTest {
         val randomUuid = UUID.randomUUID()
         val res = clientForClientCredentials.post<_, IngenReferanse>(
             URI.create("http://localhost:8082/")
-                .resolve("testApi/authorizedPost/client-credentials"),
-            PostRequest(IngenReferanse(randomUuid.toString()), currentToken = getOboToken())
+                .resolve("testApi/authorizedPost/client-credentials-approved-applications"),
+            PostRequest(IngenReferanse(randomUuid.toString()))
         )
 
         assertThat(res?.noe).isEqualTo(randomUuid.toString())
@@ -184,18 +209,51 @@ class TilgangPluginTest {
         val res1 = clientForOBO.post<_, Saksinfo>(
             URI.create("http://localhost:8082/")
                 .resolve("testApi/authorizedPost/client-credentials-and-on-behalf-of"),
-            PostRequest(Saksinfo(randomUuid), currentToken = getOboToken())
+            PostRequest(Saksinfo(randomUuid), currentToken = generateToken(isApp = false))
         )
         val res2 = clientForClientCredentials.post<_, Saksinfo>(
             URI.create("http://localhost:8082/")
                 .resolve("testApi/authorizedPost/client-credentials-and-on-behalf-of"),
-            PostRequest(Saksinfo(randomUuid), currentToken = getOboToken())
+            PostRequest(Saksinfo(randomUuid))
         )
 
         assertThat(res1?.saksnummer).isEqualTo(uuid)
         assertThat(res2?.saksnummer).isEqualTo(uuid)
     }
-    
+
+    @Test
+    fun `post som støtter client-credentials med rolle gir tilgang med riktig rolle`() {
+        val randomUuid = UUID.randomUUID()
+        val token = generateToken(isApp = true, roles = listOf("tilgang-rolle"))
+        val res = clientUtenTokenProvider.post<_, IngenReferanse>(
+            URI.create("http://localhost:8082/")
+                .resolve("testApi/authorizedPost/client-credentials-application-role"),
+            PostRequest(
+                IngenReferanse(randomUuid.toString()),
+                additionalHeaders = listOf(Header("Authorization", "Bearer ${token.token()}"))
+            )
+        )
+
+        assertThat(res?.noe).isEqualTo(randomUuid.toString())
+    }
+
+    @Test
+    fun `post som støtter client-credentials med rolle gir ikke tilgang med feil rolle`() {
+        val randomUuid = UUID.randomUUID()
+        val token = generateToken(isApp = true, roles = listOf("feil-rolle"))
+        assertThrows<ManglerTilgangException> {
+            clientUtenTokenProvider.post<_, IngenReferanse>(
+                URI.create("http://localhost:8082/")
+                    .resolve("testApi/authorizedPost/client-credentials-application-role"),
+                PostRequest(
+                    IngenReferanse(randomUuid.toString()),
+                    additionalHeaders = listOf(Header("Authorization", "Bearer ${token.token()}"))
+                )
+            )
+        }
+    }
+
+
     @Test
     fun `post støtter path params`() {
         val behandlingsRef = "123"
@@ -204,7 +262,7 @@ class TilgangPluginTest {
         val res = clientForOBO.post<_, IngenReferanse>(
             URI.create("http://localhost:8082/")
                 .resolve("testApi/pathForPost/$behandlingsRef"),
-            PostRequest(IngenReferanse("test"), currentToken = getOboToken())
+            PostRequest(IngenReferanse("test"), currentToken = generateToken(isApp = false))
         )
 
         assertThat(res?.noe).isEqualTo("test")

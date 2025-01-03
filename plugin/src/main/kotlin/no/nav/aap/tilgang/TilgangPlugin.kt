@@ -70,3 +70,7 @@ fun ApplicationCall.azp(): AzpName {
     }
     return AzpName(azp)
 }
+
+fun ApplicationCall.rolesClaim(): List<String> {
+    return principal<JWTPrincipal>()?.getListClaim("roles", String::class) ?: emptyList()
+}
