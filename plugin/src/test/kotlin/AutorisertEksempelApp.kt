@@ -82,10 +82,20 @@ fun Application.autorisertEksempelApp() {
                             respond(Saksinfo(saksnummer = req.saksnummer))
                         }
                     }
-                    route("client-credentials") {
+                    route("client-credentials-approved-applications") {
                         authorizedGet<TestReferanse, Saksinfo>(
                             AuthorizationParamPathConfig(
                                 approvedApplications = setOf("azp"),
+                                applicationsOnly = true
+                            )
+                        ) { req ->
+                            respond(Saksinfo(saksnummer = req.saksnummer))
+                        }
+                    }
+                    route("client-credentials-application-role") {
+                        authorizedGet<TestReferanse, Saksinfo>(
+                            AuthorizationParamPathConfig(
+                                applicationRole = "tilgang-rolle",
                                 applicationsOnly = true
                             )
                         ) { req ->
@@ -121,11 +131,22 @@ fun Application.autorisertEksempelApp() {
                             respond(Saksinfo(saksnummer = uuid))
                         }
                     }
-                    route("client-credentials") {
+                    route("client-credentials-approved-applications") {
                         authorizedPost<Unit, IngenReferanse, IngenReferanse>(
                             AuthorizationBodyPathConfig(
                                 operasjon = Operasjon.SAKSBEHANDLE,
                                 approvedApplications = setOf("azp"),
+                                applicationsOnly = true
+                            )
+                        ) { _, dto ->
+                            respond(dto)
+                        }
+                    }
+                    route("client-credentials-application-role") {
+                        authorizedPost<Unit, IngenReferanse, IngenReferanse>(
+                            AuthorizationBodyPathConfig(
+                                operasjon = Operasjon.SAKSBEHANDLE,
+                                applicationRole = "tilgang-rolle",
                                 applicationsOnly = true
                             )
                         ) { _, dto ->
