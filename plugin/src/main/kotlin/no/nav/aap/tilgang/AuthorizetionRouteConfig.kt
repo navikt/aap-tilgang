@@ -21,7 +21,7 @@ data class AuthorizationParamPathConfig(
     val sakPathParam: SakPathParam? = null,
     val behandlingPathParam: BehandlingPathParam? = null,
     val journalpostPathParam: JournalpostPathParam? = null
-) {
+) : AuthorizetionRouteConfig {
 
     internal fun tilTilgangRequest(parameters: Parameters): AuthorizedRequest {
         require(operasjon != Operasjon.SAKSBEHANDLE || avklaringsbehovKode != null) {
@@ -70,7 +70,7 @@ data class AuthorizationBodyPathConfig(
     val approvedApplications: Set<String> = emptySet(),
     val applicationsOnly: Boolean = false,
     val journalpostIdResolver: JournalpostIdResolver? = DefaultJournalpostIdResolver()
-) {
+) : AuthorizetionRouteConfig {
 
     fun tilTilgangRequest(request: Any): AuthorizedRequest {
         when (request) {
@@ -116,6 +116,8 @@ data class AuthorizationBodyPathConfig(
         }
     }
 }
+
+interface AuthorizetionRouteConfig
 
 
 data class AuthorizedRequest(

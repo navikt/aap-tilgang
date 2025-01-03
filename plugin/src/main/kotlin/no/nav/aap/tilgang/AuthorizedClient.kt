@@ -26,26 +26,16 @@ inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.a
 }
 
 inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : Any> NormalOpenAPIRoute.authorizedPost(
-    pathConfig: AuthorizationBodyPathConfig,
+    routeConfig: AuthorizetionRouteConfig,
     vararg modules: RouteOpenAPIModule,
     noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams, TRequest) -> Unit
 ) {
-    ktorRoute.installerTilgangBodyPlugin<TRequest>(pathConfig)
-    @Suppress("UnauthorizedPost")
-    post<TParams, TResponse, TRequest>(tilgangkontrollertTag, *modules) { params, request ->
-        body(
-            params,
-            request
-        )
+    when (routeConfig) {
+        is AuthorizationParamPathConfig -> ktorRoute.installerTilgangParamPlugin(routeConfig)
+        is AuthorizationBodyPathConfig -> ktorRoute.installerTilgangBodyPlugin<TRequest>(routeConfig)
+        else -> throw IllegalArgumentException("Unsupported routeConfig type: $routeConfig")
     }
-}
 
-inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : Any> NormalOpenAPIRoute.authorizedPost(
-    pathConfig: AuthorizationParamPathConfig,
-    vararg modules: RouteOpenAPIModule,
-    noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams, TRequest) -> Unit
-) {
-    ktorRoute.installerTilgangParamPlugin(pathConfig)
     @Suppress("UnauthorizedPost")
     post<TParams, TResponse, TRequest>(tilgangkontrollertTag, *modules) { params, request ->
         body(

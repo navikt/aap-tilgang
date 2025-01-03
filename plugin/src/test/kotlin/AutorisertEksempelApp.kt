@@ -4,12 +4,13 @@ import TilgangPluginTest.Companion.Saksinfo
 import TilgangPluginTest.Companion.TestReferanse
 import TilgangPluginTest.Companion.uuid
 import com.papsign.ktor.openapigen.model.info.InfoModel
+import com.papsign.ktor.openapigen.route.TagModule
 import com.papsign.ktor.openapigen.route.apiRouting
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.server.application.Application
 import io.ktor.server.auth.authenticate
-import io.ktor.server.routing.*
+import io.ktor.server.routing.routing
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureConfig
@@ -19,6 +20,7 @@ import no.nav.aap.tilgang.AuthorizationBodyPathConfig
 import no.nav.aap.tilgang.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.JournalpostPathParam
 import no.nav.aap.tilgang.SakPathParam
+import no.nav.aap.tilgang.Tags
 import no.nav.aap.tilgang.authorizedGet
 import no.nav.aap.tilgang.authorizedPost
 import tilgang.Operasjon
@@ -63,7 +65,8 @@ fun Application.autorisertEksempelApp() {
                             AuthorizationBodyPathConfig(
                                 operasjon = Operasjon.SAKSBEHANDLE,
                                 approvedApplications = setOf("azp")
-                            )
+                            ),
+                            modules = arrayOf(TagModule(listOf(Tags.Tilgangkontrollert)))
                         ) { _, dto ->
                             respond(
                                 Random.nextLong()
