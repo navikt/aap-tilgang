@@ -13,12 +13,8 @@ object TilgangService {
         token: OidcToken
     ): Boolean {
         if (token.isClientCredentials()) {
-            return if (authorizedRequest.applicationRole != null) {
-                call.rolesClaim().contains(authorizedRequest.applicationRole)
-            } else {
-                val azpName = call.azp()
-                authorizedRequest.approvedApplications?.contains(azpName.name) == true
-            }
+            return authorizedRequest.applicationRole != null &&
+                    call.rolesClaim().contains(authorizedRequest.applicationRole)
         }
         if (authorizedRequest.applicationsOnly) {
             return false

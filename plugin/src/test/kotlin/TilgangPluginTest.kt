@@ -120,19 +120,20 @@ class TilgangPluginTest {
     }
 
     @Test
-    fun `get route som støtter client-credentials med approvedApplications gir tilgang med client-credentials token uten at tilgang-tjenesten kalles`() {
+    fun `get route som støtter on-behalf-of gir ikke tilgang med client credentials token`() {
         val randomUuid = UUID.randomUUID()
-        val res = clientForClientCredentials.get<Saksinfo>(
-            URI.create("http://localhost:8082/")
-                .resolve("testApi/authorizedGet/$randomUuid/client-credentials-approved-applications"),
-            GetRequest()
-        )
-
-        assertThat(res?.saksnummer).isEqualTo(randomUuid)
+        fakes.gittTilgangTilSak(randomUuid.toString(), true)
+        assertThrows<ManglerTilgangException> {
+            clientForClientCredentials.get<Saksinfo>(
+                URI.create("http://localhost:8082/")
+                    .resolve("testApi/authorizedGet/$randomUuid/on-behalf-of"),
+                GetRequest(currentToken = generateToken(isApp = false))
+            )
+        }
     }
 
     @Test
-    fun `get route som støtter client-credentials med rolle gir tilgang med riktig rolle`() {
+    fun `get route som støtter client-credentials med rolle gir tilgang med riktig rolle uten at tilgang-tjenesten kalles`() {
         val randomUuid = UUID.randomUUID()
         val token = generateToken(isApp = true, roles = listOf("tilgang-rolle"))
         val res = clientUtenTokenProvider.get<Saksinfo>(
@@ -167,10 +168,12 @@ class TilgangPluginTest {
                 .resolve("testApi/authorizedGet/$randomUuid/client-credentials-and-on-behalf-of"),
             GetRequest(currentToken = generateToken(isApp = false))
         )
-        val res2 = clientForClientCredentials.get<Saksinfo>(
+
+        val token = generateToken(isApp = true, roles = listOf("tilgang-rolle"))
+        val res2 = clientUtenTokenProvider.get<Saksinfo>(
             URI.create("http://localhost:8082/")
                 .resolve("testApi/authorizedGet/$randomUuid/client-credentials-and-on-behalf-of"),
-            GetRequest()
+            GetRequest(additionalHeaders = listOf(Header("Authorization", "Bearer ${token.token()}")))
         )
 
         assertThat(res1?.saksnummer).isEqualTo(randomUuid)
@@ -193,10 +196,11 @@ class TilgangPluginTest {
     @Test
     fun `post route som støtter client-credentials gir tilgang med client-credentials token uten å ha en tilgang-referanse`() {
         val randomUuid = UUID.randomUUID()
-        val res = clientForClientCredentials.post<_, IngenReferanse>(
+        val token = generateToken(isApp = true, roles = listOf("tilgang-rolle"))
+        val res = clientUtenTokenProvider.post<_, IngenReferanse>(
             URI.create("http://localhost:8082/")
-                .resolve("testApi/authorizedPost/client-credentials-approved-applications"),
-            PostRequest(IngenReferanse(randomUuid.toString()))
+                .resolve("testApi/authorizedPost/client-credentials-application-role"),
+            PostRequest(IngenReferanse(randomUuid.toString()), additionalHeaders = listOf(Header("Authorization", "Bearer ${token.token()}")))
         )
 
         assertThat(res?.noe).isEqualTo(randomUuid.toString())
@@ -211,10 +215,11 @@ class TilgangPluginTest {
                 .resolve("testApi/authorizedPost/client-credentials-and-on-behalf-of"),
             PostRequest(Saksinfo(randomUuid), currentToken = generateToken(isApp = false))
         )
-        val res2 = clientForClientCredentials.post<_, Saksinfo>(
+        val token = generateToken(isApp = true, roles = listOf("tilgang-rolle"))
+        val res2 = clientUtenTokenProvider.post<_, Saksinfo>(
             URI.create("http://localhost:8082/")
                 .resolve("testApi/authorizedPost/client-credentials-and-on-behalf-of"),
-            PostRequest(Saksinfo(randomUuid))
+            PostRequest(Saksinfo(randomUuid), additionalHeaders = listOf(Header("Authorization", "Bearer ${token.token()}")))
         )
 
         assertThat(res1?.saksnummer).isEqualTo(uuid)
