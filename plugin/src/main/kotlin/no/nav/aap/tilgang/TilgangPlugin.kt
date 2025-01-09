@@ -14,7 +14,6 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.RoutingNode
 import io.ktor.util.AttributeKey
-import no.nav.aap.komponenter.httpklient.auth.AzpName
 import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import org.slf4j.LoggerFactory
@@ -63,10 +62,6 @@ suspend inline fun <reified T : Any> ApplicationCall.parseGeneric(): T {
     return DefaultJsonMapper.fromJson<T>(receiveText())
 }
 
-fun ApplicationCall.azp(): AzpName {
-    val azp = principal<JWTPrincipal>()?.getClaim("azp_name", String::class)
-    if (azp == null) {
-        error("azp mangler i AzureAD claims")
-    }
-    return AzpName(azp)
+fun ApplicationCall.rolesClaim(): List<String> {
+    return principal<JWTPrincipal>()?.getListClaim("roles", String::class) ?: emptyList()
 }

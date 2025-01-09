@@ -64,7 +64,7 @@ fun Application.autorisertEksempelApp() {
                         authorizedPost<Unit, Long, Journalpostinfo>(
                             AuthorizationBodyPathConfig(
                                 operasjon = Operasjon.SAKSBEHANDLE,
-                                approvedApplications = setOf("azp")
+                                applicationRole = "tilgang-rolle",
                             ),
                             modules = arrayOf(TagModule(listOf(Tags.Tilgangkontrollert)))
                         ) { _, dto ->
@@ -82,10 +82,10 @@ fun Application.autorisertEksempelApp() {
                             respond(Saksinfo(saksnummer = req.saksnummer))
                         }
                     }
-                    route("client-credentials") {
+                    route("client-credentials-application-role") {
                         authorizedGet<TestReferanse, Saksinfo>(
                             AuthorizationParamPathConfig(
-                                approvedApplications = setOf("azp"),
+                                applicationRole = "tilgang-rolle",
                                 applicationsOnly = true
                             )
                         ) { req ->
@@ -96,7 +96,7 @@ fun Application.autorisertEksempelApp() {
                         authorizedGet<TestReferanse, Saksinfo>(
                             AuthorizationParamPathConfig(
                                 sakPathParam = SakPathParam("saksnummer"),
-                                approvedApplications = setOf("azp")
+                                applicationRole = "tilgang-rolle"
                             )
                         ) { req ->
                             respond(Saksinfo(saksnummer = req.saksnummer))
@@ -115,17 +115,17 @@ fun Application.autorisertEksempelApp() {
                         authorizedPost<Unit, Saksinfo, Saksinfo>(
                             AuthorizationBodyPathConfig(
                                 operasjon = Operasjon.SAKSBEHANDLE,
-                                approvedApplications = setOf("azp")
+                                applicationRole = "tilgang-rolle"
                             )
                         ) { _, dto ->
                             respond(Saksinfo(saksnummer = uuid))
                         }
                     }
-                    route("client-credentials") {
+                    route("client-credentials-application-role") {
                         authorizedPost<Unit, IngenReferanse, IngenReferanse>(
                             AuthorizationBodyPathConfig(
                                 operasjon = Operasjon.SAKSBEHANDLE,
-                                approvedApplications = setOf("azp"),
+                                applicationRole = "tilgang-rolle",
                                 applicationsOnly = true
                             )
                         ) { _, dto ->

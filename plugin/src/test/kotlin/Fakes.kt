@@ -26,7 +26,7 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.*
 
-class Fakes(azurePort: Int = 0) : AutoCloseable {
+internal class Fakes(azurePort: Int = 0, val azureTokenGen: AzureTokenGen) : AutoCloseable {
     private val azure = embeddedServer(Netty, port = azurePort, module = { azureFake() }).start()
     private val tilgang = embeddedServer(Netty, port = 0, module = {    tilgangFake() }).apply { start() }
 
@@ -43,7 +43,7 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
         routing {
             post("/token") {
                 val body = call.receiveText()
-                val token = AzureTokenGen("behandlingsflyt", "behandlingsflyt")
+                val token = azureTokenGen
                     .generate(body.contains("grant_type=client_credentials"))
                 call.respond(TestToken(access_token = token))
             }
@@ -145,7 +145,7 @@ internal class AzureTokenGen(private val issuer: String, private val audience: S
         return signedJWT
     }
 
-    private fun claims(isApp: Boolean): JWTClaimsSet {
+    private fun claims(isApp: Boolean, roles: List<String>): JWTClaimsSet {
         val builder = JWTClaimsSet
             .Builder()
             .subject(UUID.randomUUID().toString())
@@ -157,6 +157,7 @@ internal class AzureTokenGen(private val issuer: String, private val audience: S
 
         if (isApp) {
             builder.claim("idtyp", "app")
+            builder.claim("roles", roles)
         }
 
         return builder.build()
@@ -166,8 +167,8 @@ internal class AzureTokenGen(private val issuer: String, private val audience: S
         return Date.from(this.atZone(ZoneId.systemDefault()).toInstant())
     }
 
-    fun generate(isApp: Boolean): String {
-        return signed(claims(isApp)).serialize()
+    fun generate(isApp: Boolean, roles: List<String> = emptyList()): String {
+        return signed(claims(isApp, roles)).serialize()
     }
 }
 

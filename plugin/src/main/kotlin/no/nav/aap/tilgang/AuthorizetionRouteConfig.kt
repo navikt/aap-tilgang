@@ -16,29 +16,36 @@ import tilgang.TilgangRequest
 data class AuthorizationParamPathConfig(
     val operasjon: Operasjon = Operasjon.SE,
     val avklaringsbehovKode: String? = null,
-    val approvedApplications: Set<String> = emptySet(),
+    val applicationRole: String? = null,
     val applicationsOnly: Boolean = false,
     val sakPathParam: SakPathParam? = null,
     val behandlingPathParam: BehandlingPathParam? = null,
     val journalpostPathParam: JournalpostPathParam? = null
 ) : AuthorizetionRouteConfig {
-
-    internal fun tilTilgangRequest(parameters: Parameters): AuthorizedRequest {
+    init {
         require(operasjon != Operasjon.SAKSBEHANDLE || avklaringsbehovKode != null) {
             "Avklaringsbehovkode må være satt for operasjon SAKSBEHANDLE"
         }
+        if (applicationsOnly) {
+            requireNotNull(applicationRole) {
+                "applicationRole må være satt dersom applicationsOnly = true"
+            }
+        }
+    }
 
+    internal fun tilTilgangRequest(parameters: Parameters): AuthorizedRequest {
         if (sakPathParam != null) {
             return AuthorizedRequest(
                 applicationsOnly,
-                approvedApplications,
+                applicationRole,
                 SakTilgangRequest(saksnummer = parameters.getOrFail(sakPathParam.param), operasjon = operasjon)
             )
         }
         if (behandlingPathParam != null) {
             return AuthorizedRequest(
                 applicationsOnly,
-                approvedApplications, BehandlingTilgangRequest(
+                applicationRole,
+                BehandlingTilgangRequest(
                     behandlingsreferanse = parameters.getOrFail(behandlingPathParam.param),
                     operasjon = operasjon,
                     avklaringsbehovKode = avklaringsbehovKode
@@ -50,7 +57,8 @@ data class AuthorizationParamPathConfig(
                 journalpostPathParam.resolver.resolve(parameters.getOrFail(journalpostPathParam.param))
             return AuthorizedRequest(
                 applicationsOnly,
-                approvedApplications, JournalpostTilgangRequest(
+                applicationRole,
+                JournalpostTilgangRequest(
                     journalpostId = journalpostId,
                     operasjon = operasjon,
                     avklaringsbehovKode = avklaringsbehovKode
@@ -59,7 +67,7 @@ data class AuthorizationParamPathConfig(
         }
         return AuthorizedRequest(
             applicationsOnly = applicationsOnly,
-            approvedApplications = approvedApplications,
+            applicationRole = applicationRole,
             tilgangRequest = null
         )
     }
@@ -67,11 +75,10 @@ data class AuthorizationParamPathConfig(
 
 data class AuthorizationBodyPathConfig(
     val operasjon: Operasjon,
-    val approvedApplications: Set<String> = emptySet(),
+    val applicationRole: String? = null,
     val applicationsOnly: Boolean = false,
     val journalpostIdResolver: JournalpostIdResolver? = DefaultJournalpostIdResolver()
 ) : AuthorizetionRouteConfig {
-
     fun tilTilgangRequest(request: Any): AuthorizedRequest {
         when (request) {
             is TilgangReferanse ->
@@ -80,7 +87,7 @@ data class AuthorizationBodyPathConfig(
                         val referanse = request.hentSaksreferanse()
                         return AuthorizedRequest(
                             applicationsOnly,
-                            approvedApplications,
+                            applicationRole,
                             SakTilgangRequest(referanse, operasjon)
                         )
                     }
@@ -90,7 +97,7 @@ data class AuthorizationBodyPathConfig(
                         val avklaringsbehovKode = request.hentAvklaringsbehovKode()
                         return AuthorizedRequest(
                             applicationsOnly,
-                            approvedApplications,
+                            applicationRole,
                             BehandlingTilgangRequest(referanse, avklaringsbehovKode, operasjon)
                         )
                     }
@@ -101,7 +108,7 @@ data class AuthorizationBodyPathConfig(
                         val avklaringsbehovKode = request.hentAvklaringsbehovKode()
                         return AuthorizedRequest(
                             applicationsOnly,
-                            approvedApplications,
+                            applicationRole,
                             JournalpostTilgangRequest(referanse, avklaringsbehovKode, operasjon)
                         )
                     }
@@ -109,7 +116,7 @@ data class AuthorizationBodyPathConfig(
 
             else -> return AuthorizedRequest(
                 applicationsOnly = applicationsOnly,
-                approvedApplications = approvedApplications,
+                applicationRole = applicationRole,
                 tilgangRequest = null
             )
 
@@ -122,6 +129,6 @@ interface AuthorizetionRouteConfig
 
 data class AuthorizedRequest(
     val applicationsOnly: Boolean,
-    val approvedApplications: Set<String> = emptySet(),
+    val applicationRole: String?,
     val tilgangRequest: TilgangRequest?
 )
