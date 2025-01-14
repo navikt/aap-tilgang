@@ -1,3 +1,5 @@
+import ch.qos.logback.classic.spi.ILoggingEvent
+import ch.qos.logback.core.AppenderBase
 import com.papsign.ktor.openapigen.annotations.parameters.PathParam
 import io.ktor.serialization.jackson.*
 import io.ktor.server.application.*
@@ -26,8 +28,12 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.slf4j.LoggerFactory
 import java.net.URI
 import java.util.*
+import ch.qos.logback.classic.Logger
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertTrue
 
 class TilgangPluginTest {
     companion object {
@@ -272,4 +278,73 @@ class TilgangPluginTest {
 
         assertThat(res?.noe).isEqualTo("test")
     }
+
+    @Test
+    fun `skal auditlogge - path resolver`() {
+        val randomUuid = UUID.randomUUID()
+        fakes.gittTilgangTilSak(randomUuid.toString(), true)
+
+        val logger = LoggerFactory.getLogger(TILGANG_PLUGIN) as Logger
+        val appender = LogCaptureAppender()
+        appender.start()
+        logger.addAppender(appender)
+
+
+        val res = clientForOBO.get<Saksinfo>(
+            URI.create("http://localhost:8082/")
+                .resolve("testApi/authorizedGet/$randomUuid/on-behalf-of"),
+            GetRequest(currentToken = generateToken(isApp = false))
+        )
+
+        assertThat(res?.saksnummer).isEqualTo(randomUuid)
+
+        val messages = appender.getLoggedMessages()
+        val expected = messages.first{it.contains("CEF:0|Kelvin|behandlingsflyt|1.0|audit:access|Auditlogg|INFO|flexString1=Permit request=/testApi/authorizedGet/$randomUuid/on-behalf-of duid=12345678901 flexString1Label=Decision end=")}
+        assertNotNull(expected)
+        assertTrue(expected.contains("suid=Lokalsaksbehandler"))
+
+        // Clean up
+        logger.detachAppender(appender)
+        
+    }
+
+    @Test
+    fun `skal auditlogge - body resolver`() {
+        val randomUuid = UUID.randomUUID()
+        fakes.gittTilgangTilSak(randomUuid.toString(), true)
+
+        val logger = LoggerFactory.getLogger(TILGANG_PLUGIN) as Logger
+        val appender = LogCaptureAppender()
+        appender.start()
+        logger.addAppender(appender)
+
+
+        val res = clientForOBO.post<_, RequestMedAuditResolver>(
+            URI.create("http://localhost:8082/")
+                .resolve("testApi/authorizedPost/med-audit-resolver"),
+            PostRequest(RequestMedAuditResolver(saksreferanse = randomUuid), currentToken = generateToken(isApp = false))
+        )
+
+        assertThat(res?.saksreferanse).isEqualTo(randomUuid)
+
+        val messages = appender.getLoggedMessages()
+        val expected = messages.first{it.contains("CEF:0|Kelvin|behandlingsflyt|1.0|audit:access|Auditlogg|INFO|flexString1=Permit request=/testApi/authorizedPost/med-audit-resolver duid=12345678901 flexString1Label=Decision end=")}
+        assertNotNull(expected)
+        assertTrue(expected.contains("suid=Lokalsaksbehandler"))
+
+        // Clean up
+        logger.detachAppender(appender)
+    }
+
 }
+
+class LogCaptureAppender : AppenderBase<ILoggingEvent>() {
+    private val events = mutableListOf<ILoggingEvent>()
+
+    override fun append(eventObject: ILoggingEvent) {
+        events.add(eventObject)
+    }
+
+    fun getLoggedMessages(): List<String> = events.map { it.formattedMessage }
+}
+

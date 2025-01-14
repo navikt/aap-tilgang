@@ -33,7 +33,7 @@ data class AuthorizationParamPathConfig(
         }
     }
 
-    internal fun tilTilgangRequest(parameters: Parameters): AuthorizedRequest {
+    fun tilTilgangRequest(parameters: Parameters): AuthorizedRequest {
         if (sakPathParam != null) {
             return AuthorizedRequest(
                 applicationsOnly,

@@ -8,6 +8,9 @@ import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.path.normal.put
 import com.papsign.ktor.openapigen.route.response.OpenAPIPipelineResponseContext
+import no.nav.aap.tilgang.auditlog.AuditLogBodyConfig
+import no.nav.aap.tilgang.auditlog.AuditLogConfig
+import no.nav.aap.tilgang.auditlog.AuditLogPathParamConfig
 
 enum class Tags(override val description: String) : APITag {
     Tilgangkontrollert("Dette endepunktet er tilgangkontrollert.")
@@ -17,22 +20,24 @@ val tilgangkontrollertTag = TagModule(listOf(Tags.Tilgangkontrollert))
 
 inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.authorizedGet(
     pathConfig: AuthorizationParamPathConfig,
+    auditLogConfig: AuditLogPathParamConfig? = null,
     vararg modules: RouteOpenAPIModule,
     noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams) -> Unit
 ) {
-    ktorRoute.installerTilgangParamPlugin(pathConfig)
+    ktorRoute.installerTilgangParamPlugin(pathConfig, auditLogConfig)
     @Suppress("UnauthorizedGet")
     get<TParams, TResponse>(*modules, tilgangkontrollertTag) { params -> body(params) }
 }
 
 inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : Any> NormalOpenAPIRoute.authorizedPost(
     routeConfig: AuthorizetionRouteConfig,
+    auditLogConfig: AuditLogConfig? = null,
     vararg modules: RouteOpenAPIModule,
     noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams, TRequest) -> Unit
 ) {
     when (routeConfig) {
-        is AuthorizationParamPathConfig -> ktorRoute.installerTilgangParamPlugin(routeConfig)
-        is AuthorizationBodyPathConfig -> ktorRoute.installerTilgangBodyPlugin<TRequest>(routeConfig)
+        is AuthorizationParamPathConfig -> ktorRoute.installerTilgangParamPlugin(routeConfig, if (auditLogConfig == null) null else auditLogConfig as AuditLogPathParamConfig)
+        is AuthorizationBodyPathConfig -> ktorRoute.installerTilgangBodyPlugin<TRequest>(routeConfig, auditLogConfig)
         else -> throw IllegalArgumentException("Unsupported routeConfig type: $routeConfig")
     }
 
@@ -47,10 +52,11 @@ inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : A
 
 inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : Any> NormalOpenAPIRoute.authorizedPut(
     pathConfig: AuthorizationBodyPathConfig,
+    auditLogConfig: AuditLogBodyConfig? = null,
     vararg modules: RouteOpenAPIModule,
     noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams, TRequest) -> Unit
 ) {
-    ktorRoute.installerTilgangBodyPlugin<TRequest>(pathConfig)
+    ktorRoute.installerTilgangBodyPlugin<TRequest>(pathConfig, auditLogConfig)
     @Suppress("UnauthorizedPut")
     put<TParams, TResponse, TRequest>(tilgangkontrollertTag, *modules) { params, request ->
         body(
