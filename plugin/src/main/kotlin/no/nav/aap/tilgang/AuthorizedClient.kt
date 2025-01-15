@@ -30,7 +30,7 @@ inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.a
 }
 
 inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : Any> NormalOpenAPIRoute.authorizedPost(
-    routeConfig: AuthorizetionRouteConfig,
+    routeConfig: AuthorizationRouteConfig,
     auditLogConfig: AuditLogConfig? = null,
     vararg modules: RouteOpenAPIModule,
     noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams, TRequest) -> Unit

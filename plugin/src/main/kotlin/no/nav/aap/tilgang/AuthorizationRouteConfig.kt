@@ -21,7 +21,7 @@ data class AuthorizationParamPathConfig(
     val sakPathParam: SakPathParam? = null,
     val behandlingPathParam: BehandlingPathParam? = null,
     val journalpostPathParam: JournalpostPathParam? = null
-) : AuthorizetionRouteConfig {
+) : AuthorizationRouteConfig {
     init {
         require(operasjon != Operasjon.SAKSBEHANDLE || avklaringsbehovKode != null) {
             "Avklaringsbehovkode må være satt for operasjon SAKSBEHANDLE"
@@ -78,7 +78,7 @@ data class AuthorizationBodyPathConfig(
     val applicationRole: String? = null,
     val applicationsOnly: Boolean = false,
     val journalpostIdResolver: JournalpostIdResolver? = DefaultJournalpostIdResolver()
-) : AuthorizetionRouteConfig {
+) : AuthorizationRouteConfig {
     fun tilTilgangRequest(request: Any): AuthorizedRequest {
         when (request) {
             is TilgangReferanse ->
@@ -124,7 +124,7 @@ data class AuthorizationBodyPathConfig(
     }
 }
 
-interface AuthorizetionRouteConfig
+interface AuthorizationRouteConfig
 
 
 data class AuthorizedRequest(
