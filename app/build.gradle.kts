@@ -47,7 +47,7 @@ dependencies {
     testImplementation(kotlin("test"))
     testImplementation("com.nimbusds:nimbus-jose-jwt:10.0.1")
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.11.4")
-    testImplementation("org.assertj:assertj-core:3.27.2")
+    testImplementation("org.assertj:assertj-core:3.27.3")
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
     testImplementation("com.redis:testcontainers-redis:2.2.2")
     constraints {
