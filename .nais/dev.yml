@@ -12,15 +12,28 @@ roles:
   - name: AAP_VEILEDER
     ad: 0000-GA-AAP_VEILEDER
     group: 12353679-aa80-4e59-bb47-95e727bfe85c
-  
-    #TODO: Trenger vi denne?
-  - name: AAP_FATTER
-    ad: 0000-GA-AAP_FATTER
-    group: b60d74dd-fcf7-4c53-a50b-7b20f51804a1
 
     #NKS og andre nysgjerrige
   - name: AAP_LES
     ad: 0000-GA-AAP_LES
     group: 96e18023-db50-45f7-b023-3251279df28d
-    
-  # TODO: Utvikler, avdelingsleder
+
+  - name: AAP_SAKSBEHANDLER_OPPFOLGING
+    ad: 0000-GA-AAP_SAKSBEHANDLER_OPPFOLGING
+    group: 33e00155-169b-41e5-8a3f-5582ed975a15
+
+  - name: AAP_KVALITETSSIKRER
+    ad: 0000-GA-AAP_KVALITETSSIKRER
+    group: c3e18aef-a7ac-49df-806e-4fe58b81460d
+
+  - name: AAP_SAKSBEHANDLER_NASJONAL
+    ad: 0000-GA-AAP_SAKSBEHANDLER_NASJONAL
+    group: 3377dc51-ca61-4e36-b812-21b5fc34474f
+
+  - name: AAP_DRIFT
+    ad: 0000-GA-AAP_DRIFT
+    group: bc89623f-4624-4978-ac54-acd048c0f2a5
+
+  - name: AAP_PRODUKSJONSSTYRING
+    ad: 0000-GA-AAP_PRODUKSJONSSTYRING
+    group: c75883f9-4cb2-42c7-b75c-3f0f29ee3ead
