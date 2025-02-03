@@ -7,7 +7,7 @@ fun parseRoller(rolesWithGroupIds: List<Role>, rollerFraToken: List<String>): Li
     return rollerFraToken
         .filter {
             it in rolesWithGroupIds
-                .map { it.objectId.toString() }
+                .map { role -> role.objectId.toString() }
         }
         .map { rollefraToken ->
             Rolle.valueOf(rolesWithGroupIds.first { it.objectId.toString() == rollefraToken }.name.name)

@@ -10,12 +10,12 @@ class LeseRolleRegelTest {
         assertFalse(
             LeseRolleRegel.vurder(
                 listOf(
-                    Rolle.UTVIKLER,
+                    Rolle.DRIFT,
                 )
             )
         )
         assertTrue(LeseRolleRegel.vurder(listOf(Rolle.LES)))
-        assertTrue(LeseRolleRegel.vurder(listOf(Rolle.SAKSBEHANDLER)))
-        assertTrue(LeseRolleRegel.vurder(listOf(Rolle.VEILEDER)))
+        assertTrue(LeseRolleRegel.vurder(listOf(Rolle.SAKSBEHANDLER_NASJONAL)))
+        assertTrue(LeseRolleRegel.vurder(listOf(Rolle.SAKSBEHANDLER_OPPFOLGING)))
     }
 }

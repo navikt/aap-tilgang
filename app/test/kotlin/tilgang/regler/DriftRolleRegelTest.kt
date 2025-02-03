@@ -7,14 +7,14 @@ import tilgang.Rolle
 class DriftRolleRegelTest {
     @Test
     fun `Kun utvikler skal ha tilgang til operasjon 'DRIFTE'`() {
-        assertTrue(DriftRolleRegel.vurder(listOf(Rolle.UTVIKLER)))
+        assertTrue(DriftRolleRegel.vurder(listOf(Rolle.DRIFT)))
         assertFalse(
             DriftRolleRegel.vurder(
                 listOf(
                     Rolle.LES,
-                    Rolle.SAKSBEHANDLER,
-                    Rolle.VEILEDER,
-                    Rolle.AVDELINGSLEDER,
+                    Rolle.SAKSBEHANDLER_NASJONAL,
+                    Rolle.SAKSBEHANDLER_OPPFOLGING,
+                    Rolle.PRODUKSJONSSTYRING,
                     Rolle.BESLUTTER,
                 )
             )

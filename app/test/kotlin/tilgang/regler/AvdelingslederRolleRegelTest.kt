@@ -7,15 +7,15 @@ import tilgang.Rolle
 class AvdelingslederRolleRegelTest {
     @Test
     fun `Rolle avdelingsleder påkrevd`() {
-        assertTrue(AvdelingslederRolleRegel.vurder(listOf(Rolle.AVDELINGSLEDER)))
+        assertTrue(AvdelingslederRolleRegel.vurder(listOf(Rolle.PRODUKSJONSSTYRING)))
         assertFalse(
             AvdelingslederRolleRegel.vurder(
                 listOf(
-                    Rolle.UTVIKLER,
+                    Rolle.DRIFT,
                     Rolle.BESLUTTER,
-                    Rolle.VEILEDER,
+                    Rolle.SAKSBEHANDLER_OPPFOLGING,
                     Rolle.LES,
-                    Rolle.SAKSBEHANDLER
+                    Rolle.SAKSBEHANDLER_NASJONAL
                 )
             )
         )
