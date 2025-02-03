@@ -15,6 +15,8 @@ import tilgang.auth.roller
 import tilgang.metrics.httpCallCounter
 import tilgang.regler.parseRoller
 
+private val log = org.slf4j.LoggerFactory.getLogger("tilgang.routes.TilgangRoute")
+
 fun NormalOpenAPIRoute.tilgang(
     tilgangService: TilgangService,
     roles: List<Role>,
@@ -41,6 +43,8 @@ fun NormalOpenAPIRoute.tilgang(
                 val callId = pipeline.call.request.header("Nav-CallId") ?: "ukjent"
                 val token = token()
                 val roller = parseRoller(rolesWithGroupIds = roles, roller())
+
+                log.info("Vurderer tilgang. Lastede roller: $roller.")
 
                 val harTilgang = tilgangService.harTilgangTilBehandling(ident(), req, roller, token, callId)
                 respond(TilgangResponse(harTilgang))
