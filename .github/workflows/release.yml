@@ -28,7 +28,7 @@ jobs:
     secrets: inherit
     
   publish-plugin:
-#    needs: gradle
+    needs: gradle
     permissions:
       contents: write
       packages: write
@@ -46,7 +46,7 @@ jobs:
       - uses: paulhatch/semantic-version@v5.4.0
         id: tag
         with:
-          change_path: "plugin/"
+          change_path: "plugin/ plugin-kontrakt/ api-kontrakt/"
           bump_each_commit: true
           tag_prefix: ""
           bump_each_commit_patch_pattern: ''
