@@ -28,7 +28,7 @@ jobs:
     secrets: inherit
     
   publish-plugin:
-    needs: gradle
+#    needs: gradle
     permissions:
       contents: write
       packages: write
