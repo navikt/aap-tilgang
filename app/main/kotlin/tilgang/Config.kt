@@ -9,8 +9,8 @@ private fun getEnvVar(envar: String) = System.getenv(envar) ?: error("missing en
 data class Config(
     val azureConfig: AzureConfig = AzureConfig(),
     val roles: List<Role> = listOf(
-        Role(Rolle.SAKSBEHANDLER_OPPFOLGING, UUID.fromString(getEnvVar("AAP_VEILEDER"))),
-        Role(Rolle.SAKSBEHANDLER_NASJONAL, UUID.fromString(getEnvVar("AAP_SAKSBEHANDLER"))),
+        Role(Rolle.SAKSBEHANDLER_OPPFOLGING, UUID.fromString(getEnvVar("AAP_SAKSBEHANDLER_OPPFOLGING"))),
+        Role(Rolle.SAKSBEHANDLER_NASJONAL, UUID.fromString(getEnvVar("AAP_SAKSBEHANDLER_NASJONAL"))),
         Role(Rolle.BESLUTTER, UUID.fromString(getEnvVar("AAP_BESLUTTER"))),
         Role(Rolle.LES, UUID.fromString(getEnvVar("AAP_LES"))),
         Role(Rolle.DRIFT, UUID.fromString(getEnvVar("AAP_DRIFT"))),
