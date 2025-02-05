@@ -31,6 +31,8 @@ fun NormalOpenAPIRoute.tilgang(
                 val token = token()
                 val roller = parseRoller(rolesWithGroupIds = roles, roller())
 
+                log.info("Vurderer tilgang til sak. Lastede roller: $roller.")
+
                 val harTilgang = tilgangService.harTilgangTilSak(ident(), req, roller, token, callId)
 
                 respond(TilgangResponse(harTilgang))
@@ -44,7 +46,7 @@ fun NormalOpenAPIRoute.tilgang(
                 val token = token()
                 val roller = parseRoller(rolesWithGroupIds = roles, roller())
 
-                log.info("Vurderer tilgang. Lastede roller: $roller.")
+                log.info("Vurderer tilgang til behandling. Lastede roller: $roller.")
 
                 val harTilgang = tilgangService.harTilgangTilBehandling(ident(), req, roller, token, callId)
                 respond(TilgangResponse(harTilgang))
