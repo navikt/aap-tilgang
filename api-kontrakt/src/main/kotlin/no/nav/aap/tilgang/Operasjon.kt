@@ -1,4 +1,4 @@
-package tilgang
+package no.nav.aap.tilgang
 
 /**
  * Muligene operasjoner en rolle kan gjøre.

@@ -2,9 +2,6 @@ package no.nav.aap.tilgang
 
 import io.ktor.server.application.ApplicationCall
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
-import tilgang.BehandlingTilgangRequest
-import tilgang.JournalpostTilgangRequest
-import tilgang.SakTilgangRequest
 
 object TilgangService {
     fun harTilgang(

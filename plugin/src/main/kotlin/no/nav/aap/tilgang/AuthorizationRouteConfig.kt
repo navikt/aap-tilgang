@@ -7,11 +7,6 @@ import no.nav.aap.tilgang.plugin.kontrakt.JournalpostIdResolver
 import no.nav.aap.tilgang.plugin.kontrakt.Journalpostreferanse
 import no.nav.aap.tilgang.plugin.kontrakt.Saksreferanse
 import no.nav.aap.tilgang.plugin.kontrakt.TilgangReferanse
-import tilgang.BehandlingTilgangRequest
-import tilgang.JournalpostTilgangRequest
-import tilgang.Operasjon
-import tilgang.SakTilgangRequest
-import tilgang.TilgangRequest
 
 data class AuthorizationParamPathConfig(
     val operasjon: Operasjon = Operasjon.SE,

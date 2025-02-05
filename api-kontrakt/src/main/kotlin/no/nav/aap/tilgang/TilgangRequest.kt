@@ -1,4 +1,4 @@
-package tilgang
+package no.nav.aap.tilgang
 
 data class SakTilgangRequest (
     val saksnummer: String,

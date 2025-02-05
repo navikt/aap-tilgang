@@ -23,7 +23,7 @@ import no.nav.aap.tilgang.auditlog.PathBrukerIdentResolver
 import no.nav.aap.tilgang.plugin.kontrakt.AuditlogResolverInput
 import no.nav.aap.tilgang.plugin.kontrakt.BrukerIdentResolver
 import no.nav.aap.tilgang.plugin.kontrakt.Saksreferanse
-import tilgang.Operasjon
+import no.nav.aap.tilgang.Operasjon
 import java.util.*
 import kotlin.random.Random
 

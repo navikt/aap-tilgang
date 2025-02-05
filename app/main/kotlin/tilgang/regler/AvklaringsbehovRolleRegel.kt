@@ -2,7 +2,7 @@ package tilgang.regler
 
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.postmottak.kontrakt.avklaringsbehov.Definisjon as PostmottakDefinisjon
-import tilgang.Rolle
+import no.nav.aap.tilgang.Rolle
 
 data object AvklaringsbehovRolleRegel : Regel<AvklaringsbehovRolleInput> {
     override fun vurder(input: AvklaringsbehovRolleInput): Boolean {

@@ -18,10 +18,10 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.coroutines.runBlocking
 import org.intellij.lang.annotations.Language
-import tilgang.BehandlingTilgangRequest
-import tilgang.JournalpostTilgangRequest
-import tilgang.SakTilgangRequest
-import tilgang.TilgangResponse
+import no.nav.aap.tilgang.BehandlingTilgangRequest
+import no.nav.aap.tilgang.JournalpostTilgangRequest
+import no.nav.aap.tilgang.SakTilgangRequest
+import no.nav.aap.tilgang.TilgangResponse
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.*

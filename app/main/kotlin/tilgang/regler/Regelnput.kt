@@ -3,8 +3,8 @@ package tilgang.regler
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.postmottak.kontrakt.avklaringsbehov.Definisjon as PostmottakDefinisjon
-import tilgang.Operasjon
-import tilgang.Rolle
+import no.nav.aap.tilgang.Operasjon
+import no.nav.aap.tilgang.Rolle
 import tilgang.integrasjoner.behandlingsflyt.IdenterRespons
 
 class RegelInput (

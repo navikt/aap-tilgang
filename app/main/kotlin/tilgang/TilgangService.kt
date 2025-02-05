@@ -4,6 +4,10 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.postmottak.saf.graphql.SafGraphqlClient
 import no.nav.aap.postmottak.saf.graphql.SafJournalpost
+import no.nav.aap.tilgang.BehandlingTilgangRequest
+import no.nav.aap.tilgang.JournalpostTilgangRequest
+import no.nav.aap.tilgang.Rolle
+import no.nav.aap.tilgang.SakTilgangRequest
 import org.slf4j.LoggerFactory
 import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytClient
 import tilgang.integrasjoner.behandlingsflyt.IdenterRespons

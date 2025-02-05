@@ -1,6 +1,7 @@
 package tilgang
 
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureConfig
+import no.nav.aap.tilgang.Rolle
 import java.net.URI
 import java.util.*
 

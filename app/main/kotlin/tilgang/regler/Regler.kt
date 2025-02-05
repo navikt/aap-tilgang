@@ -1,7 +1,7 @@
 package tilgang.regler
 
 import org.slf4j.LoggerFactory
-import tilgang.Operasjon
+import no.nav.aap.tilgang.Operasjon
 import tilgang.service.EnhetService
 import tilgang.service.GeoService
 import tilgang.integrasjoner.nom.INomClient

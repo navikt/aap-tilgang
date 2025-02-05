@@ -1,7 +1,7 @@
 package tilgang.regler
 
 import tilgang.Role
-import tilgang.Rolle
+import no.nav.aap.tilgang.Rolle
 
 fun parseRoller(rolesWithGroupIds: List<Role>, rollerFraToken: List<String>): List<Rolle> {
     val map = rolesWithGroupIds

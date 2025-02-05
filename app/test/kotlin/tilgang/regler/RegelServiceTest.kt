@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import tilgang.AzureTokenGen
-import tilgang.Operasjon
+import no.nav.aap.tilgang.Operasjon
 import tilgang.fakes.Fakes
 import tilgang.integrasjoner.behandlingsflyt.IdenterRespons
 import tilgang.integrasjoner.msgraph.Group
