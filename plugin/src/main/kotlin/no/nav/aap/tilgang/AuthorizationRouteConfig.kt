@@ -8,6 +8,11 @@ import no.nav.aap.tilgang.plugin.kontrakt.Journalpostreferanse
 import no.nav.aap.tilgang.plugin.kontrakt.Saksreferanse
 import no.nav.aap.tilgang.plugin.kontrakt.TilgangReferanse
 
+/**
+ * Informasjon som tilgang trenger for å utlede kontekst fra path til requesten.
+ *
+ * @param avklaringsbehovKode Om operasjonen er [Operasjon.SAKSBEHANDLE], trenger tilgang også å vite hvilket avklaringsbehov som skal saksbehandles.
+ */
 data class AuthorizationParamPathConfig(
     val operasjon: Operasjon = Operasjon.SE,
     val avklaringsbehovKode: String? = null,
@@ -33,7 +38,10 @@ data class AuthorizationParamPathConfig(
             return AuthorizedRequest(
                 applicationsOnly,
                 applicationRole,
-                SakTilgangRequest(saksnummer = parameters.getOrFail(sakPathParam.param), operasjon = operasjon)
+                SakTilgangRequest(
+                    saksnummer = parameters.getOrFail(sakPathParam.param),
+                    operasjon = operasjon
+                )
             )
         }
         if (behandlingPathParam != null) {

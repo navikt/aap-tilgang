@@ -10,10 +10,13 @@ import io.ktor.server.request.*
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.tilgang.*
-import tilgang.*
+import tilgang.LOGGER
+import tilgang.Role
+import tilgang.TilgangService
 import tilgang.auth.ident
 import tilgang.auth.roller
 import tilgang.metrics.httpCallCounter
+import tilgang.metrics.nektetTilgangTeller
 import tilgang.regler.parseRoller
 
 private val log = org.slf4j.LoggerFactory.getLogger("tilgang.routes.TilgangRoute")
@@ -34,7 +37,12 @@ fun NormalOpenAPIRoute.tilgang(
 
                 log.info("Vurderer tilgang til sak. Lastede roller: $roller.")
 
-                val harTilgang = tilgangService.harTilgangTilSak(ident(), req, roller, token, callId)
+                val harTilgang =
+                    tilgangService.harTilgangTilSak(ident(), req, roller, token, callId)
+
+                if (!harTilgang) {
+                    prometheus.nektetTilgangTeller("sak").increment()
+                }
 
                 respond(TilgangResponse(harTilgang))
             }
@@ -49,7 +57,13 @@ fun NormalOpenAPIRoute.tilgang(
 
                 log.info("Vurderer tilgang til behandling. Lastede roller: $roller.")
 
-                val harTilgang = tilgangService.harTilgangTilBehandling(ident(), req, roller, token, callId)
+                val harTilgang =
+                    tilgangService.harTilgangTilBehandling(ident(), req, roller, token, callId)
+
+                if (!harTilgang) {
+                    prometheus.nektetTilgangTeller("behandling").increment()
+                }
+
                 respond(TilgangResponse(harTilgang))
             }
         }
@@ -66,7 +80,12 @@ fun NormalOpenAPIRoute.tilgang(
                 val token = token()
                 val roller = parseRoller(rolesWithGroupIds = roles, roller())
 
-                val harTilgang = tilgangService.harTilgangTilJournalpost(ident(), req, roller, token, callId)
+                val harTilgang =
+                    tilgangService.harTilgangTilJournalpost(ident(), req, roller, token, callId)
+
+                if (!harTilgang) {
+                    prometheus.nektetTilgangTeller("journalpost").increment()
+                }
 
                 respond(TilgangResponse(harTilgang))
             }

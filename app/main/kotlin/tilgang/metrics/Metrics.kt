@@ -24,3 +24,6 @@ fun MeterRegistry.uhåndtertExceptionTeller(name: String): Counter = this.counte
     "uhaandtert_exception_total",
     listOf(Tag.of("name", name))
 )
+
+fun MeterRegistry.nektetTilgangTeller(type: String): Counter =
+    this.counter("nektet_tilgang_total", listOf(Tag.of("type", type)))
