@@ -41,7 +41,7 @@ spec:
     initialDelay: 3
     periodSeconds: 3
     failureThreshold: 21
-  redis:
+  valkey:
     - instance: tilgang
       access: readwrite
   prometheus:
