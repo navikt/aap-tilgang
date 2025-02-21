@@ -7,7 +7,7 @@ data object LeseRolleRegel : Regel<List<Rolle>> {
         return input.any {
             it in listOf(
                 Rolle.SAKSBEHANDLER_OPPFOLGING,
-                Rolle.SAKSBEHANDLER_NASJONAL, Rolle.BESLUTTER, Rolle.LES
+                Rolle.SAKSBEHANDLER_NASJONAL, Rolle.BESLUTTER, Rolle.LES, Rolle.KVALITETSSIKRER
             )
         }
     }
