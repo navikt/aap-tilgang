@@ -3,6 +3,7 @@ package no.nav.aap.tilgang
 import io.ktor.http.Parameters
 import io.ktor.server.util.getOrFail
 import no.nav.aap.tilgang.plugin.kontrakt.Behandlingsreferanse
+import no.nav.aap.tilgang.plugin.kontrakt.BehandlingsreferanseResolver
 import no.nav.aap.tilgang.plugin.kontrakt.JournalpostIdResolver
 import no.nav.aap.tilgang.plugin.kontrakt.Journalpostreferanse
 import no.nav.aap.tilgang.plugin.kontrakt.Saksreferanse
@@ -80,7 +81,8 @@ data class AuthorizationBodyPathConfig(
     val operasjon: Operasjon,
     val applicationRole: String? = null,
     val applicationsOnly: Boolean = false,
-    val journalpostIdResolver: JournalpostIdResolver? = DefaultJournalpostIdResolver()
+    val journalpostIdResolver: JournalpostIdResolver = DefaultJournalpostIdResolver(),
+    val behandlingreferanseResolver: BehandlingsreferanseResolver = DefaultBehandlingreferanseResolver()
 ) : AuthorizationRouteConfig {
     fun tilTilgangRequest(request: Any): AuthorizedRequest {
         when (request) {
@@ -96,7 +98,7 @@ data class AuthorizationBodyPathConfig(
                     }
 
                     is Behandlingsreferanse -> {
-                        val referanse = request.hentBehandlingsreferanse()
+                        val referanse = behandlingreferanseResolver.resolve(request.behandlingsreferanseResolverInput())
                         val avklaringsbehovKode = request.hentAvklaringsbehovKode()
                         return AuthorizedRequest(
                             applicationsOnly,
@@ -107,7 +109,7 @@ data class AuthorizationBodyPathConfig(
 
                     is Journalpostreferanse -> {
                         val referanse =
-                            requireNotNull(journalpostIdResolver).resolve(request.journalpostIdResolverInput())
+                            journalpostIdResolver.resolve(request.journalpostIdResolverInput())
                         val avklaringsbehovKode = request.hentAvklaringsbehovKode()
                         return AuthorizedRequest(
                             applicationsOnly,

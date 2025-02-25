@@ -3,6 +3,7 @@ import TilgangPluginTest.Companion.Journalpostinfo
 import TilgangPluginTest.Companion.Saksinfo
 import TilgangPluginTest.Companion.TestReferanse
 import TilgangPluginTest.Companion.uuid
+import com.papsign.ktor.openapigen.annotations.parameters.PathParam
 import com.papsign.ktor.openapigen.model.info.InfoModel
 import com.papsign.ktor.openapigen.route.TagModule
 import com.papsign.ktor.openapigen.route.apiRouting
@@ -37,15 +38,25 @@ fun Application.autorisertEksempelApp() {
                         AuthorizationParamPathConfig(
                             operasjon = Operasjon.SAKSBEHANDLE,
                             avklaringsbehovKode = "1337",
-                            journalpostPathParam = JournalpostPathParam(
-                                "behandlingReferanse",
-                            )
-                            { 456 }
+                            journalpostPathParam = JournalpostPathParam("behandlingReferanse") { 456 }
                         )
                     ) { _, dto ->
                         respond(
                             dto
                         )
+                    }
+                    route("testApi/pathForPost/resolve/{enAnnenReferanse}") {
+                        authorizedPost<EnAnnenReferanse, IngenReferanse, IngenReferanse>(
+                            AuthorizationParamPathConfig(
+                                operasjon = Operasjon.SAKSBEHANDLE,
+                                avklaringsbehovKode = "1337",
+                                behandlingPathParam = BehandlingPathParam("enAnnenReferanse") { "behandlingsreferanse-for-$it" }
+                            )
+                        ) { _, dto ->
+                            respond(
+                                dto
+                            )
+                        }
                     }
                 }
                 route("testApi/journalpost") {
@@ -176,5 +187,6 @@ class RequestMedAuditResolver(val saksreferanse: UUID) : AuditlogResolverInput, 
     override fun hentSaksreferanse(): String {
         return saksreferanse.toString()
     }
-
 }
+
+data class EnAnnenReferanse(@PathParam("enAnnenReferanse") val enAnnenReferanse: String)
