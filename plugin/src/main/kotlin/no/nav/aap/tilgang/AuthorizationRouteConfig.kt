@@ -3,7 +3,7 @@ package no.nav.aap.tilgang
 import io.ktor.http.Parameters
 import io.ktor.server.util.getOrFail
 import no.nav.aap.tilgang.plugin.kontrakt.Behandlingsreferanse
-import no.nav.aap.tilgang.plugin.kontrakt.BehandlingsreferanseResolver
+import no.nav.aap.tilgang.plugin.kontrakt.BehandlingreferanseResolver
 import no.nav.aap.tilgang.plugin.kontrakt.JournalpostIdResolver
 import no.nav.aap.tilgang.plugin.kontrakt.Journalpostreferanse
 import no.nav.aap.tilgang.plugin.kontrakt.Saksreferanse
@@ -82,7 +82,7 @@ data class AuthorizationBodyPathConfig(
     val applicationRole: String? = null,
     val applicationsOnly: Boolean = false,
     val journalpostIdResolver: JournalpostIdResolver = DefaultJournalpostIdResolver(),
-    val behandlingreferanseResolver: BehandlingsreferanseResolver = DefaultBehandlingreferanseResolver()
+    val behandlingreferanseResolver: BehandlingreferanseResolver = DefaultBehandlingreferanseResolver()
 ) : AuthorizationRouteConfig {
     fun tilTilgangRequest(request: Any): AuthorizedRequest {
         when (request) {

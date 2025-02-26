@@ -50,13 +50,12 @@ må request body være en sub-type av `TilgangReferanse`.
 Det er ikke alltid man har nødvendig kontekst for autorisering når man definerer en route. Dette kan være fordi konteksten
 baserer seg på en ID/referanse som ikke er verken en sak, en behandling eller en journalpost, men der man har en kobling
 mellom ID/referanse og f.eks. sak i databasen. Man har da følgende muligheter for autorisering:
-- Foretrukket løsning er å lage nye resolvers, se etter hvordan det er løst for journalpost. Generaliser gjerne
-implementasjonen av resolvers når det lages flere (per nå er det kun en resolver).
+- Lag egne resolvers: `JournalpostIdResolver`, `BehandlingreferanseResolver` (Lag `SaksnummerResolver` ved behov)
 - Ikke bruk plugin, men bruk TilgangGateway.
 - Endre på kontekst slik at man kan bruke plugin, altså endre route til å inkludere enten sak, behandling eller
 journalpost. Husk å i tillegg sjekke at ID/referanse og sak, behandling eller journalpost hører sammen.
 - Man _kan_ vurdere å lage en ny PIP (policy information point) som tilgang-tjenesten kan slå opp i, men det bør være
 sentrale identifikatorer i domenet.
 
-Ved autorisering av requests med client-credentials, altså en maskin-til-maskin integrasjon, autoriserer man et
-forhåndsdefinert sett av applikasjoner. Dermed er det ikke behov for en ytterligere kontekst for hva man autoriserer. 
+Ved autorisering av requests med client-credentials, altså en maskin-til-maskin integrasjon, autoriserer man en mot en
+rolle som applikasjoner kan tilordnes. Dermed er det ikke behov for en ytterligere kontekst for hva man autoriserer. 

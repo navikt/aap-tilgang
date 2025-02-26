@@ -40,7 +40,9 @@ fun Application.autorisertEksempelApp() {
                             AuthorizationParamPathConfig(
                                 operasjon = Operasjon.SAKSBEHANDLE,
                                 avklaringsbehovKode = "1337",
-                                behandlingPathParam = BehandlingPathParam("enAnnenReferanse") { enAnnenReferanseTilbehandlingReferanse.getValue(it) }
+                                behandlingPathParam = BehandlingPathParam(
+                                    param = "enAnnenReferanse",
+                                    resolver = { enAnnenReferanseTilbehandlingReferanse.getValue(it) })
                             )
                         ) { _, dto ->
                             respond(

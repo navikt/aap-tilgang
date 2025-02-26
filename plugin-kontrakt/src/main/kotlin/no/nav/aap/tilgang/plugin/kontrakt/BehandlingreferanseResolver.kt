@@ -2,6 +2,6 @@ package no.nav.aap.tilgang.plugin.kontrakt
 
 import java.util.UUID
 
-fun interface BehandlingsreferanseResolver {
+fun interface BehandlingreferanseResolver {
     fun resolve(referanse: String): UUID
 }
