@@ -1,27 +1,30 @@
 package no.nav.aap.tilgang
 
-import io.ktor.http.HttpStatusCode
+import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 import io.ktor.server.plugins.callid.*
-import io.ktor.server.plugins.doublereceive.DoubleReceive
+import io.ktor.server.plugins.doublereceive.*
 import io.ktor.server.request.*
-import io.ktor.server.response.respond
-import io.ktor.server.routing.Route
-import io.ktor.server.routing.RoutingNode
-import io.ktor.util.AttributeKey
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
+import io.ktor.util.*
 import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.json.DefaultJsonMapper
-import no.nav.aap.tilgang.auditlog.*
+import no.nav.aap.tilgang.auditlog.AuditLogBodyConfig
+import no.nav.aap.tilgang.auditlog.AuditLogConfig
+import no.nav.aap.tilgang.auditlog.AuditLogPathParamConfig
+import no.nav.aap.tilgang.auditlog.AuditLoggerImpl
 import no.nav.aap.tilgang.auditlog.cef.AuthorizationDecision
 import no.nav.aap.tilgang.auditlog.cef.CefMessage
 import no.nav.aap.tilgang.plugin.kontrakt.AuditlogResolverInput
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 const val TILGANG_PLUGIN = "TilgangPlugin"
 
-val log = LoggerFactory.getLogger(TILGANG_PLUGIN)
+val log: Logger = LoggerFactory.getLogger(TILGANG_PLUGIN)
 
 inline fun <reified T : Any> Route.installerTilgangBodyPlugin(
     pathConfig: AuthorizationBodyPathConfig,
