@@ -57,5 +57,5 @@ journalpost. Husk å i tillegg sjekke at ID/referanse og sak, behandling eller j
 - Man _kan_ vurdere å lage en ny PIP (policy information point) som tilgang-tjenesten kan slå opp i, men det bør være
 sentrale identifikatorer i domenet.
 
-Ved autorisering av requests med client-credentials, altså en maskin-til-maskin integrasjon, autoriserer man en mot en
+Ved autorisering av requests med client-credentials, altså en maskin-til-maskin integrasjon, autoriserer man mot en
 rolle som applikasjoner kan tilordnes. Dermed er det ikke behov for en ytterligere kontekst for hva man autoriserer. 
