@@ -50,7 +50,7 @@ data class AuthorizationParamPathConfig(
                 applicationsOnly,
                 applicationRole,
                 BehandlingTilgangRequest(
-                    behandlingsreferanse = parameters.getOrFail(behandlingPathParam.param),
+                    behandlingsreferanse = behandlingPathParam.resolver.resolve(parameters.getOrFail(behandlingPathParam.param)),
                     operasjon = operasjon,
                     avklaringsbehovKode = avklaringsbehovKode
                 )

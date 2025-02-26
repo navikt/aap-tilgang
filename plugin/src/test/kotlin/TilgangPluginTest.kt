@@ -1,3 +1,4 @@
+import ch.qos.logback.classic.Logger
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.AppenderBase
 import com.papsign.ktor.openapigen.annotations.parameters.PathParam
@@ -22,18 +23,16 @@ import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.Client
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.OnBehalfOfTokenProvider
 import no.nav.aap.tilgang.*
 import no.nav.aap.tilgang.plugin.kontrakt.Journalpostreferanse
-import no.nav.aap.tilgang.plugin.kontrakt.Saksreferanse
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.slf4j.LoggerFactory
 import java.net.URI
 import java.util.*
-import ch.qos.logback.classic.Logger
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertTrue
 
 class TilgangPluginTest {
     companion object {
@@ -59,12 +58,6 @@ class TilgangPluginTest {
             return OidcToken(azureTokenGen.generate(isApp, roles))
         }
 
-        class Saksinfo(val saksnummer: UUID) : Saksreferanse {
-            override fun hentSaksreferanse(): String {
-                return saksnummer.toString()
-            }
-        }
-
         data class Journalpostinfo(@PathParam("behandlingReferanse") val behandlingReferanse: String) :
             Journalpostreferanse {
             override fun journalpostIdResolverInput(): String {
@@ -80,13 +73,9 @@ class TilgangPluginTest {
 
         val autorisertEksempelAppServer = embeddedServer(Netty, port = 8082) { autorisertEksempelApp() }
 
-        val uuid = UUID.randomUUID()
-
         @JvmStatic
         @BeforeAll
         fun beforeAll() {
-            fakes.gittTilgangTilSak(uuid.toString(), true)
-            fakes.gittTilgangTilBehandling(uuid.toString(), true)
             autorisertEksempelAppServer.start()
         }
 
@@ -192,11 +181,26 @@ class TilgangPluginTest {
         fakes.gittTilgangTilSak(randomUuid.toString(), true)
         val res = clientForOBO.post<_, Saksinfo>(
             URI.create("http://localhost:8082/")
-                .resolve("testApi/authorizedPost/on-behalf-of"),
+                .resolve("testApi/authorizedPost/on-behalf-of/saksinfo"),
             PostRequest(Saksinfo(randomUuid), currentToken = generateToken(isApp = false))
         )
 
-        assertThat(res?.saksnummer).isEqualTo(uuid)
+        assertThat(res?.saksnummer).isEqualTo(randomUuid)
+    }
+
+    @Test
+    fun `post route som slår opp behandlingreferanse basert på annen referanse`() {
+        val enAnnenReferanse = UUID.randomUUID()
+        val behandlingReferanse = UUID.randomUUID()
+        fakes.gittTilgangTilBehandling(behandlingReferanse, true)
+        enAnnenReferanseTilbehandlingReferanse.put(enAnnenReferanse.toString(), behandlingReferanse)
+        val res = clientForOBO.post<_, Behandlinginfo>(
+            URI.create("http://localhost:8082/")
+                .resolve("testApi/authorizedPost/on-behalf-of/behandlinginfo"),
+            PostRequest(Behandlinginfo(enAnnenReferanse.toString()), currentToken = generateToken(isApp = false))
+        )
+
+        assertThat(res?.enAnnenReferanse).isEqualTo(enAnnenReferanse.toString())
     }
 
     @Test
@@ -214,22 +218,22 @@ class TilgangPluginTest {
 
     @Test
     fun `post som støtter on-behalf-of token og client-credentials gir tilgang med on-behalf-of token og client-credentials token`() {
-        val randomUuid = UUID.randomUUID()
-        fakes.gittTilgangTilSak(randomUuid.toString(), true)
+        val saksnummer = UUID.randomUUID()
+        fakes.gittTilgangTilSak(saksnummer.toString(), true)
         val res1 = clientForOBO.post<_, Saksinfo>(
             URI.create("http://localhost:8082/")
                 .resolve("testApi/authorizedPost/client-credentials-and-on-behalf-of"),
-            PostRequest(Saksinfo(randomUuid), currentToken = generateToken(isApp = false))
+            PostRequest(Saksinfo(saksnummer), currentToken = generateToken(isApp = false))
         )
         val token = generateToken(isApp = true, roles = listOf("tilgang-rolle"))
         val res2 = clientUtenTokenProvider.post<_, Saksinfo>(
             URI.create("http://localhost:8082/")
                 .resolve("testApi/authorizedPost/client-credentials-and-on-behalf-of"),
-            PostRequest(Saksinfo(randomUuid), additionalHeaders = listOf(Header("Authorization", "Bearer ${token.token()}")))
+            PostRequest(Saksinfo(saksnummer), additionalHeaders = listOf(Header("Authorization", "Bearer ${token.token()}")))
         )
 
-        assertThat(res1?.saksnummer).isEqualTo(uuid)
-        assertThat(res2?.saksnummer).isEqualTo(uuid)
+        assertThat(res1?.saksnummer).isEqualTo(saksnummer)
+        assertThat(res2?.saksnummer).isEqualTo(saksnummer)
     }
 
     @Test
@@ -266,13 +270,28 @@ class TilgangPluginTest {
 
 
     @Test
-    fun `post støtter path params`() {
+    fun `post støtter path params med mapping fra annen referanse til journalpostId`() {
         val behandlingsRef = "123"
         val journalpostId = 456L
         fakes.gittTilgangTilJournalpost(journalpostId, true)
         val res = clientForOBO.post<_, IngenReferanse>(
             URI.create("http://localhost:8082/")
-                .resolve("testApi/pathForPost/$behandlingsRef"),
+                .resolve("testApi/pathForPost/resolve/journalpost/$behandlingsRef"),
+            PostRequest(IngenReferanse("test"), currentToken = generateToken(isApp = false))
+        )
+
+        assertThat(res?.noe).isEqualTo("test")
+    }
+
+    @Test
+    fun `post støtter path params med mapping fra annen referanse til behandlingreferanse`() {
+        val enAnnenReferanse = UUID.randomUUID()
+        val behandlingReferanse = UUID.randomUUID()
+        fakes.gittTilgangTilBehandling(behandlingReferanse, true)
+        enAnnenReferanseTilbehandlingReferanse.put(enAnnenReferanse.toString(), behandlingReferanse)
+        val res = clientForOBO.post<_, IngenReferanse>(
+            URI.create("http://localhost:8082/")
+                .resolve("testApi/pathForPost/resolve/behandlingreferanse/$enAnnenReferanse"),
             PostRequest(IngenReferanse("test"), currentToken = generateToken(isApp = false))
         )
 

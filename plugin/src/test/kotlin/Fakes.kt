@@ -58,8 +58,8 @@ internal class Fakes(azurePort: Int = 0, val azureTokenGen: AzureTokenGen) : Aut
         tilgangTilSak[sak] = tilgang
     }
 
-    private val tilgangTilBehandling = mutableMapOf<String, Boolean>()
-    fun gittTilgangTilBehandling(behandling: String, tilgang: Boolean) {
+    private val tilgangTilBehandling = mutableMapOf<UUID, Boolean>()
+    fun gittTilgangTilBehandling(behandling: UUID, tilgang: Boolean) {
         tilgangTilBehandling[behandling] = tilgang
     }
 
