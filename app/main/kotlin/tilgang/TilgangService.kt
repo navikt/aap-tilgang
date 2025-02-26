@@ -50,7 +50,7 @@ class TilgangService(
         token: OidcToken,
         callId: String
     ): Boolean {
-        val identer = behandlingsflytClient.hentIdenterForBehandling(req.behandlingsreferanse)
+        val identer = behandlingsflytClient.hentIdenterForBehandling(req.behandlingsreferanse.toString())
         val avklaringsbehov =
             if (req.avklaringsbehovKode != null) Definisjon.forKode(req.avklaringsbehovKode!!) else null
 

@@ -1,8 +1,7 @@
 import TilgangPluginTest.Companion.IngenReferanse
 import TilgangPluginTest.Companion.Journalpostinfo
-import TilgangPluginTest.Companion.Saksinfo
 import TilgangPluginTest.Companion.TestReferanse
-import TilgangPluginTest.Companion.uuid
+import com.papsign.ktor.openapigen.annotations.parameters.PathParam
 import com.papsign.ktor.openapigen.model.info.InfoModel
 import com.papsign.ktor.openapigen.route.TagModule
 import com.papsign.ktor.openapigen.route.apiRouting
@@ -24,28 +23,45 @@ import no.nav.aap.tilgang.plugin.kontrakt.AuditlogResolverInput
 import no.nav.aap.tilgang.plugin.kontrakt.BrukerIdentResolver
 import no.nav.aap.tilgang.plugin.kontrakt.Saksreferanse
 import no.nav.aap.tilgang.Operasjon
+import no.nav.aap.tilgang.plugin.kontrakt.Behandlingsreferanse
 import java.util.*
 import kotlin.random.Random
+
+val enAnnenReferanseTilbehandlingReferanse = mutableMapOf<String, UUID>()
 
 fun Application.autorisertEksempelApp() {
     commonKtorModule(PrometheusMeterRegistry(PrometheusConfig.DEFAULT), AzureConfig(), InfoModel())
     routing {
         authenticate(AZURE) {
             apiRouting {
-                route("testApi/pathForPost/{behandlingReferanse}") {
-                    authorizedPost<Journalpostinfo, IngenReferanse, IngenReferanse>(
-                        AuthorizationParamPathConfig(
-                            operasjon = Operasjon.SAKSBEHANDLE,
-                            avklaringsbehovKode = "1337",
-                            journalpostPathParam = JournalpostPathParam(
-                                "behandlingReferanse",
+                route("testApi/pathForPost/resolve") {
+                    route("behandlingreferanse/{enAnnenReferanse}") {
+                        authorizedPost<EnAnnenReferanse, IngenReferanse, IngenReferanse>(
+                            AuthorizationParamPathConfig(
+                                operasjon = Operasjon.SAKSBEHANDLE,
+                                avklaringsbehovKode = "1337",
+                                behandlingPathParam = BehandlingPathParam(
+                                    param = "enAnnenReferanse",
+                                    resolver = { enAnnenReferanseTilbehandlingReferanse.getValue(it) })
                             )
-                            { 456 }
-                        )
-                    ) { _, dto ->
-                        respond(
-                            dto
-                        )
+                        ) { _, dto ->
+                            respond(
+                                dto
+                            )
+                        }
+                    }
+                    route("journalpost/{behandlingReferanse}") {
+                        authorizedPost<Journalpostinfo, IngenReferanse, IngenReferanse>(
+                            AuthorizationParamPathConfig(
+                                operasjon = Operasjon.SAKSBEHANDLE,
+                                avklaringsbehovKode = "1337",
+                                journalpostPathParam = JournalpostPathParam("behandlingReferanse") { 456 }
+                            )
+                        ) { _, dto ->
+                            respond(
+                                dto
+                            )
+                        }
                     }
                 }
                 route("testApi/journalpost") {
@@ -113,11 +129,19 @@ fun Application.autorisertEksempelApp() {
                     }
                 }
                 route("testApi/authorizedPost") {
-                    route("on-behalf-of") {
+                    route("on-behalf-of/saksinfo") {
                         authorizedPost<Unit, Saksinfo, Saksinfo>(
                             AuthorizationBodyPathConfig(operasjon = Operasjon.SAKSBEHANDLE)
                         ) { _, dto ->
-                            respond(Saksinfo(saksnummer = uuid))
+                            respond(dto)
+                        }
+                    }
+
+                    route("on-behalf-of/behandlinginfo") {
+                        authorizedPost<Unit, Behandlinginfo, Behandlinginfo>(
+                            AuthorizationBodyPathConfig(operasjon = Operasjon.SAKSBEHANDLE, behandlingreferanseResolver = { enAnnenReferanseTilbehandlingReferanse.getValue(it) })
+                        ) { _, dto ->
+                            respond(dto)
                         }
                     }
                     route("client-credentials-and-on-behalf-of") {
@@ -127,7 +151,7 @@ fun Application.autorisertEksempelApp() {
                                 applicationRole = "tilgang-rolle"
                             )
                         ) { _, dto ->
-                            respond(Saksinfo(saksnummer = uuid))
+                            respond(dto)
                         }
                     }
                     route("client-credentials-application-role") {
@@ -161,6 +185,22 @@ fun Application.autorisertEksempelApp() {
     }
 }
 
+data class Saksinfo(val saksnummer: UUID) : Saksreferanse {
+    override fun hentSaksreferanse(): String {
+        return saksnummer.toString()
+    }
+}
+
+data class Behandlinginfo(val enAnnenReferanse: String) :Behandlingsreferanse {
+    override fun behandlingsreferanseResolverInput(): String {
+        return enAnnenReferanse
+    }
+
+    override fun hentAvklaringsbehovKode(): String? {
+        return null
+    }
+}
+
 class TestResolver : BrukerIdentResolver {
     override fun resolve(referanse: String): String {
         log.info("Resolving ident for $referanse")
@@ -176,5 +216,6 @@ class RequestMedAuditResolver(val saksreferanse: UUID) : AuditlogResolverInput, 
     override fun hentSaksreferanse(): String {
         return saksreferanse.toString()
     }
-
 }
+
+data class EnAnnenReferanse(@PathParam("enAnnenReferanse") val enAnnenReferanse: String)
