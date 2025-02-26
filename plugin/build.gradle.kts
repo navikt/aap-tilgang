@@ -1,5 +1,5 @@
 val ktorVersion = "3.1.1"
-val komponenterVersjon = "1.0.152"
+val komponenterVersjon = "1.0.156"
 val junitVersion = "5.11.4"
 
 plugins {
