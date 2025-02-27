@@ -47,7 +47,7 @@ dependencies {
     compileOnly("no.nav.aap.kelvin:infrastructure:$komponenterVersjon")
 
     implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
-    implementation("ch.qos.logback:logback-classic:1.5.16")
+    implementation("ch.qos.logback:logback-classic:1.5.17")
     implementation("no.nav:ktor-openapi-generator:1.0.81")
     implementation("io.ktor:ktor-server-core:$ktorVersion")
 
