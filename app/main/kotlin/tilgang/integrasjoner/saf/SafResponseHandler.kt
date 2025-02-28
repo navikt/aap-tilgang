@@ -1,7 +1,7 @@
-import no.nav.aap.postmottak.saf.graphql.SafRespons
 import no.nav.aap.komponenter.httpklient.httpclient.error.DefaultResponseHandler
 import no.nav.aap.komponenter.httpklient.httpclient.error.RestResponseHandler
 import tilgang.graphql.GraphQLError
+import tilgang.integrasjoner.saf.SafRespons
 import java.io.InputStream
 import java.net.http.HttpHeaders
 import java.net.http.HttpRequest

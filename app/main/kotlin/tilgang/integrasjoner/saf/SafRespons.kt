@@ -1,8 +1,7 @@
-package no.nav.aap.postmottak.saf.graphql
+package tilgang.integrasjoner.saf
 
 import tilgang.graphql.GraphQLError
 import tilgang.graphql.GraphQLExtensions
-import java.time.LocalDateTime
 
 data class SafRespons(
     val data: SafData?,
@@ -25,7 +24,7 @@ data class SafJournalpost(
      * @example: 123456789
      */
     val journalpostId: Long,
-    
+
     /**
      * Sier hvilken sak journalposten er knyttet til.
      * En journalpost kan maksimalt være knyttet til èn sak,

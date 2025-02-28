@@ -2,8 +2,8 @@ package tilgang
 
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
-import no.nav.aap.postmottak.saf.graphql.SafGraphqlClient
-import no.nav.aap.postmottak.saf.graphql.SafJournalpost
+import tilgang.integrasjoner.saf.SafGraphqlClient
+import tilgang.integrasjoner.saf.SafJournalpost
 import no.nav.aap.tilgang.BehandlingTilgangRequest
 import no.nav.aap.tilgang.JournalpostTilgangRequest
 import no.nav.aap.tilgang.Rolle

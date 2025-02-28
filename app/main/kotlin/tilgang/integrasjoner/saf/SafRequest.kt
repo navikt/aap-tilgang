@@ -1,4 +1,4 @@
-package no.nav.aap.postmottak.saf.graphql
+package tilgang.integrasjoner.saf
 
 import tilgang.graphql.asQuery
 

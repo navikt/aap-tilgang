@@ -14,7 +14,7 @@ import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import no.nav.aap.komponenter.server.AZURE
 import no.nav.aap.komponenter.server.commonKtorModule
-import no.nav.aap.postmottak.saf.graphql.SafGraphqlClient
+import tilgang.integrasjoner.saf.SafGraphqlClient
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import tilgang.service.EnhetService
