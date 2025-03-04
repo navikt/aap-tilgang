@@ -1,0 +1,39 @@
+roles:
+  #NAY
+  - name: AAP_SAKSBEHANDLER
+    ad: 0000-GA-AAP_SAKSBEHANDLER
+    group: 5f16693c-9910-4976-a1b6-c5b09972eca2
+
+  - name: AAP_BESLUTTER
+    ad: 0000-GA-AAP_BESLUTTER
+    group: 5763b52f-f16a-483d-8f40-25be9de95c0a
+
+    #Lokalkontor
+  - name: AAP_VEILEDER
+    ad: 0000-GA-AAP_VEILEDER
+    group: abc596bf-8493-47a9-8362-5450381f9a9d
+
+    #NKS og andre nysgjerrige
+  - name: AAP_LES
+    ad: 0000-GA-AAP_LES
+    group: 963df3e5-04f7-415e-8d13-1de981603940
+
+  - name: AAP_SAKSBEHANDLER_OPPFOLGING
+    ad: 0000-GA-AAP_SAKSBEHANDLER_OPPFOLGING
+    group: dc8b0182-1449-445a-833c-1a4620b7c2be
+
+  - name: AAP_KVALITETSSIKRER
+    ad: 0000-GA-AAP_KVALITETSSIKRER
+    group: a6bf143f-fee9-41ab-a487-f54503a28de6
+
+  - name: AAP_SAKSBEHANDLER_NASJONAL
+    ad: 0000-GA-AAP_SAKSBEHANDLER_NASJONAL
+    group: 3a65f41a-b3f3-4b1c-830a-df20ff020980
+
+  - name: AAP_DRIFT
+    ad: 0000-GA-AAP_DRIFT
+    group: ff9a228b-4aab-47bd-8aee-598d80f0fb4b
+
+  - name: AAP_PRODUKSJONSSTYRING
+    ad: 0000-GA-AAP_PRODUKSJONSSTYRING
+    group: 1d61ecf2-fcca-4dbb-ba49-82ab01aef96e
