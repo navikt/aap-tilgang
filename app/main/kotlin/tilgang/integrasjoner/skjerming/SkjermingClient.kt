@@ -26,7 +26,8 @@ open class SkjermingClient(
     )
     private val httpClient = RestClient.withDefaultResponseHandler(
         config = config,
-        tokenProvider = ClientCredentialsTokenProvider
+        tokenProvider = ClientCredentialsTokenProvider,
+        prometheus = prometheus,
     )
 
     open fun isSkjermet(identer: IdenterRespons): Boolean {

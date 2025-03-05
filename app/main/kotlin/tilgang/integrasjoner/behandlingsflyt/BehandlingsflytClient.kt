@@ -28,7 +28,8 @@ class BehandlingsflytClient(
     )
     private val httpClient = RestClient.withDefaultResponseHandler(
         config = clientConfig,
-        tokenProvider = ClientCredentialsTokenProvider
+        tokenProvider = ClientCredentialsTokenProvider,
+        prometheus = prometheus,
     )
 
     fun hentIdenterForSak(saksnummer: String): IdenterRespons {

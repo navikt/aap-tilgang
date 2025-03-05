@@ -34,6 +34,7 @@ class MsGraphClient(
     private val httpClient =  RestClient.withDefaultResponseHandler(
         config = clientConfig,
         tokenProvider = OnBehalfOfTokenProvider,
+        prometheus = prometheus,
     )
 
     override fun hentAdGrupper(currentToken: OidcToken, ident: String): MemberOf {

@@ -29,7 +29,8 @@ open class NomClient(
     )
     private val httpClient = RestClient.withDefaultResponseHandler(
         config = config,
-        tokenProvider = ClientCredentialsTokenProvider
+        tokenProvider = ClientCredentialsTokenProvider,
+        prometheus = prometheus,
     )
     private val baseUrl = URI.create(requiredConfigForKey("nom.base.url"))
 
@@ -50,7 +51,8 @@ open class NomClient(
             )
         )
         val response: NOMRespons =
-            httpClient.post(baseUrl, request) ?: throw NomException("Feil ved henting av match mot NOM")
+            httpClient.post(baseUrl, request)
+                ?: throw NomException("Feil ved henting av match mot NOM")
 
         val navIdentFraNOM = response.data?.ressurs?.navident.orEmpty()
         redis.set(Key(NOM_PREFIX, søkerIdent), navIdentFraNOM.serialize(), 3600)
