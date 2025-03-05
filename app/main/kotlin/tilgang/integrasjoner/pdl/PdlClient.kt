@@ -33,7 +33,8 @@ class PdlGraphQLClient(
     private val httpClient = RestClient(
         config = clientConfig,
         tokenProvider = ClientCredentialsTokenProvider,
-        responseHandler = PdlResponseHandler()
+        responseHandler = PdlResponseHandler(),
+        prometheus = prometheus,
     )
 
     override fun hentPersonBolk(personidenter: List<String>, callId: String): List<PersonResultat>? {

@@ -33,7 +33,8 @@ class SafGraphqlClient(
     private val httpClient = RestClient(
         config = config,
         tokenProvider = ClientCredentialsTokenProvider,
-        responseHandler = SafResponseHandler()
+        responseHandler = SafResponseHandler(),
+        prometheus = prometheus,
     )
 
     companion object {
