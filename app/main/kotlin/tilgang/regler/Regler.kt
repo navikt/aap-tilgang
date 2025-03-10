@@ -1,13 +1,13 @@
 package tilgang.regler
 
-import org.slf4j.LoggerFactory
 import no.nav.aap.tilgang.Operasjon
-import tilgang.service.EnhetService
-import tilgang.service.GeoService
+import org.slf4j.LoggerFactory
 import tilgang.integrasjoner.nom.INomClient
 import tilgang.integrasjoner.pdl.IPdlGraphQLClient
 import tilgang.integrasjoner.skjerming.SkjermingClient
 import tilgang.service.AdressebeskyttelseService
+import tilgang.service.EnhetService
+import tilgang.service.GeoService
 import tilgang.service.SkjermingService
 
 private val logger = LoggerFactory.getLogger(RegelService::class.java)
@@ -54,7 +54,7 @@ class RegelService(
     ): Boolean {
         return this.reglerForOperasjon[input.operasjon]!!.all {
             val resultat = it.vurder(input)
-            logger.info("Vurderte regel ${it.regel} med svar: $resultat")
+            logger.info("Vurderte regel ${it.regel} med svar: $resultat, for ident ${input.ansattIdent}")
             resultat
         }
     }
