@@ -1,3 +1,4 @@
+ingress: https://aap-tilgang.intern.dev.nav.no
 roles:
   #NAY
   - name: AAP_SAKSBEHANDLER

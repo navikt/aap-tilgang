@@ -9,12 +9,11 @@ metadata:
 spec:
   image: {{image}}
   replicas:
-    cpuThresholdPercentage: 90
-    disableAutoScaling: true
-    max: 1
+    cpuThresholdPercentage: 80
+    max: 2
     min: 1
   ingresses:
-    - https://aap-tilgang.intern.dev.nav.no
+    - {{ingress}}
   azure:
     application:
       enabled: true
