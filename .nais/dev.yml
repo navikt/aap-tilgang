@@ -1,18 +1,8 @@
 ingress: https://aap-tilgang.intern.dev.nav.no
 roles:
-  #NAY
-  - name: AAP_SAKSBEHANDLER
-    ad: 0000-GA-AAP_SAKSBEHANDLER
-    group: 8bb0ee13-49cd-4e75-8c3d-a13420c8b376
-
   - name: AAP_BESLUTTER
     ad: 0000-GA-AAP_BESLUTTER
     group: f0f6cad5-e3c0-4308-99a2-3630ac60174a
-
-    #Lokalkontor
-  - name: AAP_VEILEDER
-    ad: 0000-GA-AAP_VEILEDER
-    group: 12353679-aa80-4e59-bb47-95e727bfe85c
 
     #NKS og andre nysgjerrige
   - name: AAP_LES
