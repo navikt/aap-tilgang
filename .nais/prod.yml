@@ -55,9 +55,9 @@ env:
     value: http://nom-api.nom/graphql
   - name: NOM_SCOPE
     value: api://prod-gcp.nom.nom-api/.default
-  - name: FORTROLIG_ADRESSE_AD # TODO: oppdater med prod
-    value: ea930b6b-9397-44d9-b9e6-f4cf527a632a # 0000-GA-Fortrolig_Adresse
-  - name: STRENGT_FORTROLIG_ADRESSE_AD # TODO: oppdater med prod
-    value: 5ef775f2-61f8-4283-bf3d-8d03f428aa14 #0000-GA-Strengt_Fortrolig_Adresse
-  - name: SKJERMEDE_PERSONER_AD # TODO: oppdater med prod
-    value: dbe4ad45-320b-4e9a-aaa1-73cca4ee124d # 0000-GA-Egne_ansatte TODO: Oppdater disse
+  - name: FORTROLIG_ADRESSE_AD
+    value: 9ec6487d-f37a-4aad-a027-cd221c1ac32b # 0000-GA-Fortrolig_Adresse
+  - name: STRENGT_FORTROLIG_ADRESSE_AD
+    value: ad7b87a6-9180-467c-affc-20a566b0fec0 # 0000-GA-Strengt_Fortrolig_Adresse
+  - name: SKJERMEDE_PERSONER_AD
+    value: e750ceb5-b70b-4d94-b4fa-9d22467b786b # 0000-GA-Egne_ansatte
