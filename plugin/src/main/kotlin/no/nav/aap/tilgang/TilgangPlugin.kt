@@ -76,7 +76,7 @@ fun Route.installerTilgangMachineToMachinePlugin(
         throw IllegalStateException("Fant allerede registeret tilgang plugin")
     }
 
-    requireNotNull(auditLogConfig) {
+    require(auditLogConfig == null) {
         "kan ikke installere audit-logger for maskin-til-maskin tokens uten on-behalf-of tokens (m2m obo tokens)"
     }
 
