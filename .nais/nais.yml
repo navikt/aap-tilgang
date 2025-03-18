@@ -71,6 +71,7 @@ spec:
         - application: behandlingsflyt
         - application: postmottak-backend
         - application: oppgave
+        - application: saksbehandling
     outbound:
       rules:
         - application: behandlingsflyt
