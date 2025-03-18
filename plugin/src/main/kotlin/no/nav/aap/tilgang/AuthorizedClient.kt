@@ -18,12 +18,16 @@ enum class Tags(override val description: String) : APITag {
 val tilgangkontrollertTag = TagModule(listOf(Tags.Tilgangkontrollert))
 
 inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.authorizedGet(
-    pathConfig: AuthorizationParamPathConfig,
+    routeConfig: AuthorizationRouteConfig,
     auditLogConfig: AuditLogPathParamConfig? = null,
     vararg modules: RouteOpenAPIModule,
     noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams) -> Unit
 ) {
-    ktorRoute.installerTilgangParamPlugin(pathConfig, auditLogConfig)
+    when (routeConfig) {
+        is AuthorizationParamPathConfig -> ktorRoute.installerTilgangParamPlugin(routeConfig, if (auditLogConfig == null) null else auditLogConfig as AuditLogPathParamConfig)
+        is AuthorizationMachineToMachineConfig -> ktorRoute.installerTilgangMachineToMachinePlugin(routeConfig, auditLogConfig)
+        else -> throw IllegalArgumentException("Unsupported routeConfig type for GET: $routeConfig")
+    }
     @Suppress("UnauthorizedGet")
     get<TParams, TResponse>(*modules, tilgangkontrollertTag) { params -> body(params) }
 }
@@ -37,7 +41,8 @@ inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : A
     when (routeConfig) {
         is AuthorizationParamPathConfig -> ktorRoute.installerTilgangParamPlugin(routeConfig, if (auditLogConfig == null) null else auditLogConfig as AuditLogPathParamConfig)
         is AuthorizationBodyPathConfig -> ktorRoute.installerTilgangBodyPlugin<TRequest>(routeConfig, auditLogConfig)
-        else -> throw IllegalArgumentException("Unsupported routeConfig type: $routeConfig")
+        is AuthorizationMachineToMachineConfig -> ktorRoute.installerTilgangMachineToMachinePlugin(routeConfig, auditLogConfig)
+        else -> throw IllegalArgumentException("Unsupported routeConfig type for POST: $routeConfig")
     }
 
     @Suppress("UnauthorizedPost")
@@ -58,7 +63,8 @@ inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : A
     when (routeConfig) {
         is AuthorizationParamPathConfig -> ktorRoute.installerTilgangParamPlugin(routeConfig, if (auditLogConfig == null) null else auditLogConfig as AuditLogPathParamConfig)
         is AuthorizationBodyPathConfig ->ktorRoute.installerTilgangBodyPlugin<TRequest>(routeConfig, auditLogConfig)
-        else -> throw IllegalArgumentException("Unsupported routeConfig type: $routeConfig")
+        is AuthorizationMachineToMachineConfig -> ktorRoute.installerTilgangMachineToMachinePlugin(routeConfig, auditLogConfig)
+        else -> throw IllegalArgumentException("Unsupported routeConfig type for PUT: $routeConfig")
     }
 
     @Suppress("UnauthorizedPut")
