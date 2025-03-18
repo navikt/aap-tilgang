@@ -10,6 +10,10 @@ import java.util.*
  * Spesifiser hvilke apper som har tilgang, enten med å oppgi `azp` eller
  * roller definert i inbound-access-policy.
  *
+ * Du kan finne azp (client id) ved å kjøre:
+ * ```
+ * kubectl get azureadapplication -n aap
+ * ```
  */
 data class AuthorizationMachineToMachineConfig(
     /** `CLIENT_ID` til applikasjonen som får lov til å kalle oss. */
