@@ -6,7 +6,7 @@ plugins {
 }
 
 val ktorVersion = "3.1.1"
-val behandlingsflytVersjon = "0.0.198"
+val behandlingsflytVersjon = "0.0.212"
 val postmottakVersjon = "0.0.58"
 val komponenterVersjon = "1.0.180"
 
