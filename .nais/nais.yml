@@ -72,6 +72,9 @@ spec:
         - application: postmottak-backend
         - application: oppgave
         - application: saksbehandling
+        {{#if isdev}}
+        - application: saksbehandling-lokal # For lokal utvikling. IKKE kopier denne til prod.yaml
+        {{/if}}
     outbound:
       rules:
         - application: behandlingsflyt
