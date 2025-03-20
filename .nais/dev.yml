@@ -1,3 +1,4 @@
+isdev: true
 ingress: https://aap-tilgang.intern.dev.nav.no
 roles:
   - name: AAP_BESLUTTER
