@@ -1,5 +1,5 @@
 # aap-tilgang
-Applikasjon for å sjekke om brukere har tilgang til Kelvin-ressurs
+Applikasjon for å sjekke om brukere har tilgang til Kelvin-ressurs.
 
 ## Plugin
 For integrasjon mot tilgang-tjenesten finnes det en plugin og en http-klient, se [plugin/README.md](plugin/README.md) 
