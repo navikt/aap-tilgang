@@ -26,9 +26,12 @@ jobs:
       id-token: write
     uses: navikt/aap-workflows/.github/workflows/gradle-build.yml@main
     secrets: inherit
-    
+
   publish-plugin:
     needs: gradle
+    concurrency:
+      group: kontrakt
+      cancel-in-progress: true
     permissions:
       contents: write
       packages: write
