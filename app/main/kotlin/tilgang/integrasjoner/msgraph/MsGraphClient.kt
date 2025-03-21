@@ -43,8 +43,7 @@ class MsGraphClient(
             return redis[Key(MSGRAPH_PREFIX, ident)]!!.deserialize()
         }
         prometheus.cacheMiss(MSGRAPH_PREFIX).increment()
-        
-        val url = baseUrl.resolve("me/memberOf")
+        val url = baseUrl.resolve("me/memberOf?\$top=500&\$select=id,mailNickname")
         val respons = httpClient.get<MemberOf>(url, GetRequest(currentToken = currentToken)) ?: MemberOf()
         redis.set(Key(MSGRAPH_PREFIX, ident), respons.serialize())
         return respons

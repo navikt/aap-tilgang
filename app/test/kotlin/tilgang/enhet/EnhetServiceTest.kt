@@ -5,7 +5,6 @@ import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import tilgang.AzureTokenGen
-import tilgang.fakes.TestToken
 import tilgang.service.EnhetService
 import tilgang.integrasjoner.msgraph.Group
 import tilgang.integrasjoner.msgraph.IMsGraphClient
