@@ -29,6 +29,7 @@ class TilgangService(
         token: OidcToken,
         callId: String
     ): Boolean {
+        log.info("Sjekker tilgang til sak ${req.saksnummer}")
         val identer = behandlingsflytClient.hentIdenterForSak(req.saksnummer)
         val regelInput = RegelInput(
             callId = callId,
@@ -50,6 +51,7 @@ class TilgangService(
         token: OidcToken,
         callId: String
     ): Boolean {
+        log.info("Sjekker tilgang til behandling ${req.behandlingsreferanse}")
         val identer = behandlingsflytClient.hentIdenterForBehandling(req.behandlingsreferanse.toString())
         val avklaringsbehov =
             if (req.avklaringsbehovKode != null) Definisjon.forKode(req.avklaringsbehovKode!!) else null
@@ -74,6 +76,7 @@ class TilgangService(
         token: OidcToken,
         callId: String
     ): Boolean {
+        log.info("Sjekker tilgang til journalpost ${req.journalpostId}")
         val journalpostInfo: SafJournalpost = safClient.hentJournalpostInfo(req.journalpostId, callId)
         val identer = finnIdenterForJournalpost(journalpostInfo, token)
 
