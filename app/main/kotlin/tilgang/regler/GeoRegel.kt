@@ -1,5 +1,8 @@
 package tilgang.regler
 
+import no.nav.aap.komponenter.miljo.Miljø
+import no.nav.aap.komponenter.miljo.MiljøKode
+import org.slf4j.LoggerFactory
 import tilgang.service.GeoRolle
 import tilgang.service.GeoService
 import tilgang.service.GeoType
@@ -8,9 +11,19 @@ import tilgang.integrasjoner.pdl.IPdlGraphQLClient
 import tilgang.integrasjoner.pdl.PdlGeoType
 
 data object GeoRegel : Regel<GeoInput> {
-
+    private val log = LoggerFactory.getLogger(GeoRegel::class.java)
     override fun vurder(input: GeoInput): Boolean {
         val (geoRoller, søkersGeografiskeTilknytning) = input
+
+        if (søkersGeografiskeTilknytning == null) {
+            if (Miljø.er() == MiljøKode.PROD) {
+                log.warn("Fant ikke geografisk tilknytning for ident i PDL - returnerer false")
+            } else {
+                log.info("Fant ikke geografisk tilknytning for ident i PDL - returnerer false")
+            }
+            return false
+        }
+
         val harNasjonalTilgang = geoRoller.any { it.geoType === GeoType.NASJONAL }
 
         return when (søkersGeografiskeTilknytning.gtType) {
@@ -44,11 +57,9 @@ class GeoInputGenerator(
     InputGenerator<GeoInput> {
     override fun generer(input: RegelInput): GeoInput {
         val geoRoller = geoService.hentGeoRoller(input.currentToken, input.ansattIdent)
-        val søkersGeografiskeTilknytning = requireNotNull(
-            pdlClient.hentGeografiskTilknytning(
-                input.søkerIdenter.søker.first(),
-                input.callId
-            )
+        val søkersGeografiskeTilknytning = pdlClient.hentGeografiskTilknytning(
+            input.søkerIdenter.søker.first(),
+            input.callId
         )
         return GeoInput(geoRoller, søkersGeografiskeTilknytning, input.ansattIdent)
     }
@@ -56,6 +67,6 @@ class GeoInputGenerator(
 
 data class GeoInput(
     val geoRoller: List<GeoRolle>,
-    val søkersGeografiskTilknytning: HentGeografiskTilknytningResult,
+    val søkersGeografiskTilknytning: HentGeografiskTilknytningResult?,
     val ident: String
 )

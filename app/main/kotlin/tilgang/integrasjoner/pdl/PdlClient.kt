@@ -69,7 +69,7 @@ class PdlGraphQLClient(
         return nyePersoner?.toList()
     }
 
-    override fun hentGeografiskTilknytning(ident: String, callId: String): HentGeografiskTilknytningResult {
+    override fun hentGeografiskTilknytning(ident: String, callId: String): HentGeografiskTilknytningResult? {
         if (redis.exists(Key(GEO_PREFIX, ident))) {
             prometheus.cacheHit(GEO_PREFIX).increment()
             return redis[Key(GEO_PREFIX, ident)]!!.deserialize()
@@ -77,7 +77,7 @@ class PdlGraphQLClient(
         prometheus.cacheMiss(GEO_PREFIX).increment()
 
         val result = query(PdlRequest.hentGeografiskTilknytning(ident), callId)
-        val geoTilknytning = result.data?.hentGeografiskTilknytning!!
+        val geoTilknytning = result.data?.hentGeografiskTilknytning
         redis.set(Key(GEO_PREFIX, ident), geoTilknytning.serialize())
         return geoTilknytning
     }
