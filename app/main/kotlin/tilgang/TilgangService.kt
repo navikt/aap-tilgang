@@ -99,7 +99,9 @@ class TilgangService(
     private fun finnIdenterForJournalpost(journalpost: SafJournalpost, token: OidcToken): IdenterRespons {
         val saksnummer = journalpost.sak?.fagsakId
         if(saksnummer != null) {
-            return behandlingsflytClient.hentIdenterForSak(saksnummer)
+            val identer = behandlingsflytClient.hentIdenterForSak(saksnummer)
+            require(identer.søker.isNotEmpty()) { "Fant ingen søkeridenter for sak $saksnummer" }
+            return identer
         } else {
             val søkerIdent = journalpost.bruker?.id
             requireNotNull(søkerIdent)
