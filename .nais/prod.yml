@@ -37,7 +37,7 @@ env:
   - name: PDL_SCOPE
     value: api://prod-fss.pdl.pdl-api/.default
   - name: SAF_BASE_URL
-    value: https://safselvbetjening.prod-fss-pub.nais.io
+    value: https://saf.prod-fss-pub.nais.io/graphql
   - name: SAF_SCOPE
     value: api://prod-fss.teamdokumenthandtering.saf/.default
   - name: MS_GRAPH_BASE_URL
