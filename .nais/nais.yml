@@ -84,5 +84,6 @@ spec:
         - application: skjermede-personer-pip
           namespace: nom
       external:
-        - host: pdl-api.dev-fss-pub.nais.io
-        - host: saf.dev-fss-pub.nais.io
+      {{#each external-outbound-hosts as |host|}}
+        - host: "{{host.value}}"
+      {{/each}}
