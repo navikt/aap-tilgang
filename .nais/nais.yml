@@ -8,10 +8,6 @@ metadata:
     sub: tilgang
 spec:
   image: {{image}}
-  replicas:
-    cpuThresholdPercentage: 80
-    max: 2
-    min: 1
   ingresses:
     - {{ingress}}
   azure:
