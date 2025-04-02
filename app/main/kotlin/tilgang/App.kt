@@ -79,7 +79,7 @@ fun Application.api(
             )
         }
         exception<BehandlingsflytException> { call, cause ->
-            LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause)
+            LOGGER.error(cause.message ?: "Uhåndtert feil ved kall til '${call.request.local.uri}'", cause)
             prometheus.uhåndtertExceptionTeller(cause.javaClass.name).increment()
             call.respondText(
                 text = "Feil i behandlingsflyt: ${cause.message}", status = HttpStatusCode.InternalServerError

@@ -43,7 +43,7 @@ class BehandlingsflytClient(
         log.info("Kaller behandlingsflyt med URL: $url")
 
         val respons = httpClient.get<IdenterRespons>(url, GetRequest())
-            ?: throw BehandlingsflytException("Feil ved henting av identer fra behandlingsflyt")
+            ?: throw BehandlingsflytException("Feil ved henting av identer for sak")
 
         redis.set(Key(IDENTER_SAK_PREFIX, saksnummer), respons.serialize())
         return respons
@@ -60,7 +60,7 @@ class BehandlingsflytClient(
         log.info("Kaller behandlingsflyt med URL: $url")
 
         val respons = httpClient.get<IdenterRespons>(url, GetRequest())
-            ?: throw BehandlingsflytException("Feil ved henting av identer fra behandlingsflyt")
+            ?: throw BehandlingsflytException("Feil ved henting av identer for behandling")
         redis.set(Key(IDENTER_BEHANDLING_PREFIX, behandlingsnummer), respons.serialize())
         return respons
     }
