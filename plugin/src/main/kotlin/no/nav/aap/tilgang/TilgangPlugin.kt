@@ -68,6 +68,25 @@ fun Route.installerTilgangParamPlugin(
     )
 }
 
+fun Route.installerTilgangRollePlugin(
+    config: RollerConfig
+) {
+    if ((this as RoutingNode).pluginRegistry.getOrNull(AttributeKey(TILGANG_PLUGIN)) != null) {
+        throw IllegalStateException("Fant allerede registeret tilgang plugin")
+    }
+
+    install(createRouteScopedPlugin(name = TILGANG_PLUGIN) {
+        on(AuthenticationChecked) { call ->
+            val roller = call.groupsClaim()
+            
+            if (roller.any { adRolle -> adRolle in config.roller.map { it.id } }) {
+                return@on
+            }
+            call.respond(HttpStatusCode.Forbidden, "Ingen tilgang")
+        }
+    })
+}
+
 fun Route.installerTilgangMachineToMachinePlugin(
     config: AuthorizationMachineToMachineConfig,
     auditLogConfig: AuditLogConfig?,
@@ -143,4 +162,8 @@ suspend inline fun <reified T : Any> ApplicationCall.parseGeneric(): T {
 
 fun ApplicationCall.rolesClaim(): List<String> {
     return principal<JWTPrincipal>()?.getListClaim("roles", String::class) ?: emptyList()
+}
+
+fun ApplicationCall.groupsClaim(): List<String> {
+    return principal<JWTPrincipal>()?.getListClaim("groups", String::class) ?: emptyList()
 }

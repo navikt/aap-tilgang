@@ -24,6 +24,7 @@ inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.a
     noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams) -> Unit
 ) {
     when (routeConfig) {
+        is RollerConfig -> ktorRoute.installerTilgangRollePlugin(routeConfig)
         is AuthorizationParamPathConfig -> ktorRoute.installerTilgangParamPlugin(routeConfig, if (auditLogConfig == null) null else auditLogConfig as AuditLogPathParamConfig)
         is AuthorizationMachineToMachineConfig -> ktorRoute.installerTilgangMachineToMachinePlugin(routeConfig, auditLogConfig)
         else -> throw IllegalArgumentException("Unsupported routeConfig type for GET: $routeConfig")
@@ -42,6 +43,7 @@ inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : A
         is AuthorizationParamPathConfig -> ktorRoute.installerTilgangParamPlugin(routeConfig, if (auditLogConfig == null) null else auditLogConfig as AuditLogPathParamConfig)
         is AuthorizationBodyPathConfig -> ktorRoute.installerTilgangBodyPlugin<TRequest>(routeConfig, auditLogConfig)
         is AuthorizationMachineToMachineConfig -> ktorRoute.installerTilgangMachineToMachinePlugin(routeConfig, auditLogConfig)
+        is RollerConfig -> ktorRoute.installerTilgangRollePlugin(routeConfig)
         else -> throw IllegalArgumentException("Unsupported routeConfig type for POST: $routeConfig")
     }
 
@@ -64,6 +66,7 @@ inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : A
         is AuthorizationParamPathConfig -> ktorRoute.installerTilgangParamPlugin(routeConfig, if (auditLogConfig == null) null else auditLogConfig as AuditLogPathParamConfig)
         is AuthorizationBodyPathConfig ->ktorRoute.installerTilgangBodyPlugin<TRequest>(routeConfig, auditLogConfig)
         is AuthorizationMachineToMachineConfig -> ktorRoute.installerTilgangMachineToMachinePlugin(routeConfig, auditLogConfig)
+        is RollerConfig -> ktorRoute.installerTilgangRollePlugin(routeConfig)
         else -> throw IllegalArgumentException("Unsupported routeConfig type for PUT: $routeConfig")
     }
 

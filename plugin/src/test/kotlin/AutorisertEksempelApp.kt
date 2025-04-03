@@ -34,6 +34,15 @@ fun Application.autorisertEksempelApp() {
     routing {
         authenticate(AZURE) {
             apiRouting {
+                route("kun-roller") {
+                    authorizedGet<Unit, IngenReferanse>(
+                        RollerConfig(
+                            listOf(EksempelRolle)
+                        )
+                    ) {
+                        respond(IngenReferanse("test"))
+                    }
+                }
                 route("testApi/pathForPost/resolve") {
                     route("behandlingreferanse/{enAnnenReferanse}") {
                         authorizedPost<EnAnnenReferanse, IngenReferanse, IngenReferanse>(
@@ -191,7 +200,7 @@ data class Saksinfo(val saksnummer: UUID) : Saksreferanse {
     }
 }
 
-data class Behandlinginfo(val enAnnenReferanse: String) :Behandlingsreferanse {
+data class Behandlinginfo(val enAnnenReferanse: String) : Behandlingsreferanse {
     override fun behandlingsreferanseResolverInput(): String {
         return enAnnenReferanse
     }
@@ -219,3 +228,7 @@ class RequestMedAuditResolver(val saksreferanse: UUID) : AuditlogResolverInput, 
 }
 
 data class EnAnnenReferanse(@PathParam("enAnnenReferanse") val enAnnenReferanse: String)
+
+object EksempelRolle : Rolle {
+    override val id = "en-eller-annen-uid"
+}

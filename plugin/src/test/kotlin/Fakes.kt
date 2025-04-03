@@ -28,7 +28,7 @@ import java.util.*
 
 internal class Fakes(azurePort: Int = 0, val azureTokenGen: AzureTokenGen) : AutoCloseable {
     private val azure = embeddedServer(Netty, port = azurePort, module = { azureFake() }).start()
-    private val tilgang = embeddedServer(Netty, port = 0, module = {    tilgangFake() }).apply { start() }
+    private val tilgang = embeddedServer(Netty, port = 0, module = { tilgangFake() }).apply { start() }
 
     private fun Application.azureFake() {
         install(ContentNegotiation) {
@@ -148,9 +148,9 @@ internal class AzureTokenGen(private val issuer: String, private val audience: S
     private fun claims(isApp: Boolean, roles: List<String>): JWTClaimsSet {
         val builder = JWTClaimsSet
             .Builder()
-            .subject(UUID.randomUUID().toString())
             .issuer(issuer)
             .audience(audience)
+            .subject(UUID.randomUUID().toString())
             .expirationTime(LocalDateTime.now().plusHours(4).toDate())
             .claim("NAVident", "Lokalsaksbehandler")
             .claim("azp_name", "azp")
@@ -158,6 +158,9 @@ internal class AzureTokenGen(private val issuer: String, private val audience: S
         if (isApp) {
             builder.claim("idtyp", "app")
             builder.claim("roles", roles)
+        } else {
+            builder.claim("groups", roles)
+            builder.claim("NAVident", "Lokalsaksbehandler")
         }
 
         return builder.build()

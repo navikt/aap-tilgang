@@ -115,6 +115,31 @@ class TilgangPluginTest {
     }
 
     @Test
+    fun `Skal gi tilgang kun basert på rolle`() {
+        val token = generateToken(isApp = false, roles = listOf(EksempelRolle.id))
+
+        val res = clientUtenTokenProvider.get<IngenReferanse>(
+            URI.create("http://localhost:8082/")
+                .resolve("kun-roller"),
+            GetRequest(additionalHeaders = listOf(Header("Authorization", "Bearer ${token.token()}")))
+        )
+
+        assertThat(res?.noe).isEqualTo("test")
+    }
+
+    @Test
+    fun `Skal ikke gi tilgang for manglende rolle`() {
+        val token = generateToken(isApp = false, roles = listOf("ikke-riktig-rolle"))
+        assertThrows<ManglerTilgangException> {
+            clientUtenTokenProvider.get<IngenReferanse>(
+                URI.create("http://localhost:8082/")
+                    .resolve("kun-roller"),
+                GetRequest(additionalHeaders = listOf(Header("Authorization", "Bearer ${token.token()}")))
+            )
+        }
+    }
+
+    @Test
     fun `get route som støtter on-behalf-of gir ikke tilgang med client credentials token`() {
         val randomUuid = UUID.randomUUID()
         fakes.gittTilgangTilSak(randomUuid.toString(), true)
@@ -210,7 +235,10 @@ class TilgangPluginTest {
         val res = clientUtenTokenProvider.post<_, IngenReferanse>(
             URI.create("http://localhost:8082/")
                 .resolve("testApi/authorizedPost/client-credentials-application-role"),
-            PostRequest(IngenReferanse(randomUuid.toString()), additionalHeaders = listOf(Header("Authorization", "Bearer ${token.token()}")))
+            PostRequest(
+                IngenReferanse(randomUuid.toString()),
+                additionalHeaders = listOf(Header("Authorization", "Bearer ${token.token()}"))
+            )
         )
 
         assertThat(res?.noe).isEqualTo(randomUuid.toString())
@@ -229,7 +257,10 @@ class TilgangPluginTest {
         val res2 = clientUtenTokenProvider.post<_, Saksinfo>(
             URI.create("http://localhost:8082/")
                 .resolve("testApi/authorizedPost/client-credentials-and-on-behalf-of"),
-            PostRequest(Saksinfo(saksnummer), additionalHeaders = listOf(Header("Authorization", "Bearer ${token.token()}")))
+            PostRequest(
+                Saksinfo(saksnummer),
+                additionalHeaders = listOf(Header("Authorization", "Bearer ${token.token()}"))
+            )
         )
 
         assertThat(res1?.saksnummer).isEqualTo(saksnummer)
@@ -318,13 +349,14 @@ class TilgangPluginTest {
         assertThat(res?.saksnummer).isEqualTo(randomUuid)
 
         val messages = appender.getLoggedMessages()
-        val expected = messages.first{it.contains("CEF:0|Kelvin|behandlingsflyt|1.0|audit:access|Auditlogg|INFO|flexString1=Permit request=/testApi/authorizedGet/$randomUuid/on-behalf-of duid=12345678901 flexString1Label=Decision end=")}
+        val expected =
+            messages.first { it.contains("CEF:0|Kelvin|behandlingsflyt|1.0|audit:access|Auditlogg|INFO|flexString1=Permit request=/testApi/authorizedGet/$randomUuid/on-behalf-of duid=12345678901 flexString1Label=Decision end=") }
         assertNotNull(expected)
         assertTrue(expected.contains("suid=Lokalsaksbehandler"))
 
         // Clean up
         logger.detachAppender(appender)
-        
+
     }
 
     @Test
@@ -341,13 +373,17 @@ class TilgangPluginTest {
         val res = clientForOBO.post<_, RequestMedAuditResolver>(
             URI.create("http://localhost:8082/")
                 .resolve("testApi/authorizedPost/med-audit-resolver"),
-            PostRequest(RequestMedAuditResolver(saksreferanse = randomUuid), currentToken = generateToken(isApp = false))
+            PostRequest(
+                RequestMedAuditResolver(saksreferanse = randomUuid),
+                currentToken = generateToken(isApp = false)
+            )
         )
 
         assertThat(res?.saksreferanse).isEqualTo(randomUuid)
 
         val messages = appender.getLoggedMessages()
-        val expected = messages.first{it.contains("CEF:0|Kelvin|behandlingsflyt|1.0|audit:access|Auditlogg|INFO|flexString1=Permit request=/testApi/authorizedPost/med-audit-resolver duid=12345678901 flexString1Label=Decision end=")}
+        val expected =
+            messages.first { it.contains("CEF:0|Kelvin|behandlingsflyt|1.0|audit:access|Auditlogg|INFO|flexString1=Permit request=/testApi/authorizedPost/med-audit-resolver duid=12345678901 flexString1Label=Decision end=") }
         assertNotNull(expected)
         assertTrue(expected.contains("suid=Lokalsaksbehandler"))
 
