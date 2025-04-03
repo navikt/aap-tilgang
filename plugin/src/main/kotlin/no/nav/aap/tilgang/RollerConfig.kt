@@ -1,6 +1,6 @@
 package no.nav.aap.tilgang
 
-interface Rolle {
+interface AdGruppe {
     /**
      * Id-en til ad-gruppen.
      */
@@ -11,5 +11,5 @@ interface Rolle {
  * Kun spesifiserte roller i claims får tilgang. Ingen ytterligere tilgangssjekk
  */
 data class RollerConfig(
-    val roller: List<Rolle>
+    val roller: List<AdGruppe>
 ): AuthorizationRouteConfig

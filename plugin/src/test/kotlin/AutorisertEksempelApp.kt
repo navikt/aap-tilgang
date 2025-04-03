@@ -229,6 +229,6 @@ class RequestMedAuditResolver(val saksreferanse: UUID) : AuditlogResolverInput, 
 
 data class EnAnnenReferanse(@PathParam("enAnnenReferanse") val enAnnenReferanse: String)
 
-object EksempelRolle : Rolle {
+object EksempelRolle : AdGruppe {
     override val id = "en-eller-annen-uid"
 }
