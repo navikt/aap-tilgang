@@ -1,5 +1,4 @@
 isdev: 0
-ingress: https://aap-tilgang.intern.nav.no
 roles:
   - name: AAP_BESLUTTER
     ad: 0000-GA-AAP_BESLUTTER
