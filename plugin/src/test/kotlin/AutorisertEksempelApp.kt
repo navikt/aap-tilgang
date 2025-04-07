@@ -37,7 +37,7 @@ fun Application.autorisertEksempelApp() {
                 route("kun-roller") {
                     authorizedGet<Unit, IngenReferanse>(
                         RollerConfig(
-                            listOf(EksempelRolle)
+                            listOf(Beslutter)
                         )
                     ) {
                         respond(IngenReferanse("test"))
@@ -228,7 +228,3 @@ class RequestMedAuditResolver(val saksreferanse: UUID) : AuditlogResolverInput, 
 }
 
 data class EnAnnenReferanse(@PathParam("enAnnenReferanse") val enAnnenReferanse: String)
-
-object EksempelRolle : AdGruppe {
-    override val id = "en-eller-annen-uid"
-}

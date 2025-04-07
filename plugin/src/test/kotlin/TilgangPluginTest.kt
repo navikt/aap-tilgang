@@ -76,6 +76,7 @@ class TilgangPluginTest {
         @JvmStatic
         @BeforeAll
         fun beforeAll() {
+            System.setProperty("AAP_BESLUTTER", "en-eller-annen-uid")
             autorisertEksempelAppServer.start()
         }
 
@@ -116,7 +117,7 @@ class TilgangPluginTest {
 
     @Test
     fun `Skal gi tilgang kun basert på rolle`() {
-        val token = generateToken(isApp = false, roles = listOf(EksempelRolle.id))
+        val token = generateToken(isApp = false, roles = listOf(Beslutter.id))
 
         val res = clientUtenTokenProvider.get<IngenReferanse>(
             URI.create("http://localhost:8082/")
