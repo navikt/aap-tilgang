@@ -8,7 +8,7 @@ plugins {
 val ktorVersion = "3.1.2"
 val behandlingsflytVersjon = "0.0.240"
 val postmottakVersjon = "0.0.67"
-val komponenterVersjon = "1.0.194"
+val komponenterVersjon = "1.0.200"
 
 application {
     mainClass.set("tilgang.AppKt")
