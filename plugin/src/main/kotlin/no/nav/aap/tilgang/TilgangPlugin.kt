@@ -143,6 +143,7 @@ inline fun buildTilgangPlugin(
 
             if (!harTilgang) {
                 call.respond(HttpStatusCode.Forbidden, "Ingen tilgang")
+                return@on
             }
 
             if (auditLogConfig != null && !token.isClientCredentials()) {
