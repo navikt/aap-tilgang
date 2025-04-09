@@ -392,6 +392,33 @@ class TilgangPluginTest {
         logger.detachAppender(appender)
     }
 
+    @Test
+    fun `Maskin-til-maskin`() {
+        val randomUuid = UUID.randomUUID()
+        val token = generateToken(isApp = true, roles = listOf("tilgang-rolle"))
+        val res = clientUtenTokenProvider.get<Saksinfo>(
+            URI.create("http://localhost:8082/")
+                .resolve("testApi/authorizedGet/$randomUuid/application-role-machine-to-machine"),
+            GetRequest(
+                additionalHeaders = listOf(Header("Authorization", "Bearer ${token.token()}"))
+            )
+        )
+
+        assertThat(res?.saksnummer).isEqualTo(randomUuid)
+    }
+
+    @Test
+    fun `get route maskin-til-maskin gir ikke tilgang med feil rolle`() {
+        val randomUuid = UUID.randomUUID()
+        val token = generateToken(isApp = true, roles = listOf("feil-rolle"))
+        assertThrows<ManglerTilgangException> {
+            clientUtenTokenProvider.get<Saksinfo>(
+                URI.create("http://localhost:8082/")
+                    .resolve("testApi/authorizedGet/$randomUuid/application-role-machine-to-machine"),
+                GetRequest(additionalHeaders = listOf(Header("Authorization", "Bearer ${token.token()}")))
+            )
+        }
+    }
 }
 
 class LogCaptureAppender : AppenderBase<ILoggingEvent>() {

@@ -126,6 +126,15 @@ fun Application.autorisertEksempelApp() {
                             respond(Saksinfo(saksnummer = req.saksnummer))
                         }
                     }
+                    route("application-role-machine-to-machine") {
+                        authorizedGet<TestReferanse, Saksinfo>(
+                            AuthorizationMachineToMachineConfig(
+                                authorizedRoles = listOf("tilgang-rolle")
+                            )
+                        ) { req ->
+                            respond(Saksinfo(saksnummer = req.saksnummer))
+                        }
+                    }
                     route("client-credentials-and-on-behalf-of") {
                         authorizedGet<TestReferanse, Saksinfo>(
                             AuthorizationParamPathConfig(
@@ -148,7 +157,9 @@ fun Application.autorisertEksempelApp() {
 
                     route("on-behalf-of/behandlinginfo") {
                         authorizedPost<Unit, Behandlinginfo, Behandlinginfo>(
-                            AuthorizationBodyPathConfig(operasjon = Operasjon.SAKSBEHANDLE, behandlingreferanseResolver = { enAnnenReferanseTilbehandlingReferanse.getValue(it) })
+                            AuthorizationBodyPathConfig(
+                                operasjon = Operasjon.SAKSBEHANDLE,
+                                behandlingreferanseResolver = { enAnnenReferanseTilbehandlingReferanse.getValue(it) })
                         ) { _, dto ->
                             respond(dto)
                         }

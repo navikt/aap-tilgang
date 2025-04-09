@@ -23,8 +23,8 @@ data class AuthorizationMachineToMachineConfig(
     val authorizedRoles: List<String> = listOf(),
 ) : AuthorizationRouteConfig {
     init {
-        if (authorizedRoles.isEmpty() && authorizedAzps.isEmpty()) {
-            log.warn("{} konfigurert uten at noen applikasjoner har tilgang", javaClass.name, Exception())
+        if (authorizedRoles.isEmpty() == authorizedAzps.isEmpty()) {
+            log.warn("{} må sette enten authorizedRoles eller authourizedAzps", javaClass.name, Exception())
         }
     }
 }

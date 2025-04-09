@@ -90,7 +90,7 @@ fun Route.installerTilgangRollePlugin(
 fun Route.installerTilgangMachineToMachinePlugin(
     config: AuthorizationMachineToMachineConfig,
     auditLogConfig: AuditLogConfig?,
-): RouteScopedPlugin<Unit> {
+) {
     if ((this as RoutingNode).pluginRegistry.getOrNull(AttributeKey(TILGANG_PLUGIN)) != null) {
         throw IllegalStateException("Fant allerede registeret tilgang plugin")
     }
@@ -99,28 +99,34 @@ fun Route.installerTilgangMachineToMachinePlugin(
         "kan ikke installere audit-logger for maskin-til-maskin tokens uten on-behalf-of tokens (m2m obo tokens)"
     }
 
-    return createRouteScopedPlugin(name = TILGANG_PLUGIN) {
+    install(createRouteScopedPlugin(name = TILGANG_PLUGIN) {
         on(AuthenticationChecked) { call ->
             val principal = call.principal<JWTPrincipal>() ?: error("mangler principal")
-            val azp = principal.getClaim("azp", UUID::class) ?: error("token uten azp-claim")
+            
+            if (config.authorizedAzps.isNotEmpty()) {
+                val azpName = principal.getClaim("azp_name", String::class)
+                val azp = principal.getClaim("azp", UUID::class) ?: error("token uten azp-claim")
 
-            if (azp in config.authorizedAzps) {
+                if (azp in config.authorizedAzps) {
+                    return@on
+                }
+
+                log.error("azp $azpName ($azp) har ikke tilgang dette endepunktet")
+                call.respond(HttpStatusCode.Forbidden, "Ingen tilgang")
                 return@on
             }
 
             val roles = principal.getListClaim("roles", String::class)
-            val azpName = principal.getClaim("azp_name", String::class)
 
             if (roles.any { it in config.authorizedRoles }) {
-                log.info("azp $azpName ($azp) bruker deprecated mekanisme `roles`")
+                log.info("bruker deprecated mekanisme `roles`")
                 return@on
             }
 
             /* Default: deny */
-            log.error("azp $azpName ($azp) har ikke tilgang dette endepunktet")
             call.respond(HttpStatusCode.Forbidden, "Ingen tilgang")
         }
-    }
+    })
 }
 
 
