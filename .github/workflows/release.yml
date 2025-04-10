@@ -90,8 +90,8 @@ jobs:
     secrets: inherit
     with:
       cluster: dev-gcp
-      vars: .nais/dev.yml
-      manifest: .nais/nais.yml
+      vars: .nais/dev.yaml
+      manifest: .nais/nais.yaml
 
   prod:
     needs: dev
@@ -104,5 +104,5 @@ jobs:
     secrets: inherit
     with:
       cluster: prod-gcp
-      vars: .nais/prod.yml
-      manifest: .nais/nais.yml
+      vars: .nais/prod.yaml
+      manifest: .nais/nais.yaml
