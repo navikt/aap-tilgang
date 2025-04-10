@@ -15,6 +15,7 @@ import tilgang.Role
 import tilgang.TilgangService
 import tilgang.auth.ident
 import tilgang.auth.roller
+import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinRequest
 import tilgang.metrics.httpCallCounter
 import tilgang.metrics.nektetTilgangTeller
 import tilgang.regler.parseRoller
@@ -87,7 +88,10 @@ fun NormalOpenAPIRoute.tilgang(
             }
         }
         route("/test/tilgangsmaskinen") {
-            return harTil
+            post<Unit, TilgangResponse, TilgangsmaskinRequest> { _, req ->
+                val harTilgang =  tilgangService.harTilgangFraTilgangsmaskin(req.brukerIdenter)
+                respond(TilgangResponse(harTilgang))
+            }
         }
     }
 }

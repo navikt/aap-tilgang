@@ -29,7 +29,7 @@ class TilgangsmaskinClient() : ITilgangsmaskinClient {
     ): Boolean {
         val url = baseUrl.resolve("/api/v1/bulk")
         val request = PostRequest(
-            body = TilgangsmaskinBulkRequest(brukerIdenter)
+            body = TilgangsmaskinRequest(brukerIdenter)
         )
 
         try {
@@ -46,8 +46,6 @@ class TilgangsmaskinClient() : ITilgangsmaskinClient {
 
 }
 
-data class BrukerOgRegeltype(val brukerId: String, val type: String)
 
-data class TilgangsmaskinBulkRequest(val input: List<BrukerOgRegeltype>)
 
 

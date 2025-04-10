@@ -11,6 +11,7 @@ import no.nav.aap.tilgang.SakTilgangRequest
 import org.slf4j.LoggerFactory
 import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytClient
 import tilgang.integrasjoner.behandlingsflyt.IdenterRespons
+import tilgang.integrasjoner.tilgangsmaskin.BrukerOgRegeltype
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinClient
 import tilgang.regler.RegelInput
 import tilgang.regler.RegelService
@@ -109,5 +110,9 @@ class TilgangService(
             requireNotNull(søkerIdent)
             return IdenterRespons(søker = listOf(søkerIdent), barn = emptyList())
         }
+    }
+
+    fun harTilgangFraTilgangsmaskin(brukerIdenter: List<BrukerOgRegeltype>): Boolean {
+        return tilgangsmaskinClient.harTilganger(brukerIdenter)
     }
 }

@@ -30,6 +30,7 @@ import tilgang.integrasjoner.saf.SafException
 import tilgang.integrasjoner.saf.SafGraphqlClient
 import tilgang.integrasjoner.skjerming.SkjermingClient
 import tilgang.integrasjoner.skjerming.SkjermingException
+import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinClient
 import tilgang.metrics.uhåndtertExceptionTeller
 import tilgang.redis.Redis
 import tilgang.regler.RegelService
@@ -63,7 +64,8 @@ fun Application.api(
     val regelService = RegelService(
         geoService, enhetService, pdl, skjermingClient, nomClient, skjermingService, AdressebeskyttelseService(msGraph)
     )
-    val tilgangService = TilgangService(saf, behandlingsflyt, regelService)
+    val tilgangsmaskinClient = TilgangsmaskinClient()
+    val tilgangService = TilgangService(saf, behandlingsflyt, regelService, tilgangsmaskinClient)
 
     install(StatusPages) {
         exception<Throwable> { call, cause ->
