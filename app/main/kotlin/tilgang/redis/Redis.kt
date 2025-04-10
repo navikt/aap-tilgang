@@ -12,6 +12,7 @@ import tilgang.LOGGER
 import tilgang.RedisConfig
 import java.net.URI
 import java.time.LocalDateTime
+import no.nav.aap.komponenter.miljo.Miljø
 
 const val EnDagSekunder: Long = 60 * 60 * 24
 
@@ -31,7 +32,14 @@ class Redis private constructor(
         JedisPool(
             JedisPoolConfig(),
             HostAndPort(config.uri.host, config.uri.port),
-            DefaultJedisClientConfig.builder().ssl(true).user(config.username).password(config.password).build()
+            DefaultJedisClientConfig.builder()
+                .apply {
+                    if (!Miljø.erLokal()) {
+                        ssl(true)
+                        user(config.username)
+                    }
+                }
+                .password(config.password).build()
         )
     )
 

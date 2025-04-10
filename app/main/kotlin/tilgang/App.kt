@@ -45,7 +45,12 @@ val LOGGER: Logger = LoggerFactory.getLogger("aap-tilgang")
 
 fun main() {
     Thread.currentThread().setUncaughtExceptionHandler { _, e -> LOGGER.error("Uhåndtert feil", e) }
-    embeddedServer(Netty, port = 8080, module = Application::api).start(wait = true)
+
+    embeddedServer(
+        Netty,
+        port = System.getenv("PORT")?.toInt() ?: 8080,
+        module = Application::api
+    ).start(wait = true)
 }
 
 fun Application.api(

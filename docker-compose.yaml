@@ -1,0 +1,14 @@
+services:
+  valkey:
+    container_name: valkey
+    image: valkey/valkey:8-alpine
+    restart: always
+    ports:
+      - '6379:6379'
+    command: redis-server --requirepass test
+    volumes:
+      - valkey:/data
+
+volumes:
+  valkey:
+    driver: local
