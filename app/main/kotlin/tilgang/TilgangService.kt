@@ -112,7 +112,7 @@ class TilgangService(
         }
     }
 
-    fun harTilgangFraTilgangsmaskin(brukerIdenter: List<BrukerOgRegeltype>): Boolean {
-        return tilgangsmaskinClient.harTilganger(brukerIdenter)
+    fun harTilgangFraTilgangsmaskin(brukerIdenter: List<BrukerOgRegeltype>, token: OidcToken): Boolean {
+        return tilgangsmaskinClient.harTilganger(brukerIdenter, token)
     }
 }

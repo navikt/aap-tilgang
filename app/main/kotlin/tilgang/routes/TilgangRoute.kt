@@ -89,7 +89,7 @@ fun NormalOpenAPIRoute.tilgang(
         }
         route("/test/tilgangsmaskinen") {
             post<Unit, TilgangResponse, TilgangsmaskinRequest> { _, req ->
-                val harTilgang =  tilgangService.harTilgangFraTilgangsmaskin(req.brukerIdenter)
+                val harTilgang =  tilgangService.harTilgangFraTilgangsmaskin(req.brukerIdenter, token())
                 respond(TilgangResponse(harTilgang))
             }
         }

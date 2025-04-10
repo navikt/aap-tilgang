@@ -7,11 +7,13 @@ import no.nav.aap.komponenter.httpklient.httpclient.error.ManglerTilgangExceptio
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import java.net.URI
 import no.nav.aap.komponenter.httpklient.httpclient.post
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.OnBehalfOfTokenProvider
 import org.slf4j.LoggerFactory
+import tilgang.auth.Token
 
 interface ITilgangsmaskinClient {
-    fun harTilganger(brukerIdenter: List<BrukerOgRegeltype>): Boolean
+    fun harTilganger(brukerIdenter: List<BrukerOgRegeltype>, token: OidcToken): Boolean
 }
 
 private val log = LoggerFactory.getLogger(TilgangsmaskinClient::class.java)
@@ -28,11 +30,13 @@ class TilgangsmaskinClient() : ITilgangsmaskinClient {
     )
 
     override fun harTilganger(
-        brukerIdenter: List<BrukerOgRegeltype>
+        brukerIdenter: List<BrukerOgRegeltype>,
+        token: OidcToken
     ): Boolean {
         val url = baseUrl.resolve("/api/v1/bulk")
         val request = PostRequest(
-            body = TilgangsmaskinRequest(brukerIdenter)
+            body = TilgangsmaskinRequest(brukerIdenter),
+            currentToken = token
         )
 
         try {
