@@ -23,6 +23,7 @@ object TilgangService {
             is SakTilgangRequest -> TilgangGateway.harTilgangTilSak(request, token)
             is BehandlingTilgangRequest -> TilgangGateway.harTilgangTilBehandling(request, token)
             is JournalpostTilgangRequest -> TilgangGateway.harTilgangTilJournalpost(request, token)
+            is PersonTilgangRequest -> TODO("Ikke implementert enda")
         }
     }
 }

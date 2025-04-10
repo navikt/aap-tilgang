@@ -93,5 +93,12 @@ fun NormalOpenAPIRoute.tilgang(
                 respond(TilgangResponse(harTilgang))
             }
         }
+
+        route("/person") {
+            post<Unit, TilgangResponse, PersonTilgangRequest> { _, req ->
+                val harTilgang =  tilgangService.harTilgangTilPerson(req.personIdent, token())
+                respond(TilgangResponse(harTilgang))
+            }
+        }
     }
 }

@@ -19,4 +19,8 @@ data class JournalpostTilgangRequest(
     val operasjon: Operasjon
 ): TilgangRequest
 
+data class PersonTilgangRequest(
+    val personIdent: String,
+): TilgangRequest
+
 sealed interface TilgangRequest
