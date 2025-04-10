@@ -4,48 +4,40 @@ import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.error.ManglerTilgangException
-import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import java.net.URI
+import no.nav.aap.komponenter.httpklient.httpclient.post
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.OnBehalfOfTokenProvider
+import org.slf4j.LoggerFactory
 
 interface ITilgangsmaskinClient {
-    fun harTilgang(ansattIdent: String, søkerIdent: String): Boolean
-    fun harTilganger(ansattIdent: String, brukerIdenter: List<BrukerOgRegeltype>): Boolean
+    fun harTilganger(brukerIdenter: List<BrukerOgRegeltype>): Boolean
 }
+
+private val log = LoggerFactory.getLogger(TilgangsmaskinClient::class.java)
 
 class TilgangsmaskinClient() : ITilgangsmaskinClient {
 
     private val baseUrl = URI.create(requiredConfigForKey("integrasjon.tilgangsmaskin.url"))
     private val httpClient = RestClient.withDefaultResponseHandler(
-        tokenProvider = ClientCredentialsTokenProvider,
+        tokenProvider = OnBehalfOfTokenProvider,
         config = ClientConfig(),
     )
 
-    override fun harTilgang(
-        ansattIdent: String,
-        søkerIdent: String,
-    ): Boolean {
-        val url = baseUrl.resolve("/dev/kjerne/$ansattIdent/$søkerIdent") // dev og prod har ikke samme url
-        val response = httpClient.get<TilgangsmaskinResponse>(url, GetRequest())
-
-        return false
-    }
-
     override fun harTilganger(
-        ansattIdent: String,
         brukerIdenter: List<BrukerOgRegeltype>
     ): Boolean {
-        TODO("Not yet implemented")
-        val url = baseUrl.resolve("/dev/bulk/$ansattIdent") // dev
+        val url = baseUrl.resolve("/api/v1/bulk")
         val request = PostRequest(
-            body = TilgangmaskinBulkRequest(brukerIdenter)
+            body = TilgangsmaskinBulkRequest(brukerIdenter)
         )
 
         try {
+            log.info("Kaller tilgangsmaskin med url: $url")
             httpClient.post<_, Unit>(url, request)
             return true
         } catch (e: ManglerTilgangException) {
+            log.info("Kall til tilgangsmaskin returnerte 403")
             return false
         }
 
@@ -56,6 +48,6 @@ class TilgangsmaskinClient() : ITilgangsmaskinClient {
 
 data class BrukerOgRegeltype(val brukerId: String, val type: String)
 
-data class TilgangmaskinBulkRequest(val input: List<BrukerOgRegeltype>)
+data class TilgangsmaskinBulkRequest(val input: List<BrukerOgRegeltype>)
 
 

@@ -86,5 +86,8 @@ fun NormalOpenAPIRoute.tilgang(
                 respond(TilgangResponse(harTilgang))
             }
         }
+        route("/test/tilgangsmaskinen") {
+            return harTil
+        }
     }
 }
