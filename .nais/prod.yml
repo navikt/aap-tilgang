@@ -63,6 +63,8 @@ env:
     value: e750ceb5-b70b-4d94-b4fa-9d22467b786b # 0000-GA-Egne_ansatte
   - name: INTEGRASJON_TILGANGSMASKIN_URL
     value: http://populasjonstilgangskontroll.tilgangsmaskin
+  - name: INTEGRASJON_TILGANGSMASKIN_SCOPE
+    value: api://prod-gcp.tilgangsmaskin.populasjonstilgangskontroll/.default
 external-outbound-hosts:
   - value: saf.prod-fss-pub.nais.io
   - value: pdl-api.prod-fss-pub.nais.io

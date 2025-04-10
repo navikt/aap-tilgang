@@ -64,6 +64,8 @@ env:
     value: dbe4ad45-320b-4e9a-aaa1-73cca4ee124d # 0000-GA-Egne_ansatte TODO: Oppdater disse
   - name: INTEGRASJON_TILGANGSMASKIN_URL
     value: http://populasjonstilgangskontroll.tilgangsmaskin
+  - name: INTEGRASJON_TILGANGSMASKIN_SCOPE
+    value: api://dev-gcp.tilgangsmaskin.populasjonstilgangskontroll/.default
 external-outbound-hosts:
   - value: saf.dev-fss-pub.nais.io
   - value: pdl-api.dev-fss-pub.nais.io

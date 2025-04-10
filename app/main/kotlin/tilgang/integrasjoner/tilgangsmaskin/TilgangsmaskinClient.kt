@@ -17,11 +17,14 @@ interface ITilgangsmaskinClient {
 private val log = LoggerFactory.getLogger(TilgangsmaskinClient::class.java)
 
 class TilgangsmaskinClient() : ITilgangsmaskinClient {
+    private val config = ClientConfig(
+        scope = requiredConfigForKey("integrasjon.tilgangsmaskin.scope")
+    )
 
     private val baseUrl = URI.create(requiredConfigForKey("integrasjon.tilgangsmaskin.url"))
     private val httpClient = RestClient.withDefaultResponseHandler(
         tokenProvider = OnBehalfOfTokenProvider,
-        config = ClientConfig(),
+        config = config,
     )
 
     override fun harTilganger(
