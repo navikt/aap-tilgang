@@ -73,6 +73,8 @@ spec:
         - application: dokumentinnhenting
         {{#if isdev}}
         - application: saksbehandling-lokal # For lokal utvikling. IKKE kopier denne til prod.yaml
+        - application: azure-token-geenerator
+          namespace: nais
         {{/if}}
     outbound:
       rules:
