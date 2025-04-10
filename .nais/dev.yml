@@ -62,6 +62,8 @@ env:
     value: 5ef775f2-61f8-4283-bf3d-8d03f428aa14 #0000-GA-Strengt_Fortrolig_Adresse
   - name: SKJERMEDE_PERSONER_AD
     value: dbe4ad45-320b-4e9a-aaa1-73cca4ee124d # 0000-GA-Egne_ansatte TODO: Oppdater disse
+  - name: INTEGRASJON_TILGANGSMASKIN_URL
+    value: http://populasjonstilgangskontroll.tilgangsmaskin
 external-outbound-hosts:
   - value: saf.dev-fss-pub.nais.io
   - value: pdl-api.dev-fss-pub.nais.io

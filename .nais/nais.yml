@@ -81,6 +81,8 @@ spec:
           namespace: nom
         - application: skjermede-personer-pip
           namespace: nom
+        - application: populasjonstilgangskontroll
+          namespace: tilgangsmaskin
       external:
       {{#each external-outbound-hosts as |host|}}
         - host: "{{host.value}}"
