@@ -35,7 +35,7 @@ class TilgangsmaskinClient() : ITilgangsmaskinClient {
     ): Boolean {
         val url = baseUrl.resolve("/api/v1/bulk")
         val request = PostRequest(
-            body = TilgangsmaskinRequest(brukerIdenter),
+            body = brukerIdenter,
             currentToken = token
         )
 
