@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory
 import tilgang.auth.Token
 
 interface ITilgangsmaskinClient {
+    fun harTilgangTilPerson(brukerIdent: String, token: OidcToken): Boolean
     fun harTilganger(brukerIdenter: List<BrukerOgRegeltype>, token: OidcToken): Boolean
 }
 
@@ -28,6 +29,25 @@ class TilgangsmaskinClient() : ITilgangsmaskinClient {
         tokenProvider = OnBehalfOfTokenProvider,
         config = config,
     )
+
+    override fun harTilgangTilPerson(
+        brukerIdent: String,
+        token: OidcToken
+    ): Boolean {
+        val url = baseUrl.resolve("/api/v1/komplett")
+        val request = PostRequest(
+            body = brukerIdent,
+            currentToken = token
+        )
+        try {
+            log.info("Kaller tilgangsmaskin med url: $url")
+            httpClient.post<_, Unit>(url, request)
+            return true
+        } catch (e: ManglerTilgangException) {
+            log.info("Kall til tilgangsmaskin returnerte 403")
+            return false
+        }
+    }
 
     override fun harTilganger(
         brukerIdenter: List<BrukerOgRegeltype>,
