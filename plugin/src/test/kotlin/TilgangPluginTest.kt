@@ -100,6 +100,10 @@ class TilgangPluginTest {
         data class TestReferanse(
             @PathParam(description = "saksnummer") val saksnummer: UUID = UUID.randomUUID()
         )
+
+        data class PersonIdentReferanse(
+            @PathParam(description = "personIdent") val personIdent: String
+        )
     }
 
     @Test
@@ -177,6 +181,28 @@ class TilgangPluginTest {
                 GetRequest(additionalHeaders = listOf(Header("Authorization", "Bearer ${token.token()}")))
             )
         }
+    }
+
+    @Test
+    fun `kan sjekke tilgang til person`() {
+        val person = "12345"
+        fakes.gittTilgangTilPerson(person, true)
+        val res1 = clientForOBO.get<Long>(
+            URI.create("http://localhost:8082/")
+                .resolve("testApi/person/$person"),
+            GetRequest(currentToken = generateToken(isApp = false))
+        )
+        assertThat(res1).isEqualTo(123)
+
+        val person2 = "123456"
+        assertThrows<ManglerTilgangException> {
+            clientForOBO.get<Long>(
+                URI.create("http://localhost:8082/")
+                    .resolve("testApi/person/$person2"),
+                GetRequest(currentToken = generateToken(isApp = false))
+            )
+        }
+
     }
 
 

@@ -1,5 +1,6 @@
 import TilgangPluginTest.Companion.IngenReferanse
 import TilgangPluginTest.Companion.Journalpostinfo
+import TilgangPluginTest.Companion.PersonIdentReferanse
 import TilgangPluginTest.Companion.TestReferanse
 import com.papsign.ktor.openapigen.annotations.parameters.PathParam
 import com.papsign.ktor.openapigen.model.info.InfoModel
@@ -71,6 +72,13 @@ fun Application.autorisertEksempelApp() {
                                 dto
                             )
                         }
+                    }
+                }
+                route("testApi/person/{personIdent}") {
+                    authorizedGet<PersonIdentReferanse, Long>(
+                        AuthorizationParamPathConfig(personIdentPathParam = PersonIdentPathParam("personIdent")),
+                    ) { req ->
+                        respond(123)
                     }
                 }
                 route("testApi/journalpost") {

@@ -9,3 +9,5 @@ value class SakPathParam(val param: String)
 data class BehandlingPathParam(val param: String, val resolver: BehandlingreferanseResolver = DefaultBehandlingreferanseResolver())
 
 data class JournalpostPathParam(val param: String, val resolver: JournalpostIdResolver = DefaultJournalpostIdResolver())
+
+data class PersonIdentPathParam(val param: String)

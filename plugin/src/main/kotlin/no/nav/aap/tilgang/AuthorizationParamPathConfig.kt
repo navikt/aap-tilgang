@@ -15,7 +15,8 @@ data class AuthorizationParamPathConfig(
     val applicationsOnly: Boolean = false,
     val sakPathParam: SakPathParam? = null,
     val behandlingPathParam: BehandlingPathParam? = null,
-    val journalpostPathParam: JournalpostPathParam? = null
+    val journalpostPathParam: JournalpostPathParam? = null,
+    val personIdentPathParam: PersonIdentPathParam? = null,
 ) : AuthorizationRouteConfig {
     init {
         require(operasjon != Operasjon.SAKSBEHANDLE || avklaringsbehovKode != null) {
@@ -63,6 +64,17 @@ data class AuthorizationParamPathConfig(
                 )
             )
         }
+
+        if (personIdentPathParam != null) {
+            return AuthorizedRequest(
+                applicationsOnly,
+                applicationRole,
+                PersonTilgangRequest(
+                    personIdent = parameters.getOrFail(personIdentPathParam.param),
+                )
+            )
+        }
+
         return AuthorizedRequest(
             applicationsOnly = applicationsOnly,
             applicationRole = applicationRole,

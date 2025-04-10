@@ -20,6 +20,7 @@ import kotlinx.coroutines.runBlocking
 import org.intellij.lang.annotations.Language
 import no.nav.aap.tilgang.BehandlingTilgangRequest
 import no.nav.aap.tilgang.JournalpostTilgangRequest
+import no.nav.aap.tilgang.PersonTilgangRequest
 import no.nav.aap.tilgang.SakTilgangRequest
 import no.nav.aap.tilgang.TilgangResponse
 import java.time.LocalDateTime
@@ -68,6 +69,11 @@ internal class Fakes(azurePort: Int = 0, val azureTokenGen: AzureTokenGen) : Aut
         tilgangTilJournalpost[journalpost] = tilgang
     }
 
+    private val tilgangTilPerson = mutableMapOf<String, Boolean>()
+    fun gittTilgangTilPerson(personIdent: String, tilgang: Boolean) {
+        tilgangTilPerson[personIdent] = tilgang
+    }
+
     private fun Application.tilgangFake() {
         install(ContentNegotiation) {
             jackson()
@@ -95,6 +101,10 @@ internal class Fakes(azurePort: Int = 0, val azureTokenGen: AzureTokenGen) : Aut
             post("/tilgang/journalpost") {
                 val req = call.receive<JournalpostTilgangRequest>()
                 call.respond(TilgangResponse(tilgangTilJournalpost[req.journalpostId] == true))
+            }
+            post("tilgang/person") {
+                val req = call.receive<PersonTilgangRequest>()
+                call.respond(TilgangResponse(tilgangTilPerson[req.personIdent] == true))
             }
         }
     }

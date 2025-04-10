@@ -62,4 +62,18 @@ object TilgangGateway {
         )
         return respons.tilgang
     }
+
+    fun harTilgangTilPerson(body: PersonTilgangRequest, currentToken: OidcToken): Boolean {
+        val httpRequest = PostRequest(
+            body = body,
+            currentToken = currentToken
+        )
+        val respons = requireNotNull(
+            client.post<_, TilgangResponse>(
+                uri = baseUrl.resolve("/tilgang/person"),
+                request = httpRequest
+            )
+        )
+        return respons.tilgang
+    }
 }
