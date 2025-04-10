@@ -11,6 +11,8 @@ import no.nav.aap.tilgang.SakTilgangRequest
 import org.slf4j.LoggerFactory
 import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytClient
 import tilgang.integrasjoner.behandlingsflyt.IdenterRespons
+import tilgang.integrasjoner.tilgangsmaskin.BrukerOgRegeltype
+import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinClient
 import tilgang.regler.RegelInput
 import tilgang.regler.RegelService
 import no.nav.aap.postmottak.kontrakt.avklaringsbehov.Definisjon as PostmottakDefinisjon
@@ -18,7 +20,8 @@ import no.nav.aap.postmottak.kontrakt.avklaringsbehov.Definisjon as PostmottakDe
 class TilgangService(
     private val safClient: SafGraphqlClient,
     private val behandlingsflytClient: BehandlingsflytClient,
-    private val regelService: RegelService
+    private val regelService: RegelService,
+    private val tilgangsmaskinClient: TilgangsmaskinClient
 ) {
     private val log = LoggerFactory.getLogger(TilgangService::class.java)
 
@@ -107,5 +110,9 @@ class TilgangService(
             requireNotNull(søkerIdent)
             return IdenterRespons(søker = listOf(søkerIdent), barn = emptyList())
         }
+    }
+
+    fun harTilgangFraTilgangsmaskin(brukerIdenter: List<BrukerOgRegeltype>): Boolean {
+        return tilgangsmaskinClient.harTilganger(brukerIdenter)
     }
 }

@@ -15,6 +15,7 @@ import tilgang.Role
 import tilgang.TilgangService
 import tilgang.auth.ident
 import tilgang.auth.roller
+import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinRequest
 import tilgang.metrics.httpCallCounter
 import tilgang.metrics.nektetTilgangTeller
 import tilgang.regler.parseRoller
@@ -83,6 +84,12 @@ fun NormalOpenAPIRoute.tilgang(
                     prometheus.nektetTilgangTeller("journalpost").increment()
                 }
 
+                respond(TilgangResponse(harTilgang))
+            }
+        }
+        route("/test/tilgangsmaskinen") {
+            post<Unit, TilgangResponse, TilgangsmaskinRequest> { _, req ->
+                val harTilgang =  tilgangService.harTilgangFraTilgangsmaskin(req.brukerIdenter)
                 respond(TilgangResponse(harTilgang))
             }
         }
