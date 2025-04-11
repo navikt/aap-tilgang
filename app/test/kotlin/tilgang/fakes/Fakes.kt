@@ -37,6 +37,8 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
         System.setProperty("behandlingsflyt.base.url", "test")
         System.setProperty("ms.graph.scope", "msgraph")
         System.setProperty("ms.graph.base.url", "test")
+        System.setProperty("integrasjon.tilgangsmaskin.scope", "tilgangsmaskin")
+        System.setProperty("integrasjon.tilgangsmaskin.url", "tilgangsmaskin")
     }
 
     fun azurePort(): Int {
