@@ -23,7 +23,7 @@ internal fun Application.azureFake() {
     }
     routing {
         post("/token") {
-            val token = AzureTokenGen("tilgangazure", "tilgang").generate()
+            val token = AzureTokenGen("tilgang", "tilgang").generate()
             call.respond(TestToken(access_token = token))
         }
         get("/jwks") {

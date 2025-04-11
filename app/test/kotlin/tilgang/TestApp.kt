@@ -13,11 +13,11 @@ fun main() {
         api(
             Config(
                 azureConfig = no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureConfig(
-                    clientId = "",
+                    clientId = "tilgang",
                     clientSecret = "",
                     tokenEndpoint = URI.create("http://localhost:${fakes.azurePort()}").resolve("/token"),
                     jwksUri = URI.create("http://localhost:${fakes.azurePort()}").resolve("/jwks").toString(),
-                    issuer = ""
+                    issuer = "tilgang"
                 ),
                 redis = RedisConfig(
                     uri = URI.create("http://127.0.0.1:6379"),
