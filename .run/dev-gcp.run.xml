@@ -1,38 +1,38 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="dev-gcp" type="KtorApplicationConfigurationType" factoryName="Ktor">
     <envs>
-      <env name="NAIS_APP_NAME" value="tilgang" />
-      <env name="NAIS_CLUSTER_NAME" value="LOCAL" />
-      <env name="PORT" value="8087" />
-      <env name="PDL_BASE_URL" value="https://pdl-api.dev-fss-pub.nais.io/graphql" />
-      <env name="PDL_SCOPE" value="api://dev-fss.pdl.pdl-api/.default" />
-      <env name="PDL_AUDIENCE" value="dev-fss.pdl.pdl-api" />
-      <env name="SAF_BASE_URL" value="https://saf-q2.dev-fss-pub.nais.io/graphql" />
-      <env name="SAF_SCOPE" value="api://dev-fss.teamdokumenthandtering.saf/.default" />
-      <env name="MS_GRAPH_BASE_URL" value="https://graph.microsoft.com/v1.0/" />
-      <env name="MS_GRAPH_SCOPE" value="https://graph.microsoft.com/.default" />
+      <env name="AAP_BESLUTTER" value="f0f6cad5-e3c0-4308-99a2-3630ac60174a" />
+      <env name="AAP_DRIFT" value="bc89623f-4624-4978-ac54-acd048c0f2a5" />
+      <env name="AAP_KVALITETSSIKRER" value="c3e18aef-a7ac-49df-806e-4fe58b81460d" />
+      <env name="AAP_LES" value="96e18023-db50-45f7-b023-3251279df28d" />
+      <env name="AAP_PRODUKSJONSSTYRING" value="c75883f9-4cb2-42c7-b75c-3f0f29ee3ead" />
+      <env name="AAP_SAKSBEHANDLER_NASJONAL" value="3377dc51-ca61-4e36-b812-21b5fc34474f" />
+      <env name="AAP_SAKSBEHANDLER_OPPFOLGING" value="33e00155-169b-41e5-8a3f-5582ed975a15" />
       <env name="BEHANDLINGSFLYT_BASE_URL" value="http://localhost:8080" />
       <env name="BEHANDLINGSFLYT_SCOPE" value="api://dev-gcp.aap.behandlingsflyt/.default" />
-      <env name="SKJERMING_BASE_URL" value="https://skjermede-personer-pip.intern.dev.nav.no" />
-      <env name="SKJERMING_SCOPE" value="api://dev-gcp.nom.skjermede-personer-pip/.default" />
+      <env name="FORTROLIG_ADRESSE_AD" value="ea930b6b-9397-44d9-b9e6-f4cf527a632a" />
+      <env name="INTEGRASJON_TILGANGSMASKIN_URL" value="https://tilgangsmaskin.intern.dev.nav.no" />
+      <env name="MS_GRAPH_BASE_URL" value="https://graph.microsoft.com/v1.0/" />
+      <env name="MS_GRAPH_SCOPE" value="https://graph.microsoft.com/.default" />
+      <env name="NAIS_APP_NAME" value="tilgang" />
+      <env name="NAIS_CLUSTER_NAME" value="LOCAL" />
       <env name="NOM_BASE_URL" value="https://nom-api.intern.dev.nav.no/graphql" />
       <env name="NOM_SCOPE" value="api://dev-gcp.nom.nom-api/.default" />
-      <env name="FORTROLIG_ADRESSE_AD" value="ea930b6b-9397-44d9-b9e6-f4cf527a632a" />
-      <env name="STRENGT_FORTROLIG_ADRESSE_AD" value="5ef775f2-61f8-4283-bf3d-8d03f428aa14" />
-      <env name="SKJERMEDE_PERSONER_AD" value="dbe4ad45-320b-4e9a-aaa1-73cca4ee124d" />
-      <env name="INTEGRASJON_TILGANGSMASKIN_URL" value="https://tilgangsmaskin.intern.dev.nav.no" />
-
+      <env name="PDL_AUDIENCE" value="dev-fss.pdl.pdl-api" />
+      <env name="PDL_BASE_URL" value="https://pdl-api.dev-fss-pub.nais.io/graphql" />
+      <env name="PDL_SCOPE" value="api://dev-fss.pdl.pdl-api/.default" />
+      <env name="PORT" value="8087" />
+      <env name="REDIS_PASSWORD_TILGANG" value="test" />
       <env name="REDIS_URI_TILGANG" value="redis://localhost:6379" />
       <env name="REDIS_USERNAME_TILGANG" value="" />
-      <env name="REDIS_PASSWORD_TILGANG" value="test" />
-
-      <env name="AAP_BESLUTTER" value="f0f6cad5-e3c0-4308-99a2-3630ac60174a" />
-      <env name="AAP_LES" value="96e18023-db50-45f7-b023-3251279df28d" />
-      <env name="AAP_SAKSBEHANDLER_OPPFOLGING" value="33e00155-169b-41e5-8a3f-5582ed975a15" />
-      <env name="AAP_KVALITETSSIKRER" value="c3e18aef-a7ac-49df-806e-4fe58b81460d" />
-      <env name="AAP_SAKSBEHANDLER_NASJONAL" value="3377dc51-ca61-4e36-b812-21b5fc34474f" />
-      <env name="AAP_DRIFT" value="bc89623f-4624-4978-ac54-acd048c0f2a5" />
-      <env name="AAP_PRODUKSJONSSTYRING" value="c75883f9-4cb2-42c7-b75c-3f0f29ee3ead" />
+      <env name="SAF_BASE_URL" value="https://saf-q2.dev-fss-pub.nais.io/graphql" />
+      <env name="SAF_SCOPE" value="api://dev-fss.teamdokumenthandtering.saf/.default" />
+      <env name="SKJERMEDE_PERSONER_AD" value="dbe4ad45-320b-4e9a-aaa1-73cca4ee124d" />
+      <env name="SKJERMING_BASE_URL" value="https://skjermede-personer-pip.intern.dev.nav.no" />
+      <env name="SKJERMING_SCOPE" value="api://dev-gcp.nom.skjermede-personer-pip/.default" />
+      <env name="STRENGT_FORTROLIG_ADRESSE_AD" value="5ef775f2-61f8-4283-bf3d-8d03f428aa14" />
+      <env name="INTEGRASJON_TILGANGSMASKIN_URL" value="http://populasjonstilgangskontroll.tilgangsmaskin" />
+      <env name="INTEGRASJON_TILGANGSMASKIN_SCOPE" value="api://dev-gcp.tilgangsmaskin.populasjonstilgangskontroll/.default" />
     </envs>
     <option name="MAIN_CLASS_NAME" value="tilgang.AppKt" />
     <module name="aap-tilgang.app.main" />
