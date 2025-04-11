@@ -184,26 +184,48 @@ class TilgangPluginTest {
     }
 
     @Test
-    fun `kan sjekke tilgang til person`() {
+    fun `get route kan sjekke tilgang til person`() {
         val person = "12345"
         fakes.gittTilgangTilPerson(person, true)
-        val res1 = clientForOBO.get<Long>(
+        val res = clientForOBO.get<Long>(
             URI.create("http://localhost:8082/")
-                .resolve("testApi/person/$person"),
+                .resolve("testApi/person/get/$person"),
             GetRequest(currentToken = generateToken(isApp = false))
         )
-        assertThat(res1).isEqualTo(123)
+        assertThat(res).isEqualTo(123)
 
         val person2 = "123456"
         assertThrows<ManglerTilgangException> {
             clientForOBO.get<Long>(
                 URI.create("http://localhost:8082/")
-                    .resolve("testApi/person/$person2"),
+                    .resolve("testApi/person/get/$person2"),
                 GetRequest(currentToken = generateToken(isApp = false))
             )
         }
-
     }
+
+    @Test
+    fun `post route kan sjekke tilgang til person`() {
+        val person = "234"
+        fakes.gittTilgangTilPerson(person, true)
+        val res = clientForOBO.post<_, Personinfo>(
+            URI.create("http://localhost:8082/")
+                .resolve("testApi/person/post"),
+            PostRequest(Personinfo(person), currentToken = generateToken(isApp = false))
+        )
+        assertThat(res?.personIdent).isEqualTo("234")
+
+        val person2 = "123456"
+        assertThrows<ManglerTilgangException> {
+            clientForOBO.post<_, Personinfo>(
+                URI.create("http://localhost:8082/")
+                    .resolve("testApi/person/post"),
+                PostRequest(Personinfo(person2), currentToken = generateToken(isApp = false))
+            )
+        }
+    }
+
+
 
 
     @Test

@@ -25,6 +25,7 @@ import no.nav.aap.tilgang.plugin.kontrakt.BrukerIdentResolver
 import no.nav.aap.tilgang.plugin.kontrakt.Saksreferanse
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.plugin.kontrakt.Behandlingsreferanse
+import no.nav.aap.tilgang.plugin.kontrakt.Personreferanse
 import java.util.*
 import kotlin.random.Random
 
@@ -74,11 +75,22 @@ fun Application.autorisertEksempelApp() {
                         }
                     }
                 }
-                route("testApi/person/{personIdent}") {
-                    authorizedGet<PersonIdentReferanse, Long>(
-                        AuthorizationParamPathConfig(personIdentPathParam = PersonIdentPathParam("personIdent")),
-                    ) { req ->
-                        respond(123)
+                route("testApi/person") {
+                    route("get/{personIdent}") {
+                        authorizedGet<PersonIdentReferanse, Long>(
+                            AuthorizationParamPathConfig(personIdentPathParam = PersonIdentPathParam("personIdent")),
+                        ) { req ->
+                            respond(123)
+                        }
+                    }
+                    route("post") {
+                        authorizedPost<Unit, Personinfo, Personinfo>(
+                            AuthorizationBodyPathConfig(
+                                operasjon = Operasjon.SE
+                            )
+                        ) { _, dto ->
+                            respond(dto)
+                        }
                     }
                 }
                 route("testApi/journalpost") {
@@ -216,6 +228,12 @@ fun Application.autorisertEksempelApp() {
 data class Saksinfo(val saksnummer: UUID) : Saksreferanse {
     override fun hentSaksreferanse(): String {
         return saksnummer.toString()
+    }
+}
+
+data class Personinfo(val personIdent: String) : Personreferanse {
+    override fun hentPersonreferanse(): String {
+        return personIdent
     }
 }
 
