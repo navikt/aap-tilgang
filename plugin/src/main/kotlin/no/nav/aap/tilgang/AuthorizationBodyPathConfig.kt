@@ -4,6 +4,7 @@ import no.nav.aap.tilgang.plugin.kontrakt.BehandlingreferanseResolver
 import no.nav.aap.tilgang.plugin.kontrakt.Behandlingsreferanse
 import no.nav.aap.tilgang.plugin.kontrakt.JournalpostIdResolver
 import no.nav.aap.tilgang.plugin.kontrakt.Journalpostreferanse
+import no.nav.aap.tilgang.plugin.kontrakt.Personreferanse
 import no.nav.aap.tilgang.plugin.kontrakt.Saksreferanse
 
 data class AuthorizationBodyPathConfig(
@@ -21,6 +22,15 @@ data class AuthorizationBodyPathConfig(
                     applicationsOnly,
                     applicationRole,
                     SakTilgangRequest(referanse, operasjon)
+                )
+            }
+
+            is Personreferanse -> {
+                val referanse = request.hentPersonreferanse()
+                return AuthorizedRequest(
+                    applicationsOnly,
+                    applicationRole,
+                    PersonTilgangRequest(referanse)
                 )
             }
 
