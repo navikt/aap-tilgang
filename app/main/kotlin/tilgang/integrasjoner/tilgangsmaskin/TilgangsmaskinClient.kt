@@ -7,10 +7,10 @@ import no.nav.aap.komponenter.httpklient.httpclient.error.ManglerTilgangExceptio
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import java.net.URI
 import no.nav.aap.komponenter.httpklient.httpclient.post
+import no.nav.aap.komponenter.httpklient.httpclient.request.ContentType
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.OnBehalfOfTokenProvider
 import org.slf4j.LoggerFactory
-import tilgang.auth.Token
 
 interface ITilgangsmaskinClient {
     fun harTilgangTilPerson(brukerIdent: String, token: OidcToken): Boolean
@@ -37,7 +37,8 @@ class TilgangsmaskinClient() : ITilgangsmaskinClient {
         val url = baseUrl.resolve("/api/v1/komplett")
         val request = PostRequest(
             body = brukerIdent,
-            currentToken = token
+            currentToken = token,
+            contentType = ContentType.TEXT_PLAIN
         )
         try {
             log.info("Kaller tilgangsmaskin med url: $url")
@@ -69,8 +70,6 @@ class TilgangsmaskinClient() : ITilgangsmaskinClient {
         }
 
     }
-
-
 }
 
 
