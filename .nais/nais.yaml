@@ -71,6 +71,7 @@ spec:
         - application: oppgave
         - application: saksbehandling
         - application: dokumentinnhenting
+        - application: api-intern
         {{#if isdev}}
         - application: saksbehandling-lokal # For lokal utvikling. IKKE kopier denne til prod.yaml
         - application: azure-token-generator
