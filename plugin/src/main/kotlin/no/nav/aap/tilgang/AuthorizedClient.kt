@@ -8,6 +8,7 @@ import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.path.normal.put
 import com.papsign.ktor.openapigen.route.response.OpenAPIPipelineResponseContext
+import io.ktor.server.routing.*
 import no.nav.aap.tilgang.auditlog.AuditLogConfig
 import no.nav.aap.tilgang.auditlog.AuditLogPathParamConfig
 
@@ -25,8 +26,17 @@ inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.a
 ) {
     when (routeConfig) {
         is RollerConfig -> ktorRoute.installerTilgangRollePlugin(routeConfig)
-        is AuthorizationParamPathConfig -> ktorRoute.installerTilgangParamPlugin(routeConfig, if (auditLogConfig == null) null else auditLogConfig as AuditLogPathParamConfig)
-        is AuthorizationMachineToMachineConfig -> ktorRoute.installerTilgangMachineToMachinePlugin(routeConfig, auditLogConfig)
+        is NoAuthConfig -> håndterNoAuth(this.ktorRoute, auditLogConfig)
+        is AuthorizationParamPathConfig -> ktorRoute.installerTilgangParamPlugin(
+            routeConfig,
+            if (auditLogConfig == null) null else auditLogConfig as AuditLogPathParamConfig
+        )
+
+        is AuthorizationMachineToMachineConfig -> ktorRoute.installerTilgangMachineToMachinePlugin(
+            routeConfig,
+            auditLogConfig
+        )
+
         else -> throw IllegalArgumentException("Unsupported routeConfig type for GET: $routeConfig")
     }
     @Suppress("UnauthorizedGet")
@@ -40,10 +50,19 @@ inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : A
     noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams, TRequest) -> Unit
 ) {
     when (routeConfig) {
-        is AuthorizationParamPathConfig -> ktorRoute.installerTilgangParamPlugin(routeConfig, if (auditLogConfig == null) null else auditLogConfig as AuditLogPathParamConfig)
+        is AuthorizationParamPathConfig -> ktorRoute.installerTilgangParamPlugin(
+            routeConfig,
+            if (auditLogConfig == null) null else auditLogConfig as AuditLogPathParamConfig
+        )
+
         is AuthorizationBodyPathConfig -> ktorRoute.installerTilgangBodyPlugin<TRequest>(routeConfig, auditLogConfig)
-        is AuthorizationMachineToMachineConfig -> ktorRoute.installerTilgangMachineToMachinePlugin(routeConfig, auditLogConfig)
+        is AuthorizationMachineToMachineConfig -> ktorRoute.installerTilgangMachineToMachinePlugin(
+            routeConfig,
+            auditLogConfig
+        )
+
         is RollerConfig -> ktorRoute.installerTilgangRollePlugin(routeConfig)
+        is NoAuthConfig -> håndterNoAuth(this.ktorRoute, auditLogConfig)
         else -> throw IllegalArgumentException("Unsupported routeConfig type for POST: $routeConfig")
     }
 
@@ -63,10 +82,20 @@ inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : A
     noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams, TRequest) -> Unit
 ) {
     when (routeConfig) {
-        is AuthorizationParamPathConfig -> ktorRoute.installerTilgangParamPlugin(routeConfig, if (auditLogConfig == null) null else auditLogConfig as AuditLogPathParamConfig)
-        is AuthorizationBodyPathConfig ->ktorRoute.installerTilgangBodyPlugin<TRequest>(routeConfig, auditLogConfig)
-        is AuthorizationMachineToMachineConfig -> ktorRoute.installerTilgangMachineToMachinePlugin(routeConfig, auditLogConfig)
+        is AuthorizationParamPathConfig -> ktorRoute.installerTilgangParamPlugin(
+            routeConfig,
+            if (auditLogConfig == null) null else auditLogConfig as AuditLogPathParamConfig
+        )
+
+        is AuthorizationBodyPathConfig -> ktorRoute.installerTilgangBodyPlugin<TRequest>(routeConfig, auditLogConfig)
+        is AuthorizationMachineToMachineConfig -> ktorRoute.installerTilgangMachineToMachinePlugin(
+            routeConfig,
+            auditLogConfig
+        )
+        
         is RollerConfig -> ktorRoute.installerTilgangRollePlugin(routeConfig)
+        is NoAuthConfig -> håndterNoAuth(this.ktorRoute, auditLogConfig)
+
         else -> throw IllegalArgumentException("Unsupported routeConfig type for PUT: $routeConfig")
     }
 
@@ -76,5 +105,12 @@ inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : A
             params,
             request
         )
+    }
+}
+
+fun håndterNoAuth(route: Route, auditLogConfig: AuditLogConfig?) {
+    log.info("Installerer ikke tilgangskontroll for ${route}")
+    if (auditLogConfig != null) {
+        log.warn("Auditlogging er ikke implementert for NoAuthConfig - ignorerer AuditLogConfig")
     }
 }

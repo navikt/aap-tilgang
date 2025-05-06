@@ -74,6 +74,15 @@ fun Application.autorisertEksempelApp() {
                             )
                         }
                     }
+                    route("hello") {
+                        authorizedPost<Unit, IngenReferanse, IngenReferanse>(
+                            NoAuthConfig
+                        ) { _, dto ->
+                            respond(
+                                dto
+                            )
+                        }
+                    }
                 }
                 route("testApi/person") {
                     route("get/{personIdent}") {
