@@ -11,7 +11,6 @@ import redis.clients.jedis.params.SetParams
 import tilgang.LOGGER
 import tilgang.RedisConfig
 import java.net.URI
-import java.time.LocalDateTime
 import no.nav.aap.komponenter.miljo.Miljø
 
 const val EnDagSekunder: Long = 60 * 60 * 24
@@ -72,27 +71,9 @@ class Redis private constructor(
         }
     }
 
-    fun del(key: Key) {
-        pool.resource.use {
-            it.del(key.get())
-        }
-    }
-
     fun ready(): Boolean {
         pool.resource.use {
             return it.ping() == "PONG"
-        }
-    }
-
-    fun lastUpdated(key: Key): LocalDateTime {
-        pool.resource.use {
-            return LocalDateTime.now().minusSeconds(EnDagSekunder - it.ttl(key.get()))
-        }
-    }
-
-    fun expiresIn(key: Key): Long {
-        pool.resource.use {
-            return it.ttl(key.get())
         }
     }
 

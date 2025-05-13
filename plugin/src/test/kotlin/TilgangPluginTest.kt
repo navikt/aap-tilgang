@@ -24,6 +24,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.OnBeha
 import no.nav.aap.tilgang.*
 import no.nav.aap.tilgang.plugin.kontrakt.Journalpostreferanse
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -224,9 +225,6 @@ class TilgangPluginTest {
             )
         }
     }
-
-
-
 
     @Test
     fun `get route som støtter on-behalf-of og client-credentials gir tilgang med on-behalf-of token og client-credentials token`() {
@@ -466,6 +464,18 @@ class TilgangPluginTest {
                 GetRequest(additionalHeaders = listOf(Header("Authorization", "Bearer ${token.token()}")))
             )
         }
+    }
+
+    @Test
+    fun `skal returnere json ved ikke tilgang`() {
+        val randomUuid = UUID.randomUUID()
+        assertThatThrownBy {
+            clientForOBO.get<Saksinfo>(
+                URI.create("http://localhost:8082/")
+                    .resolve("testApi/authorizedGet/$randomUuid/on-behalf-of"),
+                GetRequest(currentToken = generateToken(isApp = false))
+            )
+        }.isInstanceOf(ManglerTilgangException::class.java).extracting("body").isEqualTo("{\"message\":\"Ingen tilgang\",\"code\":\"UKJENT_FEIL\"}")
     }
 }
 

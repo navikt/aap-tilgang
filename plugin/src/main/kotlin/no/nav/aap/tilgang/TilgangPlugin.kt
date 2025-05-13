@@ -1,6 +1,5 @@
 package no.nav.aap.tilgang
 
-import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
@@ -10,8 +9,8 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.util.*
-import java.util.*
 import no.nav.aap.komponenter.httpklient.auth.token
+import no.nav.aap.komponenter.httpklient.exception.IkkeTillattException
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.tilgang.auditlog.AuditLogBodyConfig
 import no.nav.aap.tilgang.auditlog.AuditLogConfig
@@ -22,6 +21,7 @@ import no.nav.aap.tilgang.auditlog.cef.CefMessage
 import no.nav.aap.tilgang.plugin.kontrakt.AuditlogResolverInput
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.util.*
 
 const val TILGANG_PLUGIN = "TilgangPlugin"
 
@@ -78,11 +78,11 @@ fun Route.installerTilgangRollePlugin(
     install(createRouteScopedPlugin(name = TILGANG_PLUGIN) {
         on(AuthenticationChecked) { call ->
             val roller = call.groupsClaim()
-            
+
             if (roller.any { adRolle -> adRolle in config.roller.map { it.id } }) {
                 return@on
             }
-            call.respond(HttpStatusCode.Forbidden, "Ingen tilgang")
+            call.respondWithError(IkkeTillattException("Ingen tilgang"))
         }
     })
 }
@@ -102,7 +102,7 @@ fun Route.installerTilgangMachineToMachinePlugin(
     install(createRouteScopedPlugin(name = TILGANG_PLUGIN) {
         on(AuthenticationChecked) { call ->
             val principal = call.principal<JWTPrincipal>() ?: error("mangler principal")
-            
+
             if (config.authorizedAzps.isNotEmpty()) {
                 val azpName = principal.getClaim("azp_name", String::class)
                 val azp = principal.getClaim("azp", UUID::class) ?: error("token uten azp-claim")
@@ -112,7 +112,7 @@ fun Route.installerTilgangMachineToMachinePlugin(
                 }
 
                 log.error("azp $azpName ($azp) har ikke tilgang dette endepunktet")
-                call.respond(HttpStatusCode.Forbidden, "Ingen tilgang")
+                call.respondWithError(IkkeTillattException("Ingen tilgang"))
                 return@on
             }
 
@@ -124,7 +124,7 @@ fun Route.installerTilgangMachineToMachinePlugin(
             }
 
             /* Default: deny */
-            call.respond(HttpStatusCode.Forbidden, "Ingen tilgang")
+            call.respondWithError(IkkeTillattException("Ingen tilgang"))
         }
     })
 }
@@ -142,7 +142,7 @@ inline fun buildTilgangPlugin(
             val harTilgang = TilgangService.harTilgang(input, call, token)
 
             if (!harTilgang) {
-                call.respond(HttpStatusCode.Forbidden, "Ingen tilgang")
+                call.respondWithError(IkkeTillattException("Ingen tilgang"))
                 return@on
             }
 
@@ -173,4 +173,11 @@ fun ApplicationCall.rolesClaim(): List<String> {
 
 fun ApplicationCall.groupsClaim(): List<String> {
     return principal<JWTPrincipal>()?.getListClaim("groups", String::class) ?: emptyList()
+}
+
+suspend fun ApplicationCall.respondWithError(exception: IkkeTillattException) {
+    respond(
+        exception.status,
+        exception.tilApiErrorResponse()
+    )
 }
