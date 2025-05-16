@@ -4,7 +4,7 @@ internal sealed interface Regel<T> {
     fun vurder(input: T): Boolean
 }
 
-internal sealed interface InputGenerator<T> {
+internal sealed interface InputGenerator<out T> {
     fun generer(input: RegelInput): T
 }
 
