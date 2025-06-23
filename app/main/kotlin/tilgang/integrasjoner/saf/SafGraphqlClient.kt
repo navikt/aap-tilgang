@@ -2,7 +2,6 @@ package tilgang.integrasjoner.saf
 
 import SafResponseHandler
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
-import kotlinx.coroutines.runBlocking
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.Header
@@ -49,14 +48,14 @@ class SafGraphqlClient(
         prometheus.cacheMiss(JOURNALPOST_PREFIX).increment()
 
         val request = SafRequest.hentJournalpost(journalpostId)
-        val response = runBlocking { query(request, callId) }
+        val response = query(request, callId)
 
         val journalpost: SafJournalpost =
             response.data?.journalpost ?: error("Fant ikke journalpost for $journalpostId")
         redis.set(Key(JOURNALPOST_PREFIX, journalpostId.toString()), journalpost.serialize())
 
         if (journalpost.bruker?.type != BrukerIdType.FNR) {
-            log.warn("Journalpost ${journalpostId} har ikke personident")
+            log.warn("Journalpost $journalpostId har ikke personident")
         }
 
         return journalpost
