@@ -19,6 +19,10 @@ interface ITilgangsmaskinClient {
 
 private val log = LoggerFactory.getLogger(TilgangsmaskinClient::class.java)
 
+/**
+ * Se Confluence for dukumentasjon.
+ * https://confluence.adeo.no/spaces/TM/pages/628888614/Intro+til+Tilgangsmaskinen
+ */
 class TilgangsmaskinClient() : ITilgangsmaskinClient {
     private val config = ClientConfig(
         scope = requiredConfigForKey("integrasjon.tilgangsmaskin.scope")

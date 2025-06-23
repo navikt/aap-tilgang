@@ -29,7 +29,7 @@ inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.a
         is NoAuthConfig -> håndterNoAuth(this.ktorRoute, auditLogConfig)
         is AuthorizationParamPathConfig -> ktorRoute.installerTilgangParamPlugin(
             routeConfig,
-            if (auditLogConfig == null) null else auditLogConfig as AuditLogPathParamConfig
+            if (auditLogConfig == null) null else auditLogConfig
         )
 
         is AuthorizationMachineToMachineConfig -> ktorRoute.installerTilgangMachineToMachinePlugin(
