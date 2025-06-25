@@ -54,7 +54,6 @@ class TilgangService(
         roller: List<Rolle>,
         token: OidcToken,
         callId: String,
-        operasjoner: List<Operasjon> = listOf(req.operasjon),
     ): Map<Operasjon, Boolean> {
         log.info("Sjekker tilgang til behandling ${req.behandlingsreferanse}")
         val identer = behandlingsflytClient.hentIdenterForBehandling(req.behandlingsreferanse.toString())
@@ -69,7 +68,7 @@ class TilgangService(
             søkerIdenter = identer,
             avklaringsbehovFraBehandlingsflyt = avklaringsbehov,
             avklaringsbehovFraPostmottak = null,
-            operasjoner = operasjoner
+            operasjoner = (req.operasjonerIKontekst + req.operasjon).toSet().toList()
         )
         return regelService.vurderTilgang(regelInput)
     }

@@ -13,7 +13,7 @@ data class BehandlingTilgangRequest(
     val behandlingsreferanse: UUID,
     val avklaringsbehovKode: String?,
     val operasjon: Operasjon,
-    val operasjonerIKontekst: List<Operasjon>? = emptyList(),
+    val operasjonerIKontekst: List<Operasjon> = emptyList(),
 ): TilgangRequest
 
 data class JournalpostTilgangRequest(
