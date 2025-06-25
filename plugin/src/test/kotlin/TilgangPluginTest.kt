@@ -227,7 +227,7 @@ class TilgangPluginTest {
     }
 
     @Test
-    fun `get route for grunnlag`() {
+    fun `get route for grunnlag setter tilgang til operasjon som attributt`() {
         val referanse = UUID.randomUUID()
         fakes.gittTilgangTilBehandling(referanse, true)
         fakes.gittTilgangTilBehandlingIKontekst(referanse, mutableMapOf(Operasjon.SAKSBEHANDLE to true))
