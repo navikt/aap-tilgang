@@ -8,13 +8,13 @@ object TilgangService {
         authorizedRequest: AuthorizedRequest,
         call: ApplicationCall,
         token: OidcToken
-    ): Boolean {
+    ): TilgangResponse {
         if (token.isClientCredentials()) {
-            return authorizedRequest.applicationRole != null &&
-                    call.rolesClaim().contains(authorizedRequest.applicationRole)
+            return TilgangResponse(authorizedRequest.applicationRole != null &&
+                    call.rolesClaim().contains(authorizedRequest.applicationRole))
         }
         if (authorizedRequest.applicationsOnly) {
-            return false
+            return TilgangResponse(false)
         }
         val request = requireNotNull(authorizedRequest.tilgangRequest) {
             "Kan ikke utlede tilgangRequest for OBO-token."

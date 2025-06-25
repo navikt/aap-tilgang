@@ -20,6 +20,7 @@ import kotlinx.coroutines.runBlocking
 import org.intellij.lang.annotations.Language
 import no.nav.aap.tilgang.BehandlingTilgangRequest
 import no.nav.aap.tilgang.JournalpostTilgangRequest
+import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.PersonTilgangRequest
 import no.nav.aap.tilgang.SakTilgangRequest
 import no.nav.aap.tilgang.TilgangResponse
@@ -59,6 +60,11 @@ internal class Fakes(azurePort: Int = 0, val azureTokenGen: AzureTokenGen) : Aut
         tilgangTilSak[sak] = tilgang
     }
 
+    private val tilgangTilBehandlingIKontekst = mutableMapOf<UUID, Map<Operasjon, Boolean>>()
+    fun gittTilgangTilBehandlingIKontekst(behandling: UUID, tilgangMap: Map<Operasjon, Boolean>) {
+        tilgangTilBehandlingIKontekst[behandling] = tilgangMap
+    }
+
     private val tilgangTilBehandling = mutableMapOf<UUID, Boolean>()
     fun gittTilgangTilBehandling(behandling: UUID, tilgang: Boolean) {
         tilgangTilBehandling[behandling] = tilgang
@@ -96,7 +102,9 @@ internal class Fakes(azurePort: Int = 0, val azureTokenGen: AzureTokenGen) : Aut
             }
             post("/tilgang/behandling") {
                 val req = call.receive<BehandlingTilgangRequest>()
-                call.respond(TilgangResponse(tilgangTilBehandling[req.behandlingsreferanse] == true))
+                call.respond(TilgangResponse(tilgangTilBehandling[req.behandlingsreferanse] == true,
+                    tilgangTilBehandlingIKontekst[req.behandlingsreferanse]
+                ))
             }
             post("/tilgang/journalpost") {
                 val req = call.receive<JournalpostTilgangRequest>()

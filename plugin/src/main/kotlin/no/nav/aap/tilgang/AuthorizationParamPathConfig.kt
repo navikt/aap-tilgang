@@ -10,6 +10,7 @@ import io.ktor.server.util.getOrFail
  */
 data class AuthorizationParamPathConfig(
     val operasjon: Operasjon = Operasjon.SE,
+    val operasjonerIKontekst: List<Operasjon> = emptyList(),
     val avklaringsbehovKode: String? = null,
     val applicationRole: String? = null,
     val applicationsOnly: Boolean = false,
@@ -47,7 +48,8 @@ data class AuthorizationParamPathConfig(
                 BehandlingTilgangRequest(
                     behandlingsreferanse = behandlingPathParam.resolver.resolve(parameters.getOrFail(behandlingPathParam.param)),
                     operasjon = operasjon,
-                    avklaringsbehovKode = avklaringsbehovKode
+                    avklaringsbehovKode = avklaringsbehovKode,
+                    operasjonerIKontekst = operasjonerIKontekst
                 )
             )
         }

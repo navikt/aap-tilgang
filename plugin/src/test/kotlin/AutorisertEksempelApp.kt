@@ -2,6 +2,7 @@ import TilgangPluginTest.Companion.IngenReferanse
 import TilgangPluginTest.Companion.Journalpostinfo
 import TilgangPluginTest.Companion.PersonIdentReferanse
 import TilgangPluginTest.Companion.TestReferanse
+import com.fasterxml.jackson.annotation.JsonValue
 import com.papsign.ktor.openapigen.annotations.parameters.PathParam
 import com.papsign.ktor.openapigen.model.info.InfoModel
 import com.papsign.ktor.openapigen.route.TagModule
@@ -43,6 +44,23 @@ fun Application.autorisertEksempelApp() {
                         )
                     ) {
                         respond(IngenReferanse("test"))
+                    }
+                }
+
+                route("testApi/getGrunnlag/{referanse}") {
+                    getGrunnlag<BehandlingReferanse, Boolean>(
+                        behandlingPathParam = BehandlingPathParam(
+                            param = "referanse"
+                        ),
+                        avklaringsbehovKode = "1234"
+                    ) {req ->
+                        val kanSaksbehandle = pipeline.call.attributes[kanSaksbehandleKey]
+                        if (kanSaksbehandle == "true") {
+                            respond(true)
+                            return@getGrunnlag
+                        } else {
+                            respond(false)
+                        }
                     }
                 }
                 route("testApi/pathForPost/resolve") {
@@ -274,3 +292,8 @@ class RequestMedAuditResolver(val saksreferanse: UUID) : AuditlogResolverInput, 
 }
 
 data class EnAnnenReferanse(@PathParam("enAnnenReferanse") val enAnnenReferanse: String)
+data class BehandlingReferanse(@JsonValue @PathParam("referanse") val referanse: UUID = UUID.randomUUID()) {
+    override fun toString(): String {
+        return referanse.toString()
+    }
+}
