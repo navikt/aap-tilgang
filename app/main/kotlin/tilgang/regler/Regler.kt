@@ -49,11 +49,14 @@ class RegelService(
 
     fun vurderTilgang(
         input: RegelInput
-    ): Boolean {
-        return this.reglerForOperasjon[input.operasjon]!!.all {
-            val resultat = it.vurder(input)
-            logger.info("Vurderte regel ${it.regel} med svar: $resultat, for ident ${input.ansattIdent}")
-            resultat
+    ): Map<Operasjon, Boolean> {
+        val tilgangsMap = mutableMapOf<Operasjon, Boolean>()
+        input.operasjoner.forEach { operasjon ->
+            val harTilgangForRolle = this.reglerForOperasjon[operasjon]!!.all {
+                it.vurder(input)
+            }
+            tilgangsMap[operasjon] = harTilgangForRolle
         }
+        return tilgangsMap
     }
 }
