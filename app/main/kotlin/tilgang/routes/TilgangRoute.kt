@@ -57,11 +57,11 @@ fun NormalOpenAPIRoute.tilgang(
                 val harTilgang =
                     tilgangService.harTilgangTilBehandling(ident(), req, roller, token, callId)
 
-                if (harTilgang[req.operasjon] != true) {
+                if (!harTilgang) {
                     prometheus.nektetTilgangTeller("behandling").increment()
                 }
 
-                respond(TilgangResponse(harTilgang[req.operasjon] != true, harTilgang))
+                respond(TilgangResponse(harTilgang))
             }
         }
         route("/journalpost") {

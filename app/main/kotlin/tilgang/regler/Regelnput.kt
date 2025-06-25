@@ -15,7 +15,7 @@ class RegelInput (
     val søkerIdenter: IdenterRespons,
     val avklaringsbehovFraBehandlingsflyt: Definisjon?,
     val avklaringsbehovFraPostmottak: PostmottakDefinisjon?,
-    val operasjoner: List<Operasjon>,
+    val operasjon: Operasjon
 )
 
 // TODO: Oppdater til nytt identer-objekt

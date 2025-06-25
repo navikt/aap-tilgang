@@ -2,8 +2,6 @@ package no.nav.aap.tilgang
 
 import java.util.UUID
 
-sealed interface TilgangRequest
-
 data class SakTilgangRequest (
     val saksnummer: String,
     val operasjon: Operasjon
@@ -12,8 +10,7 @@ data class SakTilgangRequest (
 data class BehandlingTilgangRequest(
     val behandlingsreferanse: UUID,
     val avklaringsbehovKode: String?,
-    val operasjon: Operasjon,
-    val operasjonerIKontekst: List<Operasjon> = emptyList(),
+    val operasjon: Operasjon
 ): TilgangRequest
 
 data class JournalpostTilgangRequest(
@@ -26,4 +23,4 @@ data class PersonTilgangRequest(
     val personIdent: String,
 ): TilgangRequest
 
-
+sealed interface TilgangRequest
