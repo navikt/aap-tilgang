@@ -6,6 +6,7 @@ import tilgang.integrasjoner.saf.SafGraphqlClient
 import tilgang.integrasjoner.saf.SafJournalpost
 import no.nav.aap.tilgang.BehandlingTilgangRequest
 import no.nav.aap.tilgang.JournalpostTilgangRequest
+import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.Rolle
 import no.nav.aap.tilgang.SakTilgangRequest
 import org.slf4j.LoggerFactory
@@ -42,9 +43,9 @@ class TilgangService(
             søkerIdenter = identer,
             avklaringsbehovFraBehandlingsflyt = null,
             avklaringsbehovFraPostmottak = null,
-            operasjon = req.operasjon
+            operasjoner = listOf(req.operasjon)
         )
-        return regelService.vurderTilgang(regelInput)
+        return regelService.vurderTilgang(regelInput)[req.operasjon] == true
     }
 
     fun harTilgangTilBehandling(
@@ -52,8 +53,9 @@ class TilgangService(
         req: BehandlingTilgangRequest,
         roller: List<Rolle>,
         token: OidcToken,
-        callId: String
-    ): Boolean {
+        callId: String,
+        operasjoner: List<Operasjon> = listOf(req.operasjon),
+    ): Map<Operasjon, Boolean> {
         log.info("Sjekker tilgang til behandling ${req.behandlingsreferanse}")
         val identer = behandlingsflytClient.hentIdenterForBehandling(req.behandlingsreferanse.toString())
         val avklaringsbehov =
@@ -67,7 +69,7 @@ class TilgangService(
             søkerIdenter = identer,
             avklaringsbehovFraBehandlingsflyt = avklaringsbehov,
             avklaringsbehovFraPostmottak = null,
-            operasjon = req.operasjon
+            operasjoner = operasjoner
         )
         return regelService.vurderTilgang(regelInput)
     }
@@ -94,9 +96,9 @@ class TilgangService(
             søkerIdenter = identer,
             avklaringsbehovFraBehandlingsflyt = null,
             avklaringsbehovFraPostmottak = avklaringsbehov,
-            operasjon = req.operasjon
+            operasjoner = listOf(req.operasjon),
         )
-        return regelService.vurderTilgang(regelInput)
+        return regelService.vurderTilgang(regelInput)[req.operasjon] == true
     }
 
     private fun finnIdenterForJournalpost(journalpost: SafJournalpost, token: OidcToken): IdenterRespons {

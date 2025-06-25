@@ -117,11 +117,11 @@ class RegelServiceTest {
                 avklaringsbehovFraPostmottak = null,
                 currentToken = OidcToken(token),
                 søkerIdenter = IdenterRespons(søker = listOf("423"), barn = listOf()),
-                operasjon = Operasjon.SAKSBEHANDLE,
+                operasjoner = listOf(Operasjon.SAKSBEHANDLE),
                 roller = listOf()
             )
         )
-        Assertions.assertFalse(svar)
+        Assertions.assertFalse(svar[Operasjon.SAKSBEHANDLE] == true)
 
     }
 }
