@@ -75,6 +75,16 @@ inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : A
     }
 }
 
+inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.getGrunnlag(behandlingPathParam: BehandlingPathParam, avklaringsbehovKode: String, vararg modules: RouteOpenAPIModule, noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams) -> Unit) {
+    ktorRoute.installerTilgangParamPlugin(AuthorizationParamPathConfig(behandlingPathParam = behandlingPathParam,
+        avklaringsbehovKode = avklaringsbehovKode,
+        operasjonerIKontekst = listOf(
+        Operasjon.SAKSBEHANDLE)), null)
+
+    @Suppress("UnauthorizedGet")
+    get<TParams, TResponse>(*modules, tilgangkontrollertTag) { params -> body(params) }
+}
+
 inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : Any> NormalOpenAPIRoute.authorizedPut(
     routeConfig: AuthorizationRouteConfig,
     auditLogConfig: AuditLogConfig? = null,

@@ -141,9 +141,15 @@ inline fun buildTilgangPlugin(
             val input = parse(call)
             val harTilgang = TilgangService.harTilgang(input, call, token)
 
-            if (!harTilgang) {
+            if (!harTilgang.tilgang) {
                 call.respondWithError(IkkeTillattException("Ingen tilgang"))
                 return@on
+            }
+
+            if (harTilgang.tilgangIKontekst?.containsKey(Operasjon.SAKSBEHANDLE) == true) {
+                call.attributes.put(kanSaksbehandleKey,
+                    harTilgang.tilgangIKontekst!![Operasjon.SAKSBEHANDLE].toString()
+                )
             }
 
             if (auditLogConfig != null && !token.isClientCredentials()) {

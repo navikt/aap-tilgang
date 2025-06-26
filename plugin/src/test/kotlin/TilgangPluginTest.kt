@@ -227,6 +227,19 @@ class TilgangPluginTest {
     }
 
     @Test
+    fun `get route for grunnlag setter tilgang til operasjon som attributt`() {
+        val referanse = UUID.randomUUID()
+        fakes.gittTilgangTilBehandling(referanse, true)
+        fakes.gittTilgangTilBehandlingIKontekst(referanse, mutableMapOf(Operasjon.SAKSBEHANDLE to true))
+        val res = clientForOBO.get<Boolean>(
+            URI.create("http://localhost:8082/")
+                .resolve("testApi/getGrunnlag/$referanse"),
+            GetRequest(currentToken = generateToken(isApp = false))
+        )
+        assertThat(res).isTrue()
+    }
+
+    @Test
     fun `get route som støtter on-behalf-of og client-credentials gir tilgang med on-behalf-of token og client-credentials token`() {
         val randomUuid = UUID.randomUUID()
         fakes.gittTilgangTilSak(randomUuid.toString(), true)

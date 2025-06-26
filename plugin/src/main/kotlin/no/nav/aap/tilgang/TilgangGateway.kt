@@ -18,7 +18,7 @@ object TilgangGateway {
         tokenProvider = OnBehalfOfTokenProvider,
     )
 
-    fun harTilgangTilSak(body: SakTilgangRequest, currentToken: OidcToken): Boolean {
+    fun harTilgangTilSak(body: SakTilgangRequest, currentToken: OidcToken): TilgangResponse {
         val httpRequest = PostRequest(
             body = body,
             currentToken = currentToken
@@ -29,10 +29,10 @@ object TilgangGateway {
                 request = httpRequest
             )
         )
-        return respons.tilgang
+        return respons
     }
 
-    fun harTilgangTilBehandling(body: BehandlingTilgangRequest, currentToken: OidcToken): Boolean {
+    fun harTilgangTilBehandling(body: BehandlingTilgangRequest, currentToken: OidcToken): TilgangResponse {
         val httpRequest = PostRequest(
             body = body,
             currentToken = currentToken
@@ -43,13 +43,13 @@ object TilgangGateway {
                 request = httpRequest
             )
         )
-        return respons.tilgang
+        return respons
     }
 
     fun harTilgangTilJournalpost(
         body: JournalpostTilgangRequest,
         currentToken: OidcToken
-    ): Boolean {
+    ): TilgangResponse {
         val httpRequest = PostRequest(
             body = body,
             currentToken = currentToken
@@ -60,10 +60,10 @@ object TilgangGateway {
                 request = httpRequest
             )
         )
-        return respons.tilgang
+        return respons
     }
 
-    fun harTilgangTilPerson(body: PersonTilgangRequest, currentToken: OidcToken): Boolean {
+    fun harTilgangTilPerson(body: PersonTilgangRequest, currentToken: OidcToken): TilgangResponse {
         val httpRequest = PostRequest(
             body = body,
             currentToken = currentToken
@@ -74,6 +74,6 @@ object TilgangGateway {
                 request = httpRequest
             )
         )
-        return respons.tilgang
+        return respons
     }
 }
