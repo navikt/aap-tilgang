@@ -38,6 +38,7 @@ open class SkjermingClient(
         prometheus.cacheMiss(SKJERMING_PREFIX).increment()
 
         val url = baseUrl.resolve("/skjermetBulk")
+        // TODO: Identer på barn må hentes fra PDL
         val alleRelaterteSøkerIdenter = (identer.søker + identer.barn).distinct()
 
         val response: Map<String, Boolean> =

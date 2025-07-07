@@ -14,6 +14,10 @@ internal data class PdlRequest(val query: String, val variables: Variables) {
             query = GEOGRAFISK_TILKNYTNING_QUERY.asQuery(),
             variables = Variables(ident = ident)
         )
+        fun hentBarnForPerson(personidenter: List<String>) = PdlRequest(
+            query = BARN_RELASJON_QUERY.asQuery(),
+            variables = Variables(identer = personidenter),
+        )
     }
 }
 
@@ -43,4 +47,18 @@ val GEOGRAFISK_TILKNYTNING_QUERY = """
             gtLand
         }
 }
+""".trimIndent()
+
+val BARN_RELASJON_QUERY = """
+    query($identer: ID!) {
+        hentPersonBolk(identer: $identer) {
+            ident,
+            person {
+                forelderBarnRelasjon {
+                    relatertPersonsIdent
+                    relatertPersonsRolle
+                }
+            }
+        }
+    }
 """.trimIndent()

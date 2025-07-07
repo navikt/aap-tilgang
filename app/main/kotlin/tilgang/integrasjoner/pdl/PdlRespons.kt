@@ -21,15 +21,21 @@ internal data class PdlData(
     val hentPersonBolk: List<HentPersonBolkResult>?
 )
 
-internal data class HentPersonBolkResult(
+data class HentPersonBolkResult(
     val ident: String,
     val person: PdlPerson?,
     val code: String,
 )
 
-internal data class PdlPerson(
+data class PdlPerson(
     val adressebeskyttelse: List<Adressebeskyttelse>?,
-    val code: Code?     //Denne er påkrevd ved hentPersonBolk
+    val code: Code?,     // Denne er påkrevd ved hentPersonBolk
+    val forelderBarnRelasjon: List<PdlForelderBarnRelasjon>?,
+)
+
+data class PdlForelderBarnRelasjon(
+    val relatertPersonsIdent: String,
+    val relatertPersonsRolle: PdlRelatertPersonsRolleType,
 )
 
 data class HentGeografiskTilknytningResult(
@@ -39,11 +45,15 @@ data class HentGeografiskTilknytningResult(
     val gtLand: String?
 )
 
+enum class PdlRelatertPersonsRolleType {
+    FAR, MOR, BARN, MEDMOR
+}
+
 enum class PdlGeoType {
     BYDEL, KOMMUNE, UDEFINERT, UTLAND
 }
 
-internal enum class Code {
+enum class Code {
     ok, not_found, bad_request //TODO: add more
 }
 
@@ -54,7 +64,7 @@ internal data class PdlVegadresse(
     val postnummer: String,
 )
 
-internal data class Adressebeskyttelse(
+data class Adressebeskyttelse(
     val gradering: Gradering
 )
 

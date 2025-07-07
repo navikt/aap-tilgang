@@ -41,13 +41,14 @@ class AdressebeskyttelseInputGenerator(
 ) :
     InputGenerator<AdressebeskyttelseInput> {
     override fun generer(input: RegelInput): AdressebeskyttelseInput {
-        val personer = requireNotNull(
+        val søkerFraPdl = requireNotNull(
             pdlService.hentPersonBolk(
-                input.søkerIdenter.søker.union(input.søkerIdenter.barn).toList(),
+                input.søkerIdenter.søker,
                 input.callId
             )
         )
+        val barnFraPdl = pdlService.hentBarnForPerson(input.søkerIdenter.søker, input.callId) ?: emptyList()
         val roller = adressebeskyttelseService.hentAdressebeskyttelseRoller(input.currentToken, input.ansattIdent)
-        return AdressebeskyttelseInput(roller, personer)
+        return AdressebeskyttelseInput(roller, søkerFraPdl + barnFraPdl)
     }
 }

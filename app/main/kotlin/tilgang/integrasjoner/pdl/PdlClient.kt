@@ -18,8 +18,8 @@ import java.net.URI
 
 interface IPdlGraphQLClient {
     fun hentPersonBolk(personidenter: List<String>, callId: String): List<PersonResultat>?
-
     fun hentGeografiskTilknytning(ident: String, callId: String): HentGeografiskTilknytningResult?
+    fun hentBarnForPerson(personidenter: List<String>, callId: String): List<PersonResultat>?
 }
 
 class PdlGraphQLClient(
@@ -94,8 +94,43 @@ class PdlGraphQLClient(
         return requireNotNull(httpClient.post(uri = baseUrl, request))
     }
 
+    override fun hentBarnForPerson(personidenter: List<String>, callId: String): List<PersonResultat>? {
+        val hentBarnResult: List<String> = personidenter.filter {
+            redis.exists(Key(BARN_PREFIX, it))
+        }.map {
+            redis[Key(BARN_PREFIX, it)]!!.deserialize()
+        }
+        prometheus.cacheHit(BARN_PREFIX).increment(hentBarnResult.size.toDouble())
+
+        val manglendePersonidenter = personidenter.filter {
+            !redis.exists(Key(BARN_PREFIX, it))
+        }
+        if (manglendePersonidenter.isEmpty()) {
+            return hentPersonBolk(hentBarnResult, callId)
+        }
+
+        prometheus.cacheMiss(BARN_PREFIX).increment(manglendePersonidenter.size.toDouble())
+
+
+        val result = query(PdlRequest.hentBarnForPerson(manglendePersonidenter), callId)
+        val pdlPersoner = result.data?.hentPersonBolk?.map { it.person }
+
+        val foreldreBarnRelasjonerForPerson = pdlPersoner?.flatMap { it?.forelderBarnRelasjon ?: emptyList() }
+        val manglendeBarnIdenter = foreldreBarnRelasjonerForPerson?.filter { it.relatertPersonsRolle == PdlRelatertPersonsRolleType.BARN }?.map { it.relatertPersonsIdent } ?: emptyList()
+        val barnIdenter = hentBarnResult + manglendeBarnIdenter
+        manglendePersonidenter.forEach {
+            redis.set(Key(BARN_PREFIX, it), barnIdenter.serialize(), 3600)
+        }
+
+        if (barnIdenter.isEmpty()) {
+            return emptyList()
+        }
+        return hentPersonBolk(barnIdenter.distinct(), callId)
+    }
+
     companion object {
         private const val PERSON_BOLK_PREFIX = "personBolk"
+        private const val BARN_PREFIX = "barn"
         private const val GEO_PREFIX = "geografiskTilknytning"
         private const val BEHANDLINGSNUMMER_AAP_SAKSBEHANDLING = "B287"
     }
