@@ -9,7 +9,8 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import tilgang.AZURE_JWKS
 import tilgang.AzureTokenGen
-import tilgang.ErrorRespons
+
+data class ErrorRespons(val message: String?)
 
 internal fun Application.azureFake() {
     install(ContentNegotiation) {

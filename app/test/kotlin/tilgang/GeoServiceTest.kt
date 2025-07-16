@@ -1,13 +1,15 @@
-package tilgang.service
+package tilgang
 
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
-import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
-import tilgang.AzureTokenGen
 import tilgang.integrasjoner.msgraph.Group
 import tilgang.integrasjoner.msgraph.IMsGraphClient
 import tilgang.integrasjoner.msgraph.MemberOf
-import java.util.*
+import tilgang.service.GeoRolle
+import tilgang.service.GeoService
+import tilgang.service.GeoType
+import java.util.UUID
 
 class GeoServiceTest {
     @Test
@@ -26,7 +28,7 @@ class GeoServiceTest {
 
         val token = AzureTokenGen("tilgangazure", "tilgang").generate()
 
-        assertThat(geoService.hentGeoRoller(OidcToken(token), "xxx")).containsExactlyInAnyOrder(
+        Assertions.assertThat(geoService.hentGeoRoller(OidcToken(token), "xxx")).containsExactlyInAnyOrder(
             GeoRolle(
                 GeoType.NASJONAL,
                 kode = null

@@ -1,6 +1,7 @@
 package tilgang.routes
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
+import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.response.respondWithStatus
@@ -89,16 +90,24 @@ fun NormalOpenAPIRoute.tilgang(
         }
         route("/test/tilgangsmaskinen") {
             post<Unit, TilgangResponse, TilgangsmaskinRequest> { _, req ->
-                val harTilgang =  tilgangService.harTilgangFraTilgangsmaskin(req.brukerIdenter, token())
+                val harTilgang =
+                    tilgangService.harTilgangFraTilgangsmaskin(req.brukerIdenter, token())
                 respond(TilgangResponse(harTilgang))
             }
         }
 
         route("/person") {
             post<Unit, TilgangResponse, PersonTilgangRequest> { _, req ->
-                val harTilgang =  tilgangService.harTilgangTilPerson(req.personIdent, token())
+                val harTilgang = tilgangService.harTilgangTilPerson(req.personIdent, token())
                 respond(TilgangResponse(harTilgang))
             }
+        }
+    }
+    route("/roller") {
+        get<Unit, List<Rolle>> {
+            val roller = parseRoller(rolesWithGroupIds = roles, roller())
+
+            respond(roller)
         }
     }
 }

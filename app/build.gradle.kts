@@ -9,6 +9,7 @@ val ktorVersion = "3.2.1"
 val behandlingsflytVersjon = "0.0.371"
 val postmottakVersjon = "0.0.92"
 val komponenterVersjon = "1.0.282"
+val mockOAuth2ServerVersion = "2.2.1"
 
 application {
     mainClass.set("tilgang.AppKt")
@@ -41,6 +42,7 @@ dependencies {
     testImplementation("com.nimbusds:nimbus-jose-jwt:10.3.1")
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.13.3")
     testImplementation("org.assertj:assertj-core:3.27.3")
+    testImplementation("no.nav.security:mock-oauth2-server:${mockOAuth2ServerVersion}")
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
     testImplementation("com.redis:testcontainers-redis:2.2.4")
     constraints {

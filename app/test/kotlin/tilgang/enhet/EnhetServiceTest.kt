@@ -26,12 +26,11 @@ class EnhetServiceTest {
         }
         val service = EnhetService(graphClient)
 
-        runBlocking {
-            val token = AzureTokenGen("tilgangazure", "tilgang").generate()
-            val res = service.hentEnhetRoller(OidcToken(token), "")
-            assertThat(res).isNotEmpty()
-            assertThat(res).hasSize(1)
-            assertThat(res[0].kode).isEqualTo("12345")
-        }
+        val token = AzureTokenGen("tilgangazure", "tilgang").generate()
+        val res = service.hentEnhetRoller(OidcToken(token), "")
+        assertThat(res).isNotEmpty()
+        assertThat(res).hasSize(1)
+        assertThat(res[0].kode).isEqualTo("12345")
+
     }
 }
