@@ -40,7 +40,7 @@ dependencies {
 
     testImplementation(kotlin("test"))
     testImplementation("com.nimbusds:nimbus-jose-jwt:10.4")
-    testImplementation("org.junit.jupiter:junit-jupiter-params:5.13.3")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:5.13.4")
     testImplementation("org.assertj:assertj-core:3.27.3")
     testImplementation("no.nav.security:mock-oauth2-server:${mockOAuth2ServerVersion}")
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
