@@ -1,14 +1,14 @@
 plugins {
     id("aap-tilgang.conventions")
     kotlin("jvm")
-    id("io.ktor.plugin") version "3.2.2"
+    id("io.ktor.plugin") version "3.2.3"
     application
 }
 
-val ktorVersion = "3.2.2"
+val ktorVersion = "3.2.3"
 val behandlingsflytVersjon = "0.0.403"
-val postmottakVersjon = "0.0.111"
-val komponenterVersjon = "1.0.295"
+val postmottakVersjon = "0.0.114"
+val komponenterVersjon = "1.0.308"
 val mockOAuth2ServerVersion = "2.2.1"
 
 application {
@@ -26,7 +26,7 @@ dependencies {
     implementation("io.ktor:ktor-server-netty:$ktorVersion")
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
 
-    implementation("no.nav:ktor-openapi-generator:1.0.117")
+    implementation("no.nav:ktor-openapi-generator:1.0.120")
     api("no.nav.aap.kelvin:server:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:infrastructure:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:httpklient:$komponenterVersjon")
@@ -35,12 +35,12 @@ dependencies {
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.19.2")
     implementation("ch.qos.logback:logback-classic:1.5.18")
     implementation("net.logstash.logback:logstash-logback-encoder:8.1")
-    implementation("com.nimbusds:nimbus-jose-jwt:10.4")
+    implementation("com.nimbusds:nimbus-jose-jwt:10.4.1")
     implementation("redis.clients:jedis:6.0.0")
 
     testImplementation(kotlin("test"))
-    testImplementation("com.nimbusds:nimbus-jose-jwt:10.4")
-    testImplementation("org.junit.jupiter:junit-jupiter-params:5.13.3")
+    testImplementation("com.nimbusds:nimbus-jose-jwt:10.4.1")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:5.13.4")
     testImplementation("org.assertj:assertj-core:3.27.3")
     testImplementation("no.nav.security:mock-oauth2-server:${mockOAuth2ServerVersion}")
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")

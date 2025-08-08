@@ -1,6 +1,6 @@
-val ktorVersion = "3.2.2"
-val komponenterVersjon = "1.0.290"
-val junitVersion = "5.13.3"
+val ktorVersion = "3.2.3"
+val komponenterVersjon = "1.0.308"
+val junitVersion = "5.13.4"
 
 plugins {
     id("aap-tilgang.conventions")
@@ -48,10 +48,10 @@ dependencies {
 
     implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
     implementation("ch.qos.logback:logback-classic:1.5.18")
-    implementation("no.nav:ktor-openapi-generator:1.0.117")
+    implementation("no.nav:ktor-openapi-generator:1.0.120")
     implementation("io.ktor:ktor-server-core:$ktorVersion")
 
-    implementation("com.nimbusds:nimbus-jose-jwt:10.4")
+    implementation("com.nimbusds:nimbus-jose-jwt:10.4.1")
 
     implementation("io.ktor:ktor-server-auth:$ktorVersion")
     implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
