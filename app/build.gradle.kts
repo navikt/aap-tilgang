@@ -46,7 +46,7 @@ dependencies {
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
     testImplementation("com.redis:testcontainers-redis:2.2.4")
     constraints {
-        implementation("org.apache.commons:commons-compress:1.27.1") {
+        implementation("org.apache.commons:commons-compress:1.28.0") {
             because("https://github.com/advisories/GHSA-4g9r-vxhx-9pgx")
         }
     }
