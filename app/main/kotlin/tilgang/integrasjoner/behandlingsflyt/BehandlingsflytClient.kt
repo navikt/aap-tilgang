@@ -72,4 +72,8 @@ class BehandlingsflytClient(
     }
 }
 
-data class IdenterRespons(val søker: List<String>, val barn: List<String>)
+data class IdenterRespons(val søker: List<String>, val barn: List<String>) {
+    init {
+        require(søker.isNotEmpty()) { "Søker må ha minst en ident" }
+    }
+}
