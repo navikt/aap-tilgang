@@ -1,4 +1,4 @@
-package tilgang.integrasjoner.nom;
+package tilgang.integrasjoner.nom
 
 import tilgang.graphql.GraphQLError
 
@@ -13,5 +13,5 @@ internal data class NOMData(
 
 internal data class Ressurs(
     val navident: String,
-    val personident: String
+    val personident: String?
 )
