@@ -59,7 +59,7 @@ class TilgangPluginTest {
             return OidcToken(azureTokenGen.generate(isApp, roles))
         }
 
-        data class Journalpostinfo(@PathParam("behandlingReferanse") val behandlingReferanse: String) :
+        data class Journalpostinfo(@param:PathParam("behandlingReferanse") val behandlingReferanse: String) :
             Journalpostreferanse {
             override fun journalpostIdResolverInput(): String {
                 return behandlingReferanse
@@ -72,7 +72,8 @@ class TilgangPluginTest {
 
         class IngenReferanse(val noe: String)
 
-        val autorisertEksempelAppServer = embeddedServer(Netty, port = 8082) { autorisertEksempelApp() }
+        val autorisertEksempelAppServer =
+            embeddedServer(Netty, port = 8082) { autorisertEksempelApp() }
 
         @JvmStatic
         @BeforeAll
@@ -99,11 +100,11 @@ class TilgangPluginTest {
         }
 
         data class TestReferanse(
-            @PathParam(description = "saksnummer") val saksnummer: UUID = UUID.randomUUID()
+            @param:PathParam(description = "saksnummer") val saksnummer: UUID = UUID.randomUUID()
         )
 
         data class PersonIdentReferanse(
-            @PathParam(description = "personIdent") val personIdent: String
+            @param:PathParam(description = "personIdent") val personIdent: String
         )
     }
 
@@ -127,7 +128,14 @@ class TilgangPluginTest {
         val res = clientUtenTokenProvider.get<IngenReferanse>(
             URI.create("http://localhost:8082/")
                 .resolve("kun-roller"),
-            GetRequest(additionalHeaders = listOf(Header("Authorization", "Bearer ${token.token()}")))
+            GetRequest(
+                additionalHeaders = listOf(
+                    Header(
+                        "Authorization",
+                        "Bearer ${token.token()}"
+                    )
+                )
+            )
         )
 
         assertThat(res?.noe).isEqualTo("test")
@@ -140,7 +148,14 @@ class TilgangPluginTest {
             clientUtenTokenProvider.get<IngenReferanse>(
                 URI.create("http://localhost:8082/")
                     .resolve("kun-roller"),
-                GetRequest(additionalHeaders = listOf(Header("Authorization", "Bearer ${token.token()}")))
+                GetRequest(
+                    additionalHeaders = listOf(
+                        Header(
+                            "Authorization",
+                            "Bearer ${token.token()}"
+                        )
+                    )
+                )
             )
         }
     }
@@ -165,7 +180,14 @@ class TilgangPluginTest {
         val res = clientUtenTokenProvider.get<Saksinfo>(
             URI.create("http://localhost:8082/")
                 .resolve("testApi/authorizedGet/$randomUuid/client-credentials-application-role"),
-            GetRequest(additionalHeaders = listOf(Header("Authorization", "Bearer ${token.token()}")))
+            GetRequest(
+                additionalHeaders = listOf(
+                    Header(
+                        "Authorization",
+                        "Bearer ${token.token()}"
+                    )
+                )
+            )
         )
 
         assertThat(res?.saksnummer).isEqualTo(randomUuid)
@@ -179,7 +201,14 @@ class TilgangPluginTest {
             clientUtenTokenProvider.get<Saksinfo>(
                 URI.create("http://localhost:8082/")
                     .resolve("testApi/authorizedGet/$randomUuid/client-credentials-application-role"),
-                GetRequest(additionalHeaders = listOf(Header("Authorization", "Bearer ${token.token()}")))
+                GetRequest(
+                    additionalHeaders = listOf(
+                        Header(
+                            "Authorization",
+                            "Bearer ${token.token()}"
+                        )
+                    )
+                )
             )
         }
     }
@@ -230,7 +259,10 @@ class TilgangPluginTest {
     fun `get route for grunnlag setter tilgang til operasjon som attributt`() {
         val referanse = UUID.randomUUID()
         fakes.gittTilgangTilBehandling(referanse, true)
-        fakes.gittTilgangTilBehandlingIKontekst(referanse, mutableMapOf(Operasjon.SAKSBEHANDLE to true))
+        fakes.gittTilgangTilBehandlingIKontekst(
+            referanse,
+            mutableMapOf(Operasjon.SAKSBEHANDLE to true)
+        )
         val res = clientForOBO.get<Boolean>(
             URI.create("http://localhost:8082/")
                 .resolve("testApi/getGrunnlag/$referanse"),
@@ -253,7 +285,14 @@ class TilgangPluginTest {
         val res2 = clientUtenTokenProvider.get<Saksinfo>(
             URI.create("http://localhost:8082/")
                 .resolve("testApi/authorizedGet/$randomUuid/client-credentials-and-on-behalf-of"),
-            GetRequest(additionalHeaders = listOf(Header("Authorization", "Bearer ${token.token()}")))
+            GetRequest(
+                additionalHeaders = listOf(
+                    Header(
+                        "Authorization",
+                        "Bearer ${token.token()}"
+                    )
+                )
+            )
         )
 
         assertThat(res1?.saksnummer).isEqualTo(randomUuid)
@@ -282,7 +321,10 @@ class TilgangPluginTest {
         val res = clientForOBO.post<_, Behandlinginfo>(
             URI.create("http://localhost:8082/")
                 .resolve("testApi/authorizedPost/on-behalf-of/behandlinginfo"),
-            PostRequest(Behandlinginfo(enAnnenReferanse.toString()), currentToken = generateToken(isApp = false))
+            PostRequest(
+                Behandlinginfo(enAnnenReferanse.toString()),
+                currentToken = generateToken(isApp = false)
+            )
         )
 
         assertThat(res?.enAnnenReferanse).isEqualTo(enAnnenReferanse.toString())
@@ -474,7 +516,14 @@ class TilgangPluginTest {
             clientUtenTokenProvider.get<Saksinfo>(
                 URI.create("http://localhost:8082/")
                     .resolve("testApi/authorizedGet/$randomUuid/application-role-machine-to-machine"),
-                GetRequest(additionalHeaders = listOf(Header("Authorization", "Bearer ${token.token()}")))
+                GetRequest(
+                    additionalHeaders = listOf(
+                        Header(
+                            "Authorization",
+                            "Bearer ${token.token()}"
+                        )
+                    )
+                )
             )
         }
     }
@@ -488,7 +537,8 @@ class TilgangPluginTest {
                     .resolve("testApi/authorizedGet/$randomUuid/on-behalf-of"),
                 GetRequest(currentToken = generateToken(isApp = false))
             )
-        }.isInstanceOf(ManglerTilgangException::class.java).extracting("body").isEqualTo("{\"message\":\"Ingen tilgang\",\"code\":\"UKJENT_FEIL\"}")
+        }.isInstanceOf(ManglerTilgangException::class.java).extracting("body")
+            .isEqualTo("{\"message\":\"Ingen tilgang\",\"code\":\"UKJENT_FEIL\"}")
     }
 }
 
