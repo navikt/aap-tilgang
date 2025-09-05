@@ -35,11 +35,11 @@ dependencies {
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.20.0")
     implementation("ch.qos.logback:logback-classic:1.5.18")
     implementation("net.logstash.logback:logstash-logback-encoder:8.1")
-    implementation("com.nimbusds:nimbus-jose-jwt:10.4.2")
+    implementation("com.nimbusds:nimbus-jose-jwt:10.5")
     implementation("redis.clients:jedis:6.2.0")
 
     testImplementation(kotlin("test"))
-    testImplementation("com.nimbusds:nimbus-jose-jwt:10.4.2")
+    testImplementation("com.nimbusds:nimbus-jose-jwt:10.5")
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.13.4")
     testImplementation("org.assertj:assertj-core:3.27.4")
     testImplementation("no.nav.security:mock-oauth2-server:${mockOAuth2ServerVersion}")
