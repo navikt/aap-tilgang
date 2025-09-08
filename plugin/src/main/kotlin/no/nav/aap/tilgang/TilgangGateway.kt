@@ -17,7 +17,7 @@ object TilgangGateway {
 
     private val client = RestClient.withDefaultResponseHandler(
         config = config,
-        tokenProvider = (if (Miljø.erProd()) OnBehalfOfTokenProvider else TexasOnBehalfOfTokenProvider()),
+        tokenProvider = (if (Miljø.erProd()) OnBehalfOfTokenProvider else TexasOnBehalfOfTokenProvider(identityProvider = "azuread")),
     )
 
     fun harTilgangTilSak(body: SakTilgangRequest, currentToken: OidcToken): TilgangResponse {
