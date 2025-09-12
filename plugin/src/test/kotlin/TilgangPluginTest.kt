@@ -8,19 +8,15 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.request.*
-import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
-import no.nav.aap.komponenter.httpklient.httpclient.Header
-import no.nav.aap.komponenter.httpklient.httpclient.RestClient
+import no.nav.aap.komponenter.httpklient.httpclient.*
 import no.nav.aap.komponenter.httpklient.httpclient.error.DefaultResponseHandler
 import no.nav.aap.komponenter.httpklient.httpclient.error.ManglerTilgangException
-import no.nav.aap.komponenter.httpklient.httpclient.get
-import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.NoTokenTokenProvider
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureOBOTokenProvider
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.OnBehalfOfTokenProvider
 import no.nav.aap.tilgang.*
 import no.nav.aap.tilgang.plugin.kontrakt.Journalpostreferanse
 import org.assertj.core.api.Assertions.assertThat
@@ -47,7 +43,7 @@ class TilgangPluginTest {
         )
         private val clientForOBO = RestClient.withDefaultResponseHandler(
             config = ClientConfig(scope = "behandlingsflyt"),
-            tokenProvider = OnBehalfOfTokenProvider,
+            tokenProvider = AzureOBOTokenProvider(),
         )
         private val clientUtenTokenProvider = RestClient(
             config = ClientConfig(scope = "behandlingsflyt"),
