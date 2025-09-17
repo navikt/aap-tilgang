@@ -55,7 +55,7 @@ jobs:
           bump_each_commit_patch_pattern: ''
           major_pattern: "(MAJOR)" # If major bump, include this in the commit message
       - id: notes
-        if: ${{ steps.tag.outputs.changed == 'true' }}
+#        if: ${{ steps.tag.outputs.changed == 'true' }}
         run: |
           randomDelimiter=${RANDOM}
           text=$(git --no-pager log $(git describe --tags --abbrev=0)..HEAD --pretty=format:"%h %s" | sed ':a;N;$!ba;s/\n/\n\n/g')
@@ -64,11 +64,11 @@ jobs:
           echo '$randomDelimiter' >> $GITHUB_OUTPUT
       - run: |
           ./gradlew -Pversion=${{ steps.tag.outputs.version }} publish
-        if: ${{ steps.tag.outputs.changed == 'true' }}
+#        if: ${{ steps.tag.outputs.changed == 'true' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - uses: softprops/action-gh-release@v2
-        if: ${{ steps.tag.outputs.changed == 'true' }}
+#        if: ${{ steps.tag.outputs.changed == 'true' }}
         id: create_release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
