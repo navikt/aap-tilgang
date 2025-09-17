@@ -8,7 +8,7 @@ plugins {
 val ktorVersion = "3.2.3"
 val behandlingsflytVersjon = "0.0.432"
 val postmottakVersjon = "0.0.116"
-val komponenterVersjon = "1.0.347"
+val komponenterVersjon = "1.0.362"
 val mockOAuth2ServerVersion = "2.3.0"
 
 application {
