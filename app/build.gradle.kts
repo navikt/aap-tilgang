@@ -41,7 +41,7 @@ dependencies {
     testImplementation(kotlin("test"))
     testImplementation("com.nimbusds:nimbus-jose-jwt:10.5")
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.13.4")
-    testImplementation("org.assertj:assertj-core:3.27.4")
+    testImplementation("org.assertj:assertj-core:3.27.5")
     testImplementation("no.nav.security:mock-oauth2-server:${mockOAuth2ServerVersion}")
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
     testImplementation("com.redis:testcontainers-redis:2.2.4")
