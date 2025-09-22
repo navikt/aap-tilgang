@@ -38,11 +38,10 @@ open class SkjermingClient(
         prometheus.cacheMiss(SKJERMING_PREFIX).increment()
 
         val url = baseUrl.resolve("/skjermetBulk")
-        // TODO: skal bare sjekke søkers aktive ident, historiske kan være feil
-        val alleSøkersIdenter = identer.søker.distinct()
+        val alleRelaterteSøkerIdenter = (identer.søker + identer.barn).distinct()
 
         val response: Map<String, Boolean> =
-            httpClient.post(url, PostRequest(SkjermetDataBulkRequestDTO(alleSøkersIdenter)))
+            httpClient.post(url, PostRequest(SkjermetDataBulkRequestDTO(alleRelaterteSøkerIdenter)))
                 ?: throw SkjermingException("Feil ved henting av skjerming")
 
         val eksistererSkjermet = response.values.any { identIsSkjermet -> identIsSkjermet }
