@@ -71,6 +71,6 @@ dependencies {
     testImplementation("no.nav.aap.kelvin:infrastructure:$komponenterVersjon")
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
-    testImplementation("org.assertj:assertj-core:3.27.4")
+    testImplementation("org.assertj:assertj-core:3.27.6")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
