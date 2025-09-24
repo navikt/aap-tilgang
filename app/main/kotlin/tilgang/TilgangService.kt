@@ -82,7 +82,7 @@ class TilgangService(
     ): Boolean {
         log.info("Sjekker tilgang til journalpost ${req.journalpostId}")
         val journalpostInfo: SafJournalpost = safClient.hentJournalpostInfo(req.journalpostId, callId)
-        val identer = finnIdenterForJournalpost(journalpostInfo, token)
+        val identer = finnIdenterForJournalpost(journalpostInfo)
 
         val avklaringsbehov =
             if (req.avklaringsbehovKode != null) PostmottakDefinisjon.forKode(req.avklaringsbehovKode!!) else null
@@ -100,9 +100,10 @@ class TilgangService(
         return regelService.vurderTilgang(regelInput)[req.operasjon] == true
     }
 
-    private fun finnIdenterForJournalpost(journalpost: SafJournalpost, token: OidcToken): IdenterRespons {
+    private fun finnIdenterForJournalpost(journalpost: SafJournalpost): IdenterRespons {
         val saksnummer = journalpost.sak?.fagsakId
-        if(saksnummer != null) {
+        log.info("Finner identer på journalpost med saksnummer $saksnummer.")
+        if (saksnummer != null) {
             val identer = behandlingsflytClient.hentIdenterForSak(saksnummer)
             require(identer.søker.isNotEmpty()) { "Fant ingen søkeridenter for sak $saksnummer" }
             return identer
