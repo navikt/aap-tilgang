@@ -29,9 +29,7 @@ jobs:
 
   publish-plugin:
     needs: gradle
-    concurrency:
-      group: kontrakt
-      cancel-in-progress: true
+    concurrency: kontrakt
     permissions:
       contents: write
       packages: write
@@ -86,6 +84,7 @@ jobs:
       contents: read
       id-token: write
     needs: gradle
+    concurrency: deploy-dev
     uses: navikt/aap-workflows/.github/workflows/deploy.yml@main
     secrets: inherit
     with:
@@ -102,6 +101,7 @@ jobs:
       id-token: write
     uses: navikt/aap-workflows/.github/workflows/deploy.yml@main
     secrets: inherit
+    concurrency: deploy-prod
     with:
       cluster: prod-gcp
       vars: .nais/prod.yaml
