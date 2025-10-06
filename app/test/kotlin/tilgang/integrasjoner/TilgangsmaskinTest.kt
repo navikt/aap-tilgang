@@ -1,6 +1,7 @@
 package tilgang.integrasjoner
 
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import tilgang.AzureTokenGen
 import tilgang.fakes.Fakes
@@ -10,7 +11,15 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class TilgangsmaskinTest {
-    val fakes = Fakes()
+    companion object {
+        private val FAKES = Fakes()
+
+        @AfterAll
+        @JvmStatic
+        fun afterall() {
+            FAKES.close()
+        }
+    }
 
     @Test
     fun `Kan parse harTilgangTilPersonKjerne`() {
