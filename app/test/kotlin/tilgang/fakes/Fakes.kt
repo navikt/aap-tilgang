@@ -11,6 +11,7 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
     private val log: Logger = LoggerFactory.getLogger(Fakes::class.java)
     private val azure = FakeServer(azurePort) { azureFake() }
     private val pdl = FakeServer(module = { pdlFake() })
+    private val tilgangsmaskin = FakeServer(module = { tilgangsmaskinFake() })
     val redis = Redis(InitTestRedis.uri)
     val prometheues = SimpleMeterRegistry()
 
@@ -23,8 +24,13 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
         System.setProperty("azure.openid.config.jwks.uri", "http://localhost:${azure.port()}/jwks")
         System.setProperty("azure.openid.config.issuer", "tilgang")
 
+        // PDL
         System.setProperty("pdl.base.url", "http://localhost:${pdl.port()}/graphql")
         System.setProperty("pdl.scope", "pdl")
+
+        // Tilgangsmaskinen
+        System.setProperty("integrasjon.tilgangsmaskin.url", "http://localhost:${tilgangsmaskin.port()}/api/v1/kjerne")
+        System.setProperty("integrasjon.tilgangsmaskin.scope", "tilgangsmaskin")
         
         // TODO: Lag fakes for disse
         System.setProperty("saf.base.url", "test")
@@ -37,8 +43,6 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
         System.setProperty("behandlingsflyt.base.url", "test")
         System.setProperty("ms.graph.scope", "msgraph")
         System.setProperty("ms.graph.base.url", "test")
-        System.setProperty("integrasjon.tilgangsmaskin.scope", "tilgangsmaskin")
-        System.setProperty("integrasjon.tilgangsmaskin.url", "tilgangsmaskin")
     }
 
     fun azurePort(): Int {
@@ -48,7 +52,7 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
     override fun close() {
         azure.stop()
         pdl.stop()
+        tilgangsmaskin.stop()
         redis.close()
     }
-
 }

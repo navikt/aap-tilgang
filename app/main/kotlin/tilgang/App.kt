@@ -66,10 +66,10 @@ fun Application.api(
     val skjermingClient = SkjermingClient(redis, prometheus)
     val skjermingService = SkjermingService(msGraph)
     val nomClient = NomClient(redis, prometheus)
-    val regelService = RegelService(
-        geoService, enhetService, pdl, skjermingClient, nomClient, skjermingService, AdressebeskyttelseService(msGraph)
-    )
     val tilgangsmaskinClient = TilgangsmaskinClient()
+    val regelService = RegelService(
+        geoService, enhetService, pdl, skjermingClient, nomClient, skjermingService, AdressebeskyttelseService(msGraph), tilgangsmaskinClient
+    )
     val tilgangService = TilgangService(saf, behandlingsflyt, regelService, tilgangsmaskinClient)
 
     install(StatusPages) {
