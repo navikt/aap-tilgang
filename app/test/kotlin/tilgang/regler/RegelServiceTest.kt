@@ -21,6 +21,7 @@ import tilgang.integrasjoner.pdl.IPdlGraphQLClient
 import tilgang.integrasjoner.pdl.PdlGeoType
 import tilgang.integrasjoner.pdl.PersonResultat
 import tilgang.integrasjoner.skjerming.SkjermingClient
+import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinClient
 import tilgang.service.AdressebeskyttelseService
 import tilgang.service.EnhetService
 import tilgang.service.GeoService
@@ -105,7 +106,8 @@ class RegelServiceTest {
             skjermingClient,
             nomClient,
             skjermingService,
-            AdressebeskyttelseService(graphClient)
+            AdressebeskyttelseService(graphClient),
+            TilgangsmaskinClient()
         )
 
         val token = AzureTokenGen("tilgangazure", "tilgang").generate()
