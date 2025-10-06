@@ -3,13 +3,15 @@ package tilgang.integrasjoner
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import org.junit.jupiter.api.Test
 import tilgang.AzureTokenGen
-import tilgang.fakes.WithFakes
+import tilgang.fakes.Fakes
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinAvvistGrunn
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinClient
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-class TilgangsmaskinTest : WithFakes {
+class TilgangsmaskinTest {
+    val fakes = Fakes()
+
     @Test
     fun `Kan parse harTilgangTilPersonKjerne`() {
         val token = AzureTokenGen("tilgangazure", "tilgang").generate()

@@ -17,6 +17,8 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
 
     init {
         Thread.currentThread().setUncaughtExceptionHandler { _, e -> log.error("Uhåndtert feil", e) }
+
+        Runtime.getRuntime().addShutdownHook(Thread { close() })
         // Azure
         System.setProperty("azure.openid.config.token.endpoint", "http://localhost:${azure.port()}/token")
         System.setProperty("azure.app.client.id", "tilgang")
