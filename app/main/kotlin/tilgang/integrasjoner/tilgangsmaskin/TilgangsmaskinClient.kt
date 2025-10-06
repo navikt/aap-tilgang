@@ -64,7 +64,7 @@ class TilgangsmaskinClient() : ITilgangsmaskinClient {
         val request = PostRequest(
             body = brukerIdent,
             currentToken = token,
-            contentType = ContentType.TEXT_PLAIN
+            contentType = ContentType.APPLICATION_JSON
         )
 
         return try {
