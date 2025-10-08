@@ -16,7 +16,6 @@ import tilgang.Role
 import tilgang.TilgangService
 import tilgang.auth.ident
 import tilgang.auth.roller
-import tilgang.integrasjoner.tilgangsmaskin.HarTilgangFraTilgangsmaskinen
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinRequest
 import tilgang.metrics.httpCallCounter
 import tilgang.metrics.nektetTilgangTeller
@@ -94,15 +93,6 @@ fun NormalOpenAPIRoute.tilgang(
                 val harTilgang =
                     tilgangService.harTilgangFraTilgangsmaskin(req.brukerIdenter, token())
                 respond(TilgangResponse(harTilgang))
-            }
-        }
-
-        // Midlertidig testing
-        route("/test/tilgangsmaskinhabiltest") {
-            post<Unit, HarTilgangFraTilgangsmaskinen, PersonTilgangRequest> { _, req ->
-                val harTilgang =
-                    tilgangService.harTilgangFraTilgangsmaskinKjerne(req.personIdent, token())
-                respond(harTilgang)
             }
         }
 

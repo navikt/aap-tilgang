@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory
 import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytClient
 import tilgang.integrasjoner.behandlingsflyt.IdenterRespons
 import tilgang.integrasjoner.tilgangsmaskin.BrukerOgRegeltype
-import tilgang.integrasjoner.tilgangsmaskin.HarTilgangFraTilgangsmaskinen
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinClient
 import tilgang.regler.RegelInput
 import tilgang.regler.RegelService
@@ -121,10 +120,5 @@ class TilgangService(
 
     fun harTilgangTilPerson(brukerIdent: String, token: OidcToken): Boolean {
         return tilgangsmaskinClient.harTilgangTilPerson(brukerIdent, token)
-    }
-
-    // Midlertidig testing
-    fun harTilgangFraTilgangsmaskinKjerne(brukerIdent: String, token: OidcToken): HarTilgangFraTilgangsmaskinen {
-        return tilgangsmaskinClient.harTilgangTilPersonKjerne(brukerIdent, token)
     }
 }
