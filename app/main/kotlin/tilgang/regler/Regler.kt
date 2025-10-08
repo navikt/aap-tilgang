@@ -27,33 +27,36 @@ class RegelService(
     private val reglerForOperasjon = mapOf(
         Operasjon.SE to listOf(
             RegelMedInputgenerator(LeseRolleRegel, RolleInputGenerator),
-            if (erProd()) {
+            RegelMedInputgenerator(EgenSakRegel, EgenSakInputGenerator(nomClient)),
+            /*if (erProd()) {
                 RegelMedInputgenerator(EgenSakRegel, EgenSakInputGenerator(nomClient))
             } else {
                 RegelMedInputgenerator(TilgangsmaskinKjerneRegel, TilgangsmaskinKjerneInputGenerator(tilgangsmaskinClient))
-            },
+            },*/
             RegelMedInputgenerator(AdressebeskyttelseRegel, AdressebeskyttelseInputGenerator(pdlClient, adressebeskyttelseService)),
             RegelMedInputgenerator(GeoRegel, GeoInputGenerator(geoService, pdlClient)),
             RegelMedInputgenerator(EgenAnsattRegel, EgenAnsattInputGenerator(skjermetClient, skjermingService))
         ),
         Operasjon.DRIFTE to listOf(
             RegelMedInputgenerator(DriftRolleRegel, RolleInputGenerator),
-            if (erProd()) {
+            RegelMedInputgenerator(EgenSakRegel, EgenSakInputGenerator(nomClient)),
+            /*if (erProd()) {
                 RegelMedInputgenerator(EgenSakRegel, EgenSakInputGenerator(nomClient))
             } else {
                 RegelMedInputgenerator(TilgangsmaskinKjerneRegel, TilgangsmaskinKjerneInputGenerator(tilgangsmaskinClient))
-            },
+            },*/
         ),
         Operasjon.DELEGERE to listOf(
             RegelMedInputgenerator(AvdelingslederRolleRegel, RolleInputGenerator),
         ),
         Operasjon.SAKSBEHANDLE to listOf(
             RegelMedInputgenerator(AvklaringsbehovRolleRegel, AvklaringsbehovInputGenerator),
-            if (erProd()) {
+            RegelMedInputgenerator(EgenSakRegel, EgenSakInputGenerator(nomClient)),
+            /*if (erProd()) {
                 RegelMedInputgenerator(EgenSakRegel, EgenSakInputGenerator(nomClient))
             } else {
                 RegelMedInputgenerator(TilgangsmaskinKjerneRegel, TilgangsmaskinKjerneInputGenerator(tilgangsmaskinClient))
-            },
+            },*/
             RegelMedInputgenerator(AdressebeskyttelseRegel, AdressebeskyttelseInputGenerator(pdlClient, adressebeskyttelseService)),
             RegelMedInputgenerator(GeoRegel, GeoInputGenerator(geoService, pdlClient)),
             // TODO: Enhetsregelen gir kun mening hvis saker er knyttet mot enhet, noe de p.d. ikke er
