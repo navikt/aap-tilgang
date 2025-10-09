@@ -22,7 +22,7 @@ class TilgangsmaskinKjerneInputGenerator(private val tilgangsmaskinClient: ITilg
     InputGenerator<TilgangsmaskinKjerneInput> {
     override fun generer(input: RegelInput): TilgangsmaskinKjerneInput {
         val tilgangsmaskinResponse =
-            tilgangsmaskinClient.harTilgangTilPersonKjerne(input.ansattIdent, input.currentToken)
+            tilgangsmaskinClient.harTilgangTilPersonKjerne(input.søkerIdenter.søker.first(), input.currentToken)
         return TilgangsmaskinKjerneInput(tilgangsmaskinResponse)
     }
 }
