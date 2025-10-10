@@ -2,7 +2,7 @@ package tilgang.integrasjoner.tilgangsmaskin
 
 data class HarTilgangFraTilgangsmaskinen(
     val harTilgang: Boolean,
-    val TilgangsmaskinAvvistResponse: TilgangsmaskinAvvistResponse? = null,
+    val tilgangsmaskinAvvistResponse: TilgangsmaskinAvvistResponse? = null,
 )
 
 enum class TilgangsmaskinAvvistGrunn{

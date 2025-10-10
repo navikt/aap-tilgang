@@ -33,6 +33,6 @@ class TilgangsmaskinTest {
 
         assertTrue(harTilgangResponse.harTilgang)
         assertFalse(harIkkeTilgangResponse.harTilgang)
-        assertTrue(harIkkeTilgangResponse.TilgangsmaskinAvvistResponse?.title == TilgangsmaskinAvvistGrunn.AVVIST_HABILITET.toString())
+        assertTrue(harIkkeTilgangResponse.tilgangsmaskinAvvistResponse?.title == TilgangsmaskinAvvistGrunn.AVVIST_HABILITET.toString())
     }
 }

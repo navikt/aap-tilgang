@@ -12,7 +12,7 @@ import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinAvvistGrunn
 data object TilgangsmaskinKjerneRegel : Regel<TilgangsmaskinKjerneInput> {
     override fun vurder(input: TilgangsmaskinKjerneInput): Boolean {
         val avvistMedHabilitetsgrunn =
-            input.tilgangsmaskinResponse.TilgangsmaskinAvvistResponse?.title == TilgangsmaskinAvvistGrunn.AVVIST_HABILITET.toString()
+            input.tilgangsmaskinResponse.tilgangsmaskinAvvistResponse?.title == TilgangsmaskinAvvistGrunn.AVVIST_HABILITET.toString()
 
         return input.tilgangsmaskinResponse.harTilgang || !avvistMedHabilitetsgrunn
     }
