@@ -27,8 +27,9 @@ class TilgangsmaskinTest {
     fun `Kan parse harTilgangTilPersonKjerne`() {
         val token = AzureTokenGen("tilgangazure", "tilgang").generate()
         val prometheus = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
-        val harTilgangResponse = TilgangsmaskinClient(prometheus).harTilgangTilPersonKjerne("123", OidcToken(token))
-        val harIkkeTilgangResponse = TilgangsmaskinClient(prometheus).harTilgangTilPersonKjerne("456", OidcToken(token))
+        val client = TilgangsmaskinClient(FAKES.redis, prometheus)
+        val harTilgangResponse = client.harTilgangTilPersonKjerne("123", OidcToken(token))
+        val harIkkeTilgangResponse = client.harTilgangTilPersonKjerne("456", OidcToken(token))
 
         assertTrue(harTilgangResponse.harTilgang)
         assertFalse(harIkkeTilgangResponse.harTilgang)

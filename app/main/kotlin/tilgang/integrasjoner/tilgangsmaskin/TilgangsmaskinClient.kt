@@ -13,6 +13,12 @@ import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.OnBehalfOfTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import org.slf4j.LoggerFactory
+import tilgang.metrics.cacheHit
+import tilgang.metrics.cacheMiss
+import tilgang.redis.Key
+import tilgang.redis.Redis
+import tilgang.redis.Redis.Companion.deserialize
+import tilgang.redis.Redis.Companion.serialize
 
 interface ITilgangsmaskinClient {
     fun harTilgangTilPerson(brukerIdent: String, token: OidcToken): Boolean
@@ -27,6 +33,7 @@ private val log = LoggerFactory.getLogger(TilgangsmaskinClient::class.java)
  * https://confluence.adeo.no/spaces/TM/pages/628888614/Intro+til+Tilgangsmaskinen
  */
 class TilgangsmaskinClient(
+    private val redis: Redis,
     private val prometheus: MeterRegistry
 ) : ITilgangsmaskinClient {
     private val config = ClientConfig(
@@ -65,6 +72,12 @@ class TilgangsmaskinClient(
         token: OidcToken
     ): HarTilgangFraTilgangsmaskinen {
         val url = baseUrl.resolve("/api/v1/kjerne")
+        if (redis.exists(Key(TILGANGSMASKIN_KJERNE_PREFIX, brukerIdent))) {
+            prometheus.cacheHit(TILGANGSMASKIN_KJERNE_PREFIX).increment()
+            return redis[Key(TILGANGSMASKIN_KJERNE_PREFIX, brukerIdent)]!!.deserialize()
+        }
+        prometheus.cacheMiss(TILGANGSMASKIN_KJERNE_PREFIX).increment()
+
         val request = PostRequest(
             body = brukerIdent,
             currentToken = token,
@@ -76,7 +89,9 @@ class TilgangsmaskinClient(
                 uri = url,
                 request = request
             )
-            HarTilgangFraTilgangsmaskinen(true)
+            val tilgang = HarTilgangFraTilgangsmaskinen(true)
+            redis.set(Key(TILGANGSMASKIN_KJERNE_PREFIX, brukerIdent), tilgang.serialize(), 21600)
+            tilgang
         } catch (e: Exception) {
             if (e is ManglerTilgangException) {
                 val avvistResponse = e.body
@@ -92,7 +107,9 @@ class TilgangsmaskinClient(
                     log.info("403 fra tilgangsmaskin: ${it.title}")
                 }
 
-                HarTilgangFraTilgangsmaskinen(false, avvistResponse)
+                val ikkeTilgang = HarTilgangFraTilgangsmaskinen(false, avvistResponse)
+                redis.set(Key(TILGANGSMASKIN_KJERNE_PREFIX, brukerIdent), ikkeTilgang.serialize(), 21600)
+                ikkeTilgang
             } else {
                 log.warn("Feil ved kall til tilgangsmaskin", e)
                 throw e
@@ -118,5 +135,10 @@ class TilgangsmaskinClient(
             log.info("Kall til tilgangsmaskin returnerte 403")
             return false
         }
+    }
+
+    companion object {
+        private const val TILGANGSMASKIN_KJERNE_PREFIX = "tilgangsmaskinKjerne"
+        private const val TILGANGSMASKIN_KOMPLETT_PREFIX = "tilgangsmaskinKomplett"
     }
 }
