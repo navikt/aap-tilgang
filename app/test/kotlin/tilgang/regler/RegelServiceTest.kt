@@ -107,7 +107,7 @@ class RegelServiceTest {
             nomClient,
             skjermingService,
             AdressebeskyttelseService(graphClient),
-            TilgangsmaskinClient()
+            TilgangsmaskinClient(prometheus)
         )
 
         val token = AzureTokenGen("tilgangazure", "tilgang").generate()

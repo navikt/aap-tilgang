@@ -1,5 +1,7 @@
 package tilgang.integrasjoner
 
+import io.micrometer.prometheusmetrics.PrometheusConfig
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
@@ -24,8 +26,9 @@ class TilgangsmaskinTest {
     @Test
     fun `Kan parse harTilgangTilPersonKjerne`() {
         val token = AzureTokenGen("tilgangazure", "tilgang").generate()
-        val harTilgangResponse = TilgangsmaskinClient().harTilgangTilPersonKjerne("123", OidcToken(token))
-        val harIkkeTilgangResponse = TilgangsmaskinClient().harTilgangTilPersonKjerne("456", OidcToken(token))
+        val prometheus = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
+        val harTilgangResponse = TilgangsmaskinClient(prometheus).harTilgangTilPersonKjerne("123", OidcToken(token))
+        val harIkkeTilgangResponse = TilgangsmaskinClient(prometheus).harTilgangTilPersonKjerne("456", OidcToken(token))
 
         assertTrue(harTilgangResponse.harTilgang)
         assertFalse(harIkkeTilgangResponse.harTilgang)

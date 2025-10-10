@@ -1,5 +1,6 @@
 package tilgang.integrasjoner.tilgangsmaskin
 
+import io.micrometer.core.instrument.MeterRegistry
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
@@ -25,7 +26,9 @@ private val log = LoggerFactory.getLogger(TilgangsmaskinClient::class.java)
  * Se Confluence for dokumentasjon.
  * https://confluence.adeo.no/spaces/TM/pages/628888614/Intro+til+Tilgangsmaskinen
  */
-class TilgangsmaskinClient() : ITilgangsmaskinClient {
+class TilgangsmaskinClient(
+    private val prometheus: MeterRegistry
+) : ITilgangsmaskinClient {
     private val config = ClientConfig(
         scope = requiredConfigForKey("integrasjon.tilgangsmaskin.scope")
     )
@@ -34,6 +37,7 @@ class TilgangsmaskinClient() : ITilgangsmaskinClient {
     private val httpClient = RestClient.withDefaultResponseHandler(
         tokenProvider = OnBehalfOfTokenProvider,
         config = config,
+        prometheus = prometheus,
     )
 
     override fun harTilgangTilPerson(
