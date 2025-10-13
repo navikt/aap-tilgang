@@ -28,8 +28,8 @@ class TilgangsmaskinTest {
         val token = AzureTokenGen("tilgangazure", "tilgang").generate()
         val prometheus = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
         val client = TilgangsmaskinClient(FAKES.redis, prometheus)
-        val harTilgangResponse = client.harTilgangTilPersonKjerne("123", OidcToken(token))
-        val harIkkeTilgangResponse = client.harTilgangTilPersonKjerne("456", OidcToken(token))
+        val harTilgangResponse = client.harTilgangTilPersonKjerne("123", OidcToken(token), "799")
+        val harIkkeTilgangResponse = client.harTilgangTilPersonKjerne("456", OidcToken(token), "799")
 
         assertTrue(harTilgangResponse.harTilgang)
         assertFalse(harIkkeTilgangResponse.harTilgang)

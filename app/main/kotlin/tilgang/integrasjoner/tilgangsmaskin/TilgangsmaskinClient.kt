@@ -23,7 +23,7 @@ import tilgang.redis.Redis.Companion.serialize
 interface ITilgangsmaskinClient {
     fun harTilgangTilPerson(brukerIdent: String, token: OidcToken): Boolean
     fun harTilganger(brukerIdenter: List<BrukerOgRegeltype>, token: OidcToken): Boolean
-    fun harTilgangTilPersonKjerne(brukerIdent: String, token: OidcToken): HarTilgangFraTilgangsmaskinen
+    fun harTilgangTilPersonKjerne(brukerIdent: String, token: OidcToken, ansattIdent: String): HarTilgangFraTilgangsmaskinen
 }
 
 private val log = LoggerFactory.getLogger(TilgangsmaskinClient::class.java)
@@ -69,12 +69,13 @@ class TilgangsmaskinClient(
 
     override fun harTilgangTilPersonKjerne(
         brukerIdent: String,
-        token: OidcToken
+        token: OidcToken,
+        ansattIdent: String
     ): HarTilgangFraTilgangsmaskinen {
         val url = baseUrl.resolve("/api/v1/kjerne")
-        if (redis.exists(Key(TILGANGSMASKIN_KJERNE_PREFIX, brukerIdent))) {
+        if (redis.exists(Key(TILGANGSMASKIN_KJERNE_PREFIX, brukerIdent+ansattIdent))) {
             prometheus.cacheHit(TILGANGSMASKIN_KJERNE_PREFIX).increment()
-            return redis[Key(TILGANGSMASKIN_KJERNE_PREFIX, brukerIdent)]!!.deserialize()
+            return redis[Key(TILGANGSMASKIN_KJERNE_PREFIX, brukerIdent+ansattIdent)]!!.deserialize()
         }
         prometheus.cacheMiss(TILGANGSMASKIN_KJERNE_PREFIX).increment()
 
@@ -90,7 +91,7 @@ class TilgangsmaskinClient(
                 request = request
             )
             val tilgang = HarTilgangFraTilgangsmaskinen(true)
-            redis.set(Key(TILGANGSMASKIN_KJERNE_PREFIX, brukerIdent), tilgang.serialize(), 21600)
+            redis.set(Key(TILGANGSMASKIN_KJERNE_PREFIX, brukerIdent+ansattIdent), tilgang.serialize(), 21600)
             tilgang
         } catch (e: Exception) {
             if (e is ManglerTilgangException) {
@@ -108,7 +109,7 @@ class TilgangsmaskinClient(
                 }
 
                 val ikkeTilgang = HarTilgangFraTilgangsmaskinen(false, avvistResponse)
-                redis.set(Key(TILGANGSMASKIN_KJERNE_PREFIX, brukerIdent), ikkeTilgang.serialize(), 21600)
+                redis.set(Key(TILGANGSMASKIN_KJERNE_PREFIX, brukerIdent+ansattIdent), ikkeTilgang.serialize(), 21600)
                 ikkeTilgang
             } else {
                 log.warn("Feil ved kall til tilgangsmaskin", e)
@@ -139,6 +140,5 @@ class TilgangsmaskinClient(
 
     companion object {
         private const val TILGANGSMASKIN_KJERNE_PREFIX = "tilgangsmaskinKjerne"
-        private const val TILGANGSMASKIN_KOMPLETT_PREFIX = "tilgangsmaskinKomplett"
     }
 }
