@@ -16,16 +16,16 @@ import tilgang.redis.Redis.Companion.deserialize
 import tilgang.redis.Redis.Companion.serialize
 import java.net.URI
 
-interface IPdlGraphQLClient {
+interface IPdlGraphQLGateway {
     fun hentPersonBolk(personidenter: List<String>, callId: String): List<PersonResultat>?
 
     fun hentGeografiskTilknytning(ident: String, callId: String): HentGeografiskTilknytningResult?
 }
 
-class PdlGraphQLClient(
+class PdlGraphQLGateway(
     private val redis: Redis,
     private val prometheus: MeterRegistry
-) : IPdlGraphQLClient {
+) : IPdlGraphQLGateway {
     private val baseUrl = URI.create(requiredConfigForKey("pdl.base.url"))
     private val clientConfig = ClientConfig(
         scope = requiredConfigForKey("pdl.scope"),

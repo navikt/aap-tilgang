@@ -7,7 +7,7 @@ import tilgang.service.GeoRolle
 import tilgang.service.GeoService
 import tilgang.service.GeoType
 import tilgang.integrasjoner.pdl.HentGeografiskTilknytningResult
-import tilgang.integrasjoner.pdl.IPdlGraphQLClient
+import tilgang.integrasjoner.pdl.IPdlGraphQLGateway
 import tilgang.integrasjoner.pdl.PdlGeoType
 
 data object GeoRegel : Regel<GeoInput> {
@@ -52,7 +52,7 @@ data object GeoRegel : Regel<GeoInput> {
 
 class GeoInputGenerator(
     private val geoService: GeoService,
-    private val pdlClient: IPdlGraphQLClient
+    private val pdlClient: IPdlGraphQLGateway
 ) :
     InputGenerator<GeoInput> {
     override fun generer(input: RegelInput): GeoInput {

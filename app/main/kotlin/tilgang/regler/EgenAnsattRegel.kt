@@ -1,6 +1,6 @@
 package tilgang.regler
 
-import tilgang.integrasjoner.skjerming.SkjermingClient
+import tilgang.integrasjoner.skjerming.SkjermingGateway
 import tilgang.service.SkjermingService
 
 data object EgenAnsattRegel : Regel<EgenAnsattInput> {
@@ -14,11 +14,11 @@ data object EgenAnsattRegel : Regel<EgenAnsattInput> {
 }
 
 class EgenAnsattInputGenerator(
-    private val skjermingClient: SkjermingClient,
+    private val skjermingGateway: SkjermingGateway,
     private val skjermingService: SkjermingService
 ) : InputGenerator<EgenAnsattInput> {
     override fun generer(input: RegelInput): EgenAnsattInput {
-        val skalHaSkjerming = skjermingClient.isSkjermet(input.søkerIdenter)
+        val skalHaSkjerming = skjermingGateway.isSkjermet(input.søkerIdenter)
         val harSkjermedePersonerRolle =
             skjermingService.harSkjermedePersonerRolle(input.currentToken, input.ansattIdent)
         return EgenAnsattInput(skalHaSkjerming, harSkjermedePersonerRolle)

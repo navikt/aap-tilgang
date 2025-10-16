@@ -20,22 +20,22 @@ import tilgang.redis.Redis
 import tilgang.redis.Redis.Companion.deserialize
 import tilgang.redis.Redis.Companion.serialize
 
-interface ITilgangsmaskinClient {
+interface ITilgangsmaskinGateway {
     fun harTilgangTilPerson(brukerIdent: String, token: OidcToken): Boolean
     fun harTilganger(brukerIdenter: List<BrukerOgRegeltype>, token: OidcToken): Boolean
     fun harTilgangTilPersonKjerne(brukerIdent: String, token: OidcToken, ansattIdent: String): HarTilgangFraTilgangsmaskinen
 }
 
-private val log = LoggerFactory.getLogger(TilgangsmaskinClient::class.java)
+private val log = LoggerFactory.getLogger(TilgangsmaskinGateway::class.java)
 
 /**
  * Se Confluence for dokumentasjon.
  * https://confluence.adeo.no/spaces/TM/pages/628888614/Intro+til+Tilgangsmaskinen
  */
-class TilgangsmaskinClient(
+class TilgangsmaskinGateway(
     private val redis: Redis,
     private val prometheus: MeterRegistry
-) : ITilgangsmaskinClient {
+) : ITilgangsmaskinGateway {
     private val config = ClientConfig(
         scope = requiredConfigForKey("integrasjon.tilgangsmaskin.scope")
     )

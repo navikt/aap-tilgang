@@ -16,9 +16,9 @@ import tilgang.redis.Redis.Companion.deserialize
 import tilgang.redis.Redis.Companion.serialize
 import java.net.URI
 
-private val log = LoggerFactory.getLogger(BehandlingsflytClient::class.java)
+private val log = LoggerFactory.getLogger(BehandlingsflytGateway::class.java)
 
-class BehandlingsflytClient(
+class BehandlingsflytGateway(
     private val redis: Redis,
     private val prometheus: PrometheusMeterRegistry
 ) {

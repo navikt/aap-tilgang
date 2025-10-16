@@ -3,7 +3,7 @@ package tilgang.regler
 import tilgang.service.AdressebeskyttelseGruppe
 import tilgang.service.AdressebeskyttelseService
 import tilgang.integrasjoner.pdl.Gradering
-import tilgang.integrasjoner.pdl.IPdlGraphQLClient
+import tilgang.integrasjoner.pdl.IPdlGraphQLGateway
 import tilgang.integrasjoner.pdl.PersonResultat
 
 data object AdressebeskyttelseRegel : Regel<AdressebeskyttelseInput> {
@@ -36,7 +36,7 @@ data object AdressebeskyttelseRegel : Regel<AdressebeskyttelseInput> {
 data class AdressebeskyttelseInput(val roller: List<AdressebeskyttelseGruppe>, val personer: List<PersonResultat>)
 
 class AdressebeskyttelseInputGenerator(
-    private val pdlService: IPdlGraphQLClient,
+    private val pdlService: IPdlGraphQLGateway,
     private val adressebeskyttelseService: AdressebeskyttelseService
 ) :
     InputGenerator<AdressebeskyttelseInput> {
