@@ -13,15 +13,15 @@ import no.nav.aap.tilgang.Operasjon
 import tilgang.fakes.Fakes
 import tilgang.integrasjoner.behandlingsflyt.IdenterRespons
 import tilgang.integrasjoner.msgraph.Group
-import tilgang.integrasjoner.msgraph.IMsGraphClient
+import tilgang.integrasjoner.msgraph.IMsGraphGateway
 import tilgang.integrasjoner.msgraph.MemberOf
-import tilgang.integrasjoner.nom.INomClient
+import tilgang.integrasjoner.nom.INomGateway
 import tilgang.integrasjoner.pdl.HentGeografiskTilknytningResult
-import tilgang.integrasjoner.pdl.IPdlGraphQLClient
+import tilgang.integrasjoner.pdl.IPdlGraphQLGateway
 import tilgang.integrasjoner.pdl.PdlGeoType
 import tilgang.integrasjoner.pdl.PersonResultat
-import tilgang.integrasjoner.skjerming.SkjermingClient
-import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinClient
+import tilgang.integrasjoner.skjerming.SkjermingGateway
+import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinGateway
 import tilgang.service.AdressebeskyttelseService
 import tilgang.service.EnhetService
 import tilgang.service.GeoService
@@ -43,7 +43,7 @@ class RegelServiceTest {
     @EnumSource(Definisjon::class)
     fun `skal alltid gi false når roller er tom array`(avklaringsbehov: Definisjon) {
 
-        val graphClient = object : IMsGraphClient {
+        val graphGateway = object : IMsGraphGateway {
             override fun hentAdGrupper(currentToken: OidcToken, ident: String): MemberOf {
                 return MemberOf(
                     groups = listOf(
@@ -56,10 +56,10 @@ class RegelServiceTest {
             }
         }
 
-        val geoService = GeoService(graphClient)
+        val geoService = GeoService(graphGateway)
         val prometheus = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
 
-        val pdlService = object : IPdlGraphQLClient {
+        val pdlService = object : IPdlGraphQLGateway {
             override fun hentPersonBolk(
                 personidenter: List<String>,
                 callId: String
@@ -85,29 +85,29 @@ class RegelServiceTest {
                 )
             }
         }
-        val enhetService = EnhetService(graphClient)
-        val skjermingClient = object : SkjermingClient(
+        val enhetService = EnhetService(graphGateway)
+        val skjermingGateway = object : SkjermingGateway(
             FAKES.redis, prometheus
         ) {
         }
 
-        val nomClient = object : INomClient {
+        val nomGateway = object : INomGateway {
             override fun personNummerTilNavIdent(søkerIdent: String, callId: String): String {
                 return "T131785"
             }
         }
 
-        val skjermingService = SkjermingService(graphClient)
+        val skjermingService = SkjermingService(graphGateway)
 
         val regelService = RegelService(
             geoService,
             enhetService,
             pdlService,
-            skjermingClient,
-            nomClient,
+            skjermingGateway,
+            nomGateway,
             skjermingService,
-            AdressebeskyttelseService(graphClient),
-            TilgangsmaskinClient(FAKES.redis, prometheus)
+            AdressebeskyttelseService(graphGateway),
+            TilgangsmaskinGateway(FAKES.redis, prometheus)
         )
 
         val token = AzureTokenGen("tilgangazure", "tilgang").generate()

@@ -2,10 +2,10 @@ package tilgang.service
 
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
-import tilgang.integrasjoner.msgraph.IMsGraphClient
+import tilgang.integrasjoner.msgraph.IMsGraphGateway
 import java.util.*
 
-class AdressebeskyttelseService(private val msGraphClient: IMsGraphClient) {
+class AdressebeskyttelseService(private val msGraphClient: IMsGraphGateway) {
     fun hentAdressebeskyttelseRoller(
         currentToken: OidcToken, oboIdent: String
     ): List<AdressebeskyttelseGruppe> {

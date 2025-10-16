@@ -2,7 +2,7 @@ package tilgang
 
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
-import tilgang.integrasjoner.saf.SafGraphqlClient
+import tilgang.integrasjoner.saf.SafGraphqlGateway
 import tilgang.integrasjoner.saf.SafJournalpost
 import no.nav.aap.tilgang.BehandlingTilgangRequest
 import no.nav.aap.tilgang.JournalpostTilgangRequest
@@ -10,19 +10,19 @@ import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.Rolle
 import no.nav.aap.tilgang.SakTilgangRequest
 import org.slf4j.LoggerFactory
-import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytClient
+import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytGateway
 import tilgang.integrasjoner.behandlingsflyt.IdenterRespons
 import tilgang.integrasjoner.tilgangsmaskin.BrukerOgRegeltype
-import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinClient
+import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinGateway
 import tilgang.regler.RegelInput
 import tilgang.regler.RegelService
 import no.nav.aap.postmottak.kontrakt.avklaringsbehov.Definisjon as PostmottakDefinisjon
 
 class TilgangService(
-    private val safClient: SafGraphqlClient,
-    private val behandlingsflytClient: BehandlingsflytClient,
+    private val safGateway: SafGraphqlGateway,
+    private val behandlingsflytGateway: BehandlingsflytGateway,
     private val regelService: RegelService,
-    private val tilgangsmaskinClient: TilgangsmaskinClient
+    private val tilgangsmaskinGateway: TilgangsmaskinGateway
 ) {
     private val log = LoggerFactory.getLogger(TilgangService::class.java)
 
@@ -34,7 +34,7 @@ class TilgangService(
         callId: String
     ): Boolean {
         log.info("Sjekker tilgang til sak ${req.saksnummer}")
-        val identer = behandlingsflytClient.hentIdenterForSak(req.saksnummer)
+        val identer = behandlingsflytGateway.hentIdenterForSak(req.saksnummer)
         val regelInput = RegelInput(
             callId = callId,
             ansattIdent = ansattIdent,
@@ -56,7 +56,7 @@ class TilgangService(
         callId: String,
     ): Map<Operasjon, Boolean> {
         log.info("Sjekker tilgang til behandling ${req.behandlingsreferanse}")
-        val identer = behandlingsflytClient.hentIdenterForBehandling(req.behandlingsreferanse.toString())
+        val identer = behandlingsflytGateway.hentIdenterForBehandling(req.behandlingsreferanse.toString())
         val avklaringsbehov =
             if (req.avklaringsbehovKode != null) Definisjon.forKode(req.avklaringsbehovKode!!) else null
 
@@ -81,7 +81,7 @@ class TilgangService(
         callId: String
     ): Boolean {
         log.info("Sjekker tilgang til journalpost ${req.journalpostId}")
-        val journalpostInfo: SafJournalpost = safClient.hentJournalpostInfo(req.journalpostId, callId)
+        val journalpostInfo: SafJournalpost = safGateway.hentJournalpostInfo(req.journalpostId, callId)
         val identer = finnIdenterForJournalpost(journalpostInfo)
 
         val avklaringsbehov =
@@ -104,7 +104,7 @@ class TilgangService(
         val saksnummer = journalpost.sak?.fagsakId
         log.info("Finner identer på journalpost med saksnummer $saksnummer.")
         if (saksnummer != null) {
-            val identer = behandlingsflytClient.hentIdenterForSak(saksnummer)
+            val identer = behandlingsflytGateway.hentIdenterForSak(saksnummer)
             require(identer.søker.isNotEmpty()) { "Fant ingen søkeridenter for sak $saksnummer" }
             return identer
         } else {
@@ -115,10 +115,10 @@ class TilgangService(
     }
 
     fun harTilgangFraTilgangsmaskin(brukerIdenter: List<BrukerOgRegeltype>, token: OidcToken): Boolean {
-        return tilgangsmaskinClient.harTilganger(brukerIdenter, token)
+        return tilgangsmaskinGateway.harTilganger(brukerIdenter, token)
     }
 
     fun harTilgangTilPerson(brukerIdent: String, token: OidcToken): Boolean {
-        return tilgangsmaskinClient.harTilgangTilPerson(brukerIdent, token)
+        return tilgangsmaskinGateway.harTilgangTilPerson(brukerIdent, token)
     }
 }

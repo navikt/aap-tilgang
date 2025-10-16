@@ -1,12 +1,12 @@
 package tilgang.service
 
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
-import tilgang.integrasjoner.msgraph.IMsGraphClient
+import tilgang.integrasjoner.msgraph.IMsGraphGateway
 
-class GeoService(private val msGraphClient: IMsGraphClient) {
+class GeoService(private val msGraphGateway: IMsGraphGateway) {
 
     fun hentGeoRoller(currentToken: OidcToken, ident: String): List<GeoRolle> {
-        return msGraphClient.hentAdGrupper(currentToken, ident).groups
+        return msGraphGateway.hentAdGrupper(currentToken, ident).groups
             .filter { it.name.startsWith(GEO_GROUP_PREFIX) }
             .map { parseGeoRolle(it.name) }
     }

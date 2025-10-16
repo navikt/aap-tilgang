@@ -18,14 +18,14 @@ import tilgang.redis.Redis.Companion.serialize
 import java.net.URI
 import java.util.*
 
-interface IMsGraphClient {
+interface IMsGraphGateway {
     fun hentAdGrupper(currentToken: OidcToken, ident: String): MemberOf
 }
 
-class MsGraphClient(
+class MsGraphGateway(
     private val redis: Redis,
     private val prometheus: PrometheusMeterRegistry
-) : IMsGraphClient {
+) : IMsGraphGateway {
     private val baseUrl = URI.create(requiredConfigForKey("ms.graph.base.url"))
     
     private val clientConfig = ClientConfig(

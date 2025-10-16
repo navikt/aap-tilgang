@@ -18,11 +18,11 @@ import tilgang.redis.Redis.Companion.deserialize
 import tilgang.redis.Redis.Companion.serialize
 import java.net.URI
 
-class SafGraphqlClient(
+class SafGraphqlGateway(
     private val redis: Redis,
     private val prometheus: PrometheusMeterRegistry
 ) {
-    private val log = LoggerFactory.getLogger(SafGraphqlClient::class.java)
+    private val log = LoggerFactory.getLogger(SafGraphqlGateway::class.java)
 
     private val baseUrl = URI.create(requiredConfigForKey("saf.base.url"))
     private val config = ClientConfig(

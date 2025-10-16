@@ -18,19 +18,19 @@ import no.nav.aap.komponenter.server.AZURE
 import no.nav.aap.komponenter.server.commonKtorModule
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytClient
+import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytGateway
 import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytException
-import tilgang.integrasjoner.msgraph.MsGraphClient
+import tilgang.integrasjoner.msgraph.MsGraphGateway
 import tilgang.integrasjoner.msgraph.MsGraphException
-import tilgang.integrasjoner.nom.NomClient
+import tilgang.integrasjoner.nom.NomGateway
 import tilgang.integrasjoner.nom.NomException
 import tilgang.integrasjoner.pdl.PdlException
-import tilgang.integrasjoner.pdl.PdlGraphQLClient
+import tilgang.integrasjoner.pdl.PdlGraphQLGateway
 import tilgang.integrasjoner.saf.SafException
-import tilgang.integrasjoner.saf.SafGraphqlClient
-import tilgang.integrasjoner.skjerming.SkjermingClient
+import tilgang.integrasjoner.saf.SafGraphqlGateway
+import tilgang.integrasjoner.skjerming.SkjermingGateway
 import tilgang.integrasjoner.skjerming.SkjermingException
-import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinClient
+import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinGateway
 import tilgang.metrics.uhåndtertExceptionTeller
 import tilgang.redis.Redis
 import tilgang.regler.RegelService
@@ -57,20 +57,20 @@ fun Application.api(
     config: Config = Config(), redis: Redis = Redis(config.redis)
 ) {
     val prometheus = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
-    val pdl = PdlGraphQLClient(redis, prometheus)
-    val msGraph = MsGraphClient(redis, prometheus)
-    val behandlingsflyt = BehandlingsflytClient(redis, prometheus)
-    val saf = SafGraphqlClient(redis, prometheus)
+    val pdl = PdlGraphQLGateway(redis, prometheus)
+    val msGraph = MsGraphGateway(redis, prometheus)
+    val behandlingsflyt = BehandlingsflytGateway(redis, prometheus)
+    val saf = SafGraphqlGateway(redis, prometheus)
     val geoService = GeoService(msGraph)
     val enhetService = EnhetService(msGraph)
-    val skjermingClient = SkjermingClient(redis, prometheus)
+    val skjermingGateway = SkjermingGateway(redis, prometheus)
     val skjermingService = SkjermingService(msGraph)
-    val nomClient = NomClient(redis, prometheus)
-    val tilgangsmaskinClient = TilgangsmaskinClient(redis, prometheus)
+    val nomGateway = NomGateway(redis, prometheus)
+    val tilgangsmaskinGateway = TilgangsmaskinGateway(redis, prometheus)
     val regelService = RegelService(
-        geoService, enhetService, pdl, skjermingClient, nomClient, skjermingService, AdressebeskyttelseService(msGraph), tilgangsmaskinClient
+        geoService, enhetService, pdl, skjermingGateway, nomGateway, skjermingService, AdressebeskyttelseService(msGraph), tilgangsmaskinGateway
     )
-    val tilgangService = TilgangService(saf, behandlingsflyt, regelService, tilgangsmaskinClient)
+    val tilgangService = TilgangService(saf, behandlingsflyt, regelService, tilgangsmaskinGateway)
 
     install(StatusPages) {
         exception<Throwable> { call, cause ->

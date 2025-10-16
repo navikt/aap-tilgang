@@ -4,7 +4,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
 import tilgang.integrasjoner.msgraph.Group
-import tilgang.integrasjoner.msgraph.IMsGraphClient
+import tilgang.integrasjoner.msgraph.IMsGraphGateway
 import tilgang.integrasjoner.msgraph.MemberOf
 import tilgang.service.GeoRolle
 import tilgang.service.GeoService
@@ -14,7 +14,7 @@ import java.util.UUID
 class GeoServiceTest {
     @Test
     fun `kan parse roller fra Azure`() {
-        val geoService = GeoService(object : IMsGraphClient {
+        val geoService = GeoService(object : IMsGraphGateway {
             override fun hentAdGrupper(currentToken: OidcToken, ident: String): MemberOf {
                 return MemberOf(
                     listOf(

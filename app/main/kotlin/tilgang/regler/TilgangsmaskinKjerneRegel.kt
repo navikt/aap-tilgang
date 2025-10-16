@@ -1,7 +1,7 @@
 package tilgang.regler
 
 import tilgang.integrasjoner.tilgangsmaskin.HarTilgangFraTilgangsmaskinen
-import tilgang.integrasjoner.tilgangsmaskin.ITilgangsmaskinClient
+import tilgang.integrasjoner.tilgangsmaskin.ITilgangsmaskinGateway
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinAvvistGrunn
 
 /*
@@ -18,11 +18,11 @@ data object TilgangsmaskinKjerneRegel : Regel<TilgangsmaskinKjerneInput> {
     }
 }
 
-class TilgangsmaskinKjerneInputGenerator(private val tilgangsmaskinClient: ITilgangsmaskinClient) :
+class TilgangsmaskinKjerneInputGenerator(private val tilgangsmaskinGateway: ITilgangsmaskinGateway) :
     InputGenerator<TilgangsmaskinKjerneInput> {
     override fun generer(input: RegelInput): TilgangsmaskinKjerneInput {
         val tilgangsmaskinResponse =
-            tilgangsmaskinClient.harTilgangTilPersonKjerne(input.søkerIdenter.søker.first(), input.currentToken, input.ansattIdent)
+            tilgangsmaskinGateway.harTilgangTilPersonKjerne(input.søkerIdenter.søker.first(), input.currentToken, input.ansattIdent)
         return TilgangsmaskinKjerneInput(tilgangsmaskinResponse)
     }
 }

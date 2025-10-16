@@ -16,14 +16,14 @@ import tilgang.redis.Redis.Companion.deserialize
 import tilgang.redis.Redis.Companion.serialize
 import java.net.URI
 
-interface INomClient {
+interface INomGateway {
     fun personNummerTilNavIdent(søkerIdent: String, callId: String): String
 }
 
-open class NomClient(
+open class NomGateway(
     private val redis: Redis,
     private val prometheus: PrometheusMeterRegistry
-) : INomClient {
+) : INomGateway {
     private val config = ClientConfig(
         scope = requiredConfigForKey("nom.scope")
     )

@@ -1,20 +1,19 @@
 package tilgang.enhet
 
-import kotlinx.coroutines.runBlocking
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import tilgang.AzureTokenGen
 import tilgang.service.EnhetService
 import tilgang.integrasjoner.msgraph.Group
-import tilgang.integrasjoner.msgraph.IMsGraphClient
+import tilgang.integrasjoner.msgraph.IMsGraphGateway
 import tilgang.integrasjoner.msgraph.MemberOf
 import java.util.*
 
 class EnhetServiceTest {
     @Test
     fun `lister kun opp enhets-roller`() {
-        val graphClient = object : IMsGraphClient {
+        val graphGateway = object : IMsGraphGateway {
             override fun hentAdGrupper(currentToken: OidcToken, ident: String): MemberOf {
                 return MemberOf(
                     groups = listOf(
@@ -24,7 +23,7 @@ class EnhetServiceTest {
                 )
             }
         }
-        val service = EnhetService(graphClient)
+        val service = EnhetService(graphGateway)
 
         val token = AzureTokenGen("tilgangazure", "tilgang").generate()
         val res = service.hentEnhetRoller(OidcToken(token), "")

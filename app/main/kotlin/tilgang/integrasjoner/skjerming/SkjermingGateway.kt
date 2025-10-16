@@ -16,7 +16,7 @@ import tilgang.redis.Redis.Companion.deserialize
 import tilgang.redis.Redis.Companion.serialize
 import java.net.URI
 
-open class SkjermingClient(
+open class SkjermingGateway(
     private val redis: Redis,
     private val prometheus: PrometheusMeterRegistry
 ) {
