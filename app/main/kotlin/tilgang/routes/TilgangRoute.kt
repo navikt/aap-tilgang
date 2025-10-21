@@ -9,7 +9,7 @@ import com.papsign.ktor.openapigen.route.route
 import io.ktor.http.*
 import io.ktor.server.request.*
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
-import no.nav.aap.komponenter.httpklient.auth.token
+import no.nav.aap.komponenter.server.auth.token
 import no.nav.aap.tilgang.*
 import tilgang.LOGGER
 import tilgang.Role

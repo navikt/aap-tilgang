@@ -291,8 +291,8 @@ class RequestMedAuditResolver(val saksreferanse: UUID) : AuditlogResolverInput, 
     }
 }
 
-data class EnAnnenReferanse(@PathParam("enAnnenReferanse") val enAnnenReferanse: String)
-data class BehandlingReferanse(@JsonValue @PathParam("referanse") val referanse: UUID = UUID.randomUUID()) {
+data class EnAnnenReferanse(@param:PathParam("enAnnenReferanse") val enAnnenReferanse: String)
+data class BehandlingReferanse(@JsonValue @param:PathParam("referanse") val referanse: UUID = UUID.randomUUID()) {
     override fun toString(): String {
         return referanse.toString()
     }
