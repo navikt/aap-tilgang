@@ -101,7 +101,7 @@ class TilgangService(
     }
 
     private fun finnIdenterForJournalpost(journalpost: SafJournalpost): IdenterRespons {
-        val saksnummer = journalpost.sak?.fagsakId
+        val saksnummer = finnKelvinSaksnummerForJournalpost(journalpost)
         log.info("Finner identer på journalpost med saksnummer $saksnummer.")
         if (saksnummer != null) {
             val identer = behandlingsflytGateway.hentIdenterForSak(saksnummer)
@@ -111,6 +111,13 @@ class TilgangService(
             val søkerIdent = journalpost.bruker?.id
             requireNotNull(søkerIdent)
             return IdenterRespons(søker = listOf(søkerIdent), barn = emptyList())
+        }
+    }
+
+    private fun finnKelvinSaksnummerForJournalpost(journalpost: SafJournalpost): String? {
+        return when (journalpost.sak?.fagsaksystem) {
+            "KELVIN" -> journalpost.sak.fagsakId
+            else -> null
         }
     }
 
