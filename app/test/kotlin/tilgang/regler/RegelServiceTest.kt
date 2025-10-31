@@ -10,8 +10,8 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import tilgang.AzureTokenGen
 import no.nav.aap.tilgang.Operasjon
+import no.nav.aap.tilgang.RelevanteIdenter
 import tilgang.fakes.Fakes
-import tilgang.integrasjoner.behandlingsflyt.IdenterRespons
 import tilgang.integrasjoner.msgraph.Group
 import tilgang.integrasjoner.msgraph.IMsGraphGateway
 import tilgang.integrasjoner.msgraph.MemberOf
@@ -118,7 +118,7 @@ class RegelServiceTest {
                 avklaringsbehovFraBehandlingsflyt = avklaringsbehov,
                 avklaringsbehovFraPostmottak = null,
                 currentToken = OidcToken(token),
-                søkerIdenter = IdenterRespons(søker = listOf("423"), barn = listOf()),
+                søkerIdenter = RelevanteIdenter(søker = listOf("423"), barn = listOf()),
                 operasjoner = listOf(Operasjon.SAKSBEHANDLE),
                 roller = listOf()
             )
