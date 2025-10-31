@@ -2,6 +2,7 @@ package no.nav.aap.tilgang
 
 import io.ktor.http.Parameters
 import io.ktor.server.util.getOrFail
+import no.nav.aap.tilgang.plugin.kontrakt.RelevanteIdenterResolver
 
 /**
  * Informasjon som tilgang trenger for å utlede kontekst fra path til requesten.
@@ -15,6 +16,7 @@ data class AuthorizationParamPathConfig(
     val applicationRole: String? = null,
     val applicationsOnly: Boolean = false,
     val sakPathParam: SakPathParam? = null,
+    val relevanteIdenterResolver: RelevanteIdenterResolver? = null,
     val behandlingPathParam: BehandlingPathParam? = null,
     val journalpostPathParam: JournalpostPathParam? = null,
     val personIdentPathParam: PersonIdentPathParam? = null,
@@ -32,21 +34,27 @@ data class AuthorizationParamPathConfig(
 
     fun tilTilgangRequest(parameters: Parameters): AuthorizedRequest {
         if (sakPathParam != null) {
+            val saksnummer = parameters.getOrFail(sakPathParam.param)
+            val relevanteIdenter = relevanteIdenterResolver?.resolve(saksnummer)
             return AuthorizedRequest(
                 applicationsOnly,
                 applicationRole,
                 SakTilgangRequest(
-                    saksnummer = parameters.getOrFail(sakPathParam.param),
+                    relevanteIdenter = relevanteIdenter,
+                    saksnummer = saksnummer,
                     operasjon = operasjon
                 )
             )
         }
         if (behandlingPathParam != null) {
+            val behandlingsreferanse = behandlingPathParam.resolver.resolve(parameters.getOrFail(behandlingPathParam.param))
+            val relevanteIdenter = relevanteIdenterResolver?.resolve(behandlingsreferanse.toString())
             return AuthorizedRequest(
                 applicationsOnly,
                 applicationRole,
                 BehandlingTilgangRequest(
-                    behandlingsreferanse = behandlingPathParam.resolver.resolve(parameters.getOrFail(behandlingPathParam.param)),
+                    relevanteIdenter = relevanteIdenter,
+                    behandlingsreferanse = behandlingsreferanse,
                     operasjon = operasjon,
                     avklaringsbehovKode = avklaringsbehovKode,
                     operasjonerIKontekst = operasjonerIKontekst
