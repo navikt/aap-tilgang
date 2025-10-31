@@ -53,7 +53,7 @@ fun Application.autorisertEksempelApp() {
                             param = "referanse"
                         ),
                         avklaringsbehovKode = "1234"
-                    ) {req ->
+                    ) { req ->
                         val kanSaksbehandle = pipeline.call.attributes[kanSaksbehandleKey]
                         if (kanSaksbehandle == "true") {
                             respond(true)
@@ -69,6 +69,12 @@ fun Application.autorisertEksempelApp() {
                             AuthorizationParamPathConfig(
                                 operasjon = Operasjon.SAKSBEHANDLE,
                                 avklaringsbehovKode = "1337",
+                                relevanteIdenterResolver = {
+                                    RelevanteIdenter(
+                                        søker = listOf("1234"),
+                                        barn = listOf("3456")
+                                    )
+                                },
                                 behandlingPathParam = BehandlingPathParam(
                                     param = "enAnnenReferanse",
                                     resolver = { enAnnenReferanseTilbehandlingReferanse.getValue(it) })
