@@ -7,11 +7,11 @@ import tilgang.integrasjoner.saf.SafJournalpost
 import no.nav.aap.tilgang.BehandlingTilgangRequest
 import no.nav.aap.tilgang.JournalpostTilgangRequest
 import no.nav.aap.tilgang.Operasjon
+import no.nav.aap.tilgang.RelevanteIdenter
 import no.nav.aap.tilgang.Rolle
 import no.nav.aap.tilgang.SakTilgangRequest
 import org.slf4j.LoggerFactory
 import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytGateway
-import tilgang.integrasjoner.behandlingsflyt.IdenterRespons
 import tilgang.integrasjoner.tilgangsmaskin.BrukerOgRegeltype
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinGateway
 import tilgang.regler.RegelInput
@@ -34,7 +34,9 @@ class TilgangService(
         callId: String
     ): Boolean {
         log.info("Sjekker tilgang til sak ${req.saksnummer}")
-        val identer = behandlingsflytGateway.hentIdenterForSak(req.saksnummer)
+        val identer = req.relevanteIdenter ?: behandlingsflytGateway
+            .hentIdenterForSak(req.saksnummer)
+        
         val regelInput = RegelInput(
             callId = callId,
             ansattIdent = ansattIdent,
@@ -56,7 +58,9 @@ class TilgangService(
         callId: String,
     ): Map<Operasjon, Boolean> {
         log.info("Sjekker tilgang til behandling ${req.behandlingsreferanse}")
-        val identer = behandlingsflytGateway.hentIdenterForBehandling(req.behandlingsreferanse.toString())
+        val identer = req.relevanteIdenter ?: behandlingsflytGateway
+            .hentIdenterForBehandling(req.behandlingsreferanse.toString())
+
         val avklaringsbehov =
             if (req.avklaringsbehovKode != null) Definisjon.forKode(req.avklaringsbehovKode!!) else null
 
@@ -100,7 +104,7 @@ class TilgangService(
         return regelService.vurderTilgang(regelInput)[req.operasjon] == true
     }
 
-    private fun finnIdenterForJournalpost(journalpost: SafJournalpost): IdenterRespons {
+    private fun finnIdenterForJournalpost(journalpost: SafJournalpost): RelevanteIdenter {
         val saksnummer = finnKelvinSaksnummerForJournalpost(journalpost)
         log.info("Finner identer på journalpost med saksnummer $saksnummer.")
         if (saksnummer != null) {
@@ -110,7 +114,7 @@ class TilgangService(
         } else {
             val søkerIdent = journalpost.bruker?.id
             requireNotNull(søkerIdent)
-            return IdenterRespons(søker = listOf(søkerIdent), barn = emptyList())
+            return RelevanteIdenter(søker = listOf(søkerIdent), barn = emptyList())
         }
     }
 

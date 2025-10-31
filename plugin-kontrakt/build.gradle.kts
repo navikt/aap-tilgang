@@ -33,3 +33,7 @@ publishing {
         }
     }
 }
+
+dependencies {
+    api(project(":api-kontrakt"))
+}

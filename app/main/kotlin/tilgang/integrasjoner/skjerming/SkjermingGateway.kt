@@ -7,7 +7,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
-import tilgang.integrasjoner.behandlingsflyt.IdenterRespons
+import no.nav.aap.tilgang.RelevanteIdenter
 import tilgang.metrics.cacheHit
 import tilgang.metrics.cacheMiss
 import tilgang.redis.Key
@@ -30,7 +30,7 @@ open class SkjermingGateway(
         prometheus = prometheus,
     )
 
-    open fun isSkjermet(identer: IdenterRespons): Boolean {
+    open fun isSkjermet(identer: RelevanteIdenter): Boolean {
         if (redis.exists(Key(SKJERMING_PREFIX, identer.søker.first()))) {
             prometheus.cacheHit(SKJERMING_PREFIX).increment()
             return redis[Key(SKJERMING_PREFIX, identer.søker.first())]!!.deserialize()

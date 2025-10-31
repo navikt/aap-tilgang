@@ -7,6 +7,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.get
 import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
+import no.nav.aap.tilgang.RelevanteIdenter
 import org.slf4j.LoggerFactory
 import tilgang.metrics.cacheHit
 import tilgang.metrics.cacheMiss
@@ -32,7 +33,7 @@ class BehandlingsflytGateway(
         prometheus = prometheus,
     )
 
-    fun hentIdenterForSak(saksnummer: String): IdenterRespons {
+    fun hentIdenterForSak(saksnummer: String): RelevanteIdenter {
         if (redis.exists(Key(IDENTER_SAK_PREFIX, saksnummer))) {
             prometheus.cacheHit(BEHANDLINGSFLYT).increment()
             return redis[Key(IDENTER_SAK_PREFIX, saksnummer)]!!.deserialize()
@@ -42,14 +43,14 @@ class BehandlingsflytGateway(
         val url = baseUrl.resolve("/pip/api/sak/${saksnummer}/identer")
         log.info("Kaller behandlingsflyt med URL: $url")
 
-        val respons = httpClient.get<IdenterRespons>(url, GetRequest())
+        val respons = httpClient.get<RelevanteIdenter>(url, GetRequest())
             ?: throw BehandlingsflytException("Feil ved henting av identer for sak")
 
         redis.set(Key(IDENTER_SAK_PREFIX, saksnummer), respons.serialize())
         return respons
     }
 
-    fun hentIdenterForBehandling(behandlingsnummer: String): IdenterRespons {
+    fun hentIdenterForBehandling(behandlingsnummer: String): RelevanteIdenter {
         if (redis.exists(Key(IDENTER_BEHANDLING_PREFIX, behandlingsnummer))) {
             prometheus.cacheHit(BEHANDLINGSFLYT).increment()
             return redis[Key(IDENTER_BEHANDLING_PREFIX, behandlingsnummer)]!!.deserialize()
@@ -59,7 +60,7 @@ class BehandlingsflytGateway(
         val url = baseUrl.resolve("/pip/api/behandling/${behandlingsnummer}/identer")
         log.info("Kaller behandlingsflyt med URL: $url")
 
-        val respons = httpClient.get<IdenterRespons>(url, GetRequest())
+        val respons = httpClient.get<RelevanteIdenter>(url, GetRequest())
             ?: throw BehandlingsflytException("Feil ved henting av identer for behandling")
         redis.set(Key(IDENTER_BEHANDLING_PREFIX, behandlingsnummer), respons.serialize())
         return respons
@@ -69,11 +70,5 @@ class BehandlingsflytGateway(
         private const val IDENTER_SAK_PREFIX = "identer_sak"
         private const val IDENTER_BEHANDLING_PREFIX = "identer_behandling"
         private const val BEHANDLINGSFLYT = "Behandlingsflyt"
-    }
-}
-
-data class IdenterRespons(val søker: List<String>, val barn: List<String>) {
-    init {
-        require(søker.isNotEmpty()) { "Søker må ha minst en ident" }
     }
 }
