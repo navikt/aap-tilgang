@@ -22,7 +22,6 @@ import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytGateway
 import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytException
 import tilgang.integrasjoner.msgraph.MsGraphGateway
 import tilgang.integrasjoner.msgraph.MsGraphException
-import tilgang.integrasjoner.nom.NomGateway
 import tilgang.integrasjoner.nom.NomException
 import tilgang.integrasjoner.pdl.PdlException
 import tilgang.integrasjoner.pdl.PdlGraphQLGateway
@@ -65,10 +64,9 @@ fun Application.api(
     val enhetService = EnhetService(msGraph)
     val skjermingGateway = SkjermingGateway(redis, prometheus)
     val skjermingService = SkjermingService(msGraph)
-    val nomGateway = NomGateway(redis, prometheus)
     val tilgangsmaskinGateway = TilgangsmaskinGateway(redis, prometheus)
     val regelService = RegelService(
-        geoService, enhetService, pdl, skjermingGateway, nomGateway, skjermingService, AdressebeskyttelseService(msGraph), tilgangsmaskinGateway
+        geoService, enhetService, pdl, skjermingGateway, skjermingService, AdressebeskyttelseService(msGraph), tilgangsmaskinGateway
     )
     val tilgangService = TilgangService(saf, behandlingsflyt, regelService, tilgangsmaskinGateway)
 

@@ -20,6 +20,9 @@ interface INomGateway {
     fun personNummerTilNavIdent(søkerIdent: String, callId: String): String
 }
 
+/**
+ * Bruk av oppslagene er erstattet av tilgangsmaskinen, kan fjernes med tid når vi ser at tilgangsmaskinen er stabil nok
+ */
 open class NomGateway(
     private val redis: Redis,
     private val prometheus: PrometheusMeterRegistry

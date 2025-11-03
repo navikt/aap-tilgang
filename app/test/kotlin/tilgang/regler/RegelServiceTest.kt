@@ -15,7 +15,6 @@ import tilgang.fakes.Fakes
 import tilgang.integrasjoner.msgraph.Group
 import tilgang.integrasjoner.msgraph.IMsGraphGateway
 import tilgang.integrasjoner.msgraph.MemberOf
-import tilgang.integrasjoner.nom.INomGateway
 import tilgang.integrasjoner.pdl.HentGeografiskTilknytningResult
 import tilgang.integrasjoner.pdl.IPdlGraphQLGateway
 import tilgang.integrasjoner.pdl.PdlGeoType
@@ -91,12 +90,6 @@ class RegelServiceTest {
         ) {
         }
 
-        val nomGateway = object : INomGateway {
-            override fun personNummerTilNavIdent(søkerIdent: String, callId: String): String {
-                return "T131785"
-            }
-        }
-
         val skjermingService = SkjermingService(graphGateway)
 
         val regelService = RegelService(
@@ -104,7 +97,6 @@ class RegelServiceTest {
             enhetService,
             pdlService,
             skjermingGateway,
-            nomGateway,
             skjermingService,
             AdressebeskyttelseService(graphGateway),
             TilgangsmaskinGateway(FAKES.redis, prometheus)

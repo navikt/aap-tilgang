@@ -2,6 +2,9 @@ package tilgang.regler
 
 import tilgang.integrasjoner.nom.INomGateway
 
+/**
+ * Erstattet av tilgangsmaskinen, fjern når vi ser at dette med tid er stabilt
+*/
 data object EgenSakRegel : Regel<EgenSakInput> {
     override fun vurder(input: EgenSakInput): Boolean {
         return input.navAnsattIdent != input.navIdentFraNOM
