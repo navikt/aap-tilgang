@@ -11,6 +11,7 @@ import com.papsign.ktor.openapigen.route.response.OpenAPIPipelineResponseContext
 import io.ktor.server.routing.*
 import no.nav.aap.tilgang.auditlog.AuditLogConfig
 import no.nav.aap.tilgang.auditlog.AuditLogPathParamConfig
+import no.nav.aap.tilgang.plugin.kontrakt.RelevanteIdenterResolver
 
 enum class Tags(override val description: String) : APITag {
     Tilgangkontrollert("Dette endepunktet er tilgangkontrollert.")
@@ -75,9 +76,10 @@ inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : A
     }
 }
 
-inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.getGrunnlag(behandlingPathParam: BehandlingPathParam, avklaringsbehovKode: String, vararg modules: RouteOpenAPIModule, noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams) -> Unit) {
+inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.getGrunnlag(behandlingPathParam: BehandlingPathParam, avklaringsbehovKode: String, relevanteIdenterResolver: RelevanteIdenterResolver? = null, vararg modules: RouteOpenAPIModule, noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams) -> Unit) {
     ktorRoute.installerTilgangParamPlugin(AuthorizationParamPathConfig(behandlingPathParam = behandlingPathParam,
         avklaringsbehovKode = avklaringsbehovKode,
+        relevanteIdenterResolver = relevanteIdenterResolver,
         operasjonerIKontekst = listOf(
         Operasjon.SAKSBEHANDLE)), null)
 
