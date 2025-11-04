@@ -27,7 +27,7 @@ jobs:
     uses: navikt/aap-workflows/.github/workflows/gradle-build.yml@main
     secrets: inherit
 
-  publish-plugin:
+  publiser-plugin:
     needs: gradle
     concurrency: kontrakt
     permissions:
@@ -93,7 +93,7 @@ jobs:
       manifest: .nais/nais.yaml
 
   prod:
-    needs: dev
+    needs: [ publiser-plugin, dev ]
     ## push til main eller etter branch (e.g. dependabot) er merget
     if: github.event.pull_request.merged || github.event_name == 'push' || github.event.inputs.cluster == 'dev-gcp'
     permissions:
