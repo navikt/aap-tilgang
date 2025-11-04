@@ -32,7 +32,7 @@ dependencies {
     implementation("no.nav.aap.kelvin:httpklient:$komponenterVersjon")
     implementation("io.micrometer:micrometer-registry-prometheus:1.15.5")
     implementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.20.0")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.20.1")
     implementation("ch.qos.logback:logback-classic:1.5.20")
     implementation("net.logstash.logback:logstash-logback-encoder:8.1")
     implementation("com.nimbusds:nimbus-jose-jwt:10.5")
@@ -40,7 +40,7 @@ dependencies {
 
     testImplementation(kotlin("test"))
     testImplementation("com.nimbusds:nimbus-jose-jwt:10.5")
-    testImplementation("org.junit.jupiter:junit-jupiter-params:6.0.0")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:6.0.1")
     testImplementation("org.assertj:assertj-core:3.27.6")
     testImplementation("no.nav.security:mock-oauth2-server:${mockOAuth2ServerVersion}")
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
