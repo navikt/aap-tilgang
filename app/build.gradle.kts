@@ -1,7 +1,7 @@
 plugins {
     id("aap-tilgang.conventions")
     kotlin("jvm")
-    id("io.ktor.plugin") version "3.3.1"
+    id("io.ktor.plugin") version "3.3.2"
     application
 }
 
