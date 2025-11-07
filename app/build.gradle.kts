@@ -1,7 +1,7 @@
 plugins {
     id("aap-tilgang.conventions")
     kotlin("jvm")
-    id("io.ktor.plugin") version "3.3.1"
+    id("io.ktor.plugin") version "3.3.2"
     application
 }
 
@@ -9,7 +9,7 @@ val ktorVersion = "3.3.1"
 val behandlingsflytVersjon = "0.0.471"
 val postmottakVersjon = "0.0.131"
 val komponenterVersjon = "1.0.422"
-val mockOAuth2ServerVersion = "3.0.0"
+val mockOAuth2ServerVersion = "3.0.1"
 
 application {
     mainClass.set("tilgang.AppKt")
