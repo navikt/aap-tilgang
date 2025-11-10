@@ -1,15 +1,15 @@
 plugins {
     id("aap-tilgang.conventions")
     kotlin("jvm")
-    id("io.ktor.plugin") version "3.3.1"
+    id("io.ktor.plugin") version "3.3.2"
     application
 }
 
-val ktorVersion = "3.3.1"
+val ktorVersion = "3.3.2"
 val behandlingsflytVersjon = "0.0.481"
 val postmottakVersjon = "5.5.5"
 val komponenterVersjon = "1.0.428"
-val mockOAuth2ServerVersion = "3.0.0"
+val mockOAuth2ServerVersion = "3.0.1"
 
 application {
     mainClass.set("tilgang.AppKt")
@@ -30,16 +30,16 @@ dependencies {
     api("no.nav.aap.kelvin:server:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:infrastructure:$komponenterVersjon")
     implementation("no.nav.aap.kelvin:httpklient:$komponenterVersjon")
-    implementation("io.micrometer:micrometer-registry-prometheus:1.15.5")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.16.0")
     implementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.20.1")
     implementation("ch.qos.logback:logback-classic:1.5.20")
     implementation("net.logstash.logback:logstash-logback-encoder:8.1")
-    implementation("com.nimbusds:nimbus-jose-jwt:10.5")
+    implementation("com.nimbusds:nimbus-jose-jwt:10.6")
     implementation("redis.clients:jedis:7.0.0")
 
     testImplementation(kotlin("test"))
-    testImplementation("com.nimbusds:nimbus-jose-jwt:10.5")
+    testImplementation("com.nimbusds:nimbus-jose-jwt:10.6")
     testImplementation("org.junit.jupiter:junit-jupiter-params:6.0.1")
     testImplementation("org.assertj:assertj-core:3.27.6")
     testImplementation("no.nav.security:mock-oauth2-server:${mockOAuth2ServerVersion}")
