@@ -1,4 +1,4 @@
-val ktorVersion = "3.3.1"
+val ktorVersion = "3.3.2"
 val komponenterVersjon = "1.0.428"
 val junitVersion = "6.0.1"
 
@@ -51,7 +51,7 @@ dependencies {
     implementation("no.nav:ktor-openapi-generator:1.0.131")
     implementation("io.ktor:ktor-server-core:$ktorVersion")
 
-    implementation("com.nimbusds:nimbus-jose-jwt:10.5")
+    implementation("com.nimbusds:nimbus-jose-jwt:10.6")
 
     implementation("io.ktor:ktor-server-auth:$ktorVersion")
     implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
