@@ -9,6 +9,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import java.net.URI
 import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.ContentType
+import no.nav.aap.komponenter.httpklient.httpclient.retryablePost
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.OnBehalfOfTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
@@ -59,7 +60,7 @@ class TilgangsmaskinGateway(
         )
         try {
             log.info("Kaller tilgangsmaskin med url: $url")
-            httpClient.post<_, Unit>(url, request)
+            httpClient.retryablePost<_, Unit>(url, request)
             return true
         } catch (e: ManglerTilgangException) {
             log.info("Kall til tilgangsmaskin returnerte 403")
@@ -86,7 +87,7 @@ class TilgangsmaskinGateway(
         )
 
         return try {
-            httpClient.post<_, Unit>(
+            httpClient.retryablePost<_, Unit>(
                 uri = url,
                 request = request
             )
