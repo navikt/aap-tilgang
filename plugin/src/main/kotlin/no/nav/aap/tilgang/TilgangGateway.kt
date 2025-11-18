@@ -3,7 +3,7 @@ package no.nav.aap.tilgang
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
-import no.nav.aap.komponenter.httpklient.httpclient.retryablePost
+import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.OnBehalfOfTokenProvider
@@ -26,7 +26,7 @@ object TilgangGateway {
             currentToken = currentToken
         )
         val respons = requireNotNull(
-            client.retryablePost<_, TilgangResponse>(
+            client.post<_, TilgangResponse>(
                 uri = baseUrl.resolve("/tilgang/sak"),
                 request = httpRequest
             )
@@ -40,7 +40,7 @@ object TilgangGateway {
             currentToken = currentToken
         )
         val respons = requireNotNull(
-            client.retryablePost<_, TilgangResponse>(
+            client.post<_, TilgangResponse>(
                 uri = baseUrl.resolve("/tilgang/behandling"),
                 request = httpRequest
             )
@@ -57,7 +57,7 @@ object TilgangGateway {
             currentToken = currentToken
         )
         val respons = requireNotNull(
-            client.retryablePost<_, TilgangResponse>(
+            client.post<_, TilgangResponse>(
                 uri = baseUrl.resolve("/tilgang/journalpost"),
                 request = httpRequest
             )
@@ -71,7 +71,7 @@ object TilgangGateway {
             currentToken = currentToken
         )
         val respons = requireNotNull(
-            client.retryablePost<_, TilgangResponse>(
+            client.post<_, TilgangResponse>(
                 uri = baseUrl.resolve("/tilgang/person"),
                 request = httpRequest
             )

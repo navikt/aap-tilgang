@@ -4,7 +4,7 @@ import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
-import no.nav.aap.komponenter.httpklient.httpclient.retryableGet
+import no.nav.aap.komponenter.httpklient.httpclient.get
 import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.tilgang.RelevanteIdenter
@@ -43,7 +43,7 @@ class BehandlingsflytGateway(
         val url = baseUrl.resolve("/pip/api/sak/${saksnummer}/identer")
         log.info("Kaller behandlingsflyt med URL: $url")
 
-        val respons = httpClient.retryableGet<RelevanteIdenter>(url, GetRequest())
+        val respons = httpClient.get<RelevanteIdenter>(url, GetRequest())
             ?: throw BehandlingsflytException("Feil ved henting av identer for sak")
 
         redis.set(Key(IDENTER_SAK_PREFIX, saksnummer), respons.serialize())
@@ -60,7 +60,7 @@ class BehandlingsflytGateway(
         val url = baseUrl.resolve("/pip/api/behandling/${behandlingsnummer}/identer")
         log.info("Kaller behandlingsflyt med URL: $url")
 
-        val respons = httpClient.retryableGet<RelevanteIdenter>(url, GetRequest())
+        val respons = httpClient.get<RelevanteIdenter>(url, GetRequest())
             ?: throw BehandlingsflytException("Feil ved henting av identer for behandling")
         redis.set(Key(IDENTER_BEHANDLING_PREFIX, behandlingsnummer), respons.serialize())
         return respons
