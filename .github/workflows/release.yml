@@ -94,8 +94,8 @@ jobs:
 
   prod:
     needs: [ publiser-plugin, dev ]
-    ## push til main eller etter branch (e.g. dependabot) er merget
-    if: github.event.pull_request.merged || github.event_name == 'push' || github.event.inputs.cluster == 'dev-gcp'
+    ## push til main eller etter branch (e.g. dependabot) er merget inn på main
+    if: github.ref == 'refs/heads/main' && (github.event.pull_request.merged || github.event_name == 'push' || github.event.inputs.cluster == 'dev-gcp')
     permissions:
       contents: read
       id-token: write
