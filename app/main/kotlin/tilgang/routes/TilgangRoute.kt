@@ -11,7 +11,6 @@ import io.ktor.server.request.*
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import no.nav.aap.komponenter.server.auth.token
 import no.nav.aap.tilgang.*
-import tilgang.LOGGER
 import tilgang.Role
 import tilgang.TilgangService
 import tilgang.auth.ident
@@ -70,7 +69,7 @@ fun NormalOpenAPIRoute.tilgang(
                 prometheus.httpCallCounter("/tilgang/journalpost").increment()
 
                 if (req.operasjon == Operasjon.SAKSBEHANDLE && req.avklaringsbehovKode == null) {
-                    LOGGER.info("Kan ikke saksbehandle uten avklaringsbehov $req")
+                    log.info("Kan ikke saksbehandle uten avklaringsbehov $req")
                     respondWithStatus(HttpStatusCode.BadRequest)
                 }
 

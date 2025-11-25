@@ -185,7 +185,6 @@ fun Application.api(
         }
     }
 
-
     monitor.subscribe(ApplicationStopPreparing) { environment ->
         environment.log.info("ktor forbereder seg på å stoppe.")
     }
