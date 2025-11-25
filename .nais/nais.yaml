@@ -29,6 +29,7 @@ spec:
     requests:
       cpu: 500m
       memory: 1024Mi
+  terminationGracePeriodSeconds: 20
   liveness:
     path: /actuator/live
     initialDelay: 3
