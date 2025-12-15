@@ -30,7 +30,7 @@ fun NormalOpenAPIRoute.tilgang(
     route("/tilgang") {
         route("/sak") {
             post<Unit, TilgangResponse, SakTilgangRequest> { _, req ->
-                prometheus.httpCallCounter("/tilgang/sak").increment()
+                prometheus.httpCallCounter(pipeline.call).increment()
 
                 val callId = pipeline.call.request.header("Nav-CallId") ?: "ukjent"
                 val token = token()
@@ -48,7 +48,7 @@ fun NormalOpenAPIRoute.tilgang(
         }
         route("/behandling") {
             post<Unit, TilgangResponse, BehandlingTilgangRequest> { _, req ->
-                prometheus.httpCallCounter("/tilgang/behandling").increment()
+                prometheus.httpCallCounter(pipeline.call).increment()
 
                 val callId = pipeline.call.request.header("Nav-CallId") ?: "ukjent"
                 val token = token()
@@ -66,7 +66,7 @@ fun NormalOpenAPIRoute.tilgang(
         }
         route("/journalpost") {
             post<Unit, TilgangResponse, JournalpostTilgangRequest> { _, req ->
-                prometheus.httpCallCounter("/tilgang/journalpost").increment()
+                prometheus.httpCallCounter(pipeline.call).increment()
 
                 if (req.operasjon == Operasjon.SAKSBEHANDLE && req.avklaringsbehovKode == null) {
                     log.info("Kan ikke saksbehandle uten avklaringsbehov $req")
@@ -89,6 +89,7 @@ fun NormalOpenAPIRoute.tilgang(
         }
         route("/test/tilgangsmaskinen") {
             post<Unit, TilgangResponse, TilgangsmaskinRequest> { _, req ->
+                prometheus.httpCallCounter(pipeline.call).increment()
                 val harTilgang =
                     tilgangService.harTilgangFraTilgangsmaskin(req.brukerIdenter, token())
                 respond(TilgangResponse(harTilgang))
@@ -97,6 +98,7 @@ fun NormalOpenAPIRoute.tilgang(
 
         route("/person") {
             post<Unit, TilgangResponse, PersonTilgangRequest> { _, req ->
+                prometheus.httpCallCounter(pipeline.call).increment()
                 val harTilgang = tilgangService.harTilgangTilPerson(req.personIdent, token())
                 respond(TilgangResponse(harTilgang))
             }
@@ -104,6 +106,8 @@ fun NormalOpenAPIRoute.tilgang(
     }
     route("/roller") {
         get<Unit, List<Rolle>> {
+            prometheus.httpCallCounter(pipeline.call).increment()
+
             val roller = parseRoller(rolesWithGroupIds = roles, roller())
 
             respond(roller)

@@ -19,6 +19,7 @@ spec:
       claims:
         extra:
           - "NAVident"
+          - "azp_name"
         groups:
           {{#each roles}}
           - id: "{{this.group}}"
