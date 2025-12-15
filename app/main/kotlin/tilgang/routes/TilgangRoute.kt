@@ -106,6 +106,8 @@ fun NormalOpenAPIRoute.tilgang(
     }
     route("/roller") {
         get<Unit, List<Rolle>> {
+            prometheus.httpCallCounter(pipeline.call).increment()
+
             val roller = parseRoller(rolesWithGroupIds = roles, roller())
 
             respond(roller)
