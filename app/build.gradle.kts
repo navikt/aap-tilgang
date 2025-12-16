@@ -5,46 +5,40 @@ plugins {
     application
 }
 
-val ktorVersion = "3.3.3"
-val behandlingsflytVersjon = "0.0.508"
-val postmottakVersjon = "6.0.2"
-val komponenterVersjon = "1.0.464"
-val mockOAuth2ServerVersion = "3.0.1"
-
 application {
     mainClass.set("tilgang.AppKt")
 }
 
 dependencies {
     implementation(project(":api-kontrakt"))
-    implementation("no.nav.aap.behandlingsflyt:kontrakt:$behandlingsflytVersjon")
-    implementation("no.nav.aap.postmottak:kontrakt:$postmottakVersjon")
-    implementation("io.ktor:ktor-server-call-logging:$ktorVersion")
-    implementation("io.ktor:ktor-server-call-logging-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
-    implementation("io.ktor:ktor-server-core:$ktorVersion")
-    implementation("io.ktor:ktor-server-netty:$ktorVersion")
-    implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
+    implementation(libs.behandlingsflytKontrakt)
+    implementation(libs.postmottakKontrakt)
+    implementation(libs.ktorServerCallLogging)
+    implementation(libs.ktorServerCallLoggingJvm)
+    implementation(libs.ktorServerContentNegotation)
+    implementation(libs.ktorServerCore)
+    implementation(libs.ktorServerNetty)
+    implementation(libs.ktorServerStatusPages)
 
-    implementation("no.nav:ktor-openapi-generator:1.0.131")
-    api("no.nav.aap.kelvin:server:$komponenterVersjon")
-    implementation("no.nav.aap.kelvin:infrastructure:$komponenterVersjon")
-    implementation("no.nav.aap.kelvin:httpklient:$komponenterVersjon")
-    implementation("io.micrometer:micrometer-registry-prometheus:1.16.1")
-    implementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.20.1")
-    implementation("ch.qos.logback:logback-classic:1.5.21")
-    implementation("net.logstash.logback:logstash-logback-encoder:9.0")
-    implementation("com.nimbusds:nimbus-jose-jwt:10.6")
-    implementation("redis.clients:jedis:7.1.0")
+    implementation(libs.ktorOpenApiGenerator)
+    api(libs.server)
+    implementation(libs.infrastructure)
+    implementation(libs.httpklient)
+    implementation(libs.micrometerRegistryPrometheus)
+    implementation(libs.ktorSerializationJackson)
+    implementation(libs.jacksonDatatypeJsr310)
+    implementation(libs.logbackClassic)
+    implementation(libs.logstashLogbackEncoder)
+    implementation(libs.joseJwt)
+    implementation(libs.jedis)
 
     testImplementation(kotlin("test"))
-    testImplementation("com.nimbusds:nimbus-jose-jwt:10.6")
-    testImplementation("org.junit.jupiter:junit-jupiter-params:6.0.1")
-    testImplementation("org.assertj:assertj-core:3.27.6")
-    testImplementation("no.nav.security:mock-oauth2-server:${mockOAuth2ServerVersion}")
-    testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
-    testImplementation("com.redis:testcontainers-redis:2.2.4")
+    testImplementation(libs.joseJwt)
+    testImplementation(libs.junitJupiterParams)
+    testImplementation(libs.assertJ)
+    testImplementation(libs.mockOauth2Server)
+    testImplementation(libs.ktorServerTestHost)
+    testImplementation(libs.testcontainersRedis)
     constraints {
         implementation("org.apache.commons:commons-compress:1.28.0") {
             because("https://github.com/advisories/GHSA-4g9r-vxhx-9pgx")
