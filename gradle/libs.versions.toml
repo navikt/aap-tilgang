@@ -1,15 +1,11 @@
 [versions]
 ktor = "3.3.3"
 komponenter = "1.0.464"
-tilgang = "1.0.170"
-utbetaling = "0.0.68"
 junit = "6.0.1"
 testcontainers = "2.0.2"
 
 [libraries]
-ktorClientContentNegotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
 ktorServerContentNegotation = { module = "io.ktor:ktor-server-content-negotiation", version.ref = "ktor" }
-ktorHttpJvm = { module = "io.ktor:ktor-http-jvm", version.ref = "ktor" }
 ktorServerNetty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor" }
 ktorServerCore = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
 ktorServerAuth = { module = "io.ktor:ktor-server-auth", version.ref = "ktor" }
@@ -25,25 +21,13 @@ ktorServerCallId = { module = "io.ktor:ktor-server-call-id", version.ref = "ktor
 ktorServerMetricsMicrometer = { module = "io.ktor:ktor-server-metrics-micrometer", version.ref = "ktor" }
 
 json = { module = "no.nav.aap.kelvin:json", version.ref = "komponenter" }
-dbconnect = { module = "no.nav.aap.kelvin:dbconnect", version.ref = "komponenter" }
-verdityper = { module = "no.nav.aap.kelvin:verdityper", version.ref = "komponenter" }
-dbmigrering = { module = "no.nav.aap.kelvin:dbmigrering", version.ref = "komponenter" }
 httpklient = { module = "no.nav.aap.kelvin:httpklient", version.ref = "komponenter" }
 infrastructure = { module = "no.nav.aap.kelvin:infrastructure", version.ref = "komponenter" }
 server = { module = "no.nav.aap.kelvin:server", version = "1.0.461" }
-tidslinje = { module = "no.nav.aap.kelvin:tidslinje", version.ref = "komponenter" }
-motor = { module = "no.nav.aap.kelvin:motor", version.ref = "komponenter" }
-motorApi = { module = "no.nav.aap.kelvin:motor-api", version.ref = "komponenter" }
-gateway = { module = "no.nav.aap.kelvin:gateway", version.ref = "komponenter" }
-dbtest = { module = "no.nav.aap.kelvin:dbtest", version.ref = "komponenter" }
-motorTestUtils = { module = "no.nav.aap.kelvin:motor-test-utils", version.ref = "komponenter" }
 
 behandlingsflytKontrakt = { module = "no.nav.aap.behandlingsflyt:kontrakt", version = "0.0.508" }
 postmottakKontrakt = { module = "no.nav.aap.postmottak:kontrakt", version = "6.0.2" }
 
-utbetalKontrakt = { module = "no.nav.aap.utbetal:api-kontrakt", version.ref = "utbetaling" }
-
-caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version = "3.2.3" }
 ktorOpenApiGenerator = { module = "no.nav:ktor-openapi-generator", version = "1.0.132" }
 
 logbackClassic = { module = "ch.qos.logback:logback-classic", version = "1.5.21" }
@@ -61,10 +45,6 @@ junitJupiterEngine = { module = "org.junit.jupiter:junit-jupiter-engine", versio
 junitJupiterParams = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit" }
 junitPlatformLauncher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit" }
 assertJ = { module = "org.assertj:assertj-core", version = "3.27.6" }
-tabletest = { module = "io.github.nchaugen:tabletest-junit", version = "0.5.5" }
-testcontainers = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers"}
-testcontainersPostgres = { module = "org.testcontainers:testcontainers-postgresql", version.ref = "testcontainers"}
-testcontainersKafka = { module = "org.testcontainers:testcontainers-kafka", version.ref = "testcontainers"}
 
 [bundles]
 junit = ["junitJupiterApi", "junitJupiterEngine", "junitJupiterParams", "assertJ"]
