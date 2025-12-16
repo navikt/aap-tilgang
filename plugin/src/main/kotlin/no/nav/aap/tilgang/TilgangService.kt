@@ -1,12 +1,10 @@
 package no.nav.aap.tilgang
 
 import io.ktor.server.application.ApplicationCall
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runInterruptible
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 
 object TilgangService {
-    suspend fun harTilgang(
+    fun harTilgang(
         authorizedRequest: AuthorizedRequest,
         call: ApplicationCall,
         token: OidcToken
@@ -21,13 +19,11 @@ object TilgangService {
         val request = requireNotNull(authorizedRequest.tilgangRequest) {
             "Kan ikke utlede tilgangRequest for OBO-token."
         }
-        return runInterruptible(Dispatchers.IO) {
-            when (request) {
-                is SakTilgangRequest -> TilgangGateway.harTilgangTilSak(request, token)
-                is BehandlingTilgangRequest -> TilgangGateway.harTilgangTilBehandling(request, token)
-                is JournalpostTilgangRequest -> TilgangGateway.harTilgangTilJournalpost(request, token)
-                is PersonTilgangRequest -> TilgangGateway.harTilgangTilPerson(request, token)
-            }
+        return when (request) {
+            is SakTilgangRequest -> TilgangGateway.harTilgangTilSak(request, token)
+            is BehandlingTilgangRequest -> TilgangGateway.harTilgangTilBehandling(request, token)
+            is JournalpostTilgangRequest -> TilgangGateway.harTilgangTilJournalpost(request, token)
+            is PersonTilgangRequest -> TilgangGateway.harTilgangTilPerson(request, token)
         }
     }
 }
