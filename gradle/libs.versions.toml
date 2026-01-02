@@ -30,12 +30,12 @@ postmottakKontrakt = { module = "no.nav.aap.postmottak:kontrakt", version = "6.0
 
 ktorOpenApiGenerator = { module = "no.nav:ktor-openapi-generator", version = "1.0.132" }
 
-logbackClassic = { module = "ch.qos.logback:logback-classic", version = "1.5.21" }
+logbackClassic = { module = "ch.qos.logback:logback-classic", version = "1.5.23" }
 logstashLogbackEncoder = { module = "net.logstash.logback:logstash-logback-encoder", version = "9.0" }
 
 micrometerRegistryPrometheus = { module = "io.micrometer:micrometer-registry-prometheus", version = "1.16.1" }
 jacksonDatatypeJsr310 = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version = "2.20.1" }
-jedis = { module = "redis.clients:jedis", version = "7.1.0" }
+jedis = { module = "redis.clients:jedis", version = "7.2.0" }
 mockOauth2Server = { module = "no.nav.security:mock-oauth2-server", version = "3.0.1" }
 testcontainersRedis = { module = "com.redis:testcontainers-redis", version = "2.2.4" }
 
