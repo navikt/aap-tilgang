@@ -28,7 +28,7 @@ server = { module = "no.nav.aap.kelvin:server", version = "1.0.479" }
 behandlingsflytKontrakt = { module = "no.nav.aap.behandlingsflyt:kontrakt", version = "0.0.518" }
 postmottakKontrakt = { module = "no.nav.aap.postmottak:kontrakt", version = "6.0.3" }
 
-ktorOpenApiGenerator = { module = "no.nav:ktor-openapi-generator", version = "1.0.134" }
+ktorOpenApiGenerator = { module = "no.nav:ktor-openapi-generator", version = "1.0.136" }
 
 logbackClassic = { module = "ch.qos.logback:logback-classic", version = "1.5.24" }
 logstashLogbackEncoder = { module = "net.logstash.logback:logstash-logback-encoder", version = "9.0" }
