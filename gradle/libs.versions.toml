@@ -1,7 +1,7 @@
 [versions]
 ktor = "3.3.3"
 komponenter = "1.0.479"
-junit = "6.0.1"
+junit = "6.0.2"
 testcontainers = "2.0.2"
 
 [libraries]
@@ -30,7 +30,7 @@ postmottakKontrakt = { module = "no.nav.aap.postmottak:kontrakt", version = "6.0
 
 ktorOpenApiGenerator = { module = "no.nav:ktor-openapi-generator", version = "1.0.134" }
 
-logbackClassic = { module = "ch.qos.logback:logback-classic", version = "1.5.23" }
+logbackClassic = { module = "ch.qos.logback:logback-classic", version = "1.5.24" }
 logstashLogbackEncoder = { module = "net.logstash.logback:logstash-logback-encoder", version = "9.0" }
 
 micrometerRegistryPrometheus = { module = "io.micrometer:micrometer-registry-prometheus", version = "1.16.1" }
@@ -39,7 +39,7 @@ jedis = { module = "redis.clients:jedis", version = "7.2.0" }
 mockOauth2Server = { module = "no.nav.security:mock-oauth2-server", version = "3.0.1" }
 testcontainersRedis = { module = "com.redis:testcontainers-redis", version = "2.2.4" }
 
-joseJwt = { module = "com.nimbusds:nimbus-jose-jwt", version = "10.6" }
+joseJwt = { module = "com.nimbusds:nimbus-jose-jwt", version = "10.7" }
 junitJupiterApi = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
 junitJupiterEngine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
 junitJupiterParams = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit" }
