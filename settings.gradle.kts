@@ -1,4 +1,4 @@
-rootProject.name = "aap-tilgang"
+rootProject.name = "tilgang"
 include("app", "plugin", "api-kontrakt", "plugin-kontrakt")
 
 
