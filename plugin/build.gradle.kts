@@ -3,7 +3,7 @@ val komponenterVersjon = "1.0.464"
 val junitVersion = "6.0.1"
 
 plugins {
-    id("aap-tilgang.conventions")
+    id("aap.conventions")
     `maven-publish`
     `java-library`
 }
