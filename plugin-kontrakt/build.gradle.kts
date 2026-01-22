@@ -1,5 +1,5 @@
 plugins {
-    id("aap-tilgang.conventions")
+    id("aap.conventions")
     `maven-publish`
     `java-library`
 }

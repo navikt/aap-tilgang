@@ -113,7 +113,7 @@ class TilgangService(
             return identer
         } else {
             val søkerIdent = journalpost.bruker?.id
-            requireNotNull(søkerIdent)
+            requireNotNull(søkerIdent) { "Fant ingen ident på søker i journalposten" }
             return RelevanteIdenter(søker = listOf(søkerIdent), barn = emptyList())
         }
     }
