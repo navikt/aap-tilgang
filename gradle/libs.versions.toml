@@ -1,6 +1,6 @@
 [versions]
 ktor = "3.3.3"
-komponenter = "1.0.490"
+komponenter = "1.0.934"
 junit = "6.0.2"
 testcontainers = "2.0.2"
 
@@ -28,7 +28,7 @@ server = { module = "no.nav.aap.kelvin:server", version = "1.0.490" }
 behandlingsflytKontrakt = { module = "no.nav.aap.behandlingsflyt:kontrakt", version = "0.0.538" }
 postmottakKontrakt = { module = "no.nav.aap.postmottak:kontrakt", version = "6.0.4" }
 
-ktorOpenApiGenerator = { module = "no.nav:ktor-openapi-generator", version = "1.0.136" }
+ktorOpenApiGenerator = { module = "no.nav.aap.kelvin:ktor-openapi-generator", version.ref = "komponenter" }
 
 logbackClassic = { module = "ch.qos.logback:logback-classic", version = "1.5.25" }
 logstashLogbackEncoder = { module = "net.logstash.logback:logstash-logback-encoder", version = "9.0" }
