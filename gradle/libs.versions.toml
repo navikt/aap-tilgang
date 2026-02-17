@@ -22,9 +22,9 @@ ktorServerMetricsMicrometer = { module = "io.ktor:ktor-server-metrics-micrometer
 json = { module = "no.nav.aap.kelvin:json", version.ref = "komponenter" }
 httpklient = { module = "no.nav.aap.kelvin:httpklient", version.ref = "komponenter" }
 infrastructure = { module = "no.nav.aap.kelvin:infrastructure", version.ref = "komponenter" }
-server = { module = "no.nav.aap.kelvin:server", version = "1.0.937" }
+server = { module = "no.nav.aap.kelvin:server", version = "2.0.0" }
 
-behandlingsflytKontrakt = { module = "no.nav.aap.behandlingsflyt:kontrakt", version = "0.0.547" }
+behandlingsflytKontrakt = { module = "no.nav.aap.behandlingsflyt:kontrakt", version = "0.0.550" }
 postmottakKontrakt = { module = "no.nav.aap.postmottak:kontrakt", version = "6.0.4" }
 
 ktorOpenApiGenerator = { module = "no.nav.aap.kelvin:ktor-openapi-generator", version.ref = "komponenter" }
