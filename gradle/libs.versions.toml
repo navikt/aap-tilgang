@@ -37,6 +37,7 @@ jacksonDatatypeJsr310 = { module = "com.fasterxml.jackson.datatype:jackson-datat
 jedis = { module = "redis.clients:jedis", version = "7.2.1" }
 mockOauth2Server = { module = "no.nav.security:mock-oauth2-server", version = "3.0.1" }
 testcontainersRedis = { module = "com.redis:testcontainers-redis", version = "2.2.4" }
+testcontainers = { module = "org.testcontainers:testcontainers", version = "2.0.3" }
 
 joseJwt = { module = "com.nimbusds:nimbus-jose-jwt", version = "10.7" }
 junitJupiterApi = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }

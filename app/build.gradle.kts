@@ -39,6 +39,7 @@ dependencies {
     testImplementation(libs.mockOauth2Server)
     testImplementation(libs.ktorServerTestHost)
     testImplementation(libs.testcontainersRedis)
+    testImplementation(libs.testcontainers)
     constraints {
         implementation("org.apache.commons:commons-compress:1.28.0") {
             because("https://github.com/advisories/GHSA-4g9r-vxhx-9pgx")
