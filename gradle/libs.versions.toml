@@ -1,8 +1,7 @@
 [versions]
-ktor = "3.3.3"
-komponenter = "1.0.937"
+ktor = "3.4.0"
+komponenter = "2.0.0"
 junit = "6.0.2"
-testcontainers = "2.0.2"
 
 [libraries]
 ktorServerContentNegotation = { module = "io.ktor:ktor-server-content-negotiation", version.ref = "ktor" }
