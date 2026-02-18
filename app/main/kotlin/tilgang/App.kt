@@ -19,22 +19,23 @@ import io.ktor.server.routing.routing
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import java.net.http.HttpTimeoutException
+import kotlin.time.Duration.Companion.seconds
 import no.nav.aap.komponenter.server.AZURE
 import no.nav.aap.komponenter.server.commonKtorModule
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import tilgang.AppConfig.LOGGER
-import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytGateway
 import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytException
-import tilgang.integrasjoner.msgraph.MsGraphGateway
+import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytGateway
 import tilgang.integrasjoner.msgraph.MsGraphException
+import tilgang.integrasjoner.msgraph.MsGraphGateway
 import tilgang.integrasjoner.nom.NomException
 import tilgang.integrasjoner.pdl.PdlException
 import tilgang.integrasjoner.pdl.PdlGraphQLGateway
 import tilgang.integrasjoner.saf.SafException
 import tilgang.integrasjoner.saf.SafGraphqlGateway
-import tilgang.integrasjoner.skjerming.SkjermingGateway
 import tilgang.integrasjoner.skjerming.SkjermingException
+import tilgang.integrasjoner.skjerming.SkjermingGateway
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinGateway
 import tilgang.metrics.uhåndtertExceptionTeller
 import tilgang.redis.Redis
@@ -42,10 +43,8 @@ import tilgang.regler.RegelService
 import tilgang.routes.actuator
 import tilgang.routes.tilgang
 import tilgang.service.AdressebeskyttelseService
-import tilgang.service.EnhetService
 import tilgang.service.GeoService
 import tilgang.service.SkjermingService
-import kotlin.time.Duration.Companion.seconds
 
 
 internal object AppConfig {
@@ -99,12 +98,11 @@ fun Application.api(
     val behandlingsflyt = BehandlingsflytGateway(redis, prometheus)
     val saf = SafGraphqlGateway(redis, prometheus)
     val geoService = GeoService(msGraph)
-    val enhetService = EnhetService(msGraph)
     val skjermingGateway = SkjermingGateway(redis, prometheus)
     val skjermingService = SkjermingService(msGraph)
     val tilgangsmaskinGateway = TilgangsmaskinGateway(redis, prometheus)
     val regelService = RegelService(
-        geoService, enhetService, pdl, skjermingGateway, skjermingService, AdressebeskyttelseService(msGraph), tilgangsmaskinGateway
+        geoService, pdl, skjermingGateway, skjermingService, AdressebeskyttelseService(msGraph), tilgangsmaskinGateway
     )
     val tilgangService = TilgangService(saf, behandlingsflyt, regelService, tilgangsmaskinGateway)
 
