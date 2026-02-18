@@ -1,13 +1,14 @@
 package tilgang
 
-import io.ktor.server.application.*
-import io.ktor.server.engine.*
-import io.ktor.server.netty.*
-import tilgang.fakes.Fakes
+import io.ktor.server.engine.embeddedServer
+import io.ktor.server.netty.Netty
 import java.net.URI
+import tilgang.fakes.AzurePortHolder
+import tilgang.fakes.Fakes
 
 fun main() {
-    val fakes = Fakes(azurePort = 8081)
+    AzurePortHolder.setPort(8081)
+    Fakes.start()
 
     embeddedServer(Netty, port = 8080) {
         api(
@@ -15,8 +16,8 @@ fun main() {
                 azureConfig = no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureConfig(
                     clientId = "tilgang",
                     clientSecret = "",
-                    tokenEndpoint = URI.create("http://localhost:${fakes.azurePort()}").resolve("/token"),
-                    jwksUri = URI.create("http://localhost:${fakes.azurePort()}").resolve("/jwks").toString(),
+                    tokenEndpoint = URI.create("http://localhost:${AzurePortHolder.getPort()}").resolve("/token"),
+                    jwksUri = URI.create("http://localhost:${AzurePortHolder.getPort()}").resolve("/jwks").toString(),
                     issuer = "tilgang"
                 ),
                 redis = RedisConfig(
@@ -28,17 +29,5 @@ fun main() {
                 // Kan fylles inn med ekte verdier om disse fakes i Fakes
             )
         )
-        module(fakes)
     }.start(wait = true)
-}
-
-
-private fun Application.module(fakes: Fakes) {
-    // Setter opp virtuell sandkasse lokalt
-    monitor.subscribe(ApplicationStopped) { application ->
-        application.environment.log.info("Server har stoppet")
-        fakes.close()
-        // Release resources and unsubscribe from events
-        application.monitor.unsubscribe(ApplicationStopped) {}
-    }
 }

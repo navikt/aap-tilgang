@@ -1,21 +1,52 @@
 package tilgang.fakes
 
-import FakeServer
+import io.ktor.server.engine.ConnectorType
+import io.ktor.server.engine.EmbeddedServer
+import io.ktor.server.engine.embeddedServer
+import io.ktor.server.netty.Netty
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
+import kotlinx.coroutines.runBlocking
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import tilgang.InitTestRedis
 import tilgang.redis.Redis
 
-class Fakes(azurePort: Int = 0) : AutoCloseable {
-    private val log: Logger = LoggerFactory.getLogger(Fakes::class.java)
-    private val azure = FakeServer(azurePort) { azureFake() }
-    private val pdl = FakeServer(module = { pdlFake() })
-    private val tilgangsmaskin = FakeServer(module = { tilgangsmaskinFake() })
-    val redis = Redis(InitTestRedis.uri)
-    val prometheues = SimpleMeterRegistry()
+object Fakes : AutoCloseable {
+    private val log: Logger = LoggerFactory.getLogger(this::class.java)
 
-    init {
+    private val azure by lazy { embeddedServer(Netty, port = AzurePortHolder.getPort(), module = { azureFake() }) }
+    private val pdl by lazy { embeddedServer(Netty, port = 0, module = { pdlFake() }) }
+    private val tilgangsmaskin by lazy { embeddedServer(Netty, port = 0, module = { tilgangsmaskinFake() }) }
+
+    val redis = Redis(InitTestRedis.uri)
+    val prometheus = SimpleMeterRegistry()
+
+    private val started = AtomicBoolean(false)
+
+    fun start() {
+        if (!started.compareAndSet(false, true)) return
+
+        azure.start()
+        pdl.start()
+        tilgangsmaskin.start()
+
+        setProperties()
+    }
+
+    override fun close() {
+        if (!started.get()) {
+            return
+        }
+
+        azure.stop()
+        pdl.stop()
+        tilgangsmaskin.stop()
+        redis.close()
+    }
+
+    private fun setProperties() {
         Thread.currentThread().setUncaughtExceptionHandler { _, e -> log.error("Uhåndtert feil", e) }
 
         Runtime.getRuntime().addShutdownHook(Thread { close() })
@@ -33,7 +64,7 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
         // Tilgangsmaskinen
         System.setProperty("integrasjon.tilgangsmaskin.url", "http://localhost:${tilgangsmaskin.port()}/api/v1/kjerne")
         System.setProperty("integrasjon.tilgangsmaskin.scope", "tilgangsmaskin")
-        
+
         // TODO: Lag fakes for disse
         System.setProperty("saf.base.url", "test")
         System.setProperty("saf.scope", "saf")
@@ -46,15 +77,22 @@ class Fakes(azurePort: Int = 0) : AutoCloseable {
         System.setProperty("ms.graph.scope", "msgraph")
         System.setProperty("ms.graph.base.url", "test")
     }
+}
 
-    fun azurePort(): Int {
-        return azure.port()
+private fun EmbeddedServer<*, *>.port(): Int {
+    return runBlocking { this@port.engine.resolvedConnectors() }
+        .first { it.type == ConnectorType.HTTP }
+        .port
+}
+
+object AzurePortHolder {
+    private val azurePort = AtomicInteger(0)
+
+    fun setPort(port: Int) {
+        azurePort.set(port)
     }
 
-    override fun close() {
-        azure.stop()
-        pdl.stop()
-        tilgangsmaskin.stop()
-        redis.close()
+    fun getPort(): Int {
+        return azurePort.get()
     }
 }

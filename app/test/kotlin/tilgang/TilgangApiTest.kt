@@ -17,7 +17,7 @@ import java.util.*
 class TilgangApiTest {
     companion object {
         private val server = MockOAuth2Server()
-        val redis = InitTestRedis
+        private val redis = InitTestRedis
 
         @BeforeAll
         @JvmStatic

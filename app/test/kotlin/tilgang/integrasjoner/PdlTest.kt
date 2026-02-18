@@ -1,28 +1,19 @@
 package tilgang.integrasjoner
 
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import tilgang.fakes.Fakes
+import tilgang.fakes.WithFakes
 import tilgang.integrasjoner.pdl.PdlGraphQLGateway
 
+@WithFakes
 class PdlTest {
-    companion object {
-        private val fakes = Fakes()
-
-        @AfterAll
-        @JvmStatic
-        fun afterall() {
-            fakes.close()
-        }
-    }
 
     @Test
     fun `Kan parse hentPersonBolk`() {
         val test =
-            PdlGraphQLGateway(fakes.redis, fakes.prometheues).hentPersonBolk(listOf("1234"), "test")
+            PdlGraphQLGateway(Fakes.redis, Fakes.prometheus).hentPersonBolk(listOf("1234"), "test")
 
         assertThat(test?.size).isEqualTo(1)
     }
-
 }
