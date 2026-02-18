@@ -38,7 +38,7 @@ import java.util.*
 class TilgangPluginTest {
     companion object {
         private val azureTokenGen = AzureTokenGen("behandlingsflyt", "behandlingsflyt")
-        private val fakes = Fakes(azurePort = 8081, azureTokenGen)
+        private val fakes = Fakes(azureTokenGen = azureTokenGen)
 
         private val clientForClientCredentials = RestClient(
             config = ClientConfig(scope = "behandlingsflyt"),
