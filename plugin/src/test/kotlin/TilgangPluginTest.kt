@@ -89,16 +89,6 @@ class TilgangPluginTest {
             autorisertEksempelAppServer.stop()
         }
 
-        private fun Application.module(fakes: Fakes) {
-            // Setter opp virtuell sandkasse lokalt
-            monitor.subscribe(ApplicationStopped) { application ->
-                application.environment.log.info("Server har stoppet")
-                fakes.close()
-                // Release resources and unsubscribe from events
-                application.monitor.unsubscribe(ApplicationStopped) {}
-            }
-        }
-
         data class TestReferanse(
             @param:PathParam(description = "saksnummer") val saksnummer: UUID = UUID.randomUUID()
         )
