@@ -4,14 +4,12 @@ import io.ktor.server.engine.ConnectorType
 import io.ktor.server.engine.EmbeddedServer
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
-import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.runBlocking
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import tilgang.TestRedis
-import tilgang.redis.Redis
 
 object Fakes : AutoCloseable {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -20,15 +18,14 @@ object Fakes : AutoCloseable {
     private val pdl by lazy { embeddedServer(Netty, port = 0, module = { pdlFake() }) }
     private val tilgangsmaskin by lazy { embeddedServer(Netty, port = 0, module = { tilgangsmaskinFake() }) }
 
-    val redis: Redis
-        get() = TestRedis.redis
+    val redis = TestRedis()
 
     private val started = AtomicBoolean(false)
 
     fun start() {
         if (!started.compareAndSet(false, true)) return
 
-        TestRedis.start()
+        redis.start()
         azure.start()
         pdl.start()
         tilgangsmaskin.start()
@@ -44,7 +41,7 @@ object Fakes : AutoCloseable {
         azure.stop()
         pdl.stop()
         tilgangsmaskin.stop()
-        TestRedis.stop()
+        redis.stop()
     }
 
     private fun setProperties() {

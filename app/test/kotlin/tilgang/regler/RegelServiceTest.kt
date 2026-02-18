@@ -29,6 +29,7 @@ import tilgang.service.SkjermingService
 
 @WithFakes
 class RegelServiceTest {
+    private val redis = Fakes.redis.server
 
     @ParameterizedTest
     @EnumSource(Definisjon::class)
@@ -77,7 +78,7 @@ class RegelServiceTest {
             }
         }
         val enhetService = EnhetService(graphGateway)
-        val skjermingGateway = object : SkjermingGateway(Fakes.redis, prometheus) {}
+        val skjermingGateway = object : SkjermingGateway(redis, prometheus) {}
 
         val skjermingService = SkjermingService(graphGateway)
 
@@ -88,7 +89,7 @@ class RegelServiceTest {
             skjermingGateway,
             skjermingService,
             AdressebeskyttelseService(graphGateway),
-            TilgangsmaskinGateway(Fakes.redis, prometheus)
+            TilgangsmaskinGateway(redis, prometheus)
         )
 
         val token = AzureTokenGen("tilgangazure", "tilgang").generate()

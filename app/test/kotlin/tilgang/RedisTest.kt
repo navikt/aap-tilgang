@@ -12,7 +12,7 @@ import tilgang.redis.Redis.Companion.serialize
 
 @WithFakes
 class RedisTest {
-    private val redis = Fakes.redis
+    private val redis = Fakes.redis.server
 
     @Test
     fun `kan hente cache og cache fjernes etter expire`() {

@@ -3,39 +3,38 @@ package tilgang
 import com.redis.testcontainers.RedisContainer
 import java.net.URI
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 import tilgang.redis.Redis
 
-object TestRedis : AutoCloseable {
-    private const val TI_SEKUNDER_MILLIS: Long = 10_000
-    private const val HALVT_SEKUND_MILLIS: Long = 500
-
+class TestRedis : AutoCloseable {
     private val started = AtomicBoolean(false)
     private val redisContainer by lazy { RedisContainer(RedisContainer.DEFAULT_IMAGE_NAME.withTag(RedisContainer.DEFAULT_TAG)) }
 
     val uri: URI
         get() = URI(redisContainer.redisURI)
 
-    val redis: Redis by lazy { Redis(uri) }
+    val server: Redis by lazy { Redis(uri) }
 
     fun start() {
         if (!started.compareAndSet(false, true)) return
 
         redisContainer.start()
 
-        val timeout = System.currentTimeMillis() + TI_SEKUNDER_MILLIS
+        val timeout = System.currentTimeMillis() + 10.seconds.inWholeMilliseconds
         while (System.currentTimeMillis() < timeout) {
             try {
-                redis.ready()
+                server.ready()
                 break
             } catch (_: Throwable) {
-                Thread.sleep(HALVT_SEKUND_MILLIS)
+                Thread.sleep(500.milliseconds.inWholeMilliseconds)
             }
         }
     }
 
     fun stop() {
         if (!started.get()) return
-        redis.close()
+        server.close()
         redisContainer.stop()
     }
 

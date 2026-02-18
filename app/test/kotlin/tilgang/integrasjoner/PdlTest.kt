@@ -15,7 +15,7 @@ class PdlTest {
     fun `Kan parse hentPersonBolk`() {
         val prometheus = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
 
-        val test = PdlGraphQLGateway(Fakes.redis, prometheus).hentPersonBolk(listOf("1234"), "test")
+        val test = PdlGraphQLGateway(Fakes.redis.server, prometheus).hentPersonBolk(listOf("1234"), "test")
 
         assertThat(test?.size).isEqualTo(1)
     }
