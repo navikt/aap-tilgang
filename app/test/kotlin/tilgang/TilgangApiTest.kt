@@ -17,12 +17,12 @@ import java.util.*
 class TilgangApiTest {
     companion object {
         private val server = MockOAuth2Server()
-        private val redis = InitTestRedis
 
         @BeforeAll
         @JvmStatic
         fun setup() {
             server.start()
+            TestRedis.start()
 
             System.setProperty(
                 "azure.openid.config.token.endpoint",
@@ -56,6 +56,7 @@ class TilgangApiTest {
         @JvmStatic
         fun afterAll() {
             server.shutdown()
+            TestRedis.stop()
         }
     }
 
@@ -77,7 +78,7 @@ class TilgangApiTest {
                     Config(
                         roles = alleRoller,
                         redis = RedisConfig(
-                            uri = redis.uri,
+                            uri = TestRedis.uri,
                             username = "test",
                             password = "test"
                         )
