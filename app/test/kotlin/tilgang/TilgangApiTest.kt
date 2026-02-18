@@ -56,7 +56,6 @@ class TilgangApiTest {
         @JvmStatic
         fun afterAll() {
             server.shutdown()
-            TestRedis.stop()
         }
     }
 
@@ -98,7 +97,7 @@ class TilgangApiTest {
     private suspend fun sendGetRequest(
         client: HttpClient,
         jwt: SignedJWT,
-        path: String
+        path: String,
     ) = client.get(path) {
         header("Authorization", "Bearer ${jwt.serialize()}")
         header("X-callid", UUID.randomUUID().toString())

@@ -23,8 +23,6 @@ object Fakes : AutoCloseable {
     val redis: Redis
         get() = TestRedis.redis
 
-    val prometheus = SimpleMeterRegistry()
-
     private val started = AtomicBoolean(false)
 
     fun start() {

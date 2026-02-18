@@ -5,7 +5,7 @@ import java.net.URI
 import java.util.concurrent.atomic.AtomicBoolean
 import tilgang.redis.Redis
 
-object TestRedis {
+object TestRedis : AutoCloseable {
     private const val TI_SEKUNDER_MILLIS: Long = 10_000
     private const val HALVT_SEKUND_MILLIS: Long = 500
 
@@ -37,5 +37,9 @@ object TestRedis {
         if (!started.get()) return
         redis.close()
         redisContainer.stop()
+    }
+
+    override fun close() {
+        stop()
     }
 }
