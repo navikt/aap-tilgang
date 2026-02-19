@@ -1,22 +1,16 @@
 package tilgang.fakes
 
-import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.extension.BeforeAllCallback
+import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.api.extension.ExtensionContext
 
-interface WithFakes {
-    companion object {
-        lateinit var fakes: Fakes
-
-        @JvmStatic
-        @BeforeAll
-        fun beforeAll() {
-            fakes = Fakes()
-        }
-
-        @JvmStatic
-        @AfterAll
-        fun afterAll() {
-            fakes.close()
-        }
+class FakesExtension : BeforeAllCallback {
+    override fun beforeAll(context: ExtensionContext) {
+        Fakes.start()
     }
 }
+
+@Target(AnnotationTarget.CLASS)
+@Retention(AnnotationRetention.RUNTIME)
+@ExtendWith(FakesExtension::class)
+annotation class WithFakes

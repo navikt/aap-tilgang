@@ -1,62 +1,64 @@
 package tilgang
 
 import com.nimbusds.jwt.SignedJWT
-import io.ktor.client.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
-import io.ktor.server.testing.*
+import io.ktor.client.HttpClient
+import io.ktor.client.request.get
+import io.ktor.client.request.header
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
+import io.ktor.server.testing.testApplication
+import java.util.UUID
 import no.nav.aap.tilgang.Rolle
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
-import java.util.*
+import org.junit.jupiter.api.TestInstance
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TilgangApiTest {
-    companion object {
-        private val server = MockOAuth2Server()
-        val redis = InitTestRedis
+    private val redis = TestRedis()
+    private val server = MockOAuth2Server()
 
-        @BeforeAll
-        @JvmStatic
-        fun setup() {
-            server.start()
+    @BeforeAll
+    fun setup() {
+        server.start()
+        redis.start()
 
-            System.setProperty(
-                "azure.openid.config.token.endpoint",
-                server.tokenEndpointUrl("default").toString()
-            )
-            System.setProperty("azure.app.client.id", "default")
-            System.setProperty("azure.app.client.secret", "default")
-            System.setProperty("azure.openid.config.jwks.uri", server.jwksUrl("default").toString())
-            System.setProperty("azure.openid.config.issuer", server.issuerUrl("default").toString())
+        System.setProperty(
+            "azure.openid.config.token.endpoint",
+            server.tokenEndpointUrl("default").toString()
+        )
+        System.setProperty("azure.app.client.id", "default")
+        System.setProperty("azure.app.client.secret", "default")
+        System.setProperty("azure.openid.config.jwks.uri", server.jwksUrl("default").toString())
+        System.setProperty("azure.openid.config.issuer", server.issuerUrl("default").toString())
 
 
-            System.setProperty("pdl.base.url", "http://localhost")
-            System.setProperty("pdl.scope", "pdl")
+        System.setProperty("pdl.base.url", "http://localhost")
+        System.setProperty("pdl.scope", "pdl")
 
-            // TODO: Lag fakes for disse
-            System.setProperty("saf.base.url", "test")
-            System.setProperty("saf.scope", "saf")
-            System.setProperty("nom.scope", "nom")
-            System.setProperty("nom.base.url", "test")
-            System.setProperty("skjerming.scope", "skjerming")
-            System.setProperty("skjerming.base.url", "test")
-            System.setProperty("behandlingsflyt.scope", "behandlingsflyt")
-            System.setProperty("behandlingsflyt.base.url", "test")
-            System.setProperty("ms.graph.scope", "msgraph")
-            System.setProperty("ms.graph.base.url", "test")
-            System.setProperty("integrasjon.tilgangsmaskin.scope", "tilgangsmaskin")
-            System.setProperty("integrasjon.tilgangsmaskin.url", "tilgangsmaskin")
-        }
+        // TODO: Lag fakes for disse
+        System.setProperty("saf.base.url", "test")
+        System.setProperty("saf.scope", "saf")
+        System.setProperty("nom.scope", "nom")
+        System.setProperty("nom.base.url", "test")
+        System.setProperty("skjerming.scope", "skjerming")
+        System.setProperty("skjerming.base.url", "test")
+        System.setProperty("behandlingsflyt.scope", "behandlingsflyt")
+        System.setProperty("behandlingsflyt.base.url", "test")
+        System.setProperty("ms.graph.scope", "msgraph")
+        System.setProperty("ms.graph.base.url", "test")
+        System.setProperty("integrasjon.tilgangsmaskin.scope", "tilgangsmaskin")
+        System.setProperty("integrasjon.tilgangsmaskin.url", "tilgangsmaskin")
+    }
 
-        @AfterAll
-        @JvmStatic
-        fun afterAll() {
-            server.shutdown()
-        }
+    @AfterAll
+    fun afterAll() {
+        server.shutdown()
     }
 
     @Test
@@ -97,7 +99,7 @@ class TilgangApiTest {
     private suspend fun sendGetRequest(
         client: HttpClient,
         jwt: SignedJWT,
-        path: String
+        path: String,
     ) = client.get(path) {
         header("Authorization", "Bearer ${jwt.serialize()}")
         header("X-callid", UUID.randomUUID().toString())

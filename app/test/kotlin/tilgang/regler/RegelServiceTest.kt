@@ -2,16 +2,17 @@ package tilgang.regler
 
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
+import java.util.UUID
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
-import org.junit.jupiter.api.AfterAll
+import no.nav.aap.tilgang.Operasjon
+import no.nav.aap.tilgang.RelevanteIdenter
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import tilgang.AzureTokenGen
-import no.nav.aap.tilgang.Operasjon
-import no.nav.aap.tilgang.RelevanteIdenter
 import tilgang.fakes.Fakes
+import tilgang.fakes.WithFakes
 import tilgang.integrasjoner.msgraph.Group
 import tilgang.integrasjoner.msgraph.IMsGraphGateway
 import tilgang.integrasjoner.msgraph.MemberOf
@@ -25,18 +26,10 @@ import tilgang.service.AdressebeskyttelseService
 import tilgang.service.EnhetService
 import tilgang.service.GeoService
 import tilgang.service.SkjermingService
-import java.util.*
 
+@WithFakes
 class RegelServiceTest {
-    companion object {
-        private val FAKES = Fakes()
-
-        @AfterAll
-        @JvmStatic
-        fun afterall() {
-            FAKES.close()
-        }
-    }
+    private val redis = Fakes.redis.server
 
     @ParameterizedTest
     @EnumSource(Definisjon::class)
@@ -61,7 +54,7 @@ class RegelServiceTest {
         val pdlService = object : IPdlGraphQLGateway {
             override fun hentPersonBolk(
                 personidenter: List<String>,
-                callId: String
+                callId: String,
             ): List<PersonResultat> {
                 return personidenter.map {
                     PersonResultat(
@@ -74,7 +67,7 @@ class RegelServiceTest {
 
             override fun hentGeografiskTilknytning(
                 ident: String,
-                callId: String
+                callId: String,
             ): HentGeografiskTilknytningResult {
                 return HentGeografiskTilknytningResult(
                     gtType = PdlGeoType.KOMMUNE,
@@ -85,10 +78,7 @@ class RegelServiceTest {
             }
         }
         val enhetService = EnhetService(graphGateway)
-        val skjermingGateway = object : SkjermingGateway(
-            FAKES.redis, prometheus
-        ) {
-        }
+        val skjermingGateway = object : SkjermingGateway(redis, prometheus) {}
 
         val skjermingService = SkjermingService(graphGateway)
 
@@ -99,7 +89,7 @@ class RegelServiceTest {
             skjermingGateway,
             skjermingService,
             AdressebeskyttelseService(graphGateway),
-            TilgangsmaskinGateway(FAKES.redis, prometheus)
+            TilgangsmaskinGateway(redis, prometheus)
         )
 
         val token = AzureTokenGen("tilgangazure", "tilgang").generate()
