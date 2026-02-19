@@ -25,7 +25,7 @@ fun Application.tilgangsmaskinFake() {
             if (body.contains("123")) {
                 call.respond(HttpStatusCode.NoContent)
             } else if (body.contains("456")) {
-                val body = TilgangsmaskinAvvistResponse (
+                val body = TilgangsmaskinAvvistResponse(
                     type = "https://confluence.adeo.no/display/TM/Tilgangsmaskin+API+og+regelsett",
                     title = "AVVIST_HABILITET",
                     status = 403,
@@ -36,6 +36,23 @@ fun Application.tilgangsmaskinFake() {
                 call.respond(HttpStatusCode.Forbidden, body)
             } else {
                 throw NotImplementedError("Mangler implementasjon")
+            }
+        }
+
+        post("/api/v1/komplett") {
+            val body = call.receive<String>()
+            if (body.contains("456")) {
+                val body = TilgangsmaskinAvvistResponse(
+                    type = "https://confluence.adeo.no/display/TM/Tilgangsmaskin+API+og+regelsett",
+                    title = "AVVIST_HABILITET",
+                    status = 403,
+                    navIdent = "Z990883",
+                    begrunnelse = "Inhabil",
+                    kanOverstyres = false
+                )
+                call.respond(HttpStatusCode.Forbidden, body)
+            } else {
+                call.respond(HttpStatusCode.NoContent)
             }
         }
     }
