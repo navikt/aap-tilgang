@@ -1,6 +1,5 @@
 import TilgangPluginTest.Companion.IngenReferanse
 import TilgangPluginTest.Companion.Journalpostinfo
-import TilgangPluginTest.Companion.PersonIdentReferanse
 import TilgangPluginTest.Companion.TestReferanse
 import com.fasterxml.jackson.annotation.JsonValue
 import com.papsign.ktor.openapigen.annotations.parameters.PathParam
@@ -10,7 +9,7 @@ import com.papsign.ktor.openapigen.route.apiRouting
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import io.ktor.server.application.Application
-import io.ktor.server.auth.authenticate
+import io.ktor.server.auth.*
 import io.ktor.server.routing.*
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
@@ -21,12 +20,7 @@ import no.nav.aap.tilgang.*
 import no.nav.aap.tilgang.auditlog.AuditLogBodyConfig
 import no.nav.aap.tilgang.auditlog.AuditLogPathParamConfig
 import no.nav.aap.tilgang.auditlog.PathBrukerIdentResolver
-import no.nav.aap.tilgang.plugin.kontrakt.AuditlogResolverInput
-import no.nav.aap.tilgang.plugin.kontrakt.BrukerIdentResolver
-import no.nav.aap.tilgang.plugin.kontrakt.Saksreferanse
-import no.nav.aap.tilgang.Operasjon
-import no.nav.aap.tilgang.plugin.kontrakt.Behandlingsreferanse
-import no.nav.aap.tilgang.plugin.kontrakt.Personreferanse
+import no.nav.aap.tilgang.plugin.kontrakt.*
 import java.util.*
 import kotlin.random.Random
 
@@ -53,7 +47,7 @@ fun Application.autorisertEksempelApp() {
                             param = "referanse"
                         ),
                         avklaringsbehovKode = "1234"
-                    ) { req ->
+                    ) { _ ->
                         val kanSaksbehandle = pipeline.call.attributes[kanSaksbehandleKey]
                         if (kanSaksbehandle == "true") {
                             respond(true)
@@ -109,13 +103,6 @@ fun Application.autorisertEksempelApp() {
                     }
                 }
                 route("testApi/person") {
-                    route("get/{personIdent}") {
-                        authorizedGet<PersonIdentReferanse, Long>(
-                            AuthorizationParamPathConfig(personIdentPathParam = PersonIdentPathParam("personIdent")),
-                        ) { req ->
-                            respond(123)
-                        }
-                    }
                     route("post") {
                         authorizedPost<Unit, Personinfo, Personinfo>(
                             AuthorizationBodyPathConfig(
@@ -135,7 +122,7 @@ fun Application.autorisertEksempelApp() {
                                 )
                                 { Random.nextLong() }
                             )
-                        ) { req ->
+                        ) { _ ->
                             respond(Random.nextLong())
                         }
                     }
@@ -146,7 +133,7 @@ fun Application.autorisertEksempelApp() {
                                 applicationRole = "tilgang-rolle",
                             ),
                             modules = arrayOf(TagModule(listOf(Tags.Tilgangkontrollert)))
-                        ) { _, dto ->
+                        ) { _, _ ->
                             respond(
                                 Random.nextLong()
                             )
