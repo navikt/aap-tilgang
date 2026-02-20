@@ -28,8 +28,8 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.*
 
-internal class Fakes(azurePort: Int = 0, val azureTokenGen: AzureTokenGen) : AutoCloseable {
-    private val azure = embeddedServer(Netty, port = azurePort, module = { azureFake() }).start()
+internal class Fakes(val azureTokenGen: AzureTokenGen) : AutoCloseable {
+    private val azure = embeddedServer(Netty, port = 0, module = { azureFake() }).start()
     private val tilgang = embeddedServer(Netty, port = 0, module = { tilgangFake() }).apply { start() }
 
     private fun Application.azureFake() {
