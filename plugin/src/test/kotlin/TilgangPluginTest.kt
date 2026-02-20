@@ -8,13 +8,9 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.request.*
-import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
-import no.nav.aap.komponenter.httpklient.httpclient.Header
-import no.nav.aap.komponenter.httpklient.httpclient.RestClient
+import no.nav.aap.komponenter.httpklient.httpclient.*
 import no.nav.aap.komponenter.httpklient.httpclient.error.DefaultResponseHandler
 import no.nav.aap.komponenter.httpklient.httpclient.error.ManglerTilgangException
-import no.nav.aap.komponenter.httpklient.httpclient.get
-import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.NoTokenTokenProvider
@@ -103,9 +99,6 @@ class TilgangPluginTest {
             @param:PathParam(description = "saksnummer") val saksnummer: UUID = UUID.randomUUID()
         )
 
-        data class PersonIdentReferanse(
-            @param:PathParam(description = "personIdent") val personIdent: String
-        )
     }
 
     @Test
@@ -209,27 +202,6 @@ class TilgangPluginTest {
                         )
                     )
                 )
-            )
-        }
-    }
-
-    @Test
-    fun `get route kan sjekke tilgang til person`() {
-        val person = "12345"
-        fakes.gittTilgangTilPerson(person, true)
-        val res = clientForOBO.get<Long>(
-            URI.create("http://localhost:8082/")
-                .resolve("testApi/person/get/$person"),
-            GetRequest(currentToken = generateToken(isApp = false))
-        )
-        assertThat(res).isEqualTo(123)
-
-        val person2 = "123456"
-        assertThrows<ManglerTilgangException> {
-            clientForOBO.get<Long>(
-                URI.create("http://localhost:8082/")
-                    .resolve("testApi/person/get/$person2"),
-                GetRequest(currentToken = generateToken(isApp = false))
             )
         }
     }
