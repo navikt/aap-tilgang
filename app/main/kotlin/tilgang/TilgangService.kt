@@ -17,6 +17,7 @@ import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinGateway
 import tilgang.regler.RegelInput
 import tilgang.regler.RegelService
 import no.nav.aap.postmottak.kontrakt.avklaringsbehov.Definisjon as PostmottakDefinisjon
+import tilgang.integrasjoner.saf.BrukerIdType
 
 class TilgangService(
     private val safGateway: SafGraphqlGateway,
@@ -111,6 +112,9 @@ class TilgangService(
             val identer = behandlingsflytGateway.hentIdenterForSak(saksnummer)
             require(identer.søker.isNotEmpty()) { "Fant ingen søkeridenter for sak $saksnummer" }
             return identer
+        } else if (journalpost.bruker?.type == BrukerIdType.ORGNR) {
+            log.warn("Journalpost ${journalpost.journalpostId} har orgnr som bruker – returnerer tom identliste")
+            return RelevanteIdenter(søker = emptyList(), barn = emptyList())
         } else {
             val søkerIdent = journalpost.bruker?.id
             requireNotNull(søkerIdent) { "Fant ingen ident på søker i journalposten" }
