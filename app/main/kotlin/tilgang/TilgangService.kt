@@ -17,6 +17,7 @@ import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinGateway
 import tilgang.regler.RegelInput
 import tilgang.regler.RegelService
 import no.nav.aap.postmottak.kontrakt.avklaringsbehov.Definisjon as PostmottakDefinisjon
+import tilgang.integrasjoner.saf.BrukerIdType
 
 class TilgangService(
     private val safGateway: SafGraphqlGateway,
@@ -86,6 +87,12 @@ class TilgangService(
     ): Boolean {
         log.info("Sjekker tilgang til journalpost ${req.journalpostId}")
         val journalpostInfo: SafJournalpost = safGateway.hentJournalpostInfo(req.journalpostId, callId)
+
+        if (journalpostInfo.bruker?.type == BrukerIdType.ORGNR) {
+            log.warn("Journalpost ${journalpostInfo.journalpostId} har orgnr som bruker – tilgang vil vurderes som OK.")
+            return true
+        }
+
         val identer = finnIdenterForJournalpost(journalpostInfo)
 
         val avklaringsbehov =
