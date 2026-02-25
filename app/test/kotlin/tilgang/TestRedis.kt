@@ -7,7 +7,7 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import tilgang.redis.Redis
 
-class TestRedis : AutoCloseable {
+object TestRedis : AutoCloseable {
     private val started = AtomicBoolean(false)
     private val redisContainer by lazy { RedisContainer(RedisContainer.DEFAULT_IMAGE_NAME.withTag(RedisContainer.DEFAULT_TAG)) }
 
@@ -32,13 +32,9 @@ class TestRedis : AutoCloseable {
         }
     }
 
-    fun stop() {
+    override fun close() {
         if (!started.get()) return
         server.close()
         redisContainer.stop()
-    }
-
-    override fun close() {
-        stop()
     }
 }

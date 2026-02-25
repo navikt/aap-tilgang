@@ -17,16 +17,18 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import tilgang.redis.WithRedis
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@WithRedis
 class TilgangApiTest {
-    private val redis = TestRedis()
+    private val redis = TestRedis
     private val server = MockOAuth2Server()
 
     @BeforeAll
     fun setup() {
         server.start()
-        redis.start()
+//        redis.start()
 
         System.setProperty(
             "azure.openid.config.token.endpoint",

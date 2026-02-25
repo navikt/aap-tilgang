@@ -9,7 +9,6 @@ import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.runBlocking
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import tilgang.TestRedis
 
 object Fakes : AutoCloseable {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -18,14 +17,11 @@ object Fakes : AutoCloseable {
     private val pdl by lazy { embeddedServer(Netty, port = 0, module = { pdlFake() }) }
     private val tilgangsmaskin by lazy { embeddedServer(Netty, port = 0, module = { tilgangsmaskinFake() }) }
 
-    val redis = TestRedis()
-
     private val started = AtomicBoolean(false)
 
     fun start() {
         if (!started.compareAndSet(false, true)) return
 
-        redis.start()
         azure.start()
         pdl.start()
         tilgangsmaskin.start()
@@ -41,7 +37,6 @@ object Fakes : AutoCloseable {
         azure.stop()
         pdl.stop()
         tilgangsmaskin.stop()
-        redis.stop()
     }
 
     private fun setProperties() {

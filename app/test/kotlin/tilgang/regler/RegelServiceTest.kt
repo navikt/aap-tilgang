@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import tilgang.AzureTokenGen
-import tilgang.fakes.Fakes
+import tilgang.TestRedis
 import tilgang.fakes.WithFakes
 import tilgang.integrasjoner.msgraph.Group
 import tilgang.integrasjoner.msgraph.IMsGraphGateway
@@ -29,7 +29,7 @@ import tilgang.service.SkjermingService
 
 @WithFakes
 class RegelServiceTest {
-    private val redis = Fakes.redis.server
+    private val redis = TestRedis.server
 
     @ParameterizedTest
     @EnumSource(Definisjon::class)
