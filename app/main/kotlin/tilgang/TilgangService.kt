@@ -87,6 +87,12 @@ class TilgangService(
     ): Boolean {
         log.info("Sjekker tilgang til journalpost ${req.journalpostId}")
         val journalpostInfo: SafJournalpost = safGateway.hentJournalpostInfo(req.journalpostId, callId)
+
+        if (journalpostInfo.bruker?.type == BrukerIdType.ORGNR) {
+            log.warn("Journalpost ${journalpostInfo.journalpostId} har orgnr som bruker – tilgang vil vurderes som OK.")
+            return true
+        }
+
         val identer = finnIdenterForJournalpost(journalpostInfo)
 
         val avklaringsbehov =
@@ -112,9 +118,6 @@ class TilgangService(
             val identer = behandlingsflytGateway.hentIdenterForSak(saksnummer)
             require(identer.søker.isNotEmpty()) { "Fant ingen søkeridenter for sak $saksnummer" }
             return identer
-        } else if (journalpost.bruker?.type == BrukerIdType.ORGNR) {
-            log.warn("Journalpost ${journalpost.journalpostId} har orgnr som bruker – returnerer tom identliste")
-            return RelevanteIdenter(søker = emptyList(), barn = emptyList())
         } else {
             val søkerIdent = journalpost.bruker?.id
             requireNotNull(søkerIdent) { "Fant ingen ident på søker i journalposten" }
