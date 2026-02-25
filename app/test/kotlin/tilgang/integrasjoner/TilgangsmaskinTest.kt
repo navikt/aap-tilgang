@@ -8,10 +8,12 @@ import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import org.junit.jupiter.api.Test
 import tilgang.AzureTokenGen
 import tilgang.TestRedis
+import tilgang.fakes.WithFakes
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinAvvistGrunn
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinGateway
 import tilgang.redis.WithRedis
 
+@WithFakes
 @WithRedis
 class TilgangsmaskinTest {
 
