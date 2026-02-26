@@ -4,16 +4,14 @@ import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import tilgang.TestRedis
+import tilgang.fakes.Fakes
 import tilgang.fakes.WithFakes
 import tilgang.integrasjoner.pdl.PdlGraphQLGateway
 import tilgang.redis.Redis
-import tilgang.redis.WithRedis
 
 @WithFakes
-@WithRedis
 class PdlTest {
-    private val redis: Redis = TestRedis.server
+    private val redis: Redis = Fakes.getRedisServer()
 
     @Test
     fun `Kan parse hentPersonBolk`() {

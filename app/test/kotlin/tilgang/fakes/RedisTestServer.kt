@@ -1,20 +1,21 @@
-package tilgang
+package tilgang.fakes
 
 import com.redis.testcontainers.RedisContainer
 import java.net.URI
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
+import tilgang.RedisConfig
 import tilgang.redis.Redis
 
-object TestRedis : AutoCloseable {
+internal class RedisTestServer : AutoCloseable {
     private val started = AtomicBoolean(false)
     private val redisContainer by lazy { RedisContainer(RedisContainer.DEFAULT_IMAGE_NAME.withTag(RedisContainer.DEFAULT_TAG)) }
 
     private val uri: URI
         get() = URI(redisContainer.redisURI)
 
-    val server: Redis by lazy { Redis(uri) }
+    internal val server: Redis by lazy { Redis(uri) }
 
     fun start() {
         if (!started.compareAndSet(false, true)) return

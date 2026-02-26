@@ -16,11 +16,9 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import tilgang.fakes.Fakes
 import tilgang.fakes.WithFakes
-import tilgang.redis.WithRedis
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @WithFakes
-@WithRedis
 class TilgangApiTest {
     private val oAuth2Server = Fakes.getOAuth2Server()
 
@@ -41,7 +39,7 @@ class TilgangApiTest {
                 api(
                     Config(
                         roles = alleRoller,
-                        redis = TestRedis.getConfig()
+                        redis = Fakes.getRedisConfig()
                     )
                 )
             }

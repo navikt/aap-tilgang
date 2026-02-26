@@ -17,6 +17,7 @@ object Fakes : AutoCloseable {
     private val pdl by lazy { embeddedServer(Netty, port = 0, module = { pdlFake() }) }
     private val tilgangsmaskin by lazy { embeddedServer(Netty, port = 0, module = { tilgangsmaskinFake() }) }
     private val oAuth2Server = MockOAuth2Server()
+    private val redis = RedisTestServer()
 
     private val started = AtomicBoolean(false)
 
@@ -28,6 +29,7 @@ object Fakes : AutoCloseable {
         pdl.start()
         tilgangsmaskin.start()
         oAuth2Server.start()
+        redis.start()
 
         setProperties()
     }
@@ -40,9 +42,14 @@ object Fakes : AutoCloseable {
         pdl.stop()
         tilgangsmaskin.stop()
         oAuth2Server.shutdown()
+        redis.close()
     }
 
     fun getOAuth2Server(): MockOAuth2Server = oAuth2Server
+
+    fun getRedisServer() = redis.server
+
+    fun getRedisConfig() = redis.getConfig()
 
     private fun setProperties() {
         Thread.currentThread().setUncaughtExceptionHandler { _, e -> log.error("Uhåndtert feil", e) }
