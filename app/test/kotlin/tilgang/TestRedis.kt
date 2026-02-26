@@ -11,7 +11,7 @@ object TestRedis : AutoCloseable {
     private val started = AtomicBoolean(false)
     private val redisContainer by lazy { RedisContainer(RedisContainer.DEFAULT_IMAGE_NAME.withTag(RedisContainer.DEFAULT_TAG)) }
 
-    val uri: URI
+    private val uri: URI
         get() = URI(redisContainer.redisURI)
 
     val server: Redis by lazy { Redis(uri) }
@@ -37,4 +37,10 @@ object TestRedis : AutoCloseable {
         server.close()
         redisContainer.stop()
     }
+
+    fun getConfig() = RedisConfig(
+        uri = uri,
+        username = "test",
+        password = "test"
+    )
 }

@@ -11,57 +11,18 @@ import io.ktor.http.contentType
 import io.ktor.server.testing.testApplication
 import java.util.UUID
 import no.nav.aap.tilgang.Rolle
-import no.nav.security.mock.oauth2.MockOAuth2Server
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import tilgang.fakes.Fakes
+import tilgang.fakes.WithFakes
 import tilgang.redis.WithRedis
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@WithFakes
 @WithRedis
 class TilgangApiTest {
-    private val redis = TestRedis
-    private val server = MockOAuth2Server()
-
-    @BeforeAll
-    fun setup() {
-        server.start()
-//        redis.start()
-
-        System.setProperty(
-            "azure.openid.config.token.endpoint",
-            server.tokenEndpointUrl("default").toString()
-        )
-        System.setProperty("azure.app.client.id", "default")
-        System.setProperty("azure.app.client.secret", "default")
-        System.setProperty("azure.openid.config.jwks.uri", server.jwksUrl("default").toString())
-        System.setProperty("azure.openid.config.issuer", server.issuerUrl("default").toString())
-
-
-        System.setProperty("pdl.base.url", "http://localhost")
-        System.setProperty("pdl.scope", "pdl")
-
-        // TODO: Lag fakes for disse
-        System.setProperty("saf.base.url", "test")
-        System.setProperty("saf.scope", "saf")
-        System.setProperty("nom.scope", "nom")
-        System.setProperty("nom.base.url", "test")
-        System.setProperty("skjerming.scope", "skjerming")
-        System.setProperty("skjerming.base.url", "test")
-        System.setProperty("behandlingsflyt.scope", "behandlingsflyt")
-        System.setProperty("behandlingsflyt.base.url", "test")
-        System.setProperty("ms.graph.scope", "msgraph")
-        System.setProperty("ms.graph.base.url", "test")
-        System.setProperty("integrasjon.tilgangsmaskin.scope", "tilgangsmaskin")
-        System.setProperty("integrasjon.tilgangsmaskin.url", "tilgangsmaskin")
-    }
-
-    @AfterAll
-    fun afterAll() {
-        server.shutdown()
-    }
+    private val oAuth2Server = Fakes.getOAuth2Server()
 
     @Test
     fun `kan hente ut roller fra claims`() {
@@ -80,11 +41,7 @@ class TilgangApiTest {
                 api(
                     Config(
                         roles = alleRoller,
-                        redis = RedisConfig(
-                            uri = redis.uri,
-                            username = "test",
-                            password = "test"
-                        )
+                        redis = TestRedis.getConfig()
                     )
                 )
             }
@@ -108,7 +65,7 @@ class TilgangApiTest {
         contentType(ContentType.Application.Json)
     }
 
-    private fun issueToken(groups: List<String>) = server.issueToken(
+    private fun issueToken(groups: List<String>) = oAuth2Server.issueToken(
         issuerId = "default",
         claims = mapOf(
             "groups" to groups,
