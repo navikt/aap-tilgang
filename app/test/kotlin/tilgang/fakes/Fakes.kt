@@ -4,6 +4,8 @@ import io.ktor.server.engine.ConnectorType
 import io.ktor.server.engine.EmbeddedServer
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import io.micrometer.prometheusmetrics.PrometheusConfig
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.runBlocking
@@ -18,6 +20,7 @@ object Fakes : AutoCloseable {
     private val tilgangsmaskin by lazy { embeddedServer(Netty, port = 0, module = { tilgangsmaskinFake() }) }
     private val oAuth2Server = MockOAuth2Server()
     private val redis = RedisTestServer()
+    private val meterRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
 
     private val started = AtomicBoolean(false)
 
@@ -50,6 +53,8 @@ object Fakes : AutoCloseable {
     fun getRedisServer() = redis.server
 
     fun getRedisConfig() = redis.getConfig()
+
+    fun getPrometheus() = meterRegistry
 
     private fun setProperties() {
         Thread.currentThread().setUncaughtExceptionHandler { _, e -> log.error("Uhåndtert feil", e) }
