@@ -8,9 +8,15 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.request.*
-import no.nav.aap.komponenter.httpklient.httpclient.*
+import java.net.URI
+import java.util.*
+import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
+import no.nav.aap.komponenter.httpklient.httpclient.Header
+import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.error.DefaultResponseHandler
 import no.nav.aap.komponenter.httpklient.httpclient.error.ManglerTilgangException
+import no.nav.aap.komponenter.httpklient.httpclient.get
+import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.NoTokenTokenProvider
@@ -28,13 +34,11 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.slf4j.LoggerFactory
-import java.net.URI
-import java.util.*
 
 class TilgangPluginTest {
     companion object {
         private val azureTokenGen = AzureTokenGen("behandlingsflyt", "behandlingsflyt")
-        private val fakes = Fakes(azurePort = 8081, azureTokenGen)
+        private val fakes = Fakes(azurePort = 0, azureTokenGen)
 
         private val clientForClientCredentials = RestClient(
             config = ClientConfig(scope = "behandlingsflyt"),
@@ -83,16 +87,6 @@ class TilgangPluginTest {
         fun afterAll() {
             fakes.close()
             autorisertEksempelAppServer.stop()
-        }
-
-        private fun Application.module(fakes: Fakes) {
-            // Setter opp virtuell sandkasse lokalt
-            monitor.subscribe(ApplicationStopped) { application ->
-                application.environment.log.info("Server har stoppet")
-                fakes.close()
-                // Release resources and unsubscribe from events
-                application.monitor.unsubscribe(ApplicationStopped) {}
-            }
         }
 
         data class TestReferanse(
