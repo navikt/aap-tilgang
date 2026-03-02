@@ -55,8 +55,7 @@ spec:
       destinations:
         - id: elastic
         - id: loki
-  secureLogs:
-    enabled: true
+
   env:
   {{#each roles as |role|}}
     - name: "{{role.name}}"
