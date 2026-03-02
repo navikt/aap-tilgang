@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory
 class TilgangPluginTest {
     companion object {
         private val azureTokenGen = AzureTokenGen("behandlingsflyt", "behandlingsflyt")
-        private val fakes = Fakes(azurePort = 0, azureTokenGen)
+        private val fakes = Fakes(azureTokenGen)
 
         private val clientForClientCredentials = RestClient(
             config = ClientConfig(scope = "behandlingsflyt"),

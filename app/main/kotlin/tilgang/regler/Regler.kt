@@ -1,20 +1,15 @@
 package tilgang.regler
 
 import no.nav.aap.tilgang.Operasjon
-import org.slf4j.LoggerFactory
 import tilgang.integrasjoner.pdl.IPdlGraphQLGateway
 import tilgang.integrasjoner.skjerming.SkjermingGateway
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinGateway
 import tilgang.service.AdressebeskyttelseService
-import tilgang.service.EnhetService
 import tilgang.service.GeoService
 import tilgang.service.SkjermingService
 
-private val logger = LoggerFactory.getLogger(RegelService::class.java)
-
 class RegelService(
     geoService: GeoService,
-    enhetService: EnhetService,
     pdlGateway: IPdlGraphQLGateway,
     skjermetGateway: SkjermingGateway,
     skjermingService: SkjermingService,
@@ -41,8 +36,6 @@ class RegelService(
             RegelMedInputgenerator(TilgangsmaskinKjerneRegel, TilgangsmaskinKjerneInputGenerator(tilgangsmaskinGateway)),
             RegelMedInputgenerator(AdressebeskyttelseRegel, AdressebeskyttelseInputGenerator(pdlGateway, adressebeskyttelseService)),
             RegelMedInputgenerator(GeoRegel, GeoInputGenerator(geoService, pdlGateway)),
-            // TODO: Enhetsregelen gir kun mening hvis saker er knyttet mot enhet, noe de p.d. ikke er
-            //RegelMedInputgenerator(EnhetRegel, EnhetInputGenerator(enhetService)),
             RegelMedInputgenerator(EgenAnsattRegel, EgenAnsattInputGenerator(skjermetGateway, skjermingService))
         )
     )

@@ -23,7 +23,6 @@ import tilgang.integrasjoner.pdl.PersonResultat
 import tilgang.integrasjoner.skjerming.SkjermingGateway
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinGateway
 import tilgang.service.AdressebeskyttelseService
-import tilgang.service.EnhetService
 import tilgang.service.GeoService
 import tilgang.service.SkjermingService
 
@@ -77,14 +76,12 @@ class RegelServiceTest {
                 )
             }
         }
-        val enhetService = EnhetService(graphGateway)
         val skjermingGateway = object : SkjermingGateway(redis, prometheus) {}
 
         val skjermingService = SkjermingService(graphGateway)
 
         val regelService = RegelService(
             geoService,
-            enhetService,
             pdlService,
             skjermingGateway,
             skjermingService,
