@@ -8,6 +8,8 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.request.*
+import java.net.URI
+import java.util.*
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.Header
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
@@ -32,13 +34,11 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.slf4j.LoggerFactory
-import java.net.URI
-import java.util.*
 
 class TilgangPluginTest {
     companion object {
         private val azureTokenGen = AzureTokenGen("behandlingsflyt", "behandlingsflyt")
-        private val fakes = Fakes(azurePort = 8081, azureTokenGen)
+        private val fakes = Fakes(azurePort = 0, azureTokenGen)
 
         private val clientForClientCredentials = RestClient(
             config = ClientConfig(scope = "behandlingsflyt"),

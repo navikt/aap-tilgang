@@ -9,16 +9,15 @@ import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.runBlocking
-import no.nav.security.mock.oauth2.MockOAuth2Server
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 object Fakes : AutoCloseable {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
 
+    private val azure by lazy { embeddedServer(Netty, port = AzurePortHolder.getPort(), module = { azureFake() }) }
     private val pdl by lazy { embeddedServer(Netty, port = 0, module = { pdlFake() }) }
     private val tilgangsmaskin by lazy { embeddedServer(Netty, port = 0, module = { tilgangsmaskinFake() }) }
-    private val oAuth2Server = MockOAuth2Server()
     private val redis = RedisTestServer()
     private val meterRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
 
@@ -29,9 +28,9 @@ object Fakes : AutoCloseable {
             return
         }
 
+        azure.start()
         pdl.start()
         tilgangsmaskin.start()
-        oAuth2Server.start()
         redis.start()
 
         setProperties()
@@ -42,13 +41,11 @@ object Fakes : AutoCloseable {
             return
         }
 
+        azure.stop()
         pdl.stop()
         tilgangsmaskin.stop()
-        oAuth2Server.shutdown()
         redis.close()
     }
-
-    fun getOAuth2Server(): MockOAuth2Server = oAuth2Server
 
     fun getRedisServer() = redis.server
 
@@ -62,11 +59,11 @@ object Fakes : AutoCloseable {
         Runtime.getRuntime().addShutdownHook(Thread { close() })
 
         // Azure
-        System.setProperty("azure.openid.config.token.endpoint", oAuth2Server.tokenEndpointUrl("default").toString())
-        System.setProperty("azure.app.client.id", "default")
-        System.setProperty("azure.app.client.secret", "default")
-        System.setProperty("azure.openid.config.jwks.uri", oAuth2Server.jwksUrl("default").toString())
-        System.setProperty("azure.openid.config.issuer", oAuth2Server.issuerUrl("default").toString())
+        System.setProperty("azure.openid.config.token.endpoint", "http://localhost:${azure.port()}/token")
+        System.setProperty("azure.app.client.id", "tilgang")
+        System.setProperty("azure.app.client.secret", "")
+        System.setProperty("azure.openid.config.jwks.uri", "http://localhost:${azure.port()}/jwks")
+        System.setProperty("azure.openid.config.issuer", "tilgang")
 
         // PDL
         System.setProperty("pdl.base.url", "http://localhost:${pdl.port()}/graphql")
