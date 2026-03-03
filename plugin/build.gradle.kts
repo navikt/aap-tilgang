@@ -64,6 +64,10 @@ dependencies {
     implementation(libs.ktorSerializationJackson)
     implementation(libs.ktorServerDoubleReceive)
 
+    implementation(libs.ktorClientCore)
+    implementation(libs.ktorClientCio)
+    implementation(libs.ktorClientContentNegotiation)
+
     testImplementation(libs.server)
     testImplementation(libs.json)
     testImplementation(libs.infrastructure)

@@ -22,14 +22,11 @@ import no.nav.aap.tilgang.plugin.kontrakt.AuditlogResolverInput
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*
-import no.nav.aap.komponenter.config.configForKey
 import no.nav.aap.komponenter.server.auth.token
 
 const val TILGANG_PLUGIN = "TilgangPlugin"
 
 val log: Logger = LoggerFactory.getLogger(TILGANG_PLUGIN)
-
-val isTexasEnabled = configForKey("ENABLE_TEXAS").toBoolean()
 
 inline fun <reified T : Any> Route.installerTilgangBodyPlugin(
     pathConfig: AuthorizationBodyPathConfig,

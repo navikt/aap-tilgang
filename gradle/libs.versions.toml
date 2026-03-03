@@ -17,6 +17,10 @@ ktorServerCallLoggingJvm = { module = "io.ktor:ktor-server-call-logging-jvm", ve
 ktorServerDoubleReceive = { module = "io.ktor:ktor-server-double-receive", version.ref = "ktor" }
 ktorServerCallId = { module = "io.ktor:ktor-server-call-id", version.ref = "ktor" }
 ktorServerMetricsMicrometer = { module = "io.ktor:ktor-server-metrics-micrometer", version.ref = "ktor" }
+ktorClientCore= { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
+ktorClientCio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
+ktorClientContentNegotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
+
 
 json = { module = "no.nav.aap.kelvin:json", version.ref = "komponenter" }
 httpklient = { module = "no.nav.aap.kelvin:httpklient", version.ref = "komponenter" }

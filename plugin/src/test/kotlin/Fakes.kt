@@ -27,7 +27,6 @@ import no.nav.aap.tilgang.TilgangResponse
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.*
-import no.nav.aap.tilgang.isTexasEnabled
 
 internal class Fakes(val azureTokenGen: AzureTokenGen) : AutoCloseable {
     private val texas = embeddedServer(Netty, port = 0, module = { texasFake() }).start()
@@ -154,19 +153,10 @@ internal class Fakes(val azureTokenGen: AzureTokenGen) : AutoCloseable {
     }
 
     init {
-        if (isTexasEnabled) {
-            // Texas
-            System.setProperty("nais.token.endpoint", "http://localhost:${texas.port()}/token")
-            System.setProperty("nais.token.exchange.endpoint", "http://localhost:${texas.port()}/token/exchange")
-            System.setProperty("nais.token.introspection.endpoint", "http://localhost:${texas.port()}/introspect")
-        } else {
-            // Azure
-            System.setProperty("azure.openid.config.token.endpoint", "http://localhost:${azure.port()}/token")
-            System.setProperty("azure.app.client.id", "behandlingsflyt")
-            System.setProperty("azure.app.client.secret", "")
-            System.setProperty("azure.openid.config.jwks.uri", "http://localhost:${azure.port()}/jwks")
-            System.setProperty("azure.openid.config.issuer", "behandlingsflyt")
-        }
+        // Texas
+        System.setProperty("nais.token.endpoint", "http://localhost:${texas.port()}/token")
+        System.setProperty("nais.token.exchange.endpoint", "http://localhost:${texas.port()}/token/exchange")
+        System.setProperty("nais.token.introspection.endpoint", "http://localhost:${texas.port()}/introspect")
         // Tilgang
         System.setProperty("integrasjon.tilgang.url", "http://localhost:${tilgang.port()}")
         System.setProperty("integrasjon.tilgang.scope", "scope")
