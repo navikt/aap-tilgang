@@ -17,7 +17,8 @@ data class AuthorizationBodyPathConfig(
     val journalpostIdResolver: JournalpostIdResolver = DefaultJournalpostIdResolver(),
     val behandlingreferanseResolver: BehandlingreferanseResolver = DefaultBehandlingreferanseResolver()
 ) : AuthorizationRouteConfig {
-    fun tilTilgangRequest(request: Any): AuthorizedRequest {
+
+    suspend fun tilTilgangRequest(request: Any): AuthorizedRequest {
         when (request) {
             is Saksreferanse -> {
                 val referanse = request.hentSaksreferanse()

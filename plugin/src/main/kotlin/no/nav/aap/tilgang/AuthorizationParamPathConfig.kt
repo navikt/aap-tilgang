@@ -32,7 +32,7 @@ data class AuthorizationParamPathConfig(
         }
     }
 
-    fun tilTilgangRequest(parameters: Parameters): AuthorizedRequest {
+    suspend fun tilTilgangRequest(parameters: Parameters): AuthorizedRequest {
         if (sakPathParam != null) {
             val saksnummer = parameters.getOrFail(sakPathParam.param)
             val relevanteIdenter = relevanteIdenterResolver?.resolve(saksnummer)

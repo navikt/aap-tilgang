@@ -1,11 +1,15 @@
 package no.nav.aap.tilgang
 
+import com.github.benmanes.caffeine.cache.AsyncCache
+import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import io.micrometer.core.instrument.binder.cache.CaffeineCacheMetrics
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import java.net.URI
 import java.time.Duration
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runInterruptible
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
@@ -41,39 +45,41 @@ object TilgangGateway {
         tokenProvider = OnBehalfOfTokenProvider
     )
 
-    fun harTilgangTilSak(body: SakTilgangRequest, currentToken: OidcToken): TilgangResponse {
-        return tilgangGatewaySakCache.get(SakTilgangRequestMedNavIdent(body, currentToken.navIdent())) {
+    suspend fun harTilgangTilSak(body: SakTilgangRequest, currentToken: OidcToken): TilgangResponse {
+        return get(tilgangGatewaySakCache, SakTilgangRequestMedNavIdent(body, currentToken.navIdent())) {
             val httpRequest = PostRequest(
                 body = body,
                 currentToken = currentToken
             )
-            val respons = requireNotNull(
-                client.retryablePost<_, TilgangResponse>(
-                    uri = baseUrl.resolve("/tilgang/sak"),
-                    request = httpRequest
+            runInterruptible(Dispatchers.IO) {
+                requireNotNull(
+                    client.retryablePost<_, TilgangResponse>(
+                        uri = baseUrl.resolve("/tilgang/sak"),
+                        request = httpRequest
+                    )
                 )
-            )
-            respons
+            }
         }
     }
 
-    fun harTilgangTilBehandling(body: BehandlingTilgangRequest, currentToken: OidcToken): TilgangResponse {
-        return tilgangGatewayBehandlingCache.get(BehandlingTilgangRequestMedNavIdent(body, currentToken.navIdent())) {
+    suspend fun harTilgangTilBehandling(body: BehandlingTilgangRequest, currentToken: OidcToken): TilgangResponse {
+        return get(tilgangGatewayBehandlingCache, BehandlingTilgangRequestMedNavIdent(body, currentToken.navIdent())) {
             val httpRequest = PostRequest(
                 body = body,
                 currentToken = currentToken
             )
-            val respons = requireNotNull(
-                client.retryablePost<_, TilgangResponse>(
-                    uri = baseUrl.resolve("/tilgang/behandling"),
-                    request = httpRequest
+            runInterruptible(Dispatchers.IO) {
+                requireNotNull(
+                    client.retryablePost<_, TilgangResponse>(
+                        uri = baseUrl.resolve("/tilgang/behandling"),
+                        request = httpRequest
+                    )
                 )
-            )
-            respons
+            }
         }
     }
 
-    fun harTilgangTilJournalpost(
+    suspend fun harTilgangTilJournalpost(
         body: JournalpostTilgangRequest,
         currentToken: OidcToken
     ): TilgangResponse {
@@ -81,41 +87,59 @@ object TilgangGateway {
             body = body,
             currentToken = currentToken
         )
-        val respons = requireNotNull(
-            client.retryablePost<_, TilgangResponse>(
-                uri = baseUrl.resolve("/tilgang/journalpost"),
-                request = httpRequest
+        return runInterruptible(Dispatchers.IO) {
+            requireNotNull(
+                client.retryablePost<_, TilgangResponse>(
+                    uri = baseUrl.resolve("/tilgang/journalpost"),
+                    request = httpRequest
+                )
             )
-        )
-        return respons
+        }
     }
 
-    fun harTilgangTilPerson(body: PersonTilgangRequest, currentToken: OidcToken): TilgangResponse {
+    suspend fun harTilgangTilPerson(body: PersonTilgangRequest, currentToken: OidcToken): TilgangResponse {
         val httpRequest = PostRequest(
             body = body,
             currentToken = currentToken
         )
-        val respons = requireNotNull(
-            client.retryablePost<_, TilgangResponse>(
-                uri = baseUrl.resolve("/tilgang/person"),
-                request = httpRequest
+        return runInterruptible(Dispatchers.IO) {
+            requireNotNull(
+                client.retryablePost<_, TilgangResponse>(
+                    uri = baseUrl.resolve("/tilgang/person"),
+                    request = httpRequest
+                )
             )
-        )
-        return respons
+        }
     }
 
-    fun harTilgangTilTilbakekreving(body: TilbakekrevingTilgangRequest, currentToken: OidcToken): TilgangResponse {
+    suspend fun harTilgangTilTilbakekreving(
+        body: TilbakekrevingTilgangRequest,
+        currentToken: OidcToken
+    ): TilgangResponse {
         val httpRequest = PostRequest(
             body = body,
             currentToken = currentToken
         )
-        val respons = requireNotNull(
-            client.retryablePost<_, TilgangResponse>(
-                uri = baseUrl.resolve("/tilgang/tilbakekreving"),
-                request = httpRequest
+        return runInterruptible(Dispatchers.IO) {
+            requireNotNull(
+                client.retryablePost<_, TilgangResponse>(
+                    uri = baseUrl.resolve("/tilgang/tilbakekreving"),
+                    request = httpRequest
+                )
             )
-        )
-        return respons
+        }
+    }
+
+    /** Oppslag på samme key vil kunne kjøre parallelt. */
+    suspend fun <Key : Any, Value: Any> get(cache: Cache<Key, Value>, key: Key, mapper: suspend (key: Key) -> Value): Value {
+        val cached = cache.getIfPresent(key)
+        if (cached != null) {
+            return cached
+        }
+
+        val value = mapper(key)
+        cache.put(key, value)
+        return value
     }
 }
 
