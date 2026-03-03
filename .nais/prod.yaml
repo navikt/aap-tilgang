@@ -56,9 +56,9 @@ env:
   - name: NOM_SCOPE
     value: api://prod-gcp.nom.nom-api/.default
   - name: FORTROLIG_ADRESSE_AD
-    value: 9ec6487d-f37a-4aad-a027-cd221c1ac32b # 0000-GA-Fortrolig_Adresse
+    value: e98efc34-12d1-401f-b059-f17e62834065 # 0000-GA-Fortrolig_Adresse
   - name: STRENGT_FORTROLIG_ADRESSE_AD
-    value: ad7b87a6-9180-467c-affc-20a566b0fec0 # 0000-GA-Strengt_Fortrolig_Adresse
+    value: 2931da41-8b8e-42cd-99c0-04a169ddae40 # 0000-GA-Strengt_Fortrolig_Adresse
   - name: SKJERMEDE_PERSONER_AD
     value: e750ceb5-b70b-4d94-b4fa-9d22467b786b # 0000-GA-Egne_ansatte
   - name: INTEGRASJON_TILGANGSMASKIN_URL
