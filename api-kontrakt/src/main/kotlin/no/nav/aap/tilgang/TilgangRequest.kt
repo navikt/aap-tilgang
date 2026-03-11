@@ -35,3 +35,9 @@ data class JournalpostTilgangRequest(
 data class PersonTilgangRequest(
     val personIdent: String,
 ): TilgangRequest
+
+data class TilbakekrevingTilgangRequest(
+    val saksnummer: String,
+    val behandlingsreferanse: UUID,
+    val operasjon: Operasjon,
+): TilgangRequest

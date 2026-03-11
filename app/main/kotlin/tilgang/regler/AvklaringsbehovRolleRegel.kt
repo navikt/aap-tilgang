@@ -6,11 +6,13 @@ import no.nav.aap.tilgang.Rolle
 
 data object AvklaringsbehovRolleRegel : Regel<AvklaringsbehovRolleInput> {
     override fun vurder(input: AvklaringsbehovRolleInput): Boolean {
-        require(input.avklaringsbehovFraBehandlingsflyt != null || input.avklaringsbehovFraPostmottak != null) { "Avklaringsbehov er påkrevd" }
+        require(input.avklaringsbehovFraBehandlingsflyt != null || input.avklaringsbehovFraPostmottak != null || input.påkrevdRolle != null) { "Avklaringsbehov eller påkrevd rolle må være satt" }
         if (input.avklaringsbehovFraBehandlingsflyt != null) {
             return kanAvklareBehov(input.avklaringsbehovFraBehandlingsflyt, input.roller)
+        } else if (input.avklaringsbehovFraPostmottak != null){
+            return kanAvklareBehov(input.avklaringsbehovFraPostmottak, input.roller)
         } else {
-            return kanAvklareBehov(input.avklaringsbehovFraPostmottak!!, input.roller)
+            return input.roller.contains(input.påkrevdRolle)
         }
     }
 
@@ -26,6 +28,7 @@ data object AvklaringsbehovRolleRegel : Regel<AvklaringsbehovRolleInput> {
 data class AvklaringsbehovRolleInput(
     val avklaringsbehovFraBehandlingsflyt: Definisjon? = null,
     val avklaringsbehovFraPostmottak: PostmottakDefinisjon?,
+    val påkrevdRolle: Rolle?,
     val roller: List<Rolle>
 )
 
@@ -34,6 +37,7 @@ data object AvklaringsbehovInputGenerator : InputGenerator<AvklaringsbehovRolleI
         return AvklaringsbehovRolleInput(
             input.avklaringsbehovFraBehandlingsflyt,
             input.avklaringsbehovFraPostmottak,
+            input.påkrevdRolle,
             input.roller
         )
     }

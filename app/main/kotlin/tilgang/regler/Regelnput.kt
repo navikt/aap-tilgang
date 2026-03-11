@@ -15,6 +15,7 @@ class RegelInput (
     val søkerIdenter: RelevanteIdenter,
     val avklaringsbehovFraBehandlingsflyt: Definisjon?,
     val avklaringsbehovFraPostmottak: PostmottakDefinisjon?,
+    val påkrevdRolle: Rolle?,
     val operasjoner: List<Operasjon>,
 )
 
