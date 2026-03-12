@@ -78,4 +78,18 @@ object TilgangGateway {
         )
         return respons
     }
+
+    fun harTilgangTilTilbakekreving(body: TilbakekrevingTilgangRequest, currentToken: OidcToken): TilgangResponse {
+        val httpRequest = PostRequest(
+            body = body,
+            currentToken = currentToken
+        )
+        val respons = requireNotNull(
+            client.retryablePost<_, TilgangResponse>(
+                uri = baseUrl.resolve("/tilgang/tilbakekreving"),
+                request = httpRequest
+            )
+        )
+        return respons
+    }
 }

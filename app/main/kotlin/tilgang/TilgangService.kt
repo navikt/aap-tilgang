@@ -10,6 +10,7 @@ import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.RelevanteIdenter
 import no.nav.aap.tilgang.Rolle
 import no.nav.aap.tilgang.SakTilgangRequest
+import no.nav.aap.tilgang.TilbakekrevingTilgangRequest
 import org.slf4j.LoggerFactory
 import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytGateway
 import tilgang.integrasjoner.tilgangsmaskin.BrukerOgRegeltype
@@ -37,7 +38,7 @@ class TilgangService(
         log.info("Sjekker tilgang til sak ${req.saksnummer}")
         val identer = req.relevanteIdenter ?: behandlingsflytGateway
             .hentIdenterForSak(req.saksnummer)
-        
+
         val regelInput = RegelInput(
             callId = callId,
             ansattIdent = ansattIdent,
@@ -45,7 +46,8 @@ class TilgangService(
             roller = roller,
             søkerIdenter = identer,
             avklaringsbehovFraBehandlingsflyt = null,
-            avklaringsbehovFraPostmottak = null,
+            avklaringsbehovFraPostmottak = null, 
+            påkrevdRolle = null,
             operasjoner = listOf(req.operasjon)
         )
         return regelService.vurderTilgang(regelInput)[req.operasjon] == true
@@ -73,6 +75,7 @@ class TilgangService(
             søkerIdenter = identer,
             avklaringsbehovFraBehandlingsflyt = avklaringsbehov,
             avklaringsbehovFraPostmottak = null,
+            påkrevdRolle = null,
             operasjoner = (req.operasjonerIKontekst + req.operasjon).toSet().toList()
         )
         return regelService.vurderTilgang(regelInput)
@@ -106,6 +109,7 @@ class TilgangService(
             søkerIdenter = identer,
             avklaringsbehovFraBehandlingsflyt = null,
             avklaringsbehovFraPostmottak = avklaringsbehov,
+            påkrevdRolle = null,
             operasjoner = listOf(req.operasjon),
         )
         return regelService.vurderTilgang(regelInput)[req.operasjon] == true
@@ -139,4 +143,30 @@ class TilgangService(
     fun harTilgangTilPerson(brukerIdent: String, token: OidcToken): Boolean {
         return tilgangsmaskinGateway.harTilgangTilPerson(brukerIdent, token)
     }
+
+
+    fun harTilgangTilTilbakekreving(
+        ansattIdent: String,
+        req: TilbakekrevingTilgangRequest,
+        roller: List<Rolle>,
+        token: OidcToken,
+        callId: String,
+    ): Boolean {
+        log.info("Sjekker tilgang til tilbakekrevingsbehandling ${req.behandlingsreferanse}")
+        val identer = behandlingsflytGateway.hentIdenterForSak(req.saksnummer)
+
+        val regelInput = RegelInput(
+            callId = callId,
+            ansattIdent = ansattIdent,
+            currentToken = token,
+            roller = roller,
+            søkerIdenter = identer,
+            avklaringsbehovFraBehandlingsflyt = null,
+            avklaringsbehovFraPostmottak = null,
+            påkrevdRolle = req.påkrevdRolle,
+            operasjoner = listOf(req.operasjon)
+        )
+        return regelService.vurderTilgang(regelInput)[req.operasjon] == true
+    }
+
 }

@@ -27,6 +27,7 @@ object TilgangService {
                 is BehandlingTilgangRequest -> TilgangGateway.harTilgangTilBehandling(request, token)
                 is JournalpostTilgangRequest -> TilgangGateway.harTilgangTilJournalpost(request, token)
                 is PersonTilgangRequest -> TilgangGateway.harTilgangTilPerson(request, token)
+                is TilbakekrevingTilgangRequest -> TilgangGateway.harTilgangTilTilbakekreving(request, token)
             }
         }
     }

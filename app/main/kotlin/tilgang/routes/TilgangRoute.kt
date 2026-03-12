@@ -103,6 +103,26 @@ fun NormalOpenAPIRoute.tilgang(
                 respond(TilgangResponse(harTilgang))
             }
         }
+
+        route("/tilbakekreving") {
+            post<Unit, TilgangResponse, TilbakekrevingTilgangRequest> { _, req ->
+                prometheus.httpCallCounter(pipeline.call).increment()
+
+                val callId = pipeline.call.request.header("Nav-CallId") ?: "ukjent"
+                val token = token()
+                val roller = parseRoller(rolesWithGroupIds = roles, roller())
+
+                val harTilgang =
+                    tilgangService.harTilgangTilTilbakekreving(ident(), req, roller, token, callId)
+
+                if (!harTilgang) {
+                    prometheus.nektetTilgangTeller("tilbakekreving").increment()
+                }
+
+                respond(TilgangResponse(harTilgang))
+            }
+        }
+        
     }
     route("/roller") {
         get<Unit, List<Rolle>> {
