@@ -4,7 +4,7 @@ import java.util.UUID
 
 sealed interface TilgangRequest
 
-data class SakTilgangRequest (
+data class SakTilgangRequest(
     val saksnummer: String,
     val operasjon: Operasjon,
     /**
@@ -12,7 +12,7 @@ data class SakTilgangRequest (
      * Dersom feltet ikke er satt, hentes identer automatisk basert på saksnummeret
      */
     val relevanteIdenter: RelevanteIdenter? = null,
-): TilgangRequest
+) : TilgangRequest
 
 data class BehandlingTilgangRequest(
     val behandlingsreferanse: UUID,
@@ -24,20 +24,27 @@ data class BehandlingTilgangRequest(
      */
     val relevanteIdenter: RelevanteIdenter? = null,
     val operasjonerIKontekst: List<Operasjon> = emptyList(),
-): TilgangRequest
+) : TilgangRequest
 
 data class JournalpostTilgangRequest(
     val journalpostId: Long,
     val avklaringsbehovKode: String?,
     val operasjon: Operasjon
-): TilgangRequest
+) : TilgangRequest
 
 data class PersonTilgangRequest(
     val personIdent: String,
-): TilgangRequest
+) : TilgangRequest
 
 data class TilbakekrevingTilgangRequest(
     val saksnummer: String,
     val behandlingsreferanse: UUID,
+    val påkrevdRolle: Rolle? = null,
     val operasjon: Operasjon,
-): TilgangRequest
+) : TilgangRequest {
+    init {
+        if (operasjon == Operasjon.SAKSBEHANDLE) {
+            require(påkrevdRolle != null) { "Påkrevd rolle må være satt for operasjon SAKSBEHANDLE" }
+        }
+    }
+}
