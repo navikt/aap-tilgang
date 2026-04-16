@@ -65,6 +65,9 @@ object Fakes : AutoCloseable {
         System.setProperty("azure.openid.config.jwks.uri", "http://localhost:${azure.port()}/jwks")
         System.setProperty("azure.openid.config.issuer", "tilgang")
 
+        // Texas
+        System.setProperty("nais.token.exchange.endpoint", "http://localhost:${azure.port()}/token")
+
         // PDL
         System.setProperty("pdl.base.url", "http://localhost:${pdl.port()}/graphql")
         System.setProperty("pdl.scope", "pdl")

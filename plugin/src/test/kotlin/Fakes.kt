@@ -132,6 +132,9 @@ internal class Fakes(val azureTokenGen: AzureTokenGen) : AutoCloseable {
         System.setProperty("azure.openid.config.jwks.uri", "http://localhost:${azure.port()}/jwks")
         System.setProperty("azure.openid.config.issuer", "behandlingsflyt")
 
+        // Texas
+        System.setProperty("nais.token.exchange.endpoint", "http://localhost:${azure.port()}/token")
+
         // Tilgang
         System.setProperty("integrasjon.tilgang.url", "http://localhost:${tilgang.port()}")
         System.setProperty("integrasjon.tilgang.scope", "scope")
