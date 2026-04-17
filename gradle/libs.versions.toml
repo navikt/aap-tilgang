@@ -32,7 +32,7 @@ ktorOpenApiGenerator = { module = "no.nav.aap.kelvin:ktor-openapi-generator", ve
 logbackClassic = { module = "ch.qos.logback:logback-classic", version = "1.5.32" }
 logstashLogbackEncoder = { module = "net.logstash.logback:logstash-logback-encoder", version = "9.0" }
 
-micrometerRegistryPrometheus = { module = "io.micrometer:micrometer-registry-prometheus", version = "1.16.4" }
+micrometerRegistryPrometheus = { module = "io.micrometer:micrometer-registry-prometheus", version = "1.16.5" }
 jacksonDatatypeJsr310 = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version = "2.21.2" }
 jedis = { module = "redis.clients:jedis", version = "7.4.1" }
 mockOauth2Server = { module = "no.nav.security:mock-oauth2-server", version = "3.0.1" }
