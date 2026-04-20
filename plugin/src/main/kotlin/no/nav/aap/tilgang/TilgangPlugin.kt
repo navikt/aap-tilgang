@@ -9,7 +9,6 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.util.*
-import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.httpklient.exception.IkkeTillattException
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.tilgang.auditlog.AuditLogBodyConfig
@@ -22,6 +21,7 @@ import no.nav.aap.tilgang.plugin.kontrakt.AuditlogResolverInput
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*
+import no.nav.aap.komponenter.server.auth.token
 
 const val TILGANG_PLUGIN = "TilgangPlugin"
 

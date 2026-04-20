@@ -43,6 +43,7 @@ dependencies {
     api(project(":plugin-kontrakt"))
 
     compileOnly(libs.httpklient)
+    compileOnly(libs.server)
     compileOnly(libs.json)
     compileOnly(libs.infrastructure)
 

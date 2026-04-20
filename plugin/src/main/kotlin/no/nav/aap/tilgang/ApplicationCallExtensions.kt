@@ -1,17 +1,8 @@
 package no.nav.aap.tilgang
 
-import io.ktor.server.application.*
-import io.ktor.server.auth.*
-import io.ktor.server.auth.jwt.*
-import no.nav.aap.komponenter.httpklient.auth.AzpName
-
-fun ApplicationCall.azp(): AzpName {
-    val azp = principal<JWTPrincipal>()?.getClaim("azp_name", String::class)
-    if (azp == null) {
-        error("azp mangler i AzureAD claims")
-    }
-    return AzpName(azp)
-}
+import io.ktor.server.application.ApplicationCall
+import io.ktor.server.auth.jwt.JWTPrincipal
+import io.ktor.server.auth.principal
 
 fun ApplicationCall.ident(): String {
     return requireNotNull(principal<JWTPrincipal>()) {
