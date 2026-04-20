@@ -15,7 +15,6 @@ ktorSerializationJackson = { module = "io.ktor:ktor-serialization-jackson", vers
 ktorServerCallLogging = { module = "io.ktor:ktor-server-call-logging", version.ref = "ktor" }
 ktorServerCallLoggingJvm = { module = "io.ktor:ktor-server-call-logging-jvm", version.ref = "ktor" }
 ktorServerDoubleReceive = { module = "io.ktor:ktor-server-double-receive", version.ref = "ktor" }
-ktorServerCors = { module = "io.ktor:ktor-server-cors", version.ref = "ktor" }
 ktorServerCallId = { module = "io.ktor:ktor-server-call-id", version.ref = "ktor" }
 ktorServerMetricsMicrometer = { module = "io.ktor:ktor-server-metrics-micrometer", version.ref = "ktor" }
 
