@@ -129,6 +129,47 @@ class TilgangPluginTest {
     }
 
     @Test
+    fun `Skal gi tilgang basert på rolle for POST på samme route som GET`() {
+        val token = generateToken(isApp = false, roles = listOf(Beslutter.id))
+
+        val res = clientUtenTokenProvider.post<_, IngenReferanse>(
+            URI.create("http://localhost:8082/")
+                .resolve("kun-roller"),
+            PostRequest(
+                body = IngenReferanse("input"),
+                additionalHeaders = listOf(
+                    Header(
+                        "Authorization",
+                        "Bearer ${token.token()}"
+                    )
+                )
+            )
+        )
+
+        assertThat(res?.noe).isEqualTo("post-input")
+    }
+
+    @Test
+    fun `Skal ikke gi tilgang for manglende rolle på POST på samme route som GET`() {
+        val token = generateToken(isApp = false, roles = listOf("ikke-riktig-rolle"))
+        assertThrows<ManglerTilgangException> {
+            clientUtenTokenProvider.post<_, IngenReferanse>(
+                URI.create("http://localhost:8082/")
+                    .resolve("kun-roller"),
+                PostRequest(
+                    body = IngenReferanse("input"),
+                    additionalHeaders = listOf(
+                        Header(
+                            "Authorization",
+                            "Bearer ${token.token()}"
+                        )
+                    )
+                )
+            )
+        }
+    }
+
+    @Test
     fun `Skal ikke gi tilgang for manglende rolle`() {
         val token = generateToken(isApp = false, roles = listOf("ikke-riktig-rolle"))
         assertThrows<ManglerTilgangException> {
