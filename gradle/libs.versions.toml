@@ -1,6 +1,6 @@
 [versions]
 ktor = "3.4.2"
-komponenter = "2.0.31"
+komponenter = "2.0.37"
 junit = "6.0.3"
 
 [libraries]
@@ -15,7 +15,6 @@ ktorSerializationJackson = { module = "io.ktor:ktor-serialization-jackson", vers
 ktorServerCallLogging = { module = "io.ktor:ktor-server-call-logging", version.ref = "ktor" }
 ktorServerCallLoggingJvm = { module = "io.ktor:ktor-server-call-logging-jvm", version.ref = "ktor" }
 ktorServerDoubleReceive = { module = "io.ktor:ktor-server-double-receive", version.ref = "ktor" }
-ktorServerCors = { module = "io.ktor:ktor-server-cors", version.ref = "ktor" }
 ktorServerCallId = { module = "io.ktor:ktor-server-call-id", version.ref = "ktor" }
 ktorServerMetricsMicrometer = { module = "io.ktor:ktor-server-metrics-micrometer", version.ref = "ktor" }
 
@@ -24,7 +23,7 @@ httpklient = { module = "no.nav.aap.kelvin:httpklient", version.ref = "komponent
 infrastructure = { module = "no.nav.aap.kelvin:infrastructure", version.ref = "komponenter" }
 server = { module = "no.nav.aap.kelvin:server", version.ref = "komponenter" }
 
-behandlingsflytKontrakt = { module = "no.nav.aap.behandlingsflyt:kontrakt", version = "0.0.586" }
+behandlingsflytKontrakt = { module = "no.nav.aap.behandlingsflyt:kontrakt", version = "0.0.589" }
 postmottakKontrakt = { module = "no.nav.aap.postmottak:kontrakt", version = "6.0.4" }
 
 ktorOpenApiGenerator = { module = "no.nav.aap.kelvin:ktor-openapi-generator", version.ref = "komponenter" }
@@ -32,7 +31,7 @@ ktorOpenApiGenerator = { module = "no.nav.aap.kelvin:ktor-openapi-generator", ve
 logbackClassic = { module = "ch.qos.logback:logback-classic", version = "1.5.32" }
 logstashLogbackEncoder = { module = "net.logstash.logback:logstash-logback-encoder", version = "9.0" }
 
-micrometerRegistryPrometheus = { module = "io.micrometer:micrometer-registry-prometheus", version = "1.16.4" }
+micrometerRegistryPrometheus = { module = "io.micrometer:micrometer-registry-prometheus", version = "1.16.5" }
 jacksonDatatypeJsr310 = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version = "2.21.2" }
 jedis = { module = "redis.clients:jedis", version = "7.4.1" }
 mockOauth2Server = { module = "no.nav.security:mock-oauth2-server", version = "3.0.1" }

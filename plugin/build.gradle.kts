@@ -42,11 +42,10 @@ dependencies {
     api(project(":api-kontrakt"))
     api(project(":plugin-kontrakt"))
 
-    compileOnly(libs.httpklient)
+    compileOnly(libs.server)
     compileOnly(libs.json)
     compileOnly(libs.infrastructure)
 
-    implementation(libs.ktorServerAuthJwt)
     implementation(libs.logbackClassic)
     implementation(libs.ktorOpenApiGenerator)
     implementation(libs.ktorServerCore)
@@ -60,13 +59,11 @@ dependencies {
     implementation(libs.ktorServerContentNegotation)
     implementation(libs.ktorServerMetricsMicrometer)
     implementation(libs.ktorServerNetty)
-    implementation(libs.ktorServerCors)
     implementation(libs.ktorServerStatusPages)
     implementation(libs.ktorSerializationJackson)
     implementation(libs.ktorServerDoubleReceive)
 
     testImplementation(libs.server)
-    testImplementation(libs.httpklient)
     testImplementation(libs.json)
     testImplementation(libs.infrastructure)
     testImplementation(libs.junitJupiterApi)

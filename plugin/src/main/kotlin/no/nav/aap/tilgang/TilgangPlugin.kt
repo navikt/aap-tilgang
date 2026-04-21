@@ -1,5 +1,6 @@
 package no.nav.aap.tilgang
 
+import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
@@ -9,7 +10,6 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.util.*
-import no.nav.aap.komponenter.httpklient.auth.token
 import no.nav.aap.komponenter.httpklient.exception.IkkeTillattException
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.tilgang.auditlog.AuditLogBodyConfig
@@ -22,6 +22,7 @@ import no.nav.aap.tilgang.plugin.kontrakt.AuditlogResolverInput
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*
+import no.nav.aap.komponenter.server.auth.token
 
 const val TILGANG_PLUGIN = "TilgangPlugin"
 
@@ -29,15 +30,18 @@ val log: Logger = LoggerFactory.getLogger(TILGANG_PLUGIN)
 
 inline fun <reified T : Any> Route.installerTilgangBodyPlugin(
     pathConfig: AuthorizationBodyPathConfig,
-    auditLogConfig: AuditLogConfig?
+    auditLogConfig: AuditLogConfig?,
+    httpMethod: HttpMethod
 ) {
-    if ((this as RoutingNode).pluginRegistry.getOrNull(AttributeKey(TILGANG_PLUGIN)) != null) {
-        throw IllegalStateException("Fant allerede registeret tilgang plugin")
+    val pluginName = "$TILGANG_PLUGIN-${httpMethod.value}"
+    if ((this as RoutingNode).pluginRegistry.getOrNull(AttributeKey(pluginName)) != null) {
+        throw IllegalStateException("Fant allerede registeret tilgang plugin for ${httpMethod.value}")
     }
 
     install(DoubleReceive)
     install(
         buildTilgangPlugin(
+            httpMethod,
             auditLogConfig,
             { call: ApplicationCall -> pathConfig.tilTilgangRequest(call.parseGeneric<T>()) },
             { call: ApplicationCall ->
@@ -53,14 +57,17 @@ inline fun <reified T : Any> Route.installerTilgangBodyPlugin(
 
 fun Route.installerTilgangParamPlugin(
     config: AuthorizationParamPathConfig,
-    auditLogConfig: AuditLogPathParamConfig?
+    auditLogConfig: AuditLogPathParamConfig?,
+    httpMethod: HttpMethod
 ) {
-    if ((this as RoutingNode).pluginRegistry.getOrNull(AttributeKey(TILGANG_PLUGIN)) != null) {
-        throw IllegalStateException("Fant allerede registeret tilgang plugin")
+    val pluginName = "$TILGANG_PLUGIN-${httpMethod.value}"
+    if ((this as RoutingNode).pluginRegistry.getOrNull(AttributeKey(pluginName)) != null) {
+        throw IllegalStateException("Fant allerede registeret tilgang plugin for ${httpMethod.value}")
     }
 
     install(
         buildTilgangPlugin(
+            httpMethod,
             auditLogConfig,
             { call: ApplicationCall -> config.tilTilgangRequest(call.parameters) },
             { call: ApplicationCall -> auditLogConfig!!.tilIdent(call.parameters) }
@@ -69,14 +76,17 @@ fun Route.installerTilgangParamPlugin(
 }
 
 fun Route.installerTilgangRollePlugin(
-    config: RollerConfig
+    config: RollerConfig,
+    httpMethod: HttpMethod
 ) {
-    if ((this as RoutingNode).pluginRegistry.getOrNull(AttributeKey(TILGANG_PLUGIN)) != null) {
-        throw IllegalStateException("Fant allerede registeret tilgang plugin")
+    val pluginName = "$TILGANG_PLUGIN-${httpMethod.value}"
+    if ((this as RoutingNode).pluginRegistry.getOrNull(AttributeKey(pluginName)) != null) {
+        throw IllegalStateException("Fant allerede registeret tilgang plugin for ${httpMethod.value}")
     }
 
-    install(createRouteScopedPlugin(name = TILGANG_PLUGIN) {
+    install(createRouteScopedPlugin(name = pluginName) {
         on(AuthenticationChecked) { call ->
+            if (call.request.httpMethod != httpMethod) return@on
             val roller = call.groupsClaim()
 
             if (roller.any { adRolle -> adRolle in config.roller.map { it.id } }) {
@@ -90,17 +100,20 @@ fun Route.installerTilgangRollePlugin(
 fun Route.installerTilgangMachineToMachinePlugin(
     config: AuthorizationMachineToMachineConfig,
     auditLogConfig: AuditLogConfig?,
+    httpMethod: HttpMethod
 ) {
-    if ((this as RoutingNode).pluginRegistry.getOrNull(AttributeKey(TILGANG_PLUGIN)) != null) {
-        throw IllegalStateException("Fant allerede registeret tilgang plugin")
+    val pluginName = "$TILGANG_PLUGIN-${httpMethod.value}"
+    if ((this as RoutingNode).pluginRegistry.getOrNull(AttributeKey(pluginName)) != null) {
+        throw IllegalStateException("Fant allerede registeret tilgang plugin for ${httpMethod.value}")
     }
 
     require(auditLogConfig == null) {
         "kan ikke installere audit-logger for maskin-til-maskin tokens uten on-behalf-of tokens (m2m obo tokens)"
     }
 
-    install(createRouteScopedPlugin(name = TILGANG_PLUGIN) {
+    install(createRouteScopedPlugin(name = pluginName) {
         on(AuthenticationChecked) { call ->
+            if (call.request.httpMethod != httpMethod) return@on
             val principal = call.principal<JWTPrincipal>() ?: error("mangler principal")
 
             if (config.authorizedAzps.isNotEmpty()) {
@@ -131,12 +144,15 @@ fun Route.installerTilgangMachineToMachinePlugin(
 
 
 inline fun buildTilgangPlugin(
+    httpMethod: HttpMethod,
     auditLogConfig: AuditLogConfig?,
     crossinline parse: suspend (call: ApplicationCall) -> AuthorizedRequest,
     crossinline resolveIdent: suspend (call: ApplicationCall) -> String
 ): RouteScopedPlugin<Unit> {
-    return createRouteScopedPlugin(name = TILGANG_PLUGIN) {
+    val pluginName = "$TILGANG_PLUGIN-${httpMethod.value}"
+    return createRouteScopedPlugin(name = pluginName) {
         on(AuthenticationChecked) { call ->
+            if (call.request.httpMethod != httpMethod) return@on
             val token = call.token()
             val input = parse(call)
             val harTilgang = TilgangService.harTilgang(input, call, token)

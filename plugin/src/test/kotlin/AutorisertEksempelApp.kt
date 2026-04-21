@@ -39,6 +39,13 @@ fun Application.autorisertEksempelApp() {
                     ) {
                         respond(IngenReferanse("test"))
                     }
+                    authorizedPost<Unit, IngenReferanse, IngenReferanse>(
+                        RollerConfig(
+                            listOf(Beslutter)
+                        )
+                    ) { _, dto ->
+                        respond(IngenReferanse("post-${dto.noe}"))
+                    }
                 }
 
                 route("testApi/getGrunnlag/{referanse}") {
