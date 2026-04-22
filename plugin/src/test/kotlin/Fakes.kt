@@ -29,28 +29,28 @@ import java.time.ZoneId
 import java.util.*
 
 internal class Fakes(val azureTokenGen: AzureTokenGen) : AutoCloseable {
-    private val azure = embeddedServer(Netty, port = 0, module = { azureFake() }).start()
+    private val texas = embeddedServer(Netty, port = 0, module = { texasFake() }).start()
     private val tilgang = embeddedServer(Netty, port = 0, module = { tilgangFake() }).apply { start() }
 
-    private fun Application.azureFake() {
+    private fun Application.texasFake() {
         install(ContentNegotiation) {
             jackson()
         }
         install(StatusPages) {
             exception<Throwable> { call, cause ->
-                this@azureFake.log.info("AZURE :: Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
+                this@texasFake.log.info("AZURE :: Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
                 call.respond(status = HttpStatusCode.InternalServerError, message = ErrorRespons(cause.message))
             }
         }
         routing {
             post("/token") {
-                val body = call.receiveText()
-                val token = azureTokenGen
-                    .generate(body.contains("grant_type=client_credentials"))
-                call.respond(TestToken(access_token = token))
+                call.respond(TestToken(azureTokenGen.generate(isApp = true)))
             }
-            get("/jwks") {
-                call.respond(AZURE_JWKS)
+            post("/token/exchange") {
+                call.respond(TestToken(azureTokenGen.generate(isApp = false)))
+            }
+            post("/introspect") {
+                call.respond(mapOf("active" to true))
             }
         }
     }
@@ -102,9 +102,12 @@ internal class Fakes(val azureTokenGen: AzureTokenGen) : AutoCloseable {
             }
             post("/tilgang/behandling") {
                 val req = call.receive<BehandlingTilgangRequest>()
-                call.respond(TilgangResponse(tilgangTilBehandling[req.behandlingsreferanse] == true,
-                    tilgangTilBehandlingIKontekst[req.behandlingsreferanse]
-                ))
+                call.respond(
+                    TilgangResponse(
+                        tilgangTilBehandling[req.behandlingsreferanse] == true,
+                        tilgangTilBehandlingIKontekst[req.behandlingsreferanse]
+                    )
+                )
             }
             post("/tilgang/journalpost") {
                 val req = call.receive<JournalpostTilgangRequest>()
@@ -125,15 +128,10 @@ internal class Fakes(val azureTokenGen: AzureTokenGen) : AutoCloseable {
     }
 
     init {
-        // Azure
-        System.setProperty("azure.openid.config.token.endpoint", "http://localhost:${azure.port()}/token")
-        System.setProperty("azure.app.client.id", "behandlingsflyt")
-        System.setProperty("azure.app.client.secret", "")
-        System.setProperty("azure.openid.config.jwks.uri", "http://localhost:${azure.port()}/jwks")
-        System.setProperty("azure.openid.config.issuer", "behandlingsflyt")
-
         // Texas
-        System.setProperty("nais.token.exchange.endpoint", "http://localhost:${azure.port()}/token")
+        System.setProperty("nais.token.endpoint", "http://localhost:${texas.port()}/token")
+        System.setProperty("nais.token.exchange.endpoint", "http://localhost:${texas.port()}/token/exchange")
+        System.setProperty("nais.token.introspection.endpoint", "http://localhost:${texas.port()}/introspect")
 
         // Tilgang
         System.setProperty("integrasjon.tilgang.url", "http://localhost:${tilgang.port()}")
@@ -142,7 +140,7 @@ internal class Fakes(val azureTokenGen: AzureTokenGen) : AutoCloseable {
     }
 
     override fun close() {
-        azure.stop(0L, 0L)
+        texas.stop(0L, 0L)
     }
 }
 
