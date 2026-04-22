@@ -3,11 +3,11 @@ package tilgang
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import java.net.URI
-import tilgang.fakes.AzurePortHolder
+import tilgang.fakes.TexasPortHolder
 import tilgang.fakes.Fakes
 
 fun main() {
-    AzurePortHolder.setPort(8081)
+    TexasPortHolder.setPort(8081)
     Fakes.start()
 
     embeddedServer(Netty, port = 8080) {
@@ -16,8 +16,8 @@ fun main() {
                 azureConfig = no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureConfig(
                     clientId = "tilgang",
                     clientSecret = "",
-                    tokenEndpoint = URI.create("http://localhost:${AzurePortHolder.getPort()}").resolve("/token"),
-                    jwksUri = URI.create("http://localhost:${AzurePortHolder.getPort()}").resolve("/jwks").toString(),
+                    tokenEndpoint = URI.create("http://localhost:${TexasPortHolder.getPort()}").resolve("/token"),
+                    jwksUri = URI.create("http://localhost:${TexasPortHolder.getPort()}").resolve("/jwks").toString(),
                     issuer = "tilgang"
                 ),
                 redis = RedisConfig(
