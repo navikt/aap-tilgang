@@ -56,6 +56,9 @@ internal class Fakes(val azureTokenGen: AzureTokenGen) : AutoCloseable {
     }
 
     private val tilgangTilSak = mutableMapOf<String, Boolean>()
+    var sistMottattSakTilgangRequest: SakTilgangRequest? = null
+        private set
+
     fun gittTilgangTilSak(sak: String, tilgang: Boolean) {
         tilgangTilSak[sak] = tilgang
     }
@@ -96,8 +99,8 @@ internal class Fakes(val azureTokenGen: AzureTokenGen) : AutoCloseable {
         }
         routing {
             post("/tilgang/sak") {
-                // TODO: Test kontrakten på en litt mer fornuftig måte
                 val req = call.receive<SakTilgangRequest>()
+                sistMottattSakTilgangRequest = req
                 call.respond(TilgangResponse(tilgangTilSak[req.saksnummer] == true))
             }
             post("/tilgang/behandling") {

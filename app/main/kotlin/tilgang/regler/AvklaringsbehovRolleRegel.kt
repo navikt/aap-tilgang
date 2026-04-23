@@ -1,19 +1,25 @@
 package tilgang.regler
 
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.postmottak.kontrakt.avklaringsbehov.Definisjon as PostmottakDefinisjon
 import no.nav.aap.tilgang.Rolle
+import no.nav.aap.postmottak.kontrakt.avklaringsbehov.Definisjon as PostmottakDefinisjon
 
 data object AvklaringsbehovRolleRegel : Regel<AvklaringsbehovRolleInput> {
     override fun vurder(input: AvklaringsbehovRolleInput): Boolean {
-        require(input.avklaringsbehovFraBehandlingsflyt != null || input.avklaringsbehovFraPostmottak != null || input.påkrevdRolle != null) { "Avklaringsbehov eller påkrevd rolle må være satt" }
+        val sjekker = mutableListOf<Boolean>()
+
         if (input.avklaringsbehovFraBehandlingsflyt != null) {
-            return kanAvklareBehov(input.avklaringsbehovFraBehandlingsflyt, input.roller)
-        } else if (input.avklaringsbehovFraPostmottak != null){
-            return kanAvklareBehov(input.avklaringsbehovFraPostmottak, input.roller)
-        } else {
-            return input.roller.contains(input.påkrevdRolle)
+            sjekker.add(kanAvklareBehov(input.avklaringsbehovFraBehandlingsflyt, input.roller))
         }
+        if (input.avklaringsbehovFraPostmottak != null) {
+            sjekker.add(kanAvklareBehov(input.avklaringsbehovFraPostmottak, input.roller))
+        }
+        if (input.påkrevdRolle != null) {
+            sjekker.add(input.roller.contains(input.påkrevdRolle))
+        }
+
+        require(sjekker.isNotEmpty()) { "Avklaringsbehov eller påkrevd rolle må være satt" }
+        return sjekker.all { it }
     }
 
     private fun kanAvklareBehov(avklaringsbehov: Definisjon, roller: List<Rolle>): Boolean {

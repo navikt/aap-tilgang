@@ -12,6 +12,7 @@ data class AuthorizationBodyPathConfig(
     val operasjon: Operasjon,
     val applicationRole: String? = null,
     val applicationsOnly: Boolean = false,
+    val påkrevdRolle: Rolle? = null,
     val relevanteIdenterResolver: RelevanteIdenterResolver? = null,
     val journalpostIdResolver: JournalpostIdResolver = DefaultJournalpostIdResolver(),
     val behandlingreferanseResolver: BehandlingreferanseResolver = DefaultBehandlingreferanseResolver()
@@ -24,7 +25,7 @@ data class AuthorizationBodyPathConfig(
                 return AuthorizedRequest(
                     applicationsOnly,
                     applicationRole,
-                    SakTilgangRequest(referanse, operasjon, relevanteIdenter)
+                    SakTilgangRequest(saksnummer = referanse, påkrevdRolle = påkrevdRolle, operasjon = operasjon, relevanteIdenter = relevanteIdenter)
                 )
             }
 
@@ -44,7 +45,7 @@ data class AuthorizationBodyPathConfig(
                 return AuthorizedRequest(
                     applicationsOnly,
                     applicationRole,
-                    BehandlingTilgangRequest(referanse, avklaringsbehovKode, operasjon, relevanteIdenter)
+                    BehandlingTilgangRequest(behandlingsreferanse = referanse, avklaringsbehovKode = avklaringsbehovKode, påkrevdRolle = påkrevdRolle, operasjon = operasjon, relevanteIdenter = relevanteIdenter)
                 )
             }
 
@@ -55,7 +56,7 @@ data class AuthorizationBodyPathConfig(
                 return AuthorizedRequest(
                     applicationsOnly,
                     applicationRole,
-                    JournalpostTilgangRequest(referanse, avklaringsbehovKode, operasjon)
+                    JournalpostTilgangRequest(journalpostId = referanse, avklaringsbehovKode = avklaringsbehovKode, påkrevdRolle = påkrevdRolle, operasjon = operasjon)
                 )
             }
 

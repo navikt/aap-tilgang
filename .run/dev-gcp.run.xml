@@ -31,11 +31,10 @@
       <env name="SKJERMING_BASE_URL" value="https://skjermede-personer-pip.intern.dev.nav.no" />
       <env name="SKJERMING_SCOPE" value="api://dev-gcp.nom.skjermede-personer-pip/.default" />
       <env name="STRENGT_FORTROLIG_ADRESSE_AD" value="5ef775f2-61f8-4283-bf3d-8d03f428aa14" />
-      <env name="INTEGRASJON_TILGANGSMASKIN_URL" value="http://populasjonstilgangskontroll.tilgangsmaskin" />
       <env name="INTEGRASJON_TILGANGSMASKIN_SCOPE" value="api://dev-gcp.tilgangsmaskin.populasjonstilgangskontroll/.default" />
     </envs>
     <option name="MAIN_CLASS_NAME" value="tilgang.AppKt" />
-    <module name="aap-tilgang.app.main" />
+    <module name="tilgang.app.main" />
     <extension name="net.ashald.envfile">
       <option name="IS_ENABLED" value="true" />
       <option name="IS_SUBST" value="false" />

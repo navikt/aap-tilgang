@@ -6,6 +6,7 @@ sealed interface TilgangRequest
 
 data class SakTilgangRequest(
     val saksnummer: String,
+    val påkrevdRolle: Rolle? = null,
     val operasjon: Operasjon,
     /**
      * Valgfritt felt for å spesifisere relevante identer knyttet til saken.
@@ -17,6 +18,7 @@ data class SakTilgangRequest(
 data class BehandlingTilgangRequest(
     val behandlingsreferanse: UUID,
     val avklaringsbehovKode: String?,
+    val påkrevdRolle: Rolle? = null,
     val operasjon: Operasjon,
     /**
      * Valgfritt felt for å spesifisere relevante identer knyttet til saken.
@@ -29,6 +31,7 @@ data class BehandlingTilgangRequest(
 data class JournalpostTilgangRequest(
     val journalpostId: Long,
     val avklaringsbehovKode: String?,
+    val påkrevdRolle: Rolle? = null,
     val operasjon: Operasjon
 ) : TilgangRequest
 

@@ -193,6 +193,29 @@ fun Application.autorisertEksempelApp() {
                         }
                     }
                 }
+                route("testApi/påkrevdRolle") {
+                    route("sak/{saksnummer}") {
+                        authorizedGet<TestReferanse, Saksinfo>(
+                            AuthorizationParamPathConfig(
+                                operasjon = Operasjon.SAKSBEHANDLE,
+                                påkrevdRolle = Rolle.BESLUTTER,
+                                sakPathParam = SakPathParam("saksnummer")
+                            ),
+                        ) { req ->
+                            respond(Saksinfo(saksnummer = req.saksnummer))
+                        }
+                    }
+                    route("sak/post") {
+                        authorizedPost<Unit, Saksinfo, Saksinfo>(
+                            AuthorizationBodyPathConfig(
+                                operasjon = Operasjon.SAKSBEHANDLE,
+                                påkrevdRolle = Rolle.BESLUTTER,
+                            )
+                        ) { _, dto ->
+                            respond(dto)
+                        }
+                    }
+                }
                 route("testApi/authorizedPost") {
                     route("on-behalf-of/saksinfo") {
                         authorizedPost<Unit, Saksinfo, Saksinfo>(
