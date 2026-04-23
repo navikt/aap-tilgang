@@ -7,18 +7,17 @@ import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import tilgang.AZURE_JWKS
 import tilgang.AzureTokenGen
 
 data class ErrorRespons(val message: String?)
 
-internal fun Application.azureFake() {
+internal fun Application.texasFake() {
     install(ContentNegotiation) {
         jackson()
     }
     install(StatusPages) {
         exception<Throwable> { call, cause ->
-            this@azureFake.log.info("AZURE :: Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
+            this@texasFake.log.info("AZURE :: Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
             call.respond(status = HttpStatusCode.InternalServerError, message = ErrorRespons(cause.message))
         }
     }
@@ -27,8 +26,12 @@ internal fun Application.azureFake() {
             val token = AzureTokenGen("tilgang", "tilgang").generate()
             call.respond(TestToken(access_token = token))
         }
-        get("/jwks") {
-            call.respond(AZURE_JWKS)
+        post("/token/exchange") {
+            val token = AzureTokenGen("tilgang", "tilgang").generate()
+            call.respond(TestToken(token))
+        }
+        post("/introspect") {
+            call.respond(mapOf("active" to true))
         }
     }
 }

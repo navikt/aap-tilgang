@@ -6,7 +6,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
 import no.nav.aap.tilgang.RelevanteIdenter
 import tilgang.metrics.cacheHit
 import tilgang.metrics.cacheMiss
@@ -26,7 +26,7 @@ open class SkjermingGateway(
     )
     private val httpClient = RestClient.withDefaultResponseHandler(
         config = config,
-        tokenProvider = ClientCredentialsTokenProvider,
+        tokenProvider = AzureM2MTokenProvider,
         prometheus = prometheus,
     )
 

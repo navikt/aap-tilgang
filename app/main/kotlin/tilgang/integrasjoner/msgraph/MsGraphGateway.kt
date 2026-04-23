@@ -2,21 +2,21 @@ package tilgang.integrasjoner.msgraph
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
+import java.net.URI
+import java.util.UUID
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.get
 import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.OnBehalfOfTokenProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureOBOTokenProvider
 import tilgang.metrics.cacheHit
 import tilgang.metrics.cacheMiss
 import tilgang.redis.Key
 import tilgang.redis.Redis
 import tilgang.redis.Redis.Companion.deserialize
 import tilgang.redis.Redis.Companion.serialize
-import java.net.URI
-import java.util.*
 
 interface IMsGraphGateway {
     fun hentAdGrupper(currentToken: OidcToken, ident: String): MemberOf
@@ -33,7 +33,7 @@ class MsGraphGateway(
     )
     private val httpClient =  RestClient.withDefaultResponseHandler(
         config = clientConfig,
-        tokenProvider = OnBehalfOfTokenProvider,
+        tokenProvider = AzureOBOTokenProvider,
         prometheus = prometheus,
     )
 

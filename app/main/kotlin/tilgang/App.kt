@@ -20,7 +20,7 @@ import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import java.net.http.HttpTimeoutException
 import kotlin.time.Duration.Companion.seconds
-import no.nav.aap.komponenter.server.AZURE
+import no.nav.aap.komponenter.server.auth.IdentityProvider
 import no.nav.aap.komponenter.server.commonKtorModule
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -62,6 +62,7 @@ internal object AppConfig {
     // Vi skrur opp ktor sin default-verdi, som er "antall CPUer", satt ved -XX:ActiveProcessorCount i Dockerfile,
     // fordi appen vår er veldig I/O-bound når den venter på svar fra andre tjenester.
     private val ktorParallellitet = 4
+
     // Vi følger ktor sin metodikk for å regne ut tuning parametre som funksjon av parallellitet
     // https://github.com/ktorio/ktor/blob/3.3.1/ktor-server/ktor-server-core/common/src/io/ktor/server/engine/ApplicationEngine.kt#L30
     val connectionGroupSize = ktorParallellitet / 2 + 1
@@ -69,6 +70,7 @@ internal object AppConfig {
     val callGroupSize = ktorParallellitet
 
 }
+
 fun main() {
     Thread.currentThread().setUncaughtExceptionHandler { _, e -> LOGGER.error("Uhåndtert feil", e) }
 
@@ -90,7 +92,7 @@ fun main() {
 }
 
 fun Application.api(
-    config: Config = Config(), redis: Redis = Redis(config.redis)
+    config: Config = Config(), redis: Redis = Redis(config.redis),
 ) {
     val prometheus = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
     val pdl = PdlGraphQLGateway(redis, prometheus)
@@ -170,13 +172,15 @@ fun Application.api(
     }
 
     commonKtorModule(
-        prometheus, azureConfig = config.azureConfig, infoModel = InfoModel(title = "AAP - Tilgang")
+        prometheus = prometheus,
+        infoModel = InfoModel(title = "AAP - Tilgang"),
+        identityProvider = IdentityProvider.ENTRA_ID
     )
 
     routing {
         actuator(prometheus)
 
-        authenticate(AZURE) {
+        authenticate(IdentityProvider.ENTRA_ID.value) {
             apiRouting {
                 tilgang(tilgangService, config.roles, prometheus)
             }

@@ -10,7 +10,6 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.server.testing.testApplication
 import java.util.UUID
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureConfig
 import no.nav.aap.tilgang.Rolle
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import org.assertj.core.api.Assertions.assertThat
@@ -26,19 +25,9 @@ import tilgang.fakes.WithFakes
 class TilgangApiTest {
     private val oAuth2Server = MockOAuth2Server()
 
-    private lateinit var azureConfig: AzureConfig
-
     @BeforeAll
     fun setup() {
         oAuth2Server.start()
-
-        azureConfig = AzureConfig(
-            clientId = "default",
-            clientSecret = "default",
-            tokenEndpoint = oAuth2Server.tokenEndpointUrl("default").toUri(),
-            jwksUri = oAuth2Server.jwksUrl("default").toString(),
-            issuer = oAuth2Server.issuerUrl("default").toString()
-        )
     }
 
     @AfterAll
@@ -64,7 +53,6 @@ class TilgangApiTest {
                     Config(
                         roles = alleRoller,
                         redis = Fakes.getRedisConfig(),
-                        azureConfig = azureConfig
                     )
                 )
             }

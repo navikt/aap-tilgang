@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory
 object Fakes : AutoCloseable {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
 
-    private val azure by lazy { embeddedServer(Netty, port = AzurePortHolder.getPort(), module = { azureFake() }) }
+    private val texas by lazy { embeddedServer(Netty, port = TexasPortHolder.getPort(), module = { texasFake() }) }
     private val pdl by lazy { embeddedServer(Netty, port = 0, module = { pdlFake() }) }
     private val tilgangsmaskin by lazy { embeddedServer(Netty, port = 0, module = { tilgangsmaskinFake() }) }
     private val redis = RedisTestServer()
@@ -28,7 +28,7 @@ object Fakes : AutoCloseable {
             return
         }
 
-        azure.start()
+        texas.start()
         pdl.start()
         tilgangsmaskin.start()
         redis.start()
@@ -41,7 +41,7 @@ object Fakes : AutoCloseable {
             return
         }
 
-        azure.stop()
+        texas.stop()
         pdl.stop()
         tilgangsmaskin.stop()
         redis.close()
@@ -58,12 +58,10 @@ object Fakes : AutoCloseable {
 
         Runtime.getRuntime().addShutdownHook(Thread { close() })
 
-        // Azure
-        System.setProperty("azure.openid.config.token.endpoint", "http://localhost:${azure.port()}/token")
-        System.setProperty("azure.app.client.id", "tilgang")
-        System.setProperty("azure.app.client.secret", "")
-        System.setProperty("azure.openid.config.jwks.uri", "http://localhost:${azure.port()}/jwks")
-        System.setProperty("azure.openid.config.issuer", "tilgang")
+        // Texas
+        System.setProperty("nais.token.endpoint", "http://localhost:${texas.port()}/token")
+        System.setProperty("nais.token.exchange.endpoint", "http://localhost:${texas.port()}/token/exchange")
+        System.setProperty("nais.token.introspection.endpoint", "http://localhost:${texas.port()}/introspect")
 
         // PDL
         System.setProperty("pdl.base.url", "http://localhost:${pdl.port()}/graphql")
@@ -93,7 +91,7 @@ private fun EmbeddedServer<*, *>.port(): Int {
         .port
 }
 
-object AzurePortHolder {
+object TexasPortHolder {
     private val azurePort = AtomicInteger(0)
 
     fun setPort(port: Int) {
