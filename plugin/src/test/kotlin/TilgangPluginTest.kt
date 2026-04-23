@@ -536,6 +536,58 @@ class TilgangPluginTest {
     }
 
     @Test
+    fun `get sak med påkrevdRolle gir tilgang`() {
+        val randomUuid = UUID.randomUUID()
+        fakes.gittTilgangTilSak(randomUuid.toString(), true)
+        val res = clientForOBO.get<Saksinfo>(
+            URI.create("http://localhost:8082/")
+                .resolve("testApi/påkrevdRolle/sak/$randomUuid"),
+            GetRequest(currentToken = generateToken(isApp = false))
+        )
+
+        assertThat(res?.saksnummer).isEqualTo(randomUuid)
+        assertThat(fakes.sistMottattSakTilgangRequest?.påkrevdRolle).isEqualTo(Rolle.BESLUTTER)
+    }
+
+    @Test
+    fun `get sak med påkrevdRolle gir ikke tilgang`() {
+        val randomUuid = UUID.randomUUID()
+        assertThrows<ManglerTilgangException> {
+            clientForOBO.get<Saksinfo>(
+                URI.create("http://localhost:8082/")
+                    .resolve("testApi/påkrevdRolle/sak/$randomUuid"),
+                GetRequest(currentToken = generateToken(isApp = false))
+            )
+        }
+    }
+
+    @Test
+    fun `post sak med påkrevdRolle gir tilgang`() {
+        val randomUuid = UUID.randomUUID()
+        fakes.gittTilgangTilSak(randomUuid.toString(), true)
+        val res = clientForOBO.post<_, Saksinfo>(
+            URI.create("http://localhost:8082/")
+                .resolve("testApi/påkrevdRolle/sak/post"),
+            PostRequest(Saksinfo(randomUuid), currentToken = generateToken(isApp = false))
+        )
+
+        assertThat(res?.saksnummer).isEqualTo(randomUuid)
+        assertThat(fakes.sistMottattSakTilgangRequest?.påkrevdRolle).isEqualTo(Rolle.BESLUTTER)
+    }
+
+    @Test
+    fun `post sak med påkrevdRolle gir ikke tilgang`() {
+        val randomUuid = UUID.randomUUID()
+        assertThrows<ManglerTilgangException> {
+            clientForOBO.post<_, Saksinfo>(
+                URI.create("http://localhost:8082/")
+                    .resolve("testApi/påkrevdRolle/sak/post"),
+                PostRequest(Saksinfo(randomUuid), currentToken = generateToken(isApp = false))
+            )
+        }
+    }
+
+    @Test
     fun `skal returnere json ved ikke tilgang`() {
         val randomUuid = UUID.randomUUID()
         assertThatThrownBy {

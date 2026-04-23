@@ -13,6 +13,7 @@ data class AuthorizationParamPathConfig(
     val operasjon: Operasjon = Operasjon.SE,
     val operasjonerIKontekst: List<Operasjon> = emptyList(),
     val avklaringsbehovKode: String? = null,
+    val påkrevdRolle: Rolle? = null,
     val applicationRole: String? = null,
     val applicationsOnly: Boolean = false,
     val sakPathParam: SakPathParam? = null,
@@ -21,8 +22,8 @@ data class AuthorizationParamPathConfig(
     val journalpostPathParam: JournalpostPathParam? = null,
 ) : AuthorizationRouteConfig {
     init {
-        require(operasjon != Operasjon.SAKSBEHANDLE || avklaringsbehovKode != null) {
-            "Avklaringsbehovkode må være satt for operasjon SAKSBEHANDLE"
+        require(operasjon != Operasjon.SAKSBEHANDLE || avklaringsbehovKode != null || påkrevdRolle != null) {
+            "Avklaringsbehovkode eller påkrevdRolle må være satt for operasjon SAKSBEHANDLE"
         }
         if (applicationsOnly) {
             requireNotNull(applicationRole) {
@@ -41,7 +42,8 @@ data class AuthorizationParamPathConfig(
                 SakTilgangRequest(
                     relevanteIdenter = relevanteIdenter,
                     saksnummer = saksnummer,
-                    operasjon = operasjon
+                    operasjon = operasjon,
+                    påkrevdRolle = påkrevdRolle,
                 )
             )
         }
@@ -56,6 +58,7 @@ data class AuthorizationParamPathConfig(
                     behandlingsreferanse = behandlingsreferanse,
                     operasjon = operasjon,
                     avklaringsbehovKode = avklaringsbehovKode,
+                    påkrevdRolle = påkrevdRolle,
                     operasjonerIKontekst = operasjonerIKontekst
                 )
             )
@@ -69,7 +72,8 @@ data class AuthorizationParamPathConfig(
                 JournalpostTilgangRequest(
                     journalpostId = journalpostId,
                     operasjon = operasjon,
-                    avklaringsbehovKode = avklaringsbehovKode
+                    avklaringsbehovKode = avklaringsbehovKode,
+                    påkrevdRolle = påkrevdRolle
                 )
             )
         }
