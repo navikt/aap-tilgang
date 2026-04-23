@@ -1,13 +1,15 @@
 package no.nav.aap.tilgang
 
-import java.net.URI
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
-import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.retryablePost
+import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureOBOTokenProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.OnBehalfOfTokenProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.tokenx.OnBehalfOfTokenProvider as TexasOnBehalfOfTokenProvider
+import java.net.URI
+import no.nav.aap.komponenter.miljo.Miljø
 
 object TilgangGateway {
     private val baseUrl = URI.create(requiredConfigForKey("integrasjon.tilgang.url"))
@@ -15,7 +17,7 @@ object TilgangGateway {
 
     private val client = RestClient.withDefaultResponseHandler(
         config = config,
-        tokenProvider = AzureOBOTokenProvider(),
+        tokenProvider = (if (Miljø.erProd()) OnBehalfOfTokenProvider else TexasOnBehalfOfTokenProvider(identityProvider = "azuread")),
     )
 
     fun harTilgangTilSak(body: SakTilgangRequest, currentToken: OidcToken): TilgangResponse {

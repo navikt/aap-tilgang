@@ -13,6 +13,8 @@ import io.ktor.server.auth.*
 import io.ktor.server.routing.*
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureConfig
+import no.nav.aap.komponenter.server.AZURE
 import no.nav.aap.komponenter.server.commonKtorModule
 import no.nav.aap.tilgang.*
 import no.nav.aap.tilgang.auditlog.AuditLogBodyConfig
@@ -21,14 +23,13 @@ import no.nav.aap.tilgang.auditlog.PathBrukerIdentResolver
 import no.nav.aap.tilgang.plugin.kontrakt.*
 import java.util.*
 import kotlin.random.Random
-import no.nav.aap.komponenter.server.auth.IdentityProvider
 
 val enAnnenReferanseTilbehandlingReferanse = mutableMapOf<String, UUID>()
 
 fun Application.autorisertEksempelApp() {
-    commonKtorModule(PrometheusMeterRegistry(PrometheusConfig.DEFAULT), InfoModel(), IdentityProvider.ENTRA_ID)
+    commonKtorModule(PrometheusMeterRegistry(PrometheusConfig.DEFAULT), AzureConfig(), InfoModel())
     routing {
-        authenticate(IdentityProvider.ENTRA_ID.value) {
+        authenticate(AZURE) {
             apiRouting {
                 route("kun-roller") {
                     authorizedGet<Unit, IngenReferanse>(
