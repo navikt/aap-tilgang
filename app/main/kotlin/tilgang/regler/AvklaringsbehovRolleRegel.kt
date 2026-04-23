@@ -7,13 +7,20 @@ import no.nav.aap.tilgang.Rolle
 data object AvklaringsbehovRolleRegel : Regel<AvklaringsbehovRolleInput> {
     override fun vurder(input: AvklaringsbehovRolleInput): Boolean {
         require(input.avklaringsbehovFraBehandlingsflyt != null || input.avklaringsbehovFraPostmottak != null || input.påkrevdRolle != null) { "Avklaringsbehov eller påkrevd rolle må være satt" }
-        if (input.avklaringsbehovFraBehandlingsflyt != null) {
-            return kanAvklareBehov(input.avklaringsbehovFraBehandlingsflyt, input.roller)
-        } else if (input.avklaringsbehovFraPostmottak != null){
-            return kanAvklareBehov(input.avklaringsbehovFraPostmottak, input.roller)
-        } else {
-            return input.roller.contains(input.påkrevdRolle)
+
+        val harRolleForAvklaringsbehov = when {
+            input.avklaringsbehovFraBehandlingsflyt != null -> kanAvklareBehov(input.avklaringsbehovFraBehandlingsflyt, input.roller)
+            input.avklaringsbehovFraPostmottak != null -> kanAvklareBehov(input.avklaringsbehovFraPostmottak, input.roller)
+            else -> true
         }
+
+        val harPåkrevdRolle = if (input.påkrevdRolle != null) {
+            input.roller.contains(input.påkrevdRolle)
+        } else {
+            true
+        }
+
+        return harRolleForAvklaringsbehov && harPåkrevdRolle
     }
 
     private fun kanAvklareBehov(avklaringsbehov: Definisjon, roller: List<Rolle>): Boolean {

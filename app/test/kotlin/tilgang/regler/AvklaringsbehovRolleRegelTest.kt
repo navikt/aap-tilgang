@@ -53,15 +53,37 @@ class AvklaringsbehovRolleRegelTest {
     }
 
     @Test
-    fun `avklaringsbehov fra behandlingsflyt har prioritet over påkrevdRolle`() {
+    fun `krever både avklaringsbehov-rolle og påkrevdRolle når begge er satt`() {
+        // Bruker har SAKSBEHANDLER_OPPFOLGING som kan løse MANUELT_SATT_PÅ_VENT, og BESLUTTER som er påkrevdRolle
+        val input = AvklaringsbehovRolleInput(
+            avklaringsbehovFraBehandlingsflyt = Definisjon.MANUELT_SATT_PÅ_VENT,
+            avklaringsbehovFraPostmottak = null,
+            påkrevdRolle = Rolle.BESLUTTER,
+            roller = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING, Rolle.BESLUTTER)
+        )
+        assertTrue(AvklaringsbehovRolleRegel.vurder(input))
+    }
+
+    @Test
+    fun `gir ikke tilgang når avklaringsbehov passer men påkrevdRolle mangler`() {
         val input = AvklaringsbehovRolleInput(
             avklaringsbehovFraBehandlingsflyt = Definisjon.MANUELT_SATT_PÅ_VENT,
             avklaringsbehovFraPostmottak = null,
             påkrevdRolle = Rolle.BESLUTTER,
             roller = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING)
         )
-        // Avklaringsbehov brukes, ikke påkrevdRolle — SAKSBEHANDLER_OPPFOLGING kan løse MANUELT_SATT_PÅ_VENT
-        assertTrue(AvklaringsbehovRolleRegel.vurder(input))
+        assertFalse(AvklaringsbehovRolleRegel.vurder(input))
+    }
+
+    @Test
+    fun `gir ikke tilgang når påkrevdRolle passer men avklaringsbehov-rolle mangler`() {
+        val input = AvklaringsbehovRolleInput(
+            avklaringsbehovFraBehandlingsflyt = Definisjon.MANUELT_SATT_PÅ_VENT,
+            avklaringsbehovFraPostmottak = null,
+            påkrevdRolle = Rolle.BESLUTTER,
+            roller = listOf(Rolle.BESLUTTER)
+        )
+        assertFalse(AvklaringsbehovRolleRegel.vurder(input))
     }
 
     @Test
