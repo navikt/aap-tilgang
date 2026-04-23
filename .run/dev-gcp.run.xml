@@ -11,7 +11,7 @@
       <env name="BEHANDLINGSFLYT_BASE_URL" value="http://localhost:8080" />
       <env name="BEHANDLINGSFLYT_SCOPE" value="api://dev-gcp.aap.behandlingsflyt/.default" />
       <env name="FORTROLIG_ADRESSE_AD" value="ea930b6b-9397-44d9-b9e6-f4cf527a632a" />
-      <env name="INTEGRASJON_TILGANGSMASKIN_URL" value="http://populasjonstilgangskontroll.tilgangsmaskin" />
+      <env name="INTEGRASJON_TILGANGSMASKIN_URL" value="https://tilgangsmaskin.intern.dev.nav.no" />
       <env name="MS_GRAPH_BASE_URL" value="https://graph.microsoft.com/v1.0/" />
       <env name="MS_GRAPH_SCOPE" value="https://graph.microsoft.com/.default" />
       <env name="NAIS_APP_NAME" value="tilgang" />
