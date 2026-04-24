@@ -42,7 +42,8 @@ data class PersonTilgangRequest(
 data class TilbakekrevingTilgangRequest(
     val saksnummer: String,
     val behandlingsreferanse: UUID,
-    val påkrevdRolle: Rolle? = null, // TODO Trengs for bakoverkompabilitet da denne allerede er i bruk
+    @Deprecated("Trengs for bakoverkompabilitet da denne allerede er i bruk")
+    val påkrevdRolle: Rolle? = null,
     val påkrevdRoller: List<Rolle> = emptyList(),
     val operasjon: Operasjon,
 ) : TilgangRequest {
