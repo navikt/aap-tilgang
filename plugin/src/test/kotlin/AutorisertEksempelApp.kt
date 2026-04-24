@@ -198,7 +198,7 @@ fun Application.autorisertEksempelApp() {
                         authorizedGet<TestReferanse, Saksinfo>(
                             AuthorizationParamPathConfig(
                                 operasjon = Operasjon.SAKSBEHANDLE,
-                                påkrevdRolle = Rolle.BESLUTTER,
+                                påkrevdRolle = listOf(Rolle.BESLUTTER),
                                 sakPathParam = SakPathParam("saksnummer")
                             ),
                         ) { req ->
@@ -209,7 +209,7 @@ fun Application.autorisertEksempelApp() {
                         authorizedPost<Unit, Saksinfo, Saksinfo>(
                             AuthorizationBodyPathConfig(
                                 operasjon = Operasjon.SAKSBEHANDLE,
-                                påkrevdRolle = Rolle.BESLUTTER,
+                                påkrevdRolle = listOf(Rolle.BESLUTTER),
                             )
                         ) { _, dto ->
                             respond(dto)

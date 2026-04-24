@@ -15,7 +15,7 @@ class RegelInput (
     val søkerIdenter: RelevanteIdenter,
     val avklaringsbehovFraBehandlingsflyt: Definisjon?,
     val avklaringsbehovFraPostmottak: PostmottakDefinisjon?,
-    val påkrevdRolle: Rolle?,
+    val påkrevdRolle: List<Rolle> = emptyList(),
     val operasjoner: List<Operasjon>,
 )
 

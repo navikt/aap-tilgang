@@ -68,7 +68,7 @@ fun NormalOpenAPIRoute.tilgang(
             post<Unit, TilgangResponse, JournalpostTilgangRequest> { _, req ->
                 prometheus.httpCallCounter(pipeline.call).increment()
 
-                if (req.operasjon == Operasjon.SAKSBEHANDLE && req.avklaringsbehovKode == null && req.påkrevdRolle == null) {
+                if (req.operasjon == Operasjon.SAKSBEHANDLE && req.avklaringsbehovKode == null && req.påkrevdRolle.isEmpty()) {
                     log.info("Kan ikke saksbehandle uten avklaringsbehov eller påkrevd rolle $req")
                     respondWithStatus(HttpStatusCode.BadRequest)
                 }

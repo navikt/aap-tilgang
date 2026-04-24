@@ -14,8 +14,8 @@ data object AvklaringsbehovRolleRegel : Regel<AvklaringsbehovRolleInput> {
         if (input.avklaringsbehovFraPostmottak != null) {
             sjekker.add(kanAvklareBehov(input.avklaringsbehovFraPostmottak, input.roller))
         }
-        if (input.påkrevdRolle != null) {
-            sjekker.add(input.roller.contains(input.påkrevdRolle))
+        if (input.påkrevdRolle.isNotEmpty()) {
+            sjekker.add(input.påkrevdRolle.any { it in input.roller })
         }
 
         require(sjekker.isNotEmpty()) { "Avklaringsbehov eller påkrevd rolle må være satt" }
@@ -34,7 +34,7 @@ data object AvklaringsbehovRolleRegel : Regel<AvklaringsbehovRolleInput> {
 data class AvklaringsbehovRolleInput(
     val avklaringsbehovFraBehandlingsflyt: Definisjon? = null,
     val avklaringsbehovFraPostmottak: PostmottakDefinisjon?,
-    val påkrevdRolle: Rolle?,
+    val påkrevdRolle: List<Rolle> = emptyList(),
     val roller: List<Rolle>
 )
 
