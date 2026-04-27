@@ -99,7 +99,7 @@ class RegelServiceTest {
                 currentToken = OidcToken(token),
                 søkerIdenter = RelevanteIdenter(søker = listOf("423"), barn = listOf()),
                 operasjoner = listOf(Operasjon.SAKSBEHANDLE),
-                påkrevdRolle = emptyList(),
+                påkrevdRolle = null,
                 roller = listOf()
             )
         )

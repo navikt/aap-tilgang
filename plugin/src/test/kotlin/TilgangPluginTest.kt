@@ -546,7 +546,7 @@ class TilgangPluginTest {
         )
 
         assertThat(res?.saksnummer).isEqualTo(randomUuid)
-        assertThat(fakes.sistMottattSakTilgangRequest?.påkrevdRolle).isEqualTo(listOf(Rolle.BESLUTTER))
+        assertThat(fakes.sistMottattSakTilgangRequest?.påkrevdRolle).isEqualTo(Rolle.BESLUTTER)
     }
 
     @Test
@@ -572,7 +572,7 @@ class TilgangPluginTest {
         )
 
         assertThat(res?.saksnummer).isEqualTo(randomUuid)
-        assertThat(fakes.sistMottattSakTilgangRequest?.påkrevdRolle).isEqualTo(listOf(Rolle.BESLUTTER))
+        assertThat(fakes.sistMottattSakTilgangRequest?.påkrevdRolle).isEqualTo(Rolle.BESLUTTER)
     }
 
     @Test
