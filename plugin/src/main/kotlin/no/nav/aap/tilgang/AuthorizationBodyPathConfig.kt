@@ -12,7 +12,7 @@ data class AuthorizationBodyPathConfig(
     val operasjon: Operasjon,
     val applicationRole: String? = null,
     val applicationsOnly: Boolean = false,
-    val påkrevdRolle: Rolle? = null,
+    val påkrevdRolle: List<Rolle> = emptyList(),
     val relevanteIdenterResolver: RelevanteIdenterResolver? = null,
     val journalpostIdResolver: JournalpostIdResolver = DefaultJournalpostIdResolver(),
     val behandlingreferanseResolver: BehandlingreferanseResolver = DefaultBehandlingreferanseResolver()

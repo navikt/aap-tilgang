@@ -13,7 +13,7 @@ data class AuthorizationParamPathConfig(
     val operasjon: Operasjon = Operasjon.SE,
     val operasjonerIKontekst: List<Operasjon> = emptyList(),
     val avklaringsbehovKode: String? = null,
-    val påkrevdRolle: Rolle? = null,
+    val påkrevdRolle: List<Rolle> = emptyList(),
     val applicationRole: String? = null,
     val applicationsOnly: Boolean = false,
     val sakPathParam: SakPathParam? = null,
@@ -22,7 +22,7 @@ data class AuthorizationParamPathConfig(
     val journalpostPathParam: JournalpostPathParam? = null,
 ) : AuthorizationRouteConfig {
     init {
-        require(operasjon != Operasjon.SAKSBEHANDLE || avklaringsbehovKode != null || påkrevdRolle != null) {
+        require(operasjon != Operasjon.SAKSBEHANDLE || avklaringsbehovKode != null || påkrevdRolle.isNotEmpty()) {
             "Avklaringsbehovkode eller påkrevdRolle må være satt for operasjon SAKSBEHANDLE"
         }
         if (applicationsOnly) {
