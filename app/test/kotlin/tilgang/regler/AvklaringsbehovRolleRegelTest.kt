@@ -13,7 +13,7 @@ class AvklaringsbehovRolleRegelTest {
         val input = AvklaringsbehovRolleInput(
             avklaringsbehovFraBehandlingsflyt = Definisjon.MANUELT_SATT_PÅ_VENT,
             avklaringsbehovFraPostmottak = null,
-            påkrevdRolle = null,
+            påkrevdRolle = emptyList(),
             roller = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING)
         )
         assertTrue(AvklaringsbehovRolleRegel.vurder(input))
@@ -24,7 +24,7 @@ class AvklaringsbehovRolleRegelTest {
         val input = AvklaringsbehovRolleInput(
             avklaringsbehovFraBehandlingsflyt = Definisjon.MANUELT_SATT_PÅ_VENT,
             avklaringsbehovFraPostmottak = null,
-            påkrevdRolle = null,
+            påkrevdRolle = emptyList(),
             roller = listOf(Rolle.BESLUTTER)
         )
         assertFalse(AvklaringsbehovRolleRegel.vurder(input))
@@ -35,7 +35,7 @@ class AvklaringsbehovRolleRegelTest {
         val input = AvklaringsbehovRolleInput(
             avklaringsbehovFraBehandlingsflyt = null,
             avklaringsbehovFraPostmottak = null,
-            påkrevdRolle = Rolle.BESLUTTER,
+            påkrevdRolle = listOf(Rolle.BESLUTTER),
             roller = listOf(Rolle.BESLUTTER)
         )
         assertTrue(AvklaringsbehovRolleRegel.vurder(input))
@@ -46,7 +46,7 @@ class AvklaringsbehovRolleRegelTest {
         val input = AvklaringsbehovRolleInput(
             avklaringsbehovFraBehandlingsflyt = null,
             avklaringsbehovFraPostmottak = null,
-            påkrevdRolle = Rolle.BESLUTTER,
+            påkrevdRolle = listOf(Rolle.BESLUTTER),
             roller = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING)
         )
         assertFalse(AvklaringsbehovRolleRegel.vurder(input))
@@ -58,7 +58,7 @@ class AvklaringsbehovRolleRegelTest {
         val input = AvklaringsbehovRolleInput(
             avklaringsbehovFraBehandlingsflyt = Definisjon.MANUELT_SATT_PÅ_VENT,
             avklaringsbehovFraPostmottak = null,
-            påkrevdRolle = Rolle.BESLUTTER,
+            påkrevdRolle = listOf(Rolle.BESLUTTER),
             roller = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING, Rolle.BESLUTTER)
         )
         assertTrue(AvklaringsbehovRolleRegel.vurder(input))
@@ -69,7 +69,7 @@ class AvklaringsbehovRolleRegelTest {
         val input = AvklaringsbehovRolleInput(
             avklaringsbehovFraBehandlingsflyt = Definisjon.MANUELT_SATT_PÅ_VENT,
             avklaringsbehovFraPostmottak = null,
-            påkrevdRolle = Rolle.BESLUTTER,
+            påkrevdRolle = listOf(Rolle.BESLUTTER),
             roller = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING)
         )
         assertFalse(AvklaringsbehovRolleRegel.vurder(input))
@@ -80,7 +80,7 @@ class AvklaringsbehovRolleRegelTest {
         val input = AvklaringsbehovRolleInput(
             avklaringsbehovFraBehandlingsflyt = Definisjon.MANUELT_SATT_PÅ_VENT,
             avklaringsbehovFraPostmottak = null,
-            påkrevdRolle = Rolle.BESLUTTER,
+            påkrevdRolle = listOf(Rolle.BESLUTTER),
             roller = listOf(Rolle.BESLUTTER)
         )
         assertFalse(AvklaringsbehovRolleRegel.vurder(input))
@@ -91,7 +91,7 @@ class AvklaringsbehovRolleRegelTest {
         val input = AvklaringsbehovRolleInput(
             avklaringsbehovFraBehandlingsflyt = null,
             avklaringsbehovFraPostmottak = null,
-            påkrevdRolle = null,
+            påkrevdRolle = emptyList(),
             roller = listOf(Rolle.BESLUTTER)
         )
         assertThrows<IllegalArgumentException> {
