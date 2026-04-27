@@ -47,7 +47,7 @@ class TilgangService(
             søkerIdenter = identer,
             avklaringsbehovFraBehandlingsflyt = null,
             avklaringsbehovFraPostmottak = null, 
-            påkrevdRolle = req.påkrevdRolle ?: emptyList(),
+            påkrevdRolle = req.påkrevdRolle,
             operasjoner = listOf(req.operasjon)
         )
         return regelService.vurderTilgang(regelInput)[req.operasjon] == true
@@ -75,7 +75,7 @@ class TilgangService(
             søkerIdenter = identer,
             avklaringsbehovFraBehandlingsflyt = avklaringsbehov,
             avklaringsbehovFraPostmottak = null,
-            påkrevdRolle = req.påkrevdRolle ?: emptyList(),
+            påkrevdRolle = req.påkrevdRolle,
             operasjoner = (req.operasjonerIKontekst + req.operasjon).toSet().toList()
         )
         return regelService.vurderTilgang(regelInput)
@@ -109,7 +109,7 @@ class TilgangService(
             søkerIdenter = identer,
             avklaringsbehovFraBehandlingsflyt = null,
             avklaringsbehovFraPostmottak = avklaringsbehov,
-            påkrevdRolle = req.påkrevdRolle ?: emptyList(),
+            påkrevdRolle = req.påkrevdRolle,
             operasjoner = listOf(req.operasjon),
         )
         return regelService.vurderTilgang(regelInput)[req.operasjon] == true
