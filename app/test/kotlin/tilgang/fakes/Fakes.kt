@@ -7,7 +7,6 @@ import io.ktor.server.netty.Netty
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.runBlocking
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -15,7 +14,7 @@ import org.slf4j.LoggerFactory
 object Fakes : AutoCloseable {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
 
-    private val texas by lazy { embeddedServer(Netty, port = TexasPortHolder.getPort(), module = { texasFake() }) }
+    private val texas by lazy { embeddedServer(Netty, port = 0, module = { texasFake() }) }
     private val pdl by lazy { embeddedServer(Netty, port = 0, module = { pdlFake() }) }
     private val tilgangsmaskin by lazy { embeddedServer(Netty, port = 0, module = { tilgangsmaskinFake() }) }
     private val redis = RedisTestServer()
@@ -89,16 +88,4 @@ private fun EmbeddedServer<*, *>.port(): Int {
     return runBlocking { this@port.engine.resolvedConnectors() }
         .first { it.type == ConnectorType.HTTP }
         .port
-}
-
-object TexasPortHolder {
-    private val azurePort = AtomicInteger(0)
-
-    fun setPort(port: Int) {
-        azurePort.set(port)
-    }
-
-    fun getPort(): Int {
-        return azurePort.get()
-    }
 }
