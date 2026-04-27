@@ -3,11 +3,9 @@ package tilgang
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import java.net.URI
-import tilgang.fakes.TexasPortHolder
 import tilgang.fakes.Fakes
 
 fun main() {
-    TexasPortHolder.setPort(8081)
     Fakes.start()
 
     embeddedServer(Netty, port = 8080) {
