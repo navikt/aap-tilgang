@@ -163,7 +163,7 @@ class TilgangService(
             søkerIdenter = identer,
             avklaringsbehovFraBehandlingsflyt = null,
             avklaringsbehovFraPostmottak = null,
-            påkrevdRolle = req.effektivePåkrevdRoller,
+            påkrevdRolle = req.effektivePåkrevdRoller(),
             operasjoner = listOf(req.operasjon)
         )
         return regelService.vurderTilgang(regelInput)[req.operasjon] == true

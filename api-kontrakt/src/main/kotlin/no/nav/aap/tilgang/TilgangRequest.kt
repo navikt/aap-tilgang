@@ -47,12 +47,12 @@ data class TilbakekrevingTilgangRequest(
     val påkrevdRoller: List<Rolle>? = null,
     val operasjon: Operasjon,
 ) : TilgangRequest {
-    val effektivePåkrevdRoller: List<Rolle>
-        get() = påkrevdRoller?.ifEmpty { null } ?: listOfNotNull(påkrevdRolle)
+    fun effektivePåkrevdRoller(): List<Rolle> =
+        påkrevdRoller?.ifEmpty { null } ?: listOfNotNull(påkrevdRolle)
 
     init {
         if (operasjon == Operasjon.SAKSBEHANDLE) {
-            require(effektivePåkrevdRoller.isNotEmpty()) { "Påkrevd rolle må være satt for operasjon SAKSBEHANDLE" }
+            require(effektivePåkrevdRoller().isNotEmpty()) { "Påkrevd rolle må være satt for operasjon SAKSBEHANDLE" }
         }
     }
 }
