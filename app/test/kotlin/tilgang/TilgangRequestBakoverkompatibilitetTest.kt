@@ -293,7 +293,7 @@ class TilgangRequestBakoverkompatibilitetTest {
         assertThat(request.påkrevdRolle).isEqualTo(Rolle.SAKSBEHANDLER_OPPFOLGING)
         assertThat(request.påkrevdRoller).isNull()
         assertThat(request.operasjon).isEqualTo(Operasjon.SAKSBEHANDLE)
-        assertThat(request.effektivePåkrevdRoller).containsExactly(Rolle.SAKSBEHANDLER_OPPFOLGING)
+        assertThat(request.effektivePåkrevdRoller()).containsExactly(Rolle.SAKSBEHANDLER_OPPFOLGING)
     }
 
     @Test
@@ -313,7 +313,7 @@ class TilgangRequestBakoverkompatibilitetTest {
         assertThat(request.påkrevdRoller).containsExactly(Rolle.SAKSBEHANDLER_OPPFOLGING, Rolle.KVALITETSSIKRER)
         @Suppress("DEPRECATION")
         assertThat(request.påkrevdRolle).isNull()
-        assertThat(request.effektivePåkrevdRoller).containsExactly(Rolle.SAKSBEHANDLER_OPPFOLGING, Rolle.KVALITETSSIKRER)
+        assertThat(request.effektivePåkrevdRoller()).containsExactly(Rolle.SAKSBEHANDLER_OPPFOLGING, Rolle.KVALITETSSIKRER)
     }
 
     @Test
@@ -331,7 +331,7 @@ class TilgangRequestBakoverkompatibilitetTest {
 
         val request = objectMapper.readValue<TilbakekrevingTilgangRequest>(json)
 
-        assertThat(request.effektivePåkrevdRoller).containsExactly(Rolle.KVALITETSSIKRER)
+        assertThat(request.effektivePåkrevdRoller()).containsExactly(Rolle.KVALITETSSIKRER)
     }
 
     @Test
@@ -349,7 +349,7 @@ class TilgangRequestBakoverkompatibilitetTest {
 
         assertThat(request.saksnummer).isEqualTo("12345")
         assertThat(request.operasjon).isEqualTo(Operasjon.SE)
-        assertThat(request.effektivePåkrevdRoller).isEmpty()
+        assertThat(request.effektivePåkrevdRoller()).isEmpty()
     }
 
     @Test
