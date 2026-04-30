@@ -33,7 +33,7 @@ logstashLogbackEncoder = { module = "net.logstash.logback:logstash-logback-encod
 
 micrometerRegistryPrometheus = { module = "io.micrometer:micrometer-registry-prometheus", version = "1.16.5" }
 jacksonDatatypeJsr310 = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version = "2.21.2" }
-jedis = { module = "redis.clients:jedis", version = "7.4.1" }
+jedis = { module = "redis.clients:jedis", version = "7.5.0" }
 mockOauth2Server = { module = "no.nav.security:mock-oauth2-server", version = "3.0.1" }
 testcontainersRedis = { module = "com.redis:testcontainers-redis", version = "2.2.4" }
 testcontainers = { module = "org.testcontainers:testcontainers", version = "2.0.5" }
