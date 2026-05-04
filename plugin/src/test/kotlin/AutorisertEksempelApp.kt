@@ -23,13 +23,19 @@ import no.nav.aap.tilgang.auditlog.PathBrukerIdentResolver
 import no.nav.aap.tilgang.plugin.kontrakt.*
 import java.util.*
 import kotlin.random.Random
+import no.nav.aap.komponenter.server.auth.IdentityProvider
 
 val enAnnenReferanseTilbehandlingReferanse = mutableMapOf<String, UUID>()
 
 fun Application.autorisertEksempelApp() {
-    commonKtorModule(PrometheusMeterRegistry(PrometheusConfig.DEFAULT), AzureConfig(), InfoModel())
+    if (isTexasEnabled) {
+        commonKtorModule(PrometheusMeterRegistry(PrometheusConfig.DEFAULT), InfoModel(), IdentityProvider.ENTRA_ID)
+    } else {
+        commonKtorModule(PrometheusMeterRegistry(PrometheusConfig.DEFAULT), AzureConfig(), InfoModel())
+    }
+
     routing {
-        authenticate(AZURE) {
+        authenticate(if (isTexasEnabled) IdentityProvider.ENTRA_ID.value else AZURE) {
             apiRouting {
                 route("kun-roller") {
                     authorizedGet<Unit, IngenReferanse>(
