@@ -7,7 +7,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import no.nav.aap.komponenter.httpklient.httpclient.retryablePost
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureOBOTokenProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.OnBehalfOfTokenProvider
 
 object TilgangGateway {
     private val baseUrl = URI.create(requiredConfigForKey("integrasjon.tilgang.url"))
@@ -15,7 +15,7 @@ object TilgangGateway {
 
     private val client = RestClient.withDefaultResponseHandler(
         config = config,
-        tokenProvider = AzureOBOTokenProvider,
+        tokenProvider = OnBehalfOfTokenProvider
     )
 
     fun harTilgangTilSak(body: SakTilgangRequest, currentToken: OidcToken): TilgangResponse {

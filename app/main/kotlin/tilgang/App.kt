@@ -20,6 +20,8 @@ import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import java.net.http.HttpTimeoutException
 import kotlin.time.Duration.Companion.seconds
+import no.nav.aap.komponenter.config.configForKey
+import no.nav.aap.komponenter.server.AZURE
 import no.nav.aap.komponenter.server.auth.IdentityProvider
 import no.nav.aap.komponenter.server.commonKtorModule
 import org.slf4j.Logger
@@ -68,8 +70,9 @@ internal object AppConfig {
     val connectionGroupSize = ktorParallellitet / 2 + 1
     val workerGroupSize = ktorParallellitet / 2 + 1
     val callGroupSize = ktorParallellitet
-
 }
+
+val isTexasEnabled = configForKey("ENABLE_TEXAS").toBoolean()
 
 fun main() {
     Thread.currentThread().setUncaughtExceptionHandler { _, e -> LOGGER.error("Uhåndtert feil", e) }
@@ -171,16 +174,22 @@ fun Application.api(
         }
     }
 
-    commonKtorModule(
-        prometheus = prometheus,
-        infoModel = InfoModel(title = "AAP - Tilgang"),
-        identityProvider = IdentityProvider.ENTRA_ID
-    )
+    if (isTexasEnabled) {
+        commonKtorModule(
+            prometheus = prometheus,
+            infoModel = InfoModel(title = "AAP - Tilgang"),
+            identityProvider = IdentityProvider.ENTRA_ID
+        )
+    } else {
+        commonKtorModule(
+            prometheus, azureConfig = config.azureConfig, infoModel = InfoModel(title = "AAP - Tilgang")
+        )
+    }
 
     routing {
         actuator(prometheus)
 
-        authenticate(IdentityProvider.ENTRA_ID.value) {
+        authenticate(if (isTexasEnabled) IdentityProvider.ENTRA_ID.value else AZURE) {
             apiRouting {
                 tilgang(tilgangService, config.roles, prometheus)
             }

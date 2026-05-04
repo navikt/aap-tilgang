@@ -7,6 +7,7 @@ import io.ktor.server.netty.Netty
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.runBlocking
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -14,6 +15,7 @@ import org.slf4j.LoggerFactory
 object Fakes : AutoCloseable {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
 
+    private val azure by lazy { embeddedServer(Netty, port = AzurePortHolder.getPort(), module = { azureFake() }) }
     private val texas by lazy { embeddedServer(Netty, port = 0, module = { texasFake() }) }
     private val pdl by lazy { embeddedServer(Netty, port = 0, module = { pdlFake() }) }
     private val tilgangsmaskin by lazy { embeddedServer(Netty, port = 0, module = { tilgangsmaskinFake() }) }
@@ -27,6 +29,7 @@ object Fakes : AutoCloseable {
             return
         }
 
+        azure.start()
         texas.start()
         pdl.start()
         tilgangsmaskin.start()
@@ -40,6 +43,7 @@ object Fakes : AutoCloseable {
             return
         }
 
+        azure.stop()
         texas.stop()
         pdl.stop()
         tilgangsmaskin.stop()
@@ -57,10 +61,12 @@ object Fakes : AutoCloseable {
 
         Runtime.getRuntime().addShutdownHook(Thread { close() })
 
-        // Texas
-        System.setProperty("nais.token.endpoint", "http://localhost:${texas.port()}/token")
-        System.setProperty("nais.token.exchange.endpoint", "http://localhost:${texas.port()}/token/exchange")
-        System.setProperty("nais.token.introspection.endpoint", "http://localhost:${texas.port()}/introspect")
+        // Azure
+        System.setProperty("azure.openid.config.token.endpoint", "http://localhost:${azure.port()}/token")
+        System.setProperty("azure.app.client.id", "tilgang")
+        System.setProperty("azure.app.client.secret", "")
+        System.setProperty("azure.openid.config.jwks.uri", "http://localhost:${azure.port()}/jwks")
+        System.setProperty("azure.openid.config.issuer", "tilgang")
 
         // PDL
         System.setProperty("pdl.base.url", "http://localhost:${pdl.port()}/graphql")
@@ -88,4 +94,16 @@ private fun EmbeddedServer<*, *>.port(): Int {
     return runBlocking { this@port.engine.resolvedConnectors() }
         .first { it.type == ConnectorType.HTTP }
         .port
+}
+
+object AzurePortHolder {
+    private val azurePort = AtomicInteger(0)
+
+    fun setPort(port: Int) {
+        azurePort.set(port)
+    }
+
+    fun getPort(): Int {
+        return azurePort.get()
+    }
 }
