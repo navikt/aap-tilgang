@@ -67,14 +67,14 @@ class Redis private constructor(
     }
 
     companion object {
+        val mapper = jacksonObjectMapper()
+
         inline fun <reified T> ByteArray.deserialize(): T {
-            val mapper = jacksonObjectMapper()
             val tr = object : TypeReference<T>() {}
             return mapper.readValue(this, tr)
         }
 
         inline fun <reified T> T.serialize(): ByteArray {
-            val mapper = jacksonObjectMapper()
             return mapper.writeValueAsBytes(this)
         }
     }
