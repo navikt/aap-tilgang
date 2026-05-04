@@ -6,7 +6,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.retryableGet
 import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.ClientCredentialsTokenProvider
 import no.nav.aap.tilgang.RelevanteIdenter
 import org.slf4j.LoggerFactory
 import tilgang.metrics.cacheHit
@@ -29,7 +29,7 @@ class BehandlingsflytGateway(
     )
     private val httpClient = RestClient.withDefaultResponseHandler(
         config = clientConfig,
-        tokenProvider = AzureM2MTokenProvider,
+        tokenProvider = ClientCredentialsTokenProvider,
         prometheus = prometheus,
     )
 
