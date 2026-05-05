@@ -4,8 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import redis.clients.jedis.DefaultJedisClientConfig
 import redis.clients.jedis.HostAndPort
-import redis.clients.jedis.JedisPool
-import redis.clients.jedis.JedisPoolConfig
+import redis.clients.jedis.RedisClient
 import redis.clients.jedis.params.SetParams
 import tilgang.RedisConfig
 import java.net.URI
@@ -19,45 +18,40 @@ data class Key(
 }
 
 class Redis private constructor(
-    private val pool: JedisPool
+    private val jedis: RedisClient,
 ) : AutoCloseable {
     constructor(config: RedisConfig) : this(
-        JedisPool(
-            JedisPoolConfig(),
-            HostAndPort(config.uri.host, config.uri.port),
-            DefaultJedisClientConfig.builder()
-                .apply {
-                    if (!Miljø.erLokal()) {
-                        ssl(true)
-                        user(config.username)
+        RedisClient.builder()
+            .hostAndPort(HostAndPort(config.uri.host, config.uri.port))
+            .clientConfig(
+                DefaultJedisClientConfig.builder()
+                    .apply {
+                        if (!Miljø.erLokal()) {
+                            ssl(true)
+                            user(config.username)
+                        }
                     }
-                }
-                .password(config.password).build()
-        )
+                    .password(config.password).build()
+            )
+            .build()
     )
 
-    constructor(uri: URI) : this(JedisPool(uri))
+    constructor(uri: URI) : this(RedisClient.create(uri))
 
     fun set(key: Key, value: ByteArray, expireSec: Long = 3600) {
-        pool.resource.use {
-            it.set(key.get(), value, SetParams().ex(expireSec))
-        }
+        jedis.set(key.get(), value, SetParams().ex(expireSec))
     }
 
     operator fun get(key: Key): ByteArray? {
-        pool.resource.use {
-            return it.get(key.get())
-        }
+        return jedis.get(key.get())
     }
 
     fun ready(): Boolean {
-        pool.resource.use {
-            return it.ping() == "PONG"
-        }
+        return jedis.ping() == "PONG"
     }
 
     override fun close() {
-        pool.close()
+        jedis.close()
     }
 
     companion object {
