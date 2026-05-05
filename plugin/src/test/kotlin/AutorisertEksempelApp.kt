@@ -316,8 +316,8 @@ data class Behandlinginfo(val enAnnenReferanse: String) : Behandlingsreferanse {
         return enAnnenReferanse
     }
 
-    override fun hentAvklaringsbehovKode(): String? {
-        return null
+    override fun hentPåkrevdRolle(): List<Rolle> {
+        return emptyList()
     }
 }
 

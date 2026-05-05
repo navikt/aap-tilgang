@@ -112,6 +112,7 @@ class TilgangRequestBakoverkompatibilitetTest {
             {
                 "behandlingsreferanse": "$uuid",
                 "avklaringsbehovKode": null,
+                "påkrevdRolle": [],
                 "operasjon": "SE"
             }
         """.trimIndent()
@@ -121,7 +122,7 @@ class TilgangRequestBakoverkompatibilitetTest {
         assertThat(request.behandlingsreferanse).isEqualTo(uuid)
         assertThat(request.avklaringsbehovKode).isNull()
         assertThat(request.operasjon).isEqualTo(Operasjon.SE)
-        assertThat(request.påkrevdRolle).isNull()
+        assertThat(request.påkrevdRolle).isEmpty()
         assertThat(request.relevanteIdenter).isNull()
         assertThat(request.operasjonerIKontekst).isEmpty()
     }
@@ -159,7 +160,7 @@ class TilgangRequestBakoverkompatibilitetTest {
         val json = """
             {
                 "behandlingsreferanse": "$uuid",
-                "avklaringsbehovKode": "5003",
+                "påkrevdRolle": ["SAKSBEHANDLER_OPPFOLGING"],
                 "operasjon": "SE"
             }
         """.trimIndent()
@@ -177,7 +178,8 @@ class TilgangRequestBakoverkompatibilitetTest {
                 "behandlingsreferanse": "$uuid",
                 "avklaringsbehovKode": null,
                 "operasjon": "SE",
-                "nyttFremtidigFelt": true
+                "nyttFremtidigFelt": true,
+                "påkrevdRolle": []
             }
         """.trimIndent()
 

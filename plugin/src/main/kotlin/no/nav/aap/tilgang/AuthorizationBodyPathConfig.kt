@@ -25,7 +25,12 @@ data class AuthorizationBodyPathConfig(
                 return AuthorizedRequest(
                     applicationsOnly,
                     applicationRole,
-                    SakTilgangRequest(saksnummer = referanse, påkrevdRolle = påkrevdRolle, operasjon = operasjon, relevanteIdenter = relevanteIdenter)
+                    SakTilgangRequest(
+                        saksnummer = referanse,
+                        påkrevdRolle = påkrevdRolle,
+                        operasjon = operasjon,
+                        relevanteIdenter = relevanteIdenter
+                    )
                 )
             }
 
@@ -40,12 +45,20 @@ data class AuthorizationBodyPathConfig(
 
             is Behandlingsreferanse -> {
                 val referanse = behandlingreferanseResolver.resolve(request.behandlingsreferanseResolverInput())
-                val avklaringsbehovKode = request.hentAvklaringsbehovKode()
                 val relevanteIdenter = relevanteIdenterResolver?.resolve(referanse.toString())
+                val påkrevdeRoller = påkrevdRolle.ifEmpty {
+                    request.hentPåkrevdRolle()
+                }
+                
                 return AuthorizedRequest(
                     applicationsOnly,
                     applicationRole,
-                    BehandlingTilgangRequest(behandlingsreferanse = referanse, avklaringsbehovKode = avklaringsbehovKode, påkrevdRolle = påkrevdRolle, operasjon = operasjon, relevanteIdenter = relevanteIdenter)
+                    BehandlingTilgangRequest(
+                        behandlingsreferanse = referanse,
+                        påkrevdRolle = påkrevdeRoller,
+                        operasjon = operasjon,
+                        relevanteIdenter = relevanteIdenter
+                    )
                 )
             }
 
@@ -56,7 +69,12 @@ data class AuthorizationBodyPathConfig(
                 return AuthorizedRequest(
                     applicationsOnly,
                     applicationRole,
-                    JournalpostTilgangRequest(journalpostId = referanse, avklaringsbehovKode = avklaringsbehovKode, påkrevdRolle = påkrevdRolle, operasjon = operasjon)
+                    JournalpostTilgangRequest(
+                        journalpostId = referanse,
+                        avklaringsbehovKode = avklaringsbehovKode,
+                        påkrevdRolle = påkrevdRolle,
+                        operasjon = operasjon
+                    )
                 )
             }
 
