@@ -17,7 +17,8 @@ data class SakTilgangRequest(
 
 data class BehandlingTilgangRequest(
     val behandlingsreferanse: UUID,
-    val avklaringsbehovKode: String?,
+    @Deprecated("Bruk påkrevdRolle i stedet")
+    val avklaringsbehovKode: String? = null,
     val påkrevdRolle: List<Rolle>? = null,
     val operasjon: Operasjon,
     /**
