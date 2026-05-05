@@ -6,10 +6,11 @@ import tilgang.integrasjoner.msgraph.IMsGraphGateway
 import java.util.*
 
 class SkjermingService(private val msGraphGateway: IMsGraphGateway) {
+    private val skjermedePersonerGruppeId = UUID.fromString(requiredConfigForKey("skjermede.personer.ad"))
+
     fun harSkjermedePersonerRolle(
         currentToken: OidcToken, oboIdent: String
     ): Boolean {
-        val gruppeId = UUID.fromString(requiredConfigForKey("skjermede.personer.ad"))
-        return msGraphGateway.hentAdGrupper(currentToken, oboIdent).groups.any {it.id == gruppeId}
+        return msGraphGateway.hentAdGrupper(currentToken, oboIdent).groups.any { it.id == skjermedePersonerGruppeId }
     }
 }

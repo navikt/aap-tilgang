@@ -74,9 +74,9 @@ class TilgangsmaskinGateway(
         ansattIdent: String
     ): HarTilgangFraTilgangsmaskinen {
         val url = baseUrl.resolve("/api/v1/kjerne")
-        if (redis.exists(Key(TILGANGSMASKIN_KJERNE_PREFIX, brukerIdent+ansattIdent))) {
+        redis[Key(TILGANGSMASKIN_KJERNE_PREFIX, brukerIdent+ansattIdent)]?.let {
             prometheus.cacheHit(TILGANGSMASKIN_KJERNE_PREFIX).increment()
-            return redis[Key(TILGANGSMASKIN_KJERNE_PREFIX, brukerIdent+ansattIdent)]!!.deserialize()
+            return it.deserialize()
         }
         prometheus.cacheMiss(TILGANGSMASKIN_KJERNE_PREFIX).increment()
 

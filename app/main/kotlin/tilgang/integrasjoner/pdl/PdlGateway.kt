@@ -38,16 +38,14 @@ class PdlGraphQLGateway(
     )
 
     override fun hentPersonBolk(personidenter: List<String>, callId: String): List<PersonResultat>? {
-        val personBolkResult: List<PersonResultat> = personidenter.filter {
-            redis.exists(Key(PERSON_BOLK_PREFIX, it))
-        }.map {
-            redis[Key(PERSON_BOLK_PREFIX, it)]!!.deserialize()
-        }
+        val cachedById = personidenter.mapNotNull { ident ->
+            redis[Key(PERSON_BOLK_PREFIX, ident)]?.deserialize<PersonResultat>()?.let { ident to it }
+        }.toMap()
+
+        val personBolkResult = cachedById.values.toList()
         prometheus.cacheHit(PERSON_BOLK_PREFIX).increment(personBolkResult.size.toDouble())
 
-        val manglendePersonidenter = personidenter.filter {
-            !redis.exists(Key(PERSON_BOLK_PREFIX, it))
-        }
+        val manglendePersonidenter = personidenter.filter { it !in cachedById }
 
         if (manglendePersonidenter.isEmpty()) {
             return personBolkResult
@@ -70,10 +68,10 @@ class PdlGraphQLGateway(
     }
 
     override fun hentGeografiskTilknytning(ident: String, callId: String): HentGeografiskTilknytningResult? {
-        if (redis.exists(Key(GEO_PREFIX, ident))) {
+        redis[Key(GEO_PREFIX, ident)]?.let {
             prometheus.cacheHit(GEO_PREFIX).increment()
-            return redis[Key(GEO_PREFIX, ident)]!!.deserialize()
-        } //TODO: denne kan teknisk sett unngå token credentials, kan vi doppe den, eller burde vi dobbelsjekke
+            return it.deserialize()
+        }
         prometheus.cacheMiss(GEO_PREFIX).increment()
 
         val result = query(PdlRequest.hentGeografiskTilknytning(ident), callId)

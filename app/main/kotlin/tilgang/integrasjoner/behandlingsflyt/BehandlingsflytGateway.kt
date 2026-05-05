@@ -34,9 +34,9 @@ class BehandlingsflytGateway(
     )
 
     fun hentIdenterForSak(saksnummer: String): RelevanteIdenter {
-        if (redis.exists(Key(IDENTER_SAK_PREFIX, saksnummer))) {
+        redis[Key(IDENTER_SAK_PREFIX, saksnummer)]?.let {
             prometheus.cacheHit(BEHANDLINGSFLYT).increment()
-            return redis[Key(IDENTER_SAK_PREFIX, saksnummer)]!!.deserialize()
+            return it.deserialize()
         }
         prometheus.cacheMiss(BEHANDLINGSFLYT).increment()
 
@@ -51,9 +51,9 @@ class BehandlingsflytGateway(
     }
 
     fun hentIdenterForBehandling(behandlingsnummer: String): RelevanteIdenter {
-        if (redis.exists(Key(IDENTER_BEHANDLING_PREFIX, behandlingsnummer))) {
+        redis[Key(IDENTER_BEHANDLING_PREFIX, behandlingsnummer)]?.let {
             prometheus.cacheHit(BEHANDLINGSFLYT).increment()
-            return redis[Key(IDENTER_BEHANDLING_PREFIX, behandlingsnummer)]!!.deserialize()
+            return it.deserialize()
         }
         prometheus.cacheMiss(BEHANDLINGSFLYT).increment()
 
