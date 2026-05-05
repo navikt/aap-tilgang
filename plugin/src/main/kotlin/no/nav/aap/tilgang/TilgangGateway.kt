@@ -1,22 +1,31 @@
 package no.nav.aap.tilgang
 
+import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import io.micrometer.core.instrument.MeterRegistry
+import io.ktor.client.*
+import io.ktor.client.call.body
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.*
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
+import io.ktor.http.headers
+import io.ktor.serialization.jackson.jackson
 import io.micrometer.core.instrument.binder.cache.CaffeineCacheMetrics
 import java.net.URI
 import java.time.Duration
+import kotlin.time.Duration.Companion.seconds
 import no.nav.aap.komponenter.config.requiredConfigForKey
-import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
-import no.nav.aap.komponenter.httpklient.httpclient.RestClient
-import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
-import no.nav.aap.komponenter.httpklient.httpclient.retryablePost
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.OnBehalfOfTokenProvider
 
 object TilgangGateway {
     private val baseUrl = URI.create(requiredConfigForKey("integrasjon.tilgang.url"))
-    private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.tilgang.scope"))
     private var prometheus: MeterRegistry? = null
+    private val tilgangScope = requiredConfigForKey("integrasjon.tilgang.scope")
+    private val texasUrl = requiredConfigForKey("nais.token.exchange.endpoint")
 
     private val tilgangGatewayBehandlingCache = Caffeine.newBuilder()
         .maximumSize(2_000)
@@ -30,6 +39,7 @@ object TilgangGateway {
         .recordStats()
         .build<SakTilgangRequestMedNavIdent, TilgangResponse>()
 
+
     fun initialiserPrometheus(registry: MeterRegistry) {
         if (prometheus == null) {
             prometheus = registry
@@ -38,86 +48,81 @@ object TilgangGateway {
         }
     }
 
-    private val client = RestClient.withDefaultResponseHandler(
-        config = config,
-        tokenProvider = OnBehalfOfTokenProvider
-    )
-
-    fun harTilgangTilSak(body: SakTilgangRequest, currentToken: OidcToken): TilgangResponse {
-        return tilgangGatewaySakCache.get(SakTilgangRequestMedNavIdent(body, currentToken.navIdent())) {
-            val httpRequest = PostRequest(
-                body = body,
-                currentToken = currentToken
-            )
-            val respons = requireNotNull(
-                client.retryablePost<_, TilgangResponse>(
-                    uri = baseUrl.resolve("/tilgang/sak"),
-                    request = httpRequest
-                )
-            )
-            respons
+    private val client = HttpClient(CIO) {
+        install(HttpRequestRetry)
+        install(HttpTimeout) {
+            requestTimeoutMillis = 1.seconds.inWholeMilliseconds
+        }
+        install(ContentNegotiation) {
+            jackson()
         }
     }
 
-    fun harTilgangTilBehandling(body: BehandlingTilgangRequest, currentToken: OidcToken): TilgangResponse {
-        return tilgangGatewayBehandlingCache.get(BehandlingTilgangRequestMedNavIdent(body, currentToken.navIdent())) {
-            val httpRequest = PostRequest(
-                body = body,
-                currentToken = currentToken
-            )
-            val respons = requireNotNull(
-                client.retryablePost<_, TilgangResponse>(
-                    uri = baseUrl.resolve("/tilgang/behandling"),
-                    request = httpRequest
-                )
-            )
-            respons
+    private val tilgangSakUrl = baseUrl.resolve("/tilgang/sak").toString()
+    suspend fun harTilgangTilSak(body: SakTilgangRequest, currentToken: OidcToken): TilgangResponse {
+        return get(tilgangGatewaySakCache, SakTilgangRequestMedNavIdent(body, currentToken.navIdent())) {
+            post(currentToken, tilgangSakUrl, body)
         }
     }
 
-    fun harTilgangTilJournalpost(
-        body: JournalpostTilgangRequest,
-        currentToken: OidcToken
+    private val tilgangBehandlingUrl = baseUrl.resolve("/tilgang/behandling").toString()
+    suspend fun harTilgangTilBehandling(body: BehandlingTilgangRequest, currentToken: OidcToken): TilgangResponse {
+        return get(tilgangGatewayBehandlingCache, BehandlingTilgangRequestMedNavIdent(body, currentToken.navIdent())) {
+            post(currentToken, tilgangBehandlingUrl, body)
+        }
+    }
+
+    private val tilgangJournalpostUrl = baseUrl.resolve("/tilgang/journalpost").toString()
+    suspend fun harTilgangTilJournalpost(body: JournalpostTilgangRequest, currentToken: OidcToken) =
+        post(currentToken, tilgangJournalpostUrl, body)
+
+    private val tilgangPersonUrl = baseUrl.resolve("/tilgang/person").toString()
+    suspend fun harTilgangTilPerson(body: PersonTilgangRequest, currentToken: OidcToken) =
+        post(currentToken, tilgangPersonUrl, body)
+
+    private val tilgangTilbakekrevingUrl = baseUrl.resolve("/tilgang/tilbakekreving").toString()
+    suspend fun harTilgangTilTilbakekreving(body: TilbakekrevingTilgangRequest, currentToken: OidcToken) =
+        post(currentToken, tilgangTilbakekrevingUrl, body)
+
+    /** Oppslag på samme key vil kunne kjøre parallelt. */
+    suspend fun <Key : Any, Value : Any> get(
+        cache: Cache<Key, Value>,
+        key: Key,
+        mapper: suspend (key: Key) -> Value
+    ): Value {
+        val cached = cache.getIfPresent(key)
+        if (cached != null) {
+            return cached
+        }
+
+        val value = mapper(key)
+        cache.put(key, value)
+        return value
+    }
+
+    private suspend inline fun <reified Request> post(
+        currentToken: OidcToken,
+        url: String,
+        request: Request
     ): TilgangResponse {
-        val httpRequest = PostRequest(
-            body = body,
-            currentToken = currentToken
-        )
-        val respons = requireNotNull(
-            client.retryablePost<_, TilgangResponse>(
-                uri = baseUrl.resolve("/tilgang/journalpost"),
-                request = httpRequest
-            )
-        )
-        return respons
-    }
+        val newToken = client.post(texasUrl) {
+            contentType(ContentType.Application.Json)
+            setBody(buildMap{
+                put("identity_provider", "entra_id")
+                put("target", tilgangScope)
+                if (!currentToken.isClientCredentials()) {
+                    put("user_token", currentToken.token())
+                }
+            })
+        }.body<Map<String, String>>()["access_token"]
 
-    fun harTilgangTilPerson(body: PersonTilgangRequest, currentToken: OidcToken): TilgangResponse {
-        val httpRequest = PostRequest(
-            body = body,
-            currentToken = currentToken
-        )
-        val respons = requireNotNull(
-            client.retryablePost<_, TilgangResponse>(
-                uri = baseUrl.resolve("/tilgang/person"),
-                request = httpRequest
-            )
-        )
-        return respons
-    }
-
-    fun harTilgangTilTilbakekreving(body: TilbakekrevingTilgangRequest, currentToken: OidcToken): TilgangResponse {
-        val httpRequest = PostRequest(
-            body = body,
-            currentToken = currentToken
-        )
-        val respons = requireNotNull(
-            client.retryablePost<_, TilgangResponse>(
-                uri = baseUrl.resolve("/tilgang/tilbakekreving"),
-                request = httpRequest
-            )
-        )
-        return respons
+        return client.post(url) {
+            headers {
+                append("authorization", "Bearer $newToken")
+            }
+            contentType(ContentType.Application.Json)
+            setBody(request)
+        }.body()
     }
 }
 
