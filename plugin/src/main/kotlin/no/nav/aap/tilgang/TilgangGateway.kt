@@ -23,13 +23,13 @@ object TilgangGateway {
         .maximumSize(2_000)
         .expireAfterWrite(Duration.ofMinutes(30))
         .recordStats()
-        .build<BehandlingTilgangRequestMedToken, TilgangResponse>()
+        .build<BehandlingTilgangRequestMedNavIdent, TilgangResponse>()
 
     private val tilgangGatewaySakCache = Caffeine.newBuilder()
         .maximumSize(2_000)
         .expireAfterWrite(Duration.ofMinutes(30))
         .recordStats()
-        .build<SakTilgangRequestMedToken, TilgangResponse>()
+        .build<SakTilgangRequestMedNavIdent, TilgangResponse>()
 
     init {
         CaffeineCacheMetrics.monitor(prometheus, tilgangGatewayBehandlingCache, "tilgang_behandling_cache")
@@ -42,7 +42,7 @@ object TilgangGateway {
     )
 
     fun harTilgangTilSak(body: SakTilgangRequest, currentToken: OidcToken): TilgangResponse {
-        return tilgangGatewaySakCache.get(SakTilgangRequestMedToken(body, currentToken.navIdent())) {
+        return tilgangGatewaySakCache.get(SakTilgangRequestMedNavIdent(body, currentToken.navIdent())) {
             val httpRequest = PostRequest(
                 body = body,
                 currentToken = currentToken
@@ -58,7 +58,7 @@ object TilgangGateway {
     }
 
     fun harTilgangTilBehandling(body: BehandlingTilgangRequest, currentToken: OidcToken): TilgangResponse {
-        return tilgangGatewayBehandlingCache.get(BehandlingTilgangRequestMedToken(body, currentToken.navIdent())) {
+        return tilgangGatewayBehandlingCache.get(BehandlingTilgangRequestMedNavIdent(body, currentToken.navIdent())) {
             val httpRequest = PostRequest(
                 body = body,
                 currentToken = currentToken
@@ -119,12 +119,12 @@ object TilgangGateway {
     }
 }
 
-private data class BehandlingTilgangRequestMedToken(
+private data class BehandlingTilgangRequestMedNavIdent(
     val behandlingTilgangRequest: BehandlingTilgangRequest,
     val navIdent: String
 )
 
-private data class SakTilgangRequestMedToken(
+private data class SakTilgangRequestMedNavIdent(
     val sakTilgangRequest: SakTilgangRequest,
     val navIdent: String
 )
