@@ -28,7 +28,7 @@ infrastructure = { module = "no.nav.aap.kelvin:infrastructure", version.ref = "k
 server = { module = "no.nav.aap.kelvin:server", version.ref = "komponenter" }
 caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version = "3.2.3" }
 
-behandlingsflytKontrakt = { module = "no.nav.aap.behandlingsflyt:kontrakt", version = "0.0.597" }
+behandlingsflytKontrakt = { module = "no.nav.aap.behandlingsflyt:kontrakt", version = "0.0.598" }
 postmottakKontrakt = { module = "no.nav.aap.postmottak:kontrakt", version = "6.0.4" }
 
 ktorOpenApiGenerator = { module = "no.nav.aap.kelvin:ktor-openapi-generator", version.ref = "komponenter" }
