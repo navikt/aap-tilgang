@@ -70,6 +70,24 @@ fun Application.autorisertEksempelApp() {
                         }
                     }
                 }
+
+                route("testApi/getGrunnlag-rolle/{referanse}") {
+                    getGrunnlag<BehandlingReferanse, Boolean>(
+                        behandlingPathParam = BehandlingPathParam(
+                            param = "referanse"
+                        ),
+                        påkrevdRolle = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
+                    ) { _ ->
+                        val kanSaksbehandle = pipeline.call.attributes[kanSaksbehandleKey]
+                        if (kanSaksbehandle == "true") {
+                            respond(true)
+                            return@getGrunnlag
+                        } else {
+                            respond(false)
+                        }
+                    }
+                }
+                
                 route("testApi/pathForPost/resolve") {
                     route("behandlingreferanse/{enAnnenReferanse}") {
                         authorizedPost<EnAnnenReferanse, IngenReferanse, IngenReferanse>(
