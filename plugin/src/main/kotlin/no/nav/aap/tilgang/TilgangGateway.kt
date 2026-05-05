@@ -42,7 +42,7 @@ object TilgangGateway {
     )
 
     fun harTilgangTilSak(body: SakTilgangRequest, currentToken: OidcToken): TilgangResponse {
-        return tilgangGatewaySakCache.get(SakTilgangRequestMedToken(body, currentToken)) {
+        return tilgangGatewaySakCache.get(SakTilgangRequestMedToken(body, currentToken.navIdent())) {
             val httpRequest = PostRequest(
                 body = body,
                 currentToken = currentToken
@@ -58,7 +58,7 @@ object TilgangGateway {
     }
 
     fun harTilgangTilBehandling(body: BehandlingTilgangRequest, currentToken: OidcToken): TilgangResponse {
-        return tilgangGatewayBehandlingCache.get(BehandlingTilgangRequestMedToken(body, currentToken)) {
+        return tilgangGatewayBehandlingCache.get(BehandlingTilgangRequestMedToken(body, currentToken.navIdent())) {
             val httpRequest = PostRequest(
                 body = body,
                 currentToken = currentToken
@@ -121,10 +121,10 @@ object TilgangGateway {
 
 private data class BehandlingTilgangRequestMedToken(
     val behandlingTilgangRequest: BehandlingTilgangRequest,
-    val token: OidcToken
+    val navIdent: String
 )
 
 private data class SakTilgangRequestMedToken(
     val sakTilgangRequest: SakTilgangRequest,
-    val token: OidcToken
+    val navIdent: String
 )
