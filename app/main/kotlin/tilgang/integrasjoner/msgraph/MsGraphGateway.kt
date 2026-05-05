@@ -38,9 +38,9 @@ class MsGraphGateway(
     )
 
     override fun hentAdGrupper(currentToken: OidcToken, ident: String): MemberOf {
-        if (redis.exists(Key(MSGRAPH_PREFIX, ident))) {
+        redis[Key(MSGRAPH_PREFIX, ident)]?.let {
             prometheus.cacheHit(MSGRAPH_PREFIX).increment()
-            return redis[Key(MSGRAPH_PREFIX, ident)]!!.deserialize()
+            return it.deserialize()
         }
         prometheus.cacheMiss(MSGRAPH_PREFIX).increment()
         val url = baseUrl.resolve("me/memberOf?\$top=500&\$select=id,mailNickname")

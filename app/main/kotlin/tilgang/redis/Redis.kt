@@ -56,12 +56,6 @@ class Redis private constructor(
         }
     }
 
-    fun exists(key: Key): Boolean {
-        pool.resource.use {
-            return it.exists(key.get())
-        }
-    }
-
     override fun close() {
         pool.close()
     }

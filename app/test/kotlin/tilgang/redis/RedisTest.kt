@@ -2,8 +2,8 @@ package tilgang.redis
 
 import no.nav.aap.tilgang.RelevanteIdenter
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Assertions.assertNull
 import tilgang.fakes.Fakes
 import tilgang.fakes.WithFakes
 import tilgang.redis.Redis.Companion.deserialize
@@ -20,6 +20,6 @@ class RedisTest {
         val actual: RelevanteIdenter = redis[Key("helloPello", "1234")]!!.deserialize()
         assertEquals(expected, actual)
         Thread.sleep(2000)
-        assertFalse(redis.exists(Key("helloPello", "1234")))
+        assertNull(redis[Key("helloPello", "1234")])
     }
 }

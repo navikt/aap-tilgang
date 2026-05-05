@@ -6,6 +6,7 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
+import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.runBlocking
@@ -87,6 +88,11 @@ object Fakes : AutoCloseable {
         System.setProperty("behandlingsflyt.base.url", "test")
         System.setProperty("ms.graph.scope", "msgraph")
         System.setProperty("ms.graph.base.url", "test")
+
+        // Dummy-verdier
+        System.setProperty("skjermede.personer.ad", UUID.randomUUID().toString())
+        System.setProperty("strengt.fortrolig.adresse.ad", UUID.randomUUID().toString())
+        System.setProperty("fortrolig.adresse.ad", UUID.randomUUID().toString())
     }
 }
 

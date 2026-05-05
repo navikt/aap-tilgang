@@ -6,12 +6,13 @@ import tilgang.integrasjoner.msgraph.IMsGraphGateway
 import java.util.*
 
 class AdressebeskyttelseService(private val msGraphClient: IMsGraphGateway) {
+    private val adressebeskyttelseGruppeIds = AdressebeskyttelseGruppe.entries.associateBy { it.gruppeId }
+
     fun hentAdressebeskyttelseRoller(
         currentToken: OidcToken, oboIdent: String
     ): List<AdressebeskyttelseGruppe> {
         return msGraphClient.hentAdGrupper(currentToken, oboIdent).groups
-            .filter { gruppe -> gruppe.id in AdressebeskyttelseGruppe.entries.map { it.gruppeId } }
-            .map { gruppe -> AdressebeskyttelseGruppe.entries.first { it.gruppeId == gruppe.id } }
+            .mapNotNull { gruppe -> adressebeskyttelseGruppeIds[gruppe.id] }
     }
 }
 

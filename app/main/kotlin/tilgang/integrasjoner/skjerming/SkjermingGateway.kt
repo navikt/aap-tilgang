@@ -31,9 +31,9 @@ open class SkjermingGateway(
     )
 
     open fun isSkjermet(identer: RelevanteIdenter): Boolean {
-        if (redis.exists(Key(SKJERMING_PREFIX, identer.søker.first()))) {
+        redis[Key(SKJERMING_PREFIX, identer.søker.first())]?.let {
             prometheus.cacheHit(SKJERMING_PREFIX).increment()
-            return redis[Key(SKJERMING_PREFIX, identer.søker.first())]!!.deserialize()
+            return it.deserialize()
         }
         prometheus.cacheMiss(SKJERMING_PREFIX).increment()
 

@@ -1,6 +1,7 @@
 package tilgang.integrasjoner.nom
 
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
+import java.net.URI
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
 import no.nav.aap.komponenter.httpklient.httpclient.Header
@@ -14,7 +15,6 @@ import tilgang.redis.Key
 import tilgang.redis.Redis
 import tilgang.redis.Redis.Companion.deserialize
 import tilgang.redis.Redis.Companion.serialize
-import java.net.URI
 
 interface INomGateway {
     fun personNummerTilNavIdent(søkerIdent: String, callId: String): String
@@ -38,9 +38,9 @@ open class NomGateway(
     private val baseUrl = URI.create(requiredConfigForKey("nom.base.url"))
 
     override fun personNummerTilNavIdent(søkerIdent: String, callId: String): String {
-        if (redis.exists(Key(NOM_PREFIX, søkerIdent))) {
+        redis[Key(NOM_PREFIX, søkerIdent)]?.let {
             prometheus.cacheHit(NOM_PREFIX).increment()
-            return redis[Key(NOM_PREFIX, søkerIdent)]!!.deserialize()
+            return it.deserialize()
         }
 
         prometheus.cacheMiss(NOM_PREFIX).increment()

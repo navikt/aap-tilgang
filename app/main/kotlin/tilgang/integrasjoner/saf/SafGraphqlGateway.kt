@@ -41,9 +41,9 @@ class SafGraphqlGateway(
     }
 
     fun hentJournalpostInfo(journalpostId: Long, callId: String): SafJournalpost {
-        if (redis.exists(Key(JOURNALPOST_PREFIX, journalpostId.toString()))) {
+        redis[Key(JOURNALPOST_PREFIX, journalpostId.toString())]?.let {
             prometheus.cacheHit(JOURNALPOST_PREFIX).increment()
-            return redis[Key(JOURNALPOST_PREFIX, journalpostId.toString())]!!.deserialize()
+            return it.deserialize()
         }
         prometheus.cacheMiss(JOURNALPOST_PREFIX).increment()
 
