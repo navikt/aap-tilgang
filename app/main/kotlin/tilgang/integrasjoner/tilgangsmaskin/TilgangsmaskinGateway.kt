@@ -11,7 +11,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.post
 import no.nav.aap.komponenter.httpklient.httpclient.request.ContentType
 import no.nav.aap.komponenter.httpklient.httpclient.retryablePost
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.OnBehalfOfTokenProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureOBOTokenProvider
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import org.slf4j.LoggerFactory
 import tilgang.metrics.cacheHit
@@ -43,7 +43,7 @@ class TilgangsmaskinGateway(
 
     private val baseUrl = URI.create(requiredConfigForKey("integrasjon.tilgangsmaskin.url"))
     private val httpClient = RestClient.withDefaultResponseHandler(
-        tokenProvider = OnBehalfOfTokenProvider,
+        tokenProvider = AzureOBOTokenProvider,
         config = config,
         prometheus = prometheus,
     )

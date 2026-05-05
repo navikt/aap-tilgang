@@ -76,8 +76,6 @@ internal object AppConfig {
     val callGroupSize = 64
 }
 
-val isTexasEnabled = configForKey("ENABLE_TEXAS").toBoolean()
-
 fun main() {
     Thread.currentThread().setUncaughtExceptionHandler { _, e -> LOGGER.error("Uhåndtert feil", e) }
 
@@ -178,22 +176,16 @@ fun Application.api(
         }
     }
 
-    if (isTexasEnabled) {
-        commonKtorModule(
-            prometheus = prometheus,
-            infoModel = InfoModel(title = "AAP - Tilgang"),
-            identityProvider = IdentityProvider.ENTRA_ID
-        )
-    } else {
-        commonKtorModule(
-            prometheus, azureConfig = config.azureConfig, infoModel = InfoModel(title = "AAP - Tilgang")
-        )
-    }
+    commonKtorModule(
+        prometheus = prometheus,
+        infoModel = InfoModel(title = "AAP - Tilgang"),
+        identityProvider = IdentityProvider.ENTRA_ID
+    )
 
     routing {
         actuator(prometheus)
 
-        authenticate(if (isTexasEnabled) IdentityProvider.ENTRA_ID.value else AZURE) {
+        authenticate(IdentityProvider.ENTRA_ID.value) {
             apiRouting {
                 tilgang(tilgangService, config.roles, prometheus)
             }

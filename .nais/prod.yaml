@@ -65,8 +65,6 @@ env:
     value: http://populasjonstilgangskontroll.tilgangsmaskin
   - name: INTEGRASJON_TILGANGSMASKIN_SCOPE
     value: api://prod-gcp.tilgangsmaskin.populasjonstilgangskontroll/.default
-  - name: ENABLE_TEXAS
-    value: "true"
 external-outbound-hosts:
   - value: saf.prod-fss-pub.nais.io
   - value: pdl-api.prod-fss-pub.nais.io

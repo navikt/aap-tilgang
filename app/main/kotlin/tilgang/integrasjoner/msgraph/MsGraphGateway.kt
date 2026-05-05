@@ -8,7 +8,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.RestClient
 import no.nav.aap.komponenter.httpklient.httpclient.get
 import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.OnBehalfOfTokenProvider
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureOBOTokenProvider
 import tilgang.metrics.cacheHit
 import tilgang.metrics.cacheMiss
 import tilgang.redis.Key
@@ -33,7 +33,7 @@ class MsGraphGateway(
     )
     private val httpClient =  RestClient.withDefaultResponseHandler(
         config = clientConfig,
-        tokenProvider = OnBehalfOfTokenProvider,
+        tokenProvider = AzureOBOTokenProvider,
         prometheus = prometheus,
     )
 

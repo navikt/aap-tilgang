@@ -30,7 +30,6 @@ import java.util.*
 
 internal class Fakes(val azureTokenGen: AzureTokenGen) : AutoCloseable {
     private val texas = embeddedServer(Netty, port = 0, module = { texasFake() }).start()
-    private val azure = embeddedServer(Netty, port = 0, module = { azureFake() }).start()
     private val tilgang = embeddedServer(Netty, port = 0, module = { tilgangFake() }).apply { start() }
 
     private fun Application.texasFake() {
@@ -55,30 +54,6 @@ internal class Fakes(val azureTokenGen: AzureTokenGen) : AutoCloseable {
             }
         }
     }
-
-    private fun Application.azureFake() {
-        install(ContentNegotiation) {
-            jackson()
-        }
-        install(StatusPages) {
-            exception<Throwable> { call, cause ->
-                this@azureFake.log.info("AZURE :: Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
-                call.respond(status = HttpStatusCode.InternalServerError, message = ErrorRespons(cause.message))
-            }
-        }
-        routing {
-            post("/token") {
-                val body = call.receiveText()
-                val token = azureTokenGen
-                    .generate(body.contains("grant_type=client_credentials"))
-                call.respond(TestToken(access_token = token))
-            }
-            get("/jwks") {
-                call.respond(AZURE_JWKS)
-            }
-        }
-    }
-
 
     private val tilgangTilSak = mutableMapOf<String, Boolean>()
     var sistMottattSakTilgangRequest: SakTilgangRequest? = null
@@ -165,7 +140,6 @@ internal class Fakes(val azureTokenGen: AzureTokenGen) : AutoCloseable {
 
     override fun close() {
         texas.stop(0L, 0L)
-        azure.stop(0L, 0L)
     }
 }
 
