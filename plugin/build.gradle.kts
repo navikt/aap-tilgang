@@ -51,6 +51,7 @@ dependencies {
     implementation(libs.ktorServerCore)
 
     implementation(libs.joseJwt)
+    implementation(libs.caffeine)
 
     implementation(libs.ktorServerAuth)
     implementation(libs.ktorServerAuthJwt)

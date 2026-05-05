@@ -22,6 +22,7 @@ json = { module = "no.nav.aap.kelvin:json", version.ref = "komponenter" }
 httpklient = { module = "no.nav.aap.kelvin:httpklient", version.ref = "komponenter" }
 infrastructure = { module = "no.nav.aap.kelvin:infrastructure", version.ref = "komponenter" }
 server = { module = "no.nav.aap.kelvin:server", version.ref = "komponenter" }
+caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version = "3.2.3" }
 
 behandlingsflytKontrakt = { module = "no.nav.aap.behandlingsflyt:kontrakt", version = "0.0.597" }
 postmottakKontrakt = { module = "no.nav.aap.postmottak:kontrakt", version = "6.0.4" }
