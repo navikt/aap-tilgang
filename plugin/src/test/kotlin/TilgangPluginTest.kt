@@ -65,8 +65,8 @@ class TilgangPluginTest {
                 return behandlingReferanse
             }
 
-            override fun hentAvklaringsbehovKode(): String? {
-                return null
+            override fun hentPåkrevdRolle(): List<Rolle> {
+                return emptyList()
             }
         }
 
