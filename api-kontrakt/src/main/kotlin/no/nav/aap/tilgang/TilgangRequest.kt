@@ -31,7 +31,8 @@ data class BehandlingTilgangRequest(
 
 data class JournalpostTilgangRequest(
     val journalpostId: Long,
-    val avklaringsbehovKode: String?,
+    @Deprecated("Bruk påkrevdRolle")
+    val avklaringsbehovKode: String? = null,
     val påkrevdRolle: List<Rolle>? = null,
     val operasjon: Operasjon
 ) : TilgangRequest

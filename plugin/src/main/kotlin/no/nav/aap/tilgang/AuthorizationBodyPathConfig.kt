@@ -65,14 +65,16 @@ data class AuthorizationBodyPathConfig(
             is Journalpostreferanse -> {
                 val referanse =
                     journalpostIdResolver.resolve(request.journalpostIdResolverInput())
-                val avklaringsbehovKode = request.hentAvklaringsbehovKode()
+
+                val påkrevdeRoller = påkrevdRolle.ifEmpty {
+                    request.hentPåkrevdRolle()
+                }
                 return AuthorizedRequest(
                     applicationsOnly,
                     applicationRole,
                     JournalpostTilgangRequest(
                         journalpostId = referanse,
-                        avklaringsbehovKode = avklaringsbehovKode,
-                        påkrevdRolle = påkrevdRolle,
+                        påkrevdRolle = påkrevdeRoller,
                         operasjon = operasjon
                     )
                 )
