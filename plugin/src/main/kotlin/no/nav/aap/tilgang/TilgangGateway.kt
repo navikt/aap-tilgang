@@ -1,9 +1,8 @@
 package no.nav.aap.tilgang
 
 import com.github.benmanes.caffeine.cache.Caffeine
+import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.binder.cache.CaffeineCacheMetrics
-import io.micrometer.prometheusmetrics.PrometheusConfig
-import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import java.net.URI
 import java.time.Duration
 import no.nav.aap.komponenter.config.requiredConfigForKey
@@ -17,7 +16,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.OnBeha
 object TilgangGateway {
     private val baseUrl = URI.create(requiredConfigForKey("integrasjon.tilgang.url"))
     private val config = ClientConfig(scope = requiredConfigForKey("integrasjon.tilgang.scope"))
-    val prometheus = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
+    private var prometheus: MeterRegistry? = null
 
     private val tilgangGatewayBehandlingCache = Caffeine.newBuilder()
         .maximumSize(2_000)
@@ -31,9 +30,12 @@ object TilgangGateway {
         .recordStats()
         .build<SakTilgangRequestMedNavIdent, TilgangResponse>()
 
-    init {
-        CaffeineCacheMetrics.monitor(prometheus, tilgangGatewayBehandlingCache, "tilgang_behandling_cache")
-        CaffeineCacheMetrics.monitor(prometheus, tilgangGatewaySakCache, "tilgang_sak_cache")
+    fun initialiserPrometheus(registry: MeterRegistry) {
+        if (prometheus == null) {
+            prometheus = registry
+            CaffeineCacheMetrics.monitor(registry, tilgangGatewayBehandlingCache, "tilgang_behandling_cache")
+            CaffeineCacheMetrics.monitor(registry, tilgangGatewaySakCache, "tilgang_sak_cache")
+        }
     }
 
     private val client = RestClient.withDefaultResponseHandler(
