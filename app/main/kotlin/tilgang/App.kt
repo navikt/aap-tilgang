@@ -69,7 +69,11 @@ internal object AppConfig {
     // https://github.com/ktorio/ktor/blob/3.3.1/ktor-server/ktor-server-core/common/src/io/ktor/server/engine/ApplicationEngine.kt#L30
     val connectionGroupSize = ktorParallellitet / 2 + 1
     val workerGroupSize = ktorParallellitet / 2 + 1
-    val callGroupSize = ktorParallellitet
+
+    // Vi følger *IKKE* ktor sin metodikk for å regne ut tuning parametre for callGroupSize. Vi
+    // har ikke async IO, hverken for HTTP-kall eller mot databasen, så vi trenger betydelig flere
+    // tråder enn en async kodebase.
+    val callGroupSize = 64
 }
 
 val isTexasEnabled = configForKey("ENABLE_TEXAS").toBoolean()
