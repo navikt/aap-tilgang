@@ -49,6 +49,7 @@ object TilgangGateway {
     }
 
     private val client = HttpClient(CIO) {
+        expectSuccess = true
         install(HttpRequestRetry)
         install(HttpTimeout) {
             requestTimeoutMillis = 1.seconds.inWholeMilliseconds
