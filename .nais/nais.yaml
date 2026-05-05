@@ -24,9 +24,12 @@ spec:
           {{#each roles}}
           - id: "{{this.group}}"
           {{/each}}
+  replicas:
+    min: 1
+    max: 6
   resources:
     limits:
-      memory: 1024Mi
+      memory: 1536Mi
     requests:
       cpu: 500m
       memory: 1024Mi
