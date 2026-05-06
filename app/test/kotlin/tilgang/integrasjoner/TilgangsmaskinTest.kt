@@ -1,5 +1,6 @@
 package tilgang.integrasjoner
 
+import kotlinx.coroutines.test.runTest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -16,7 +17,7 @@ class TilgangsmaskinTest {
     private val prometheus = Fakes.getPrometheus()
 
     @Test
-    fun `Kan parse harTilgangTilPersonKjerne`() {
+    fun `Kan parse harTilgangTilPersonKjerne`() = runTest {
         val token = AzureTokenGen("tilgangazure", "tilgang").generate()
         val tilgangsmaskinGateway = TilgangsmaskinGateway(redis, prometheus)
         val harTilgangResponse = tilgangsmaskinGateway.harTilgangTilPersonKjerne("123", OidcToken(token), "799")

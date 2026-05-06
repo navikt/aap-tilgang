@@ -1,19 +1,21 @@
 package tilgang.integrasjoner.tilgangsmaskin
 
+import io.ktor.client.call.body
+import io.ktor.client.plugins.ClientRequestException
+import io.ktor.client.request.bearerAuth
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
 import io.micrometer.core.instrument.MeterRegistry
-import no.nav.aap.komponenter.config.requiredConfigForKey
-import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
-import no.nav.aap.komponenter.httpklient.httpclient.RestClient
-import no.nav.aap.komponenter.httpklient.httpclient.error.ManglerTilgangException
-import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
 import java.net.URI
-import no.nav.aap.komponenter.httpklient.httpclient.post
-import no.nav.aap.komponenter.httpklient.httpclient.request.ContentType
-import no.nav.aap.komponenter.httpklient.httpclient.retryablePost
+import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureOBOTokenProvider
-import no.nav.aap.komponenter.json.DefaultJsonMapper
 import org.slf4j.LoggerFactory
+import tilgang.auth.ITokenProvider
+import tilgang.auth.TokenProvider
+import tilgang.http.defaultHttpClient
 import tilgang.metrics.cacheHit
 import tilgang.metrics.cacheMiss
 import tilgang.redis.Key
@@ -22,9 +24,13 @@ import tilgang.redis.Redis.Companion.deserialize
 import tilgang.redis.Redis.Companion.serialize
 
 interface ITilgangsmaskinGateway {
-    fun harTilgangTilPerson(brukerIdent: String, token: OidcToken): Boolean
-    fun harTilganger(brukerIdenter: List<BrukerOgRegeltype>, token: OidcToken): Boolean
-    fun harTilgangTilPersonKjerne(brukerIdent: String, token: OidcToken, ansattIdent: String): HarTilgangFraTilgangsmaskinen
+    suspend fun harTilgangTilPerson(brukerIdent: String, token: OidcToken): Boolean
+    suspend fun harTilganger(brukerIdenter: List<BrukerOgRegeltype>, token: OidcToken): Boolean
+    suspend fun harTilgangTilPersonKjerne(
+        brukerIdent: String,
+        token: OidcToken,
+        ansattIdent: String,
+    ): HarTilgangFraTilgangsmaskinen
 }
 
 private val log = LoggerFactory.getLogger(TilgangsmaskinGateway::class.java)
@@ -35,107 +41,80 @@ private val log = LoggerFactory.getLogger(TilgangsmaskinGateway::class.java)
  */
 class TilgangsmaskinGateway(
     private val redis: Redis,
-    private val prometheus: MeterRegistry
+    private val prometheus: MeterRegistry,
+    private val tokenProvider: ITokenProvider = TokenProvider,
 ) : ITilgangsmaskinGateway {
-    private val config = ClientConfig(
-        scope = requiredConfigForKey("integrasjon.tilgangsmaskin.scope")
-    )
-
     private val baseUrl = URI.create(requiredConfigForKey("integrasjon.tilgangsmaskin.url"))
-    private val httpClient = RestClient.withDefaultResponseHandler(
-        tokenProvider = AzureOBOTokenProvider,
-        config = config,
-        prometheus = prometheus,
-    )
 
-    override fun harTilgangTilPerson(
-        brukerIdent: String,
-        token: OidcToken
-    ): Boolean {
-        val url = baseUrl.resolve("/api/v1/komplett")
-        val request = PostRequest(
-            body = brukerIdent,
-            currentToken = token,
-            contentType = ContentType.TEXT_PLAIN
-        )
-        try {
-            log.info("Kaller tilgangsmaskin med url: $url")
-            httpClient.retryablePost<_, Unit>(url, request)
-            return true
-        } catch (e: ManglerTilgangException) {
-            log.info("Kall til tilgangsmaskin returnerte 403")
-            return false
+    override suspend fun harTilgangTilPerson(brukerIdent: String, token: OidcToken): Boolean {
+        val url = baseUrl.resolve("/api/v1/komplett").toString()
+        log.info("Kaller tilgangsmaskin med url: $url")
+        return try {
+            defaultHttpClient.post(url) {
+                bearerAuth(tokenProvider.oboToken(requiredConfigForKey("integrasjon.tilgangsmaskin.scope"), token))
+                contentType(ContentType.Text.Plain)
+                setBody(brukerIdent)
+            }
+            true
+        } catch (e: ClientRequestException) {
+            if (e.response.status == HttpStatusCode.Forbidden) {
+                log.info("Kall til tilgangsmaskin returnerte 403")
+                false
+            } else throw e
         }
     }
 
-    override fun harTilgangTilPersonKjerne(
+    override suspend fun harTilgangTilPersonKjerne(
         brukerIdent: String,
         token: OidcToken,
-        ansattIdent: String
+        ansattIdent: String,
     ): HarTilgangFraTilgangsmaskinen {
-        val url = baseUrl.resolve("/api/v1/kjerne")
-        redis[Key(TILGANGSMASKIN_KJERNE_PREFIX, brukerIdent+ansattIdent)]?.let {
+        val url = baseUrl.resolve("/api/v1/kjerne").toString()
+        redis.get(Key(TILGANGSMASKIN_KJERNE_PREFIX, brukerIdent + ansattIdent))?.let {
             prometheus.cacheHit(TILGANGSMASKIN_KJERNE_PREFIX).increment()
             return it.deserialize()
         }
         prometheus.cacheMiss(TILGANGSMASKIN_KJERNE_PREFIX).increment()
 
-        val request = PostRequest(
-            body = brukerIdent,
-            currentToken = token,
-            contentType = ContentType.APPLICATION_JSON
-        )
-
         return try {
-            httpClient.retryablePost<_, Unit>(
-                uri = url,
-                request = request
-            )
-            val tilgang = HarTilgangFraTilgangsmaskinen(true)
-            redis.set(Key(TILGANGSMASKIN_KJERNE_PREFIX, brukerIdent+ansattIdent), tilgang.serialize(), 21600)
-            tilgang
-        } catch (e: Exception) {
-            if (e is ManglerTilgangException) {
-                val avvistResponse = e.body
-                    ?.let {
-                        runCatching {
-                            DefaultJsonMapper.fromJson(it, TilgangsmaskinAvvistResponse::class.java)
-                        }.onFailure { parseErr ->
-                            log.warn("Greide ikke parse avvist-respons fra tilgangsmaskinen", parseErr)
-                        }.getOrNull()
-                    }
-
-                avvistResponse?.let {
-                    log.info("403 fra tilgangsmaskin: ${it.title}")
-                }
-
-                val ikkeTilgang = HarTilgangFraTilgangsmaskinen(false, avvistResponse)
-                redis.set(Key(TILGANGSMASKIN_KJERNE_PREFIX, brukerIdent+ansattIdent), ikkeTilgang.serialize(), 21600)
-                ikkeTilgang
-            } else {
-                log.warn("Feil ved kall til tilgangsmaskin", e)
-                throw e
+            defaultHttpClient.post(url) {
+                bearerAuth(tokenProvider.oboToken(requiredConfigForKey("integrasjon.tilgangsmaskin.scope"), token))
+                contentType(ContentType.Application.Json)
+                setBody(brukerIdent)
             }
+            val tilgang = HarTilgangFraTilgangsmaskinen(true)
+            redis.set(Key(TILGANGSMASKIN_KJERNE_PREFIX, brukerIdent + ansattIdent), tilgang.serialize(), 21600)
+            tilgang
+        } catch (e: ClientRequestException) {
+            if (e.response.status == HttpStatusCode.Forbidden) {
+                val avvistResponse = runCatching {
+                    e.response.body<TilgangsmaskinAvvistResponse>()
+                }.onFailure { parseErr ->
+                    log.warn("Greide ikke parse avvist-respons fra tilgangsmaskinen", parseErr)
+                }.getOrNull()
+                avvistResponse?.let { log.info("403 fra tilgangsmaskin: ${it.title}") }
+                val ikkeTilgang = HarTilgangFraTilgangsmaskinen(false, avvistResponse)
+                redis.set(Key(TILGANGSMASKIN_KJERNE_PREFIX, brukerIdent + ansattIdent), ikkeTilgang.serialize(), 21600)
+                ikkeTilgang
+            } else throw e
         }
     }
 
-    override fun harTilganger(
-        brukerIdenter: List<BrukerOgRegeltype>,
-        token: OidcToken
-    ): Boolean {
-        val url = baseUrl.resolve("/api/v1/bulk")
-        val request = PostRequest(
-            body = brukerIdenter,
-            currentToken = token
-        )
-
-        try {
-            log.info("Kaller tilgangsmaskin med url: $url")
-            httpClient.post<_, Unit>(url, request)
-            return true
-        } catch (e: ManglerTilgangException) {
-            log.info("Kall til tilgangsmaskin returnerte 403")
-            return false
+    override suspend fun harTilganger(brukerIdenter: List<BrukerOgRegeltype>, token: OidcToken): Boolean {
+        val url = baseUrl.resolve("/api/v1/bulk").toString()
+        log.info("Kaller tilgangsmaskin med url: $url")
+        return try {
+            defaultHttpClient.post(url) {
+                bearerAuth(tokenProvider.oboToken(requiredConfigForKey("integrasjon.tilgangsmaskin.scope"), token))
+                contentType(ContentType.Application.Json)
+                setBody(brukerIdenter)
+            }
+            true
+        } catch (e: ClientRequestException) {
+            if (e.response.status == HttpStatusCode.Forbidden) {
+                log.info("Kall til tilgangsmaskin returnerte 403")
+                false
+            } else throw e
         }
     }
 

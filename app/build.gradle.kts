@@ -30,7 +30,11 @@ dependencies {
     implementation(libs.logbackClassic)
     implementation(libs.logstashLogbackEncoder)
     implementation(libs.joseJwt)
-    implementation(libs.jedis)
+    implementation(libs.lettuce)
+    implementation(libs.coroutinesReactor)
+    implementation(libs.ktorClientCore)
+    implementation(libs.ktorClientCio)
+    implementation(libs.ktorClientContentNegotiation)
 
     testImplementation(kotlin("test"))
     testImplementation(libs.joseJwt)
@@ -39,7 +43,8 @@ dependencies {
     testImplementation(libs.mockOauth2Server)
     testImplementation(libs.ktorServerTestHost)
     testImplementation(libs.testcontainersRedis)
-    testImplementation(libs.testcontainers)
+    testImplementation(libs.coroutinesTest)
+    testImplementation(libs.ktorClientMock)
     constraints {
         implementation("org.apache.commons:commons-compress:1.28.0") {
             because("https://github.com/advisories/GHSA-4g9r-vxhx-9pgx")

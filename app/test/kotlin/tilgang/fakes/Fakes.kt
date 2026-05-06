@@ -62,6 +62,9 @@ object Fakes : AutoCloseable {
 
         Runtime.getRuntime().addShutdownHook(Thread { close() })
 
+        // Mark as local so Redis connections skip SSL
+        System.setProperty("NAIS_CLUSTER_NAME", "LOCAL")
+
         // Azure
         System.setProperty("azure.openid.config.token.endpoint", "http://localhost:${azure.port()}/token")
         System.setProperty("azure.app.client.id", "tilgang")

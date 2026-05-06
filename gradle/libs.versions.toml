@@ -20,6 +20,7 @@ ktorServerMetricsMicrometer = { module = "io.ktor:ktor-server-metrics-micrometer
 ktorClientCore= { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktorClientCio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
 ktorClientContentNegotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
+ktorClientMock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
 
 
 json = { module = "no.nav.aap.kelvin:json", version.ref = "komponenter" }
@@ -38,7 +39,9 @@ logstashLogbackEncoder = { module = "net.logstash.logback:logstash-logback-encod
 
 micrometerRegistryPrometheus = { module = "io.micrometer:micrometer-registry-prometheus", version = "1.16.5" }
 jacksonDatatypeJsr310 = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version = "2.21.2" }
-jedis = { module = "redis.clients:jedis", version = "7.4.1" }
+lettuce = { module = "io.lettuce:lettuce-core", version = "6.5.1.RELEASE" }
+coroutinesReactor = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-reactor", version = "1.10.2" }
+coroutinesTest = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version = "1.10.2" }
 mockOauth2Server = { module = "no.nav.security:mock-oauth2-server", version = "3.0.1" }
 testcontainersRedis = { module = "com.redis:testcontainers-redis", version = "2.2.4" }
 testcontainers = { module = "org.testcontainers:testcontainers", version = "2.0.5" }

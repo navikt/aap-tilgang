@@ -2,6 +2,7 @@ package tilgang.fakes
 
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import io.ktor.http.*
 import io.ktor.serialization.jackson.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.contentnegotiation.*
@@ -21,9 +22,9 @@ fun Application.pdlFake() {
         post("/graphql") {
             val body = call.receive<String>()
             if (body.contains("hentPersonBolk")) {
-                call.respondText(genererHentPersonBolkRespons(body))
+                call.respondText(genererHentPersonBolkRespons(body), ContentType.Application.Json)
             } else if (body.contains("hentGeografiskTilknytning")) {
-                call.respondText(genererHentAdressebeskytelseOgGeotilknytning())
+                call.respondText(genererHentAdressebeskytelseOgGeotilknytning(), ContentType.Application.Json)
             } else {
                 throw NotImplementedError("Mangler implementasjon for fake PDL-spørring")
             }

@@ -55,7 +55,7 @@ class GeoInputGenerator(
     private val pdlClient: IPdlGraphQLGateway
 ) :
     InputGenerator<GeoInput> {
-    override fun generer(input: RegelInput): GeoInput {
+    override suspend fun generer(input: RegelInput): GeoInput {
         val geoRoller = geoService.hentGeoRoller(input.currentToken, input.ansattIdent)
         val søkersGeografiskeTilknytning = pdlClient.hentGeografiskTilknytning(
             input.søkerIdenter.søker.first(),

@@ -3,6 +3,7 @@ package tilgang.regler
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import java.util.UUID
+import kotlinx.coroutines.test.runTest
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.tilgang.Operasjon
@@ -32,10 +33,10 @@ class RegelServiceTest {
 
     @ParameterizedTest
     @EnumSource(Definisjon::class)
-    fun `skal alltid gi false når roller er tom array`(avklaringsbehov: Definisjon) {
+    fun `skal alltid gi false når roller er tom array`(avklaringsbehov: Definisjon) = runTest {
 
         val graphGateway = object : IMsGraphGateway {
-            override fun hentAdGrupper(currentToken: OidcToken, ident: String): MemberOf {
+            override suspend fun hentAdGrupper(currentToken: OidcToken, ident: String): MemberOf {
                 return MemberOf(
                     groups = listOf(
                         Group(
@@ -51,7 +52,7 @@ class RegelServiceTest {
         val prometheus = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
 
         val pdlService = object : IPdlGraphQLGateway {
-            override fun hentPersonBolk(
+            override suspend fun hentPersonBolk(
                 personidenter: List<String>,
                 callId: String,
             ): List<PersonResultat> {
@@ -64,7 +65,7 @@ class RegelServiceTest {
                 }
             }
 
-            override fun hentGeografiskTilknytning(
+            override suspend fun hentGeografiskTilknytning(
                 ident: String,
                 callId: String,
             ): HentGeografiskTilknytningResult {

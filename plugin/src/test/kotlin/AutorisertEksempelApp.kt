@@ -337,7 +337,7 @@ data class Behandlinginfo(val enAnnenReferanse: String) : Behandlingsreferanse {
 }
 
 class TestResolver : BrukerIdentResolver {
-    override fun resolve(referanse: String): String {
+    override suspend fun resolve(referanse: String): String {
         log.info("Resolving ident for $referanse")
         return "12345678901"
     }

@@ -20,7 +20,7 @@ data object TilgangsmaskinKjerneRegel : Regel<TilgangsmaskinKjerneInput> {
 
 class TilgangsmaskinKjerneInputGenerator(private val tilgangsmaskinGateway: ITilgangsmaskinGateway) :
     InputGenerator<TilgangsmaskinKjerneInput> {
-    override fun generer(input: RegelInput): TilgangsmaskinKjerneInput {
+    override suspend fun generer(input: RegelInput): TilgangsmaskinKjerneInput {
         val tilgangsmaskinResponse =
             tilgangsmaskinGateway.harTilgangTilPersonKjerne(input.søkerIdenter.søker.first(), input.currentToken, input.ansattIdent)
         return TilgangsmaskinKjerneInput(tilgangsmaskinResponse)

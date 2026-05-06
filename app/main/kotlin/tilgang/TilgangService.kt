@@ -28,7 +28,7 @@ class TilgangService(
 ) {
     private val log = LoggerFactory.getLogger(TilgangService::class.java)
 
-    fun harTilgangTilSak(
+    suspend fun harTilgangTilSak(
         ansattIdent: String,
         req: SakTilgangRequest,
         roller: List<Rolle>,
@@ -53,7 +53,7 @@ class TilgangService(
         return regelService.vurderTilgang(regelInput)[req.operasjon] == true
     }
 
-    fun harTilgangTilBehandling(
+    suspend fun harTilgangTilBehandling(
         ansattIdent: String,
         req: BehandlingTilgangRequest,
         roller: List<Rolle>,
@@ -81,7 +81,7 @@ class TilgangService(
         return regelService.vurderTilgang(regelInput)
     }
 
-    fun harTilgangTilJournalpost(
+    suspend fun harTilgangTilJournalpost(
         ansattIdent: String,
         req: JournalpostTilgangRequest,
         roller: List<Rolle>,
@@ -115,7 +115,7 @@ class TilgangService(
         return regelService.vurderTilgang(regelInput)[req.operasjon] == true
     }
 
-    private fun finnIdenterForJournalpost(journalpost: SafJournalpost): RelevanteIdenter {
+    private suspend fun finnIdenterForJournalpost(journalpost: SafJournalpost): RelevanteIdenter {
         val saksnummer = finnKelvinSaksnummerForJournalpost(journalpost)
         log.info("Finner identer på journalpost med saksnummer $saksnummer.")
         if (saksnummer != null) {
@@ -136,16 +136,16 @@ class TilgangService(
         }
     }
 
-    fun harTilgangFraTilgangsmaskin(brukerIdenter: List<BrukerOgRegeltype>, token: OidcToken): Boolean {
+    suspend fun harTilgangFraTilgangsmaskin(brukerIdenter: List<BrukerOgRegeltype>, token: OidcToken): Boolean {
         return tilgangsmaskinGateway.harTilganger(brukerIdenter, token)
     }
 
-    fun harTilgangTilPerson(brukerIdent: String, token: OidcToken): Boolean {
+    suspend fun harTilgangTilPerson(brukerIdent: String, token: OidcToken): Boolean {
         return tilgangsmaskinGateway.harTilgangTilPerson(brukerIdent, token)
     }
 
 
-    fun harTilgangTilTilbakekreving(
+    suspend fun harTilgangTilTilbakekreving(
         ansattIdent: String,
         req: TilbakekrevingTilgangRequest,
         roller: List<Rolle>,

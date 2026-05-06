@@ -8,7 +8,7 @@ import java.util.*
 class SkjermingService(private val msGraphGateway: IMsGraphGateway) {
     private val skjermedePersonerGruppeId = UUID.fromString(requiredConfigForKey("skjermede.personer.ad"))
 
-    fun harSkjermedePersonerRolle(
+    suspend fun harSkjermedePersonerRolle(
         currentToken: OidcToken, oboIdent: String
     ): Boolean {
         return msGraphGateway.hentAdGrupper(currentToken, oboIdent).groups.any { it.id == skjermedePersonerGruppeId }
