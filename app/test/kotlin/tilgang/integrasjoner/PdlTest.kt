@@ -1,5 +1,6 @@
 package tilgang.integrasjoner
 
+import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import tilgang.fakes.Fakes
@@ -9,11 +10,12 @@ import tilgang.integrasjoner.pdl.PdlGraphQLGateway
 @WithFakes
 class PdlTest {
     private val redis = Fakes.getRedisServer()
+    private val httpClient = Fakes.getHttpClient()
     private val prometheus = Fakes.getPrometheus()
 
     @Test
-    fun `Kan parse hentPersonBolk`() {
-        val test = PdlGraphQLGateway(redis, prometheus).hentPersonBolk(listOf("1234"), "test")
+    fun `Kan parse hentPersonBolk`() = runTest {
+        val test = PdlGraphQLGateway(redis, httpClient, prometheus).hentPersonBolk(listOf("1234"), "test")
 
         assertThat(test?.size).isEqualTo(1)
     }

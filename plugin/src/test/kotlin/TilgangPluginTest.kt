@@ -2,27 +2,29 @@ import ch.qos.logback.classic.Logger
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.AppenderBase
 import com.papsign.ktor.openapigen.annotations.parameters.PathParam
-import io.ktor.serialization.jackson.*
-import io.ktor.server.application.*
-import io.ktor.server.engine.*
-import io.ktor.server.netty.*
-import io.ktor.server.plugins.contentnegotiation.*
-import io.ktor.server.request.*
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.bearerAuth
+import io.ktor.client.request.get
+import io.ktor.client.request.header
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
+import io.ktor.http.isSuccess
+import io.ktor.serialization.jackson.jackson
+import io.ktor.server.engine.embeddedServer
+import io.ktor.server.netty.Netty
 import java.net.URI
 import java.util.*
-import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
-import no.nav.aap.komponenter.httpklient.httpclient.Header
-import no.nav.aap.komponenter.httpklient.httpclient.RestClient
-import no.nav.aap.komponenter.httpklient.httpclient.error.DefaultResponseHandler
+import kotlinx.coroutines.runBlocking
 import no.nav.aap.komponenter.httpklient.httpclient.error.ManglerTilgangException
-import no.nav.aap.komponenter.httpklient.httpclient.get
-import no.nav.aap.komponenter.httpklient.httpclient.post
-import no.nav.aap.komponenter.httpklient.httpclient.request.GetRequest
-import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.NoTokenTokenProvider
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureOBOTokenProvider
 import no.nav.aap.tilgang.*
 import no.nav.aap.tilgang.plugin.kontrakt.Journalpostreferanse
 import org.assertj.core.api.Assertions.assertThat
@@ -32,28 +34,15 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.assertThrows
 import org.slf4j.LoggerFactory
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TilgangPluginTest {
     companion object {
         private val azureTokenGen = AzureTokenGen("behandlingsflyt", "behandlingsflyt")
         private val fakes = Fakes(azureTokenGen)
-
-        private val clientForClientCredentials = RestClient(
-            config = ClientConfig(scope = "behandlingsflyt"),
-            tokenProvider = AzureM2MTokenProvider,
-            responseHandler = DefaultResponseHandler()
-        )
-        private val clientForOBO = RestClient.withDefaultResponseHandler(
-            config = ClientConfig(scope = "behandlingsflyt"),
-            tokenProvider = AzureOBOTokenProvider,
-        )
-        private val clientUtenTokenProvider = RestClient(
-            config = ClientConfig(scope = "behandlingsflyt"),
-            tokenProvider = NoTokenTokenProvider(),
-            responseHandler = DefaultResponseHandler()
-        )
 
         private fun generateToken(isApp: Boolean, roles: List<String> = emptyList()): OidcToken {
             return OidcToken(azureTokenGen.generate(isApp, roles))
@@ -92,80 +81,103 @@ class TilgangPluginTest {
         data class TestReferanse(
             @param:PathParam(description = "saksnummer") val saksnummer: UUID = UUID.randomUUID()
         )
-
     }
+
+    private val httpClient = HttpClient(CIO) {
+        install(ContentNegotiation) { jackson() }
+        expectSuccess = false
+    }
+
+    private fun texasExchangeUrl() = System.getProperty("nais.token.exchange.endpoint")
+    private fun texasTokenUrl() = System.getProperty("nais.token.endpoint")
+
+    private suspend fun oboAccessToken(currentToken: OidcToken): String =
+        httpClient.post(texasExchangeUrl()) {
+            contentType(ContentType.Application.Json)
+            setBody(mapOf("identity_provider" to "entra_id", "target" to "behandlingsflyt", "user_token" to currentToken.token()))
+        }.body<Map<String, String>>()["access_token"]!!
+
+    private suspend fun m2mAccessToken(): String =
+        httpClient.post(texasTokenUrl()) {
+            contentType(ContentType.Application.Json)
+            setBody(mapOf("identity_provider" to "entra_id", "target" to "behandlingsflyt"))
+        }.body<Map<String, String>>()["access_token"]!!
+
+    private suspend fun HttpResponse.orThrowIfForbidden(): HttpResponse {
+        if (status == HttpStatusCode.Forbidden) throw ManglerTilgangException("Mangler tilgang", bodyAsText())
+        return this
+    }
+
+    private suspend inline fun <reified T> oboGet(url: String, currentToken: OidcToken): T? {
+        val resp = httpClient.get(url) { bearerAuth(oboAccessToken(currentToken)) }.orThrowIfForbidden()
+        return if (resp.status.isSuccess()) resp.body() else null
+    }
+
+    private suspend inline fun <reified T, reified B : Any> oboPost(url: String, body: B, currentToken: OidcToken): T? {
+        val resp = httpClient.post(url) {
+            bearerAuth(oboAccessToken(currentToken))
+            contentType(ContentType.Application.Json)
+            setBody(body)
+        }.orThrowIfForbidden()
+        return if (resp.status.isSuccess()) resp.body() else null
+    }
+
+    private suspend inline fun <reified T> m2mGet(url: String): T? {
+        val resp = httpClient.get(url) { bearerAuth(m2mAccessToken()) }.orThrowIfForbidden()
+        return if (resp.status.isSuccess()) resp.body() else null
+    }
+
+    private suspend inline fun <reified T> bearerGet(url: String, token: String): T? {
+        val resp = httpClient.get(url) { header("Authorization", "Bearer $token") }.orThrowIfForbidden()
+        return if (resp.status.isSuccess()) resp.body() else null
+    }
+
+    private suspend inline fun <reified T, reified B : Any> bearerPost(url: String, body: B, token: String): T? {
+        val resp = httpClient.post(url) {
+            header("Authorization", "Bearer $token")
+            contentType(ContentType.Application.Json)
+            setBody(body)
+        }.orThrowIfForbidden()
+        return if (resp.status.isSuccess()) resp.body() else null
+    }
+
+    private fun base(path: String) = URI.create("http://localhost:8082/").resolve(path).toString()
 
     @Test
     fun `get route som støtter on-behalf-of gir tilgang med on-behalf-of token`() {
         val randomUuid = UUID.randomUUID()
         fakes.gittTilgangTilSak(randomUuid.toString(), true)
-        val res = clientForOBO.get<Saksinfo>(
-            URI.create("http://localhost:8082/")
-                .resolve("testApi/authorizedGet/$randomUuid/on-behalf-of"),
-            GetRequest(currentToken = generateToken(isApp = false))
-        )
-
-        assertThat(res?.saksnummer).isEqualTo(randomUuid)
+        runBlocking {
+            val res = oboGet<Saksinfo>(base("testApi/authorizedGet/$randomUuid/on-behalf-of"), generateToken(isApp = false))
+            assertThat(res?.saksnummer).isEqualTo(randomUuid)
+        }
     }
 
     @Test
     fun `Skal gi tilgang kun basert på rolle`() {
         val token = generateToken(isApp = false, roles = listOf(Beslutter.id))
-
-        val res = clientUtenTokenProvider.get<IngenReferanse>(
-            URI.create("http://localhost:8082/")
-                .resolve("kun-roller"),
-            GetRequest(
-                additionalHeaders = listOf(
-                    Header(
-                        "Authorization",
-                        "Bearer ${token.token()}"
-                    )
-                )
-            )
-        )
-
-        assertThat(res?.noe).isEqualTo("test")
+        runBlocking {
+            val res = bearerGet<IngenReferanse>(base("kun-roller"), token.token())
+            assertThat(res?.noe).isEqualTo("test")
+        }
     }
 
     @Test
     fun `Skal gi tilgang basert på rolle for POST på samme route som GET`() {
         val token = generateToken(isApp = false, roles = listOf(Beslutter.id))
-
-        val res = clientUtenTokenProvider.post<_, IngenReferanse>(
-            URI.create("http://localhost:8082/")
-                .resolve("kun-roller"),
-            PostRequest(
-                body = IngenReferanse("input"),
-                additionalHeaders = listOf(
-                    Header(
-                        "Authorization",
-                        "Bearer ${token.token()}"
-                    )
-                )
-            )
-        )
-
-        assertThat(res?.noe).isEqualTo("post-input")
+        runBlocking {
+            val res = bearerPost<IngenReferanse, IngenReferanse>(base("kun-roller"), IngenReferanse("input"), token.token())
+            assertThat(res?.noe).isEqualTo("post-input")
+        }
     }
 
     @Test
     fun `Skal ikke gi tilgang for manglende rolle på POST på samme route som GET`() {
         val token = generateToken(isApp = false, roles = listOf("ikke-riktig-rolle"))
         assertThrows<ManglerTilgangException> {
-            clientUtenTokenProvider.post<_, IngenReferanse>(
-                URI.create("http://localhost:8082/")
-                    .resolve("kun-roller"),
-                PostRequest(
-                    body = IngenReferanse("input"),
-                    additionalHeaders = listOf(
-                        Header(
-                            "Authorization",
-                            "Bearer ${token.token()}"
-                        )
-                    )
-                )
-            )
+            runBlocking {
+                bearerPost<IngenReferanse, IngenReferanse>(base("kun-roller"), IngenReferanse("input"), token.token())
+            }
         }
     }
 
@@ -173,18 +185,7 @@ class TilgangPluginTest {
     fun `Skal ikke gi tilgang for manglende rolle`() {
         val token = generateToken(isApp = false, roles = listOf("ikke-riktig-rolle"))
         assertThrows<ManglerTilgangException> {
-            clientUtenTokenProvider.get<IngenReferanse>(
-                URI.create("http://localhost:8082/")
-                    .resolve("kun-roller"),
-                GetRequest(
-                    additionalHeaders = listOf(
-                        Header(
-                            "Authorization",
-                            "Bearer ${token.token()}"
-                        )
-                    )
-                )
-            )
+            runBlocking { bearerGet<IngenReferanse>(base("kun-roller"), token.token()) }
         }
     }
 
@@ -193,11 +194,7 @@ class TilgangPluginTest {
         val randomUuid = UUID.randomUUID()
         fakes.gittTilgangTilSak(randomUuid.toString(), true)
         assertThrows<ManglerTilgangException> {
-            clientForClientCredentials.get<Saksinfo>(
-                URI.create("http://localhost:8082/")
-                    .resolve("testApi/authorizedGet/$randomUuid/on-behalf-of"),
-                GetRequest(currentToken = generateToken(isApp = false))
-            )
+            runBlocking { m2mGet<Saksinfo>(base("testApi/authorizedGet/$randomUuid/on-behalf-of")) }
         }
     }
 
@@ -205,20 +202,10 @@ class TilgangPluginTest {
     fun `get route som støtter client-credentials med rolle gir tilgang med riktig rolle uten at tilgang-tjenesten kalles`() {
         val randomUuid = UUID.randomUUID()
         val token = generateToken(isApp = true, roles = listOf("tilgang-rolle"))
-        val res = clientUtenTokenProvider.get<Saksinfo>(
-            URI.create("http://localhost:8082/")
-                .resolve("testApi/authorizedGet/$randomUuid/client-credentials-application-role"),
-            GetRequest(
-                additionalHeaders = listOf(
-                    Header(
-                        "Authorization",
-                        "Bearer ${token.token()}"
-                    )
-                )
-            )
-        )
-
-        assertThat(res?.saksnummer).isEqualTo(randomUuid)
+        runBlocking {
+            val res = bearerGet<Saksinfo>(base("testApi/authorizedGet/$randomUuid/client-credentials-application-role"), token.token())
+            assertThat(res?.saksnummer).isEqualTo(randomUuid)
+        }
     }
 
     @Test
@@ -226,18 +213,7 @@ class TilgangPluginTest {
         val randomUuid = UUID.randomUUID()
         val token = generateToken(isApp = true, roles = listOf("feil-rolle"))
         assertThrows<ManglerTilgangException> {
-            clientUtenTokenProvider.get<Saksinfo>(
-                URI.create("http://localhost:8082/")
-                    .resolve("testApi/authorizedGet/$randomUuid/client-credentials-application-role"),
-                GetRequest(
-                    additionalHeaders = listOf(
-                        Header(
-                            "Authorization",
-                            "Bearer ${token.token()}"
-                        )
-                    )
-                )
-            )
+            runBlocking { bearerGet<Saksinfo>(base("testApi/authorizedGet/$randomUuid/client-credentials-application-role"), token.token()) }
         }
     }
 
@@ -245,20 +221,15 @@ class TilgangPluginTest {
     fun `post route kan sjekke tilgang til person`() {
         val person = "234"
         fakes.gittTilgangTilPerson(person, true)
-        val res = clientForOBO.post<_, Personinfo>(
-            URI.create("http://localhost:8082/")
-                .resolve("testApi/person/post"),
-            PostRequest(Personinfo(person), currentToken = generateToken(isApp = false))
-        )
-        assertThat(res?.personIdent).isEqualTo("234")
-
+        runBlocking {
+            val res = oboPost<Personinfo, Personinfo>(base("testApi/person/post"), Personinfo(person), generateToken(isApp = false))
+            assertThat(res?.personIdent).isEqualTo("234")
+        }
         val person2 = "123456"
         assertThrows<ManglerTilgangException> {
-            clientForOBO.post<_, Personinfo>(
-                URI.create("http://localhost:8082/")
-                    .resolve("testApi/person/post"),
-                PostRequest(Personinfo(person2), currentToken = generateToken(isApp = false))
-            )
+            runBlocking {
+                oboPost<Personinfo, Personinfo>(base("testApi/person/post"), Personinfo(person2), generateToken(isApp = false))
+            }
         }
     }
 
@@ -266,73 +237,45 @@ class TilgangPluginTest {
     fun `get route for grunnlag setter tilgang til operasjon som attributt`() {
         val referanse = UUID.randomUUID()
         fakes.gittTilgangTilBehandling(referanse, true)
-        fakes.gittTilgangTilBehandlingIKontekst(
-            referanse,
-            mutableMapOf(Operasjon.SAKSBEHANDLE to true)
-        )
-        val res = clientForOBO.get<Boolean>(
-            URI.create("http://localhost:8082/")
-                .resolve("testApi/getGrunnlag/$referanse"),
-            GetRequest(currentToken = generateToken(isApp = false))
-        )
-        assertThat(res).isTrue()
+        fakes.gittTilgangTilBehandlingIKontekst(referanse, mutableMapOf(Operasjon.SAKSBEHANDLE to true))
+        runBlocking {
+            val res = oboGet<Boolean>(base("testApi/getGrunnlag/$referanse"), generateToken(isApp = false))
+            assertThat(res).isTrue()
+        }
     }
 
     @Test
     fun `get route for grunnlag med påkrevd rolle setter tilgang til operasjon som attributt`() {
         val referanse = UUID.randomUUID()
         fakes.gittTilgangTilBehandling(referanse, true)
-        fakes.gittTilgangTilBehandlingIKontekst(
-            referanse,
-            mutableMapOf(Operasjon.SAKSBEHANDLE to true)
-        )
-        val res = clientForOBO.get<Boolean>(
-            URI.create("http://localhost:8082/")
-                .resolve("testApi/getGrunnlag-rolle/$referanse"),
-            GetRequest(currentToken = generateToken(isApp = false))
-        )
-        assertThat(res).isTrue()
+        fakes.gittTilgangTilBehandlingIKontekst(referanse, mutableMapOf(Operasjon.SAKSBEHANDLE to true))
+        runBlocking {
+            val res = oboGet<Boolean>(base("testApi/getGrunnlag-rolle/$referanse"), generateToken(isApp = false))
+            assertThat(res).isTrue()
+        }
     }
 
     @Test
     fun `get route som støtter on-behalf-of og client-credentials gir tilgang med on-behalf-of token og client-credentials token`() {
         val randomUuid = UUID.randomUUID()
         fakes.gittTilgangTilSak(randomUuid.toString(), true)
-        val res1 = clientForOBO.get<Saksinfo>(
-            URI.create("http://localhost:8082/")
-                .resolve("testApi/authorizedGet/$randomUuid/client-credentials-and-on-behalf-of"),
-            GetRequest(currentToken = generateToken(isApp = false))
-        )
-
-        val token = generateToken(isApp = true, roles = listOf("tilgang-rolle"))
-        val res2 = clientUtenTokenProvider.get<Saksinfo>(
-            URI.create("http://localhost:8082/")
-                .resolve("testApi/authorizedGet/$randomUuid/client-credentials-and-on-behalf-of"),
-            GetRequest(
-                additionalHeaders = listOf(
-                    Header(
-                        "Authorization",
-                        "Bearer ${token.token()}"
-                    )
-                )
-            )
-        )
-
-        assertThat(res1?.saksnummer).isEqualTo(randomUuid)
-        assertThat(res2?.saksnummer).isEqualTo(randomUuid)
+        runBlocking {
+            val res1 = oboGet<Saksinfo>(base("testApi/authorizedGet/$randomUuid/client-credentials-and-on-behalf-of"), generateToken(isApp = false))
+            val token = generateToken(isApp = true, roles = listOf("tilgang-rolle"))
+            val res2 = bearerGet<Saksinfo>(base("testApi/authorizedGet/$randomUuid/client-credentials-and-on-behalf-of"), token.token())
+            assertThat(res1?.saksnummer).isEqualTo(randomUuid)
+            assertThat(res2?.saksnummer).isEqualTo(randomUuid)
+        }
     }
 
     @Test
     fun `post route som støtter on-behalf-of gir tilgang med on-behalf-of token`() {
         val randomUuid = UUID.randomUUID()
         fakes.gittTilgangTilSak(randomUuid.toString(), true)
-        val res = clientForOBO.post<_, Saksinfo>(
-            URI.create("http://localhost:8082/")
-                .resolve("testApi/authorizedPost/on-behalf-of/saksinfo"),
-            PostRequest(Saksinfo(randomUuid), currentToken = generateToken(isApp = false))
-        )
-
-        assertThat(res?.saksnummer).isEqualTo(randomUuid)
+        runBlocking {
+            val res = oboPost<Saksinfo, Saksinfo>(base("testApi/authorizedPost/on-behalf-of/saksinfo"), Saksinfo(randomUuid), generateToken(isApp = false))
+            assertThat(res?.saksnummer).isEqualTo(randomUuid)
+        }
     }
 
     @Test
@@ -341,71 +284,43 @@ class TilgangPluginTest {
         val behandlingReferanse = UUID.randomUUID()
         fakes.gittTilgangTilBehandling(behandlingReferanse, true)
         enAnnenReferanseTilbehandlingReferanse.put(enAnnenReferanse.toString(), behandlingReferanse)
-        val res = clientForOBO.post<_, Behandlinginfo>(
-            URI.create("http://localhost:8082/")
-                .resolve("testApi/authorizedPost/on-behalf-of/behandlinginfo"),
-            PostRequest(
-                Behandlinginfo(enAnnenReferanse.toString()),
-                currentToken = generateToken(isApp = false)
-            )
-        )
-
-        assertThat(res?.enAnnenReferanse).isEqualTo(enAnnenReferanse.toString())
+        runBlocking {
+            val res = oboPost<Behandlinginfo, Behandlinginfo>(base("testApi/authorizedPost/on-behalf-of/behandlinginfo"), Behandlinginfo(enAnnenReferanse.toString()), generateToken(isApp = false))
+            assertThat(res?.enAnnenReferanse).isEqualTo(enAnnenReferanse.toString())
+        }
     }
 
     @Test
     fun `post route som støtter client-credentials gir tilgang med client-credentials token uten å ha en tilgang-referanse`() {
         val randomUuid = UUID.randomUUID()
         val token = generateToken(isApp = true, roles = listOf("tilgang-rolle"))
-        val res = clientUtenTokenProvider.post<_, IngenReferanse>(
-            URI.create("http://localhost:8082/")
-                .resolve("testApi/authorizedPost/client-credentials-application-role"),
-            PostRequest(
-                IngenReferanse(randomUuid.toString()),
-                additionalHeaders = listOf(Header("Authorization", "Bearer ${token.token()}"))
-            )
-        )
-
-        assertThat(res?.noe).isEqualTo(randomUuid.toString())
+        runBlocking {
+            val res = bearerPost<IngenReferanse, IngenReferanse>(base("testApi/authorizedPost/client-credentials-application-role"), IngenReferanse(randomUuid.toString()), token.token())
+            assertThat(res?.noe).isEqualTo(randomUuid.toString())
+        }
     }
 
     @Test
     fun `post som støtter on-behalf-of token og client-credentials gir tilgang med on-behalf-of token og client-credentials token`() {
         val saksnummer = UUID.randomUUID()
         fakes.gittTilgangTilSak(saksnummer.toString(), true)
-        val res1 = clientForOBO.post<_, Saksinfo>(
-            URI.create("http://localhost:8082/")
-                .resolve("testApi/authorizedPost/client-credentials-and-on-behalf-of"),
-            PostRequest(Saksinfo(saksnummer), currentToken = generateToken(isApp = false))
-        )
-        val token = generateToken(isApp = true, roles = listOf("tilgang-rolle"))
-        val res2 = clientUtenTokenProvider.post<_, Saksinfo>(
-            URI.create("http://localhost:8082/")
-                .resolve("testApi/authorizedPost/client-credentials-and-on-behalf-of"),
-            PostRequest(
-                Saksinfo(saksnummer),
-                additionalHeaders = listOf(Header("Authorization", "Bearer ${token.token()}"))
-            )
-        )
-
-        assertThat(res1?.saksnummer).isEqualTo(saksnummer)
-        assertThat(res2?.saksnummer).isEqualTo(saksnummer)
+        runBlocking {
+            val res1 = oboPost<Saksinfo, Saksinfo>(base("testApi/authorizedPost/client-credentials-and-on-behalf-of"), Saksinfo(saksnummer), generateToken(isApp = false))
+            val token = generateToken(isApp = true, roles = listOf("tilgang-rolle"))
+            val res2 = bearerPost<Saksinfo, Saksinfo>(base("testApi/authorizedPost/client-credentials-and-on-behalf-of"), Saksinfo(saksnummer), token.token())
+            assertThat(res1?.saksnummer).isEqualTo(saksnummer)
+            assertThat(res2?.saksnummer).isEqualTo(saksnummer)
+        }
     }
 
     @Test
     fun `post som støtter client-credentials med rolle gir tilgang med riktig rolle`() {
         val randomUuid = UUID.randomUUID()
         val token = generateToken(isApp = true, roles = listOf("tilgang-rolle"))
-        val res = clientUtenTokenProvider.post<_, IngenReferanse>(
-            URI.create("http://localhost:8082/")
-                .resolve("testApi/authorizedPost/client-credentials-application-role"),
-            PostRequest(
-                IngenReferanse(randomUuid.toString()),
-                additionalHeaders = listOf(Header("Authorization", "Bearer ${token.token()}"))
-            )
-        )
-
-        assertThat(res?.noe).isEqualTo(randomUuid.toString())
+        runBlocking {
+            val res = bearerPost<IngenReferanse, IngenReferanse>(base("testApi/authorizedPost/client-credentials-application-role"), IngenReferanse(randomUuid.toString()), token.token())
+            assertThat(res?.noe).isEqualTo(randomUuid.toString())
+        }
     }
 
     @Test
@@ -413,30 +328,19 @@ class TilgangPluginTest {
         val randomUuid = UUID.randomUUID()
         val token = generateToken(isApp = true, roles = listOf("feil-rolle"))
         assertThrows<ManglerTilgangException> {
-            clientUtenTokenProvider.post<_, IngenReferanse>(
-                URI.create("http://localhost:8082/")
-                    .resolve("testApi/authorizedPost/client-credentials-application-role"),
-                PostRequest(
-                    IngenReferanse(randomUuid.toString()),
-                    additionalHeaders = listOf(Header("Authorization", "Bearer ${token.token()}"))
-                )
-            )
+            runBlocking { bearerPost<IngenReferanse, IngenReferanse>(base("testApi/authorizedPost/client-credentials-application-role"), IngenReferanse(randomUuid.toString()), token.token()) }
         }
     }
-
 
     @Test
     fun `post støtter path params med mapping fra annen referanse til journalpostId`() {
         val behandlingsRef = "123"
         val journalpostId = 456L
         fakes.gittTilgangTilJournalpost(journalpostId, true)
-        val res = clientForOBO.post<_, IngenReferanse>(
-            URI.create("http://localhost:8082/")
-                .resolve("testApi/pathForPost/resolve/journalpost/$behandlingsRef"),
-            PostRequest(IngenReferanse("test"), currentToken = generateToken(isApp = false))
-        )
-
-        assertThat(res?.noe).isEqualTo("test")
+        runBlocking {
+            val res = oboPost<IngenReferanse, IngenReferanse>(base("testApi/pathForPost/resolve/journalpost/$behandlingsRef"), IngenReferanse("test"), generateToken(isApp = false))
+            assertThat(res?.noe).isEqualTo("test")
+        }
     }
 
     @Test
@@ -445,17 +349,14 @@ class TilgangPluginTest {
         val behandlingReferanse = UUID.randomUUID()
         fakes.gittTilgangTilBehandling(behandlingReferanse, true)
         enAnnenReferanseTilbehandlingReferanse.put(enAnnenReferanse.toString(), behandlingReferanse)
-        val res = clientForOBO.post<_, IngenReferanse>(
-            URI.create("http://localhost:8082/")
-                .resolve("testApi/pathForPost/resolve/behandlingreferanse/$enAnnenReferanse"),
-            PostRequest(IngenReferanse("test"), currentToken = generateToken(isApp = false))
-        )
-
-        assertThat(res?.noe).isEqualTo("test")
+        runBlocking {
+            val res = oboPost<IngenReferanse, IngenReferanse>(base("testApi/pathForPost/resolve/behandlingreferanse/$enAnnenReferanse"), IngenReferanse("test"), generateToken(isApp = false))
+            assertThat(res?.noe).isEqualTo("test")
+        }
     }
 
     @Test
-    fun `skal auditlogge - path resolver`() {
+    fun `skal auditlogge - path resolver`() = runBlocking {
         val randomUuid = UUID.randomUUID()
         fakes.gittTilgangTilSak(randomUuid.toString(), true)
 
@@ -464,28 +365,19 @@ class TilgangPluginTest {
         appender.start()
         logger.addAppender(appender)
 
-
-        val res = clientForOBO.get<Saksinfo>(
-            URI.create("http://localhost:8082/")
-                .resolve("testApi/authorizedGet/$randomUuid/on-behalf-of"),
-            GetRequest(currentToken = generateToken(isApp = false))
-        )
-
+        val res = oboGet<Saksinfo>(base("testApi/authorizedGet/$randomUuid/on-behalf-of"), generateToken(isApp = false))
         assertThat(res?.saksnummer).isEqualTo(randomUuid)
 
         val messages = appender.getLoggedMessages()
-        val expected =
-            messages.first { it.contains("CEF:0|Kelvin|behandlingsflyt|1.0|audit:access|Auditlogg|INFO|flexString1=Permit request=/testApi/authorizedGet/$randomUuid/on-behalf-of duid=12345678901 flexString1Label=Decision end=") }
+        val expected = messages.first { it.contains("CEF:0|Kelvin|behandlingsflyt|1.0|audit:access|Auditlogg|INFO|flexString1=Permit request=/testApi/authorizedGet/$randomUuid/on-behalf-of duid=12345678901 flexString1Label=Decision end=") }
         assertNotNull(expected)
         assertTrue(expected.contains("suid=Lokalsaksbehandler"))
 
-        // Clean up
         logger.detachAppender(appender)
-
     }
 
     @Test
-    fun `skal auditlogge - body resolver`() {
+    fun `skal auditlogge - body resolver`() = runBlocking {
         val randomUuid = UUID.randomUUID()
         fakes.gittTilgangTilSak(randomUuid.toString(), true)
 
@@ -494,25 +386,14 @@ class TilgangPluginTest {
         appender.start()
         logger.addAppender(appender)
 
-
-        val res = clientForOBO.post<_, RequestMedAuditResolver>(
-            URI.create("http://localhost:8082/")
-                .resolve("testApi/authorizedPost/med-audit-resolver"),
-            PostRequest(
-                RequestMedAuditResolver(saksreferanse = randomUuid),
-                currentToken = generateToken(isApp = false)
-            )
-        )
-
+        val res = oboPost<RequestMedAuditResolver, RequestMedAuditResolver>(base("testApi/authorizedPost/med-audit-resolver"), RequestMedAuditResolver(saksreferanse = randomUuid), generateToken(isApp = false))
         assertThat(res?.saksreferanse).isEqualTo(randomUuid)
 
         val messages = appender.getLoggedMessages()
-        val expected =
-            messages.first { it.contains("CEF:0|Kelvin|behandlingsflyt|1.0|audit:access|Auditlogg|INFO|flexString1=Permit request=/testApi/authorizedPost/med-audit-resolver duid=12345678901 flexString1Label=Decision end=") }
+        val expected = messages.first { it.contains("CEF:0|Kelvin|behandlingsflyt|1.0|audit:access|Auditlogg|INFO|flexString1=Permit request=/testApi/authorizedPost/med-audit-resolver duid=12345678901 flexString1Label=Decision end=") }
         assertNotNull(expected)
         assertTrue(expected.contains("suid=Lokalsaksbehandler"))
 
-        // Clean up
         logger.detachAppender(appender)
     }
 
@@ -520,15 +401,10 @@ class TilgangPluginTest {
     fun `Maskin-til-maskin`() {
         val randomUuid = UUID.randomUUID()
         val token = generateToken(isApp = true, roles = listOf("tilgang-rolle"))
-        val res = clientUtenTokenProvider.get<Saksinfo>(
-            URI.create("http://localhost:8082/")
-                .resolve("testApi/authorizedGet/$randomUuid/application-role-machine-to-machine"),
-            GetRequest(
-                additionalHeaders = listOf(Header("Authorization", "Bearer ${token.token()}"))
-            )
-        )
-
-        assertThat(res?.saksnummer).isEqualTo(randomUuid)
+        runBlocking {
+            val res = bearerGet<Saksinfo>(base("testApi/authorizedGet/$randomUuid/application-role-machine-to-machine"), token.token())
+            assertThat(res?.saksnummer).isEqualTo(randomUuid)
+        }
     }
 
     @Test
@@ -536,18 +412,7 @@ class TilgangPluginTest {
         val randomUuid = UUID.randomUUID()
         val token = generateToken(isApp = true, roles = listOf("feil-rolle"))
         assertThrows<ManglerTilgangException> {
-            clientUtenTokenProvider.get<Saksinfo>(
-                URI.create("http://localhost:8082/")
-                    .resolve("testApi/authorizedGet/$randomUuid/application-role-machine-to-machine"),
-                GetRequest(
-                    additionalHeaders = listOf(
-                        Header(
-                            "Authorization",
-                            "Bearer ${token.token()}"
-                        )
-                    )
-                )
-            )
+            runBlocking { bearerGet<Saksinfo>(base("testApi/authorizedGet/$randomUuid/application-role-machine-to-machine"), token.token()) }
         }
     }
 
@@ -555,25 +420,18 @@ class TilgangPluginTest {
     fun `get sak med påkrevdRolle gir tilgang`() {
         val randomUuid = UUID.randomUUID()
         fakes.gittTilgangTilSak(randomUuid.toString(), true)
-        val res = clientForOBO.get<Saksinfo>(
-            URI.create("http://localhost:8082/")
-                .resolve("testApi/påkrevdRolle/sak/$randomUuid"),
-            GetRequest(currentToken = generateToken(isApp = false))
-        )
-
-        assertThat(res?.saksnummer).isEqualTo(randomUuid)
-        assertThat(fakes.sistMottattSakTilgangRequest?.påkrevdRolle).isEqualTo(listOf(Rolle.BESLUTTER))
+        runBlocking {
+            val res = oboGet<Saksinfo>(base("testApi/paakrevdRolle/sak/$randomUuid"), generateToken(isApp = false))
+            assertThat(res?.saksnummer).isEqualTo(randomUuid)
+            assertThat(fakes.sistMottattSakTilgangRequest?.påkrevdRolle).isEqualTo(listOf(Rolle.BESLUTTER))
+        }
     }
 
     @Test
     fun `get sak med påkrevdRolle gir ikke tilgang`() {
         val randomUuid = UUID.randomUUID()
         assertThrows<ManglerTilgangException> {
-            clientForOBO.get<Saksinfo>(
-                URI.create("http://localhost:8082/")
-                    .resolve("testApi/påkrevdRolle/sak/$randomUuid"),
-                GetRequest(currentToken = generateToken(isApp = false))
-            )
+            runBlocking { oboGet<Saksinfo>(base("testApi/paakrevdRolle/sak/$randomUuid"), generateToken(isApp = false)) }
         }
     }
 
@@ -581,25 +439,18 @@ class TilgangPluginTest {
     fun `post sak med påkrevdRolle gir tilgang`() {
         val randomUuid = UUID.randomUUID()
         fakes.gittTilgangTilSak(randomUuid.toString(), true)
-        val res = clientForOBO.post<_, Saksinfo>(
-            URI.create("http://localhost:8082/")
-                .resolve("testApi/påkrevdRolle/sak/post"),
-            PostRequest(Saksinfo(randomUuid), currentToken = generateToken(isApp = false))
-        )
-
-        assertThat(res?.saksnummer).isEqualTo(randomUuid)
-        assertThat(fakes.sistMottattSakTilgangRequest?.påkrevdRolle).isEqualTo(listOf(Rolle.BESLUTTER))
+        runBlocking {
+            val res = oboPost<Saksinfo, Saksinfo>(base("testApi/paakrevdRolle/sak/post"), Saksinfo(randomUuid), generateToken(isApp = false))
+            assertThat(res?.saksnummer).isEqualTo(randomUuid)
+            assertThat(fakes.sistMottattSakTilgangRequest?.påkrevdRolle).isEqualTo(listOf(Rolle.BESLUTTER))
+        }
     }
 
     @Test
     fun `post sak med påkrevdRolle gir ikke tilgang`() {
         val randomUuid = UUID.randomUUID()
         assertThrows<ManglerTilgangException> {
-            clientForOBO.post<_, Saksinfo>(
-                URI.create("http://localhost:8082/")
-                    .resolve("testApi/påkrevdRolle/sak/post"),
-                PostRequest(Saksinfo(randomUuid), currentToken = generateToken(isApp = false))
-            )
+            runBlocking { oboPost<Saksinfo, Saksinfo>(base("testApi/paakrevdRolle/sak/post"), Saksinfo(randomUuid), generateToken(isApp = false)) }
         }
     }
 
@@ -607,12 +458,9 @@ class TilgangPluginTest {
     fun `skal returnere json ved ikke tilgang`() {
         val randomUuid = UUID.randomUUID()
         assertThatThrownBy {
-            clientForOBO.get<Saksinfo>(
-                URI.create("http://localhost:8082/")
-                    .resolve("testApi/authorizedGet/$randomUuid/on-behalf-of"),
-                GetRequest(currentToken = generateToken(isApp = false))
-            )
-        }.isInstanceOf(ManglerTilgangException::class.java).extracting("body")
+            runBlocking { oboGet<Saksinfo>(base("testApi/authorizedGet/$randomUuid/on-behalf-of"), generateToken(isApp = false)) }
+        }.isInstanceOf(ManglerTilgangException::class.java)
+            .extracting("body")
             .isEqualTo("{\"message\":\"Ingen tilgang\",\"code\":\"UKJENT_FEIL\"}")
     }
 }

@@ -53,7 +53,8 @@ class TilgangApiTest {
                     Config(
                         roles = alleRoller,
                         redis = Fakes.getRedisConfig(),
-                    )
+                    ),
+                    redis = Fakes.getRedisServer()
                 )
             }
 

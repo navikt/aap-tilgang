@@ -40,13 +40,17 @@ class RegelService(
         )
     )
 
-    fun vurderTilgang(
+    suspend fun vurderTilgang(
         input: RegelInput
     ): Map<Operasjon, Boolean> {
         val tilgangsMap = mutableMapOf<Operasjon, Boolean>()
-        input.operasjoner.forEach { operasjon ->
-            val harTilgangForRolle = this.reglerForOperasjon[operasjon]!!.all {
-                it.vurder(input)
+        for (operasjon in input.operasjoner) {
+            var harTilgangForRolle = true
+            for (regel in this.reglerForOperasjon[operasjon]!!) {
+                if (!regel.vurder(input)) {
+                    harTilgangForRolle = false
+                    break
+                }
             }
             tilgangsMap[operasjon] = harTilgangForRolle
         }

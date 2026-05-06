@@ -1,14 +1,17 @@
 package tilgang.integrasjoner.nom
 
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.request.bearerAuth
+import io.ktor.client.request.header
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
+import io.ktor.server.auth.UserIdPrincipal
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
-import java.net.URI
 import no.nav.aap.komponenter.config.requiredConfigForKey
-import no.nav.aap.komponenter.httpklient.httpclient.ClientConfig
-import no.nav.aap.komponenter.httpklient.httpclient.Header
-import no.nav.aap.komponenter.httpklient.httpclient.RestClient
-import no.nav.aap.komponenter.httpklient.httpclient.post
-import no.nav.aap.komponenter.httpklient.httpclient.request.PostRequest
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.azurecc.AzureM2MTokenProvider
+import tilgang.auth.ITokenProvider
 import tilgang.metrics.cacheHit
 import tilgang.metrics.cacheMiss
 import tilgang.redis.Key
@@ -17,7 +20,7 @@ import tilgang.redis.Redis.Companion.deserialize
 import tilgang.redis.Redis.Companion.serialize
 
 interface INomGateway {
-    fun personNummerTilNavIdent(søkerIdent: String, callId: String): String
+    suspend fun personNummerTilNavIdent(søkerIdent: String, callId: String): String
 }
 
 /**
@@ -25,20 +28,14 @@ interface INomGateway {
  */
 open class NomGateway(
     private val redis: Redis,
-    private val prometheus: PrometheusMeterRegistry
+    private val httpClient: HttpClient,
+    private val tokenProvider: ITokenProvider,
+    private val prometheus: PrometheusMeterRegistry,
 ) : INomGateway {
-    private val config = ClientConfig(
-        scope = requiredConfigForKey("nom.scope")
-    )
-    private val httpClient = RestClient.withDefaultResponseHandler(
-        config = config,
-        tokenProvider = AzureM2MTokenProvider,
-        prometheus = prometheus,
-    )
-    private val baseUrl = URI.create(requiredConfigForKey("nom.base.url"))
+    private val nomBaseUrl = requiredConfigForKey("nom.base.url")
 
-    override fun personNummerTilNavIdent(søkerIdent: String, callId: String): String {
-        redis[Key(NOM_PREFIX, søkerIdent)]?.let {
+    override suspend fun personNummerTilNavIdent(søkerIdent: String, callId: String): String {
+        redis.get(Key(NOM_PREFIX, søkerIdent))?.let {
             prometheus.cacheHit(NOM_PREFIX).increment()
             return it.deserialize()
         }
@@ -46,16 +43,13 @@ open class NomGateway(
         prometheus.cacheMiss(NOM_PREFIX).increment()
 
         val query = NomRequest.hentNavIdentFraPersonIdent(søkerIdent)
-        val request = PostRequest(
-            query,
-            additionalHeaders = listOf(
-                Header("Accept", "application/json"),
-                Header("Nav-Call-Id", callId)
-            )
-        )
-        val response: NOMRespons =
-            httpClient.post(baseUrl, request)
-                ?: throw NomException("Feil ved henting av match mot NOM")
+        val response = httpClient.post(nomBaseUrl) {
+            bearerAuth(tokenProvider.m2mToken(requiredConfigForKey("nom.scope")))
+            header("Accept", "application/json")
+            header("Nav-Call-Id", callId)
+            contentType(ContentType.Application.Json)
+            setBody(query)
+        }.body<NOMRespons>()
 
         val navIdentFraNOM = response.data?.ressurs?.navident.orEmpty()
         redis.set(Key(NOM_PREFIX, søkerIdent), navIdentFraNOM.serialize(), 3600)
