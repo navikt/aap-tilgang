@@ -16,6 +16,7 @@ import tilgang.redis.Redis
 import tilgang.redis.Redis.Companion.deserialize
 import tilgang.redis.Redis.Companion.serialize
 import java.net.URI
+import java.time.Duration
 
 private val log = LoggerFactory.getLogger(BehandlingsflytGateway::class.java)
 
@@ -43,7 +44,7 @@ class BehandlingsflytGateway(
         val url = baseUrl.resolve("/pip/api/sak/${saksnummer}/identer")
         log.info("Kaller behandlingsflyt med URL: $url")
 
-        val respons = httpClient.retryableGet<RelevanteIdenter>(url, GetRequest())
+        val respons = httpClient.retryableGet<RelevanteIdenter>(url, GetRequest(timeout = Duration.ofSeconds(2)))
             ?: throw BehandlingsflytException("Feil ved henting av identer for sak")
 
         redis.set(Key(IDENTER_SAK_PREFIX, saksnummer), respons.serialize())
@@ -60,7 +61,7 @@ class BehandlingsflytGateway(
         val url = baseUrl.resolve("/pip/api/behandling/${behandlingsnummer}/identer")
         log.info("Kaller behandlingsflyt med URL: $url")
 
-        val respons = httpClient.retryableGet<RelevanteIdenter>(url, GetRequest())
+        val respons = httpClient.retryableGet<RelevanteIdenter>(url, GetRequest(timeout = Duration.ofSeconds(2)))
             ?: throw BehandlingsflytException("Feil ved henting av identer for behandling")
         redis.set(Key(IDENTER_BEHANDLING_PREFIX, behandlingsnummer), respons.serialize())
         return respons
