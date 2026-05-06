@@ -5,5 +5,5 @@ package no.nav.aap.tilgang.plugin.kontrakt
  * For eksempel ved å slå opp ident i databasen vha. saksnummer
  */
 fun interface BrukerIdentResolver {
-    fun resolve(referanse: String): String
+    suspend fun resolve(referanse: String): String
 }

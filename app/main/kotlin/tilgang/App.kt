@@ -25,6 +25,7 @@ import no.nav.aap.komponenter.server.commonKtorModule
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import tilgang.AppConfig.LOGGER
+import tilgang.http.createHttpClient
 import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytException
 import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytGateway
 import tilgang.integrasjoner.msgraph.MsGraphException
@@ -68,10 +69,8 @@ internal object AppConfig {
     val connectionGroupSize = ktorParallellitet / 2 + 1
     val workerGroupSize = ktorParallellitet / 2 + 1
 
-    // Vi følger *IKKE* ktor sin metodikk for å regne ut tuning parametre for callGroupSize. Vi
-    // har ikke async IO, hverken for HTTP-kall eller mot databasen, så vi trenger betydelig flere
-    // tråder enn en async kodebase.
-    val callGroupSize = 64
+    // Vi bruker nå suspend-funksjoner for all I/O, så vi trenger ikke flere tråder enn parallelliteten.
+    val callGroupSize = ktorParallellitet
 }
 
 fun main() {
@@ -95,17 +94,19 @@ fun main() {
 }
 
 fun Application.api(
-    config: Config = Config(), redis: Redis = Redis(config.redis),
+    config: Config = Config(), redis: Redis = Redis.from(config.redis),
 ) {
+    val httpClient = createHttpClient(10.seconds)
+
     val prometheus = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
-    val pdl = PdlGraphQLGateway(redis, prometheus)
-    val msGraph = MsGraphGateway(redis, prometheus)
-    val behandlingsflyt = BehandlingsflytGateway(redis, prometheus)
-    val saf = SafGraphqlGateway(redis, prometheus)
+    val pdl = PdlGraphQLGateway(redis, httpClient, prometheus)
+    val msGraph = MsGraphGateway(redis, httpClient, prometheus)
+    val behandlingsflyt = BehandlingsflytGateway(redis, createHttpClient(timeout = 2.seconds), prometheus)
+    val saf = SafGraphqlGateway(redis, httpClient, prometheus)
     val geoService = GeoService(msGraph)
-    val skjermingGateway = SkjermingGateway(redis, prometheus)
+    val skjermingGateway = SkjermingGateway(redis, httpClient, prometheus)
     val skjermingService = SkjermingService(msGraph)
-    val tilgangsmaskinGateway = TilgangsmaskinGateway(redis, prometheus)
+    val tilgangsmaskinGateway = TilgangsmaskinGateway(redis, httpClient, prometheus)
     val regelService = RegelService(
         geoService, pdl, skjermingGateway, skjermingService, AdressebeskyttelseService(msGraph), tilgangsmaskinGateway
     )

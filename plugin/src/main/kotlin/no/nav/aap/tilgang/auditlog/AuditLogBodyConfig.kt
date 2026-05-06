@@ -23,7 +23,7 @@ data class AuditLogBodyConfig(
     override fun app() = app
     override fun inkluderCallId() = inkluderCallId
 
-    fun tilIdent(request: AuditlogResolverInput): String {
+    suspend fun tilIdent(request: AuditlogResolverInput): String {
         return brukerIdentResolver.resolve(request.hentAuditlogResolverInput())
     }
 }
@@ -44,7 +44,7 @@ data class AuditLogPathParamConfig(
     override fun app() = app
     override fun inkluderCallId() = inkluderCallId
 
-    fun tilIdent(parameters: Parameters): String {
+    suspend fun tilIdent(parameters: Parameters): String {
         val input = parameters.getOrFail(brukerIdentResolver.param)
         return brukerIdentResolver.resolver.resolve(input)
     }

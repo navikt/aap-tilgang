@@ -49,7 +49,7 @@ data class AvklaringsbehovRolleInput(
 )
 
 data object AvklaringsbehovInputGenerator : InputGenerator<AvklaringsbehovRolleInput> {
-    override fun generer(input: RegelInput): AvklaringsbehovRolleInput {
+    override suspend fun generer(input: RegelInput): AvklaringsbehovRolleInput {
         return AvklaringsbehovRolleInput(
             input.avklaringsbehovFraBehandlingsflyt,
             input.avklaringsbehovFraPostmottak,

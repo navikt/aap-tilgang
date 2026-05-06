@@ -1,5 +1,6 @@
 package tilgang
 
+import kotlinx.coroutines.test.runTest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
@@ -13,9 +14,9 @@ import java.util.UUID
 
 class GeoServiceTest {
     @Test
-    fun `kan parse roller fra Azure`() {
+    fun `kan parse roller fra Azure`() = runTest {
         val geoService = GeoService(object : IMsGraphGateway {
-            override fun hentAdGrupper(currentToken: OidcToken, ident: String): MemberOf {
+            override suspend fun hentAdGrupper(currentToken: OidcToken, ident: String): MemberOf {
                 return MemberOf(
                     listOf(
                         Group(UUID.randomUUID(), "0000-GA-GEO_NASJONAL"),

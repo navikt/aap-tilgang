@@ -51,7 +51,7 @@ class RegelService(
         AvklaringsbehovRolleRegel to RegelMedInputgenerator(AvklaringsbehovRolleRegel, AvklaringsbehovInputGenerator),
     )
 
-    fun vurderTilgang(input: RegelInput): Map<Operasjon, Boolean> {
+    suspend fun vurderTilgang(input: RegelInput): Map<Operasjon, Boolean> {
         val aktuelleOperasjoner = regelOpppsett.filterKeys { it in input.operasjoner }
 
         val regelResultater: Map<Regel<*>, Boolean> = aktuelleOperasjoner.values

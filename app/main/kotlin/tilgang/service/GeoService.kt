@@ -5,7 +5,7 @@ import tilgang.integrasjoner.msgraph.IMsGraphGateway
 
 class GeoService(private val msGraphGateway: IMsGraphGateway) {
 
-    fun hentGeoRoller(currentToken: OidcToken, ident: String): List<GeoRolle> {
+    suspend fun hentGeoRoller(currentToken: OidcToken, ident: String): List<GeoRolle> {
         return msGraphGateway.hentAdGrupper(currentToken, ident).groups
             .filter { it.name.startsWith(GEO_GROUP_PREFIX) }
             .map { parseGeoRolle(it.name) }

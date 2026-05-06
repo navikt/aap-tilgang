@@ -6,6 +6,8 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
+import tilgang.http.createHttpClient
+import kotlin.time.Duration.Companion.seconds
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.runBlocking
@@ -25,6 +27,7 @@ object Fakes : AutoCloseable {
     private val msGraph by lazy { embeddedServer(Netty, port = 0, module = { msGraphFake() }) }
     private val redis = RedisTestServer()
     private val meterRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
+    private val testHttpClient = createHttpClient(5.seconds)
 
     private val started = AtomicBoolean(false)
 
@@ -60,6 +63,7 @@ object Fakes : AutoCloseable {
         behandlingsflyt.stop()
         msGraph.stop()
         redis.close()
+        testHttpClient.close()
     }
 
     fun getRedisServer() = redis.server
@@ -67,6 +71,8 @@ object Fakes : AutoCloseable {
     fun getRedisConfig() = redis.getConfig()
 
     fun getPrometheus() = meterRegistry
+
+    fun getHttpClient() = testHttpClient
 
     private fun setProperties() {
         Thread.currentThread().setUncaughtExceptionHandler { _, e -> log.error("Uhåndtert feil", e) }
@@ -83,7 +89,7 @@ object Fakes : AutoCloseable {
         System.setProperty("pdl.scope", "pdl")
 
         // Tilgangsmaskinen
-        System.setProperty("integrasjon.tilgangsmaskin.url", "http://localhost:${tilgangsmaskin.port()}/api/v1/kjerne")
+        System.setProperty("integrasjon.tilgangsmaskin.url", "http://localhost:${tilgangsmaskin.port()}")
         System.setProperty("integrasjon.tilgangsmaskin.scope", "tilgangsmaskin")
 
         // SAF

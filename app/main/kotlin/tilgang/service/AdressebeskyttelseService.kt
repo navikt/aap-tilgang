@@ -8,7 +8,7 @@ import java.util.*
 class AdressebeskyttelseService(private val msGraphClient: IMsGraphGateway) {
     private val adressebeskyttelseGruppeIds = AdressebeskyttelseGruppe.entries.associateBy { it.gruppeId }
 
-    fun hentAdressebeskyttelseRoller(
+    suspend fun hentAdressebeskyttelseRoller(
         currentToken: OidcToken, oboIdent: String
     ): List<AdressebeskyttelseGruppe> {
         return msGraphClient.hentAdGrupper(currentToken, oboIdent).groups
