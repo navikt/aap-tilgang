@@ -4,6 +4,10 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.tilgang.Rolle
 import no.nav.aap.postmottak.kontrakt.avklaringsbehov.Definisjon as PostmottakDefinisjon
 
+/**
+ * Sjekker alltid alle regler - kan derfor hende at man ikke har sendt med hverken påkrevd rolle eller avklaringsbehov.
+ * Skal returnere false i disse tilfellene
+ */
 data object AvklaringsbehovRolleRegel : Regel<AvklaringsbehovRolleInput> {
     override fun vurder(input: AvklaringsbehovRolleInput): Boolean {
         val sjekker = mutableListOf<Boolean>()
@@ -18,7 +22,9 @@ data object AvklaringsbehovRolleRegel : Regel<AvklaringsbehovRolleInput> {
             sjekker.add(input.påkrevdRolle.any { it in input.roller })
         }
 
-        require(sjekker.isNotEmpty()) { "Avklaringsbehov eller påkrevd rolle må være satt" }
+        if (sjekker.isEmpty()) {
+            return false
+        }
         return sjekker.all { it }
     }
 

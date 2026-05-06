@@ -94,12 +94,12 @@ class RegelServiceTest {
             RegelInput(
                 callId = UUID.randomUUID().toString(),
                 ansattIdent = "123",
-                avklaringsbehovFraBehandlingsflyt = avklaringsbehov,
+                avklaringsbehovFraBehandlingsflyt = null,
                 avklaringsbehovFraPostmottak = null,
                 currentToken = OidcToken(token),
                 søkerIdenter = RelevanteIdenter(søker = listOf("423"), barn = listOf()),
                 operasjoner = listOf(Operasjon.SAKSBEHANDLE),
-                påkrevdRolle = emptyList(),
+                påkrevdRolle = avklaringsbehov.løsesAv,
                 roller = listOf()
             )
         )
