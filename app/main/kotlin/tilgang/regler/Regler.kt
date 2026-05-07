@@ -40,32 +40,27 @@ class RegelService(
             EgenAnsattRegel,
         )
     )
-    private val alleRegler = listOf(
-        RegelMedInputgenerator(LeseRolleRegel, RolleInputGenerator),
-        RegelMedInputgenerator(TilgangsmaskinKjerneRegel, TilgangsmaskinKjerneInputGenerator(tilgangsmaskinGateway)),
-        RegelMedInputgenerator(AdressebeskyttelseRegel, AdressebeskyttelseInputGenerator(pdlGateway, adressebeskyttelseService)),
-        RegelMedInputgenerator(GeoRegel, GeoInputGenerator(geoService, pdlGateway)),
-        RegelMedInputgenerator(EgenAnsattRegel, EgenAnsattInputGenerator(skjermetGateway, skjermingService)),
-        RegelMedInputgenerator(DriftRolleRegel, RolleInputGenerator),
-        RegelMedInputgenerator(AvdelingslederRolleRegel, RolleInputGenerator),
-        RegelMedInputgenerator(AvklaringsbehovRolleRegel, AvklaringsbehovInputGenerator),
-        RegelMedInputgenerator(GeoRegel, GeoInputGenerator(geoService, pdlGateway)),
-        RegelMedInputgenerator(EgenAnsattRegel, EgenAnsattInputGenerator(skjermetGateway, skjermingService))
+    private val regelMedVurdering = mapOf<Regel<*>, RegelMedInputgenerator<*>>(
+        LeseRolleRegel to RegelMedInputgenerator(LeseRolleRegel, RolleInputGenerator),
+        TilgangsmaskinKjerneRegel to RegelMedInputgenerator(TilgangsmaskinKjerneRegel, TilgangsmaskinKjerneInputGenerator(tilgangsmaskinGateway)),
+        AdressebeskyttelseRegel to RegelMedInputgenerator(AdressebeskyttelseRegel, AdressebeskyttelseInputGenerator(pdlGateway, adressebeskyttelseService)),
+        GeoRegel to RegelMedInputgenerator(GeoRegel, GeoInputGenerator(geoService, pdlGateway)),
+        EgenAnsattRegel to RegelMedInputgenerator(EgenAnsattRegel, EgenAnsattInputGenerator(skjermetGateway, skjermingService)),
+        DriftRolleRegel to RegelMedInputgenerator(DriftRolleRegel, RolleInputGenerator),
+        AvdelingslederRolleRegel to RegelMedInputgenerator(AvdelingslederRolleRegel, RolleInputGenerator),
+        AvklaringsbehovRolleRegel to RegelMedInputgenerator(AvklaringsbehovRolleRegel, AvklaringsbehovInputGenerator),
     )
 
-    fun vurderTilgang(
-        input: RegelInput
-    ): Map<Operasjon, Boolean> {
-        val alleReglerVurdert = alleRegler.map {
-            Pair(it.regel, it.vurder(input))
-        }
+    fun vurderTilgang(input: RegelInput): Map<Operasjon, Boolean> {
+        val aktuelleOperasjoner = regelOpppsett.filterKeys { it in input.operasjoner }
 
-        val tilgangsMap = this.regelOpppsett.entries.associate { (operasjon, operasjonRegler) ->
-            operasjon to operasjonRegler.all { operasjonRegel ->
-                alleReglerVurdert.find { it.first == operasjonRegel }?.second
-                    ?: error("Fant ikke verdi for $operasjonRegel")
-            }
+        val regelResultater: Map<Regel<*>, Boolean> = aktuelleOperasjoner.values
+            .flatten()
+            .toSet()
+            .associateWith { regel -> (regelMedVurdering[regel]?.vurder(input) ?: error("Fant ikke vurdering for regel $regel")) }
+
+        return aktuelleOperasjoner.mapValues { (_, regler) ->
+            regler.all { regelResultater[it] == true }
         }
-        return tilgangsMap
     }
 }
