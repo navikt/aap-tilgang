@@ -1,3 +1,5 @@
+import com.auth0.jwt.JWT
+import com.auth0.jwt.algorithms.Algorithm
 import com.nimbusds.jose.JOSEObjectType
 import com.nimbusds.jose.JWSAlgorithm
 import com.nimbusds.jose.JWSHeader
@@ -9,6 +11,10 @@ import com.nimbusds.jwt.SignedJWT
 import io.ktor.http.*
 import io.ktor.serialization.jackson.*
 import io.ktor.server.application.*
+import io.ktor.server.auth.Authentication
+import io.ktor.server.auth.authenticate
+import io.ktor.server.auth.jwt.JWTPrincipal
+import io.ktor.server.auth.jwt.jwt
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.contentnegotiation.*
@@ -97,25 +103,43 @@ internal class Fakes(val azureTokenGen: AzureTokenGen) : AutoCloseable {
                 call.respond(status = HttpStatusCode.InternalServerError, message = ErrorRespons(cause.message))
             }
         }
+        install(Authentication) {
+            jwt {
+                verifier(
+                    JWT
+                        .require(Algorithm.RSA256(PRIVATE_TEST_RSA_KEY.toRSAPublicKey()))
+                        .withAudience(azureTokenGen.audience)
+                        .withIssuer(azureTokenGen.issuer)
+                        .build()
+                )
+                validate { credential -> JWTPrincipal(credential.payload) }
+            }
+        }
         routing {
-            post("/tilgang/sak") {
-                val req = call.receive<SakTilgangRequest>()
-                sistMottattSakTilgangRequest = req
-                call.respond(TilgangResponse(tilgangTilSak[req.saksnummer] == true))
-            }
-            post("/tilgang/behandling") {
-                val req = call.receive<BehandlingTilgangRequest>()
-                call.respond(TilgangResponse(tilgangTilBehandling[req.behandlingsreferanse] == true,
-                    tilgangTilBehandlingIKontekst[req.behandlingsreferanse]
-                ))
-            }
-            post("/tilgang/journalpost") {
-                val req = call.receive<JournalpostTilgangRequest>()
-                call.respond(TilgangResponse(tilgangTilJournalpost[req.journalpostId] == true))
-            }
-            post("tilgang/person") {
-                val req = call.receive<PersonTilgangRequest>()
-                call.respond(TilgangResponse(tilgangTilPerson[req.personIdent] == true))
+            authenticate {
+
+                post("/tilgang/sak") {
+                    val req = call.receive<SakTilgangRequest>()
+                    sistMottattSakTilgangRequest = req
+                    call.respond(TilgangResponse(tilgangTilSak[req.saksnummer] == true))
+                }
+                post("/tilgang/behandling") {
+                    val req = call.receive<BehandlingTilgangRequest>()
+                    call.respond(
+                        TilgangResponse(
+                            tilgangTilBehandling[req.behandlingsreferanse] == true,
+                            tilgangTilBehandlingIKontekst[req.behandlingsreferanse]
+                        )
+                    )
+                }
+                post("/tilgang/journalpost") {
+                    val req = call.receive<JournalpostTilgangRequest>()
+                    call.respond(TilgangResponse(tilgangTilJournalpost[req.journalpostId] == true))
+                }
+                post("tilgang/person") {
+                    val req = call.receive<PersonTilgangRequest>()
+                    call.respond(TilgangResponse(tilgangTilPerson[req.personIdent] == true))
+                }
             }
         }
     }
@@ -152,12 +176,11 @@ internal data class TestToken(
     val expires_in: Int = 3599,
 )
 
-internal class AzureTokenGen(private val issuer: String, private val audience: String) {
-    private val rsaKey: RSAKey = JWKSet.parse(AZURE_JWKS).getKeyByKeyId("localhost-signer") as RSAKey
+internal class AzureTokenGen(val issuer: String, val audience: String) {
 
     private fun signed(claims: JWTClaimsSet): SignedJWT {
-        val header = JWSHeader.Builder(JWSAlgorithm.RS256).keyID(rsaKey.keyID).type(JOSEObjectType.JWT).build()
-        val signer = RSASSASigner(rsaKey.toPrivateKey())
+        val header = JWSHeader.Builder(JWSAlgorithm.RS256).keyID(PRIVATE_TEST_RSA_KEY.keyID).type(JOSEObjectType.JWT).build()
+        val signer = RSASSASigner(PRIVATE_TEST_RSA_KEY.toPrivateKey())
         val signedJWT = SignedJWT(header, claims)
         signedJWT.sign(signer)
         return signedJWT
@@ -207,5 +230,8 @@ internal const val AZURE_JWKS: String = """{
     }
   ]
 }"""
+
+private val PRIVATE_TEST_RSA_KEY: RSAKey = JWKSet.parse(AZURE_JWKS).getKeyByKeyId("localhost-signer") as RSAKey
+
 
 data class ErrorRespons(val message: String?)
