@@ -9,6 +9,7 @@ import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.RelevanteIdenter
 import no.nav.aap.tilgang.Rolle
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import tilgang.AzureTokenGen
@@ -122,6 +123,28 @@ class RegelServiceTest {
         )
         Assertions.assertTrue(svar[Operasjon.SE] == true)
         Assertions.assertTrue(svar[Operasjon.SAKSBEHANDLE] == false)
+        Assertions.assertTrue(svar[Operasjon.DRIFTE] == false)
+        Assertions.assertTrue(svar[Operasjon.DELEGERE] == false)
+    }
+
+    @Test
+    fun `skal returnere false på saksbehandle dersom det ikke finnes noe avklaringsbehov å vurdere `(){
+
+        val svar = regelService.vurderTilgang(
+            RegelInput(
+                callId = UUID.randomUUID().toString(),
+                ansattIdent = "123",
+                avklaringsbehovFraBehandlingsflyt = null,
+                avklaringsbehovFraPostmottak = null,
+                currentToken = OidcToken(token),
+                søkerIdenter = RelevanteIdenter(søker = listOf("123"), barn = listOf()),
+                operasjoner = Operasjon.entries,
+                påkrevdRolle = emptyList(),
+                roller = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
+            )
+        )
+        Assertions.assertTrue(svar[Operasjon.SAKSBEHANDLE] == false)
+        Assertions.assertTrue(svar[Operasjon.SE] == true)
         Assertions.assertTrue(svar[Operasjon.DRIFTE] == false)
         Assertions.assertTrue(svar[Operasjon.DELEGERE] == false)
     }

@@ -94,8 +94,6 @@ class AvklaringsbehovRolleRegelTest {
             påkrevdRolle = emptyList(),
             roller = listOf(Rolle.BESLUTTER)
         )
-        assertThrows<IllegalArgumentException> {
-            AvklaringsbehovRolleRegel.vurder(input)
-        }
+        assertFalse(AvklaringsbehovRolleRegel.vurder(input))
     }
 }

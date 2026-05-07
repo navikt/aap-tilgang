@@ -22,7 +22,12 @@ data object AvklaringsbehovRolleRegel : Regel<AvklaringsbehovRolleInput> {
             sjekker.add(input.påkrevdRolle.any { it in input.roller })
         }
 
-        require(sjekker.isNotEmpty()) { "Avklaringsbehov eller påkrevd rolle må være satt" }
+        /**
+         * Dette kan skje dersom det kun sjekkes på lesetilgang og det ikke finnes noe å saksbehandle
+         */
+        if (sjekker.isEmpty()) {
+            return false
+        }
 
         return sjekker.all { it }
     }
