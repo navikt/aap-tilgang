@@ -26,7 +26,6 @@ data class BehandlingTilgangRequest(
      * Dersom feltet ikke er satt, hentes identer automatisk basert på behandlingsreferansen
      */
     val relevanteIdenter: RelevanteIdenter? = null,
-    @Deprecated("Ikke i bruk - sjekker alle operasjoner for BehandlingTilgangRequest, så dette feltet er unødvendig")
     val operasjonerIKontekst: List<Operasjon> = emptyList(),
 ) : TilgangRequest
 
