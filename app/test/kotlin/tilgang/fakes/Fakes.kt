@@ -8,7 +8,6 @@ import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.runBlocking
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -16,10 +15,14 @@ import org.slf4j.LoggerFactory
 object Fakes : AutoCloseable {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
 
-    private val azure by lazy { embeddedServer(Netty, port = AzurePortHolder.getPort(), module = { azureFake() }) }
     private val texas by lazy { embeddedServer(Netty, port = 0, module = { texasFake() }) }
     private val pdl by lazy { embeddedServer(Netty, port = 0, module = { pdlFake() }) }
     private val tilgangsmaskin by lazy { embeddedServer(Netty, port = 0, module = { tilgangsmaskinFake() }) }
+    private val saf by lazy { embeddedServer(Netty, port = 0, module = { safFake() }) }
+    private val nom by lazy { embeddedServer(Netty, port = 0, module = { nomFake() }) }
+    private val skjerming by lazy { embeddedServer(Netty, port = 0, module = { skjermingFake() }) }
+    private val behandlingsflyt by lazy { embeddedServer(Netty, port = 0, module = { behandlingsflytFake() }) }
+    private val msGraph by lazy { embeddedServer(Netty, port = 0, module = { msGraphFake() }) }
     private val redis = RedisTestServer()
     private val meterRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
 
@@ -30,10 +33,14 @@ object Fakes : AutoCloseable {
             return
         }
 
-        azure.start()
         texas.start()
         pdl.start()
         tilgangsmaskin.start()
+        saf.start()
+        nom.start()
+        skjerming.start()
+        behandlingsflyt.start()
+        msGraph.start()
         redis.start()
 
         setProperties()
@@ -44,10 +51,14 @@ object Fakes : AutoCloseable {
             return
         }
 
-        azure.stop()
         texas.stop()
         pdl.stop()
         tilgangsmaskin.stop()
+        saf.stop()
+        nom.stop()
+        skjerming.stop()
+        behandlingsflyt.stop()
+        msGraph.stop()
         redis.close()
     }
 
@@ -62,13 +73,6 @@ object Fakes : AutoCloseable {
 
         Runtime.getRuntime().addShutdownHook(Thread { close() })
 
-        // Azure
-        System.setProperty("azure.openid.config.token.endpoint", "http://localhost:${azure.port()}/token")
-        System.setProperty("azure.app.client.id", "tilgang")
-        System.setProperty("azure.app.client.secret", "")
-        System.setProperty("azure.openid.config.jwks.uri", "http://localhost:${azure.port()}/jwks")
-        System.setProperty("azure.openid.config.issuer", "tilgang")
-
         // Texas
         System.setProperty("nais.token.endpoint", "http://localhost:${texas.port()}/token")
         System.setProperty("nais.token.exchange.endpoint", "http://localhost:${texas.port()}/token/exchange")
@@ -82,17 +86,25 @@ object Fakes : AutoCloseable {
         System.setProperty("integrasjon.tilgangsmaskin.url", "http://localhost:${tilgangsmaskin.port()}/api/v1/kjerne")
         System.setProperty("integrasjon.tilgangsmaskin.scope", "tilgangsmaskin")
 
-        // TODO: Lag fakes for disse
-        System.setProperty("saf.base.url", "test")
+        // SAF
+        System.setProperty("saf.base.url", "http://localhost:${saf.port()}/graphql")
         System.setProperty("saf.scope", "saf")
+
+        // NOM
+        System.setProperty("nom.base.url", "http://localhost:${nom.port()}/graphql")
         System.setProperty("nom.scope", "nom")
-        System.setProperty("nom.base.url", "test")
+
+        // Skjerming
+        System.setProperty("skjerming.base.url", "http://localhost:${skjerming.port()}")
         System.setProperty("skjerming.scope", "skjerming")
-        System.setProperty("skjerming.base.url", "test")
+
+        // Behandlingsflyt
+        System.setProperty("behandlingsflyt.base.url", "http://localhost:${behandlingsflyt.port()}")
         System.setProperty("behandlingsflyt.scope", "behandlingsflyt")
-        System.setProperty("behandlingsflyt.base.url", "test")
+
+        // MS Graph
+        System.setProperty("ms.graph.base.url", "http://localhost:${msGraph.port()}/")
         System.setProperty("ms.graph.scope", "msgraph")
-        System.setProperty("ms.graph.base.url", "test")
 
         // Dummy-verdier
         System.setProperty("skjermede.personer.ad", UUID.randomUUID().toString())
@@ -105,16 +117,4 @@ private fun EmbeddedServer<*, *>.port(): Int {
     return runBlocking { this@port.engine.resolvedConnectors() }
         .first { it.type == ConnectorType.HTTP }
         .port
-}
-
-object AzurePortHolder {
-    private val azurePort = AtomicInteger(0)
-
-    fun setPort(port: Int) {
-        azurePort.set(port)
-    }
-
-    fun getPort(): Int {
-        return azurePort.get()
-    }
 }

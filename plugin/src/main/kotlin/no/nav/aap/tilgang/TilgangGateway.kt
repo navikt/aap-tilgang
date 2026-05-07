@@ -8,11 +8,11 @@ import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
-import io.ktor.http.headers
 import io.ktor.serialization.jackson.jackson
 import io.micrometer.core.instrument.binder.cache.CaffeineCacheMetrics
 import java.net.URI
@@ -111,16 +111,15 @@ object TilgangGateway {
             setBody(buildMap{
                 put("identity_provider", "entra_id")
                 put("target", tilgangScope)
-                if (!currentToken.isClientCredentials()) {
-                    put("user_token", currentToken.token())
-                }
+                put("user_token", currentToken.token())
             })
         }.body<Map<String, String>>()["access_token"]
+        requireNotNull(newToken) {
+            "mottok ikke user_token fra texas"
+        }
 
         return client.post(url) {
-            headers {
-                append("authorization", "Bearer $newToken")
-            }
+            bearerAuth(newToken)
             contentType(ContentType.Application.Json)
             setBody(request)
         }.body()
