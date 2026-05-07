@@ -2,12 +2,14 @@ package tilgang.fakes
 
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import io.ktor.serialization.jackson.*
-import io.ktor.server.application.*
-import io.ktor.server.plugins.contentnegotiation.*
-import io.ktor.server.request.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
+import io.ktor.serialization.jackson.jackson
+import io.ktor.server.application.Application
+import io.ktor.server.application.install
+import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.server.request.receive
+import io.ktor.server.response.respondText
+import io.ktor.server.routing.post
+import io.ktor.server.routing.routing
 
 fun Application.pdlFake() {
     install(ContentNegotiation) {
@@ -87,7 +89,9 @@ private fun genererHentAdressebeskytelseOgGeotilknytning(): String {
             {
               "data": {
                 "hentPerson": {
-                  "adressebeskyttelse": ["UGRADERT"]
+                  "adressebeskyttelse": [
+                    { "gradering": "UGRADERT" }
+                  ]
                 },
                 "hentGeografiskTilknytning": {
                   "gtType": "KOMMUNE",

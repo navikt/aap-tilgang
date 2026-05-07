@@ -1,0 +1,34 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="TestApp" type="KtorApplicationConfigurationType" factoryName="Ktor">
+    <envs>
+      <env name="NAIS_CLUSTER_NAME" value="LOCAL" />
+      <env name="AAP_BESLUTTER" value="f0f6cad5-e3c0-4308-99a2-3630ac60174a" />
+      <env name="AAP_DRIFT" value="bc89623f-4624-4978-ac54-acd048c0f2a5" />
+      <env name="AAP_KVALITETSSIKRER" value="c3e18aef-a7ac-49df-806e-4fe58b81460d" />
+      <env name="AAP_LES" value="96e18023-db50-45f7-b023-3251279df28d" />
+      <env name="AAP_PRODUKSJONSSTYRING" value="c75883f9-4cb2-42c7-b75c-3f0f29ee3ead" />
+      <env name="AAP_SAKSBEHANDLER_NASJONAL" value="3377dc51-ca61-4e36-b812-21b5fc34474f" />
+      <env name="AAP_SAKSBEHANDLER_OPPFOLGING" value="33e00155-169b-41e5-8a3f-5582ed975a15" />
+    </envs>
+    <option name="MAIN_CLASS_NAME" value="tilgang.TestAppKt" />
+    <module name="tilgang.app.test" />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="tilgang.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <option name="alternativeJrePath" />
+    <option name="alternativeJrePathEnabled" value="false" />
+    <option name="includeProvidedScope" value="false" />
+    <option name="mainClass" value="tilgang.TestAppKt" />
+    <option name="passParentEnvs" value="true" />
+    <option name="programParameters" value="" />
+    <option name="shortenCommandLine" />
+    <option name="vmParameters" />
+    <option name="workingDirectory" value="$PROJECT_DIR$" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
