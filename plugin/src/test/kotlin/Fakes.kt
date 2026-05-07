@@ -44,7 +44,7 @@ internal class Fakes(val azureTokenGen: AzureTokenGen) : AutoCloseable {
         }
         install(StatusPages) {
             exception<Throwable> { call, cause ->
-                this@texasFake.log.info("AZURE :: Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
+                this@texasFake.log.info("TEXAS :: Ukjent feil ved kall til '{}'", call.request.local.uri, cause)
                 call.respond(status = HttpStatusCode.InternalServerError, message = ErrorRespons(cause.message))
             }
         }

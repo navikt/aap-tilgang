@@ -3,12 +3,14 @@ package tilgang.fakes
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import io.ktor.http.HttpStatusCode
-import io.ktor.serialization.jackson.*
-import io.ktor.server.application.*
-import io.ktor.server.plugins.contentnegotiation.*
-import io.ktor.server.request.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
+import io.ktor.serialization.jackson.jackson
+import io.ktor.server.application.Application
+import io.ktor.server.application.install
+import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.server.request.receive
+import io.ktor.server.response.respond
+import io.ktor.server.routing.post
+import io.ktor.server.routing.routing
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinAvvistResponse
 
 fun Application.tilgangsmaskinFake() {
@@ -35,7 +37,7 @@ fun Application.tilgangsmaskinFake() {
                 )
                 call.respond(HttpStatusCode.Forbidden, body)
             } else {
-                throw NotImplementedError("Mangler implementasjon")
+                call.respond(HttpStatusCode.Accepted, "{}") // For lokal kjøring
             }
         }
 

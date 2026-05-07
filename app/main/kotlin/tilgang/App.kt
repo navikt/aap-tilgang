@@ -20,8 +20,6 @@ import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import java.net.http.HttpTimeoutException
 import kotlin.time.Duration.Companion.seconds
-import no.nav.aap.komponenter.config.configForKey
-import no.nav.aap.komponenter.server.AZURE
 import no.nav.aap.komponenter.server.auth.IdentityProvider
 import no.nav.aap.komponenter.server.commonKtorModule
 import org.slf4j.Logger
