@@ -18,5 +18,3 @@ class RegelInput (
     val påkrevdRolle: List<Rolle> = emptyList(),
     val operasjoner: List<Operasjon>,
 )
-
-// TODO: Oppdater til nytt identer-objekt

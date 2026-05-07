@@ -76,7 +76,7 @@ class TilgangService(
             avklaringsbehovFraBehandlingsflyt = avklaringsbehov,
             avklaringsbehovFraPostmottak = null,
             påkrevdRolle = req.påkrevdRolle ?: emptyList(),
-            operasjoner = (req.operasjonerIKontekst + req.operasjon).toSet().toList()
+            operasjoner = Operasjon.entries
         )
         return regelService.vurderTilgang(regelInput)
     }
