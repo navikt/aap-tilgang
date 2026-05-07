@@ -16,40 +16,51 @@ class RegelService(
     adressebeskyttelseService: AdressebeskyttelseService,
     tilgangsmaskinGateway: TilgangsmaskinGateway
 ) {
-    private val reglerForOperasjon = mapOf(
+
+    private val regelOpppsett = mapOf(
         Operasjon.SE to listOf(
-            RegelMedInputgenerator(LeseRolleRegel, RolleInputGenerator),
-            RegelMedInputgenerator(TilgangsmaskinKjerneRegel, TilgangsmaskinKjerneInputGenerator(tilgangsmaskinGateway)),
-            RegelMedInputgenerator(AdressebeskyttelseRegel, AdressebeskyttelseInputGenerator(pdlGateway, adressebeskyttelseService)),
-            RegelMedInputgenerator(GeoRegel, GeoInputGenerator(geoService, pdlGateway)),
-            RegelMedInputgenerator(EgenAnsattRegel, EgenAnsattInputGenerator(skjermetGateway, skjermingService))
+            LeseRolleRegel,
+            TilgangsmaskinKjerneRegel,
+            AdressebeskyttelseRegel,
+            GeoRegel,
+            EgenAnsattRegel,
         ),
         Operasjon.DRIFTE to listOf(
-            RegelMedInputgenerator(DriftRolleRegel, RolleInputGenerator),
-            RegelMedInputgenerator(TilgangsmaskinKjerneRegel, TilgangsmaskinKjerneInputGenerator(tilgangsmaskinGateway))
+            DriftRolleRegel,
+            TilgangsmaskinKjerneRegel,
         ),
         Operasjon.DELEGERE to listOf(
-            RegelMedInputgenerator(AvdelingslederRolleRegel, RolleInputGenerator),
+            AvdelingslederRolleRegel,
         ),
         Operasjon.SAKSBEHANDLE to listOf(
-            RegelMedInputgenerator(AvklaringsbehovRolleRegel, AvklaringsbehovInputGenerator),
-            RegelMedInputgenerator(TilgangsmaskinKjerneRegel, TilgangsmaskinKjerneInputGenerator(tilgangsmaskinGateway)),
-            RegelMedInputgenerator(AdressebeskyttelseRegel, AdressebeskyttelseInputGenerator(pdlGateway, adressebeskyttelseService)),
-            RegelMedInputgenerator(GeoRegel, GeoInputGenerator(geoService, pdlGateway)),
-            RegelMedInputgenerator(EgenAnsattRegel, EgenAnsattInputGenerator(skjermetGateway, skjermingService))
+            AvklaringsbehovRolleRegel,
+            TilgangsmaskinKjerneRegel,
+            AdressebeskyttelseRegel,
+            GeoRegel,
+            EgenAnsattRegel,
         )
     )
+    private val regelMedVurdering = mapOf<Regel<*>, RegelMedInputgenerator<*>>(
+        LeseRolleRegel to RegelMedInputgenerator(LeseRolleRegel, RolleInputGenerator),
+        TilgangsmaskinKjerneRegel to RegelMedInputgenerator(TilgangsmaskinKjerneRegel, TilgangsmaskinKjerneInputGenerator(tilgangsmaskinGateway)),
+        AdressebeskyttelseRegel to RegelMedInputgenerator(AdressebeskyttelseRegel, AdressebeskyttelseInputGenerator(pdlGateway, adressebeskyttelseService)),
+        GeoRegel to RegelMedInputgenerator(GeoRegel, GeoInputGenerator(geoService, pdlGateway)),
+        EgenAnsattRegel to RegelMedInputgenerator(EgenAnsattRegel, EgenAnsattInputGenerator(skjermetGateway, skjermingService)),
+        DriftRolleRegel to RegelMedInputgenerator(DriftRolleRegel, RolleInputGenerator),
+        AvdelingslederRolleRegel to RegelMedInputgenerator(AvdelingslederRolleRegel, RolleInputGenerator),
+        AvklaringsbehovRolleRegel to RegelMedInputgenerator(AvklaringsbehovRolleRegel, AvklaringsbehovInputGenerator),
+    )
 
-    fun vurderTilgang(
-        input: RegelInput
-    ): Map<Operasjon, Boolean> {
-        val tilgangsMap = mutableMapOf<Operasjon, Boolean>()
-        input.operasjoner.forEach { operasjon ->
-            val harTilgangForRolle = this.reglerForOperasjon[operasjon]!!.all {
-                it.vurder(input)
-            }
-            tilgangsMap[operasjon] = harTilgangForRolle
+    fun vurderTilgang(input: RegelInput): Map<Operasjon, Boolean> {
+        val aktuelleOperasjoner = regelOpppsett.filterKeys { it in input.operasjoner }
+
+        val regelResultater: Map<Regel<*>, Boolean> = aktuelleOperasjoner.values
+            .flatten()
+            .toSet()
+            .associateWith { regel -> (regelMedVurdering[regel]?.vurder(input) ?: error("Fant ikke vurdering for regel $regel")) }
+
+        return aktuelleOperasjoner.mapValues { (_, regler) ->
+            regler.all { regelResultater[it] == true }
         }
-        return tilgangsMap
     }
 }
