@@ -52,7 +52,9 @@ object TilgangGateway {
         expectSuccess = true
         install(HttpRequestRetry)
         install(HttpTimeout) {
-            requestTimeoutMillis = 1.seconds.inWholeMilliseconds
+            socketTimeoutMillis = 1.seconds.inWholeMilliseconds
+            connectTimeoutMillis = 1.seconds.inWholeMilliseconds
+            requestTimeoutMillis = 5.seconds.inWholeMilliseconds
         }
         install(ContentNegotiation) {
             jackson()
