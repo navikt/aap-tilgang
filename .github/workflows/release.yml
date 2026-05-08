@@ -1,4 +1,4 @@
-name: release
+name: Bygg, deploy og publiser plugin
 
 on:
   workflow_dispatch:
@@ -10,6 +10,7 @@ on:
         type: choice
         options:
           - dev-gcp
+          - prod-gcp
   push:
     branches: [ main ]
     paths-ignore:
@@ -17,8 +18,6 @@ on:
 
 jobs:
   gradle:
-    ## push til main eller etter branch (e.g. dependabot) er merget
-    if: github.event.pull_request.merged || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     permissions:
       contents: write
       actions: read
@@ -78,8 +77,6 @@ jobs:
             ${{ steps.notes.outputs.CHANGELOG }}
 
   dev:
-    ## push til main eller etter branch (e.g. dependabot) er merget
-    if: github.event.pull_request.merged || github.event_name == 'push' || github.event.inputs.cluster == 'dev-gcp'
     permissions:
       contents: read
       id-token: write
@@ -94,8 +91,7 @@ jobs:
 
   prod:
     needs: [ publiser-plugin, dev ]
-    ## push til main eller etter branch (e.g. dependabot) er merget inn på main
-    if: github.ref == 'refs/heads/main' && (github.event.pull_request.merged || github.event_name == 'push' || github.event.inputs.cluster == 'dev-gcp')
+    if: github.ref == 'refs/heads/main' || github.event.inputs.cluster == 'prod-gcp'
     permissions:
       contents: read
       id-token: write
