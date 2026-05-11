@@ -2,11 +2,11 @@ package no.nav.aap.tilgang
 
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
-import io.micrometer.core.instrument.MeterRegistry
-import io.ktor.client.*
+import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO
-import io.ktor.client.plugins.*
+import io.ktor.client.plugins.HttpRequestRetry
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.post
@@ -14,6 +14,7 @@ import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.serialization.jackson.jackson
+import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.binder.cache.CaffeineCacheMetrics
 import java.net.URI
 import java.time.Duration
@@ -27,13 +28,13 @@ object TilgangGateway {
     private val tilgangScope = requiredConfigForKey("integrasjon.tilgang.scope")
     private val texasUrl = requiredConfigForKey("nais.token.exchange.endpoint")
 
-    private val tilgangGatewayBehandlingCache = Caffeine.newBuilder()
+    private var tilgangGatewayBehandlingCache = Caffeine.newBuilder()
         .maximumSize(2_000)
         .expireAfterWrite(Duration.ofMinutes(30))
         .recordStats()
         .build<BehandlingTilgangRequestMedNavIdent, TilgangResponse>()
 
-    private val tilgangGatewaySakCache = Caffeine.newBuilder()
+    private var tilgangGatewaySakCache = Caffeine.newBuilder()
         .maximumSize(2_000)
         .expireAfterWrite(Duration.ofMinutes(30))
         .recordStats()
@@ -110,7 +111,7 @@ object TilgangGateway {
     ): TilgangResponse {
         val newToken = client.post(texasUrl) {
             contentType(ContentType.Application.Json)
-            setBody(buildMap{
+            setBody(buildMap {
                 put("identity_provider", "entra_id")
                 put("target", tilgangScope)
                 put("user_token", currentToken.token())
@@ -125,6 +126,19 @@ object TilgangGateway {
             contentType(ContentType.Application.Json)
             setBody(request)
         }.body()
+    }
+
+    /** Noen unit-tester i andre apper tester overganger hvor bruker
+     * mister eller får tilganger.
+     */
+    fun disableCaching() {
+        tilgangGatewayBehandlingCache = Caffeine.newBuilder()
+            .maximumSize(0)
+            .build()
+
+        tilgangGatewaySakCache = Caffeine.newBuilder()
+            .maximumSize(0)
+            .build()
     }
 }
 
