@@ -28,6 +28,7 @@ jobs:
 
   publiser-plugin:
     needs: gradle
+    if: github.ref == 'refs/heads/main'
     concurrency: kontrakt
     permissions:
       contents: write
