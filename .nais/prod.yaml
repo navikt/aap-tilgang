@@ -1,5 +1,6 @@
 isdev: 0
-minreplicas: 4
+minReplicas: 2
+maxReplicas: 4
 roles:
   - name: AAP_BESLUTTER
     ad: 0000-GA-AAP_BESLUTTER
