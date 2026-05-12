@@ -12,7 +12,7 @@ data object EgenSakRegel : Regel<EgenSakInput> {
 }
 
 class EgenSakInputGenerator(private val nomGateway: INomGateway) : InputGenerator<EgenSakInput> {
-    override fun generer(input: RegelInput): EgenSakInput {
+    override suspend fun generer(input: RegelInput): EgenSakInput {
         val søkerIdent = input.søkerIdenter.søker.first()
         val navIdentFraNOM = nomGateway.personNummerTilNavIdent(søkerIdent, input.callId)
         return EgenSakInput(input.ansattIdent, navIdentFraNOM)

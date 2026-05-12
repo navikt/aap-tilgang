@@ -2,6 +2,7 @@ package tilgang
 
 import com.nimbusds.jwt.SignedJWT
 import io.ktor.client.HttpClient
+import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.statement.bodyAsText
@@ -53,7 +54,8 @@ class TilgangApiTest {
                     Config(
                         roles = alleRoller,
                         redis = Fakes.getRedisConfig(),
-                    )
+                    ),
+                    redis = Fakes.getRedisServer()
                 )
             }
 
@@ -71,7 +73,7 @@ class TilgangApiTest {
         jwt: SignedJWT,
         path: String,
     ) = client.get(path) {
-        header("Authorization", "Bearer ${jwt.serialize()}")
+        bearerAuth(jwt.serialize())
         header("X-callid", UUID.randomUUID().toString())
         contentType(ContentType.Application.Json)
     }

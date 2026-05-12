@@ -1,6 +1,7 @@
 package tilgang.fakes
 
 import com.redis.testcontainers.RedisContainer
+import kotlinx.coroutines.runBlocking
 import java.net.URI
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.time.Duration.Companion.milliseconds
@@ -15,7 +16,7 @@ internal class RedisTestServer : AutoCloseable {
     private val uri: URI
         get() = URI(redisContainer.redisURI)
 
-    internal val server: Redis by lazy { Redis(uri) }
+    internal val server: Redis by lazy { Redis.from(uri) }
 
     fun start() {
         if (!started.compareAndSet(false, true)) return
@@ -25,7 +26,7 @@ internal class RedisTestServer : AutoCloseable {
         val timeout = System.currentTimeMillis() + 10.seconds.inWholeMilliseconds
         while (System.currentTimeMillis() < timeout) {
             try {
-                server.ready()
+                runBlocking { server.ready() }
                 break
             } catch (_: Throwable) {
                 Thread.sleep(500.milliseconds.inWholeMilliseconds)

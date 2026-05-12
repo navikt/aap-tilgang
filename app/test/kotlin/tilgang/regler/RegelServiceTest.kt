@@ -3,6 +3,7 @@ package tilgang.regler
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import java.util.UUID
+import kotlinx.coroutines.test.runTest
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.tilgang.Operasjon
@@ -36,8 +37,7 @@ class RegelServiceTest {
 
     @ParameterizedTest
     @EnumSource(value = Definisjon::class, names = [ "BESTILL_BREV" ], mode = EnumSource.Mode.EXCLUDE)
-    fun `skal alltid gi false når roller er tom array`(avklaringsbehov: Definisjon) {
-
+    fun `skal alltid gi false når roller er tom array`(avklaringsbehov: Definisjon) = runTest {
             val svar = regelService.vurderTilgang(
                 RegelInput(
                     callId = UUID.randomUUID().toString(),
@@ -56,8 +56,7 @@ class RegelServiceTest {
 
     @ParameterizedTest
     @EnumSource(value = Definisjon::class, names = [ "BESTILL_BREV" ], mode = EnumSource.Mode.EXCLUDE)
-    fun `skal gi tilgang til operasjoner for NAY-steg som saksbehandler nasjonal`(avklaringsbehov: Definisjon) {
-
+    fun `skal gi tilgang til operasjoner for NAY-steg som saksbehandler nasjonal`(avklaringsbehov: Definisjon) = runTest {
         val svar = regelService.vurderTilgang(
             RegelInput(
                 callId = UUID.randomUUID().toString(),
@@ -82,7 +81,7 @@ class RegelServiceTest {
 
     @ParameterizedTest
     @EnumSource(value = Definisjon::class, names = [ "BESTILL_BREV" ], mode = EnumSource.Mode.EXCLUDE)
-    fun `skal gi tilgang til drift, men ikke noe annet for driftsrolleinnehavere`(avklaringsbehov: Definisjon) {
+    fun `skal gi tilgang til drift, men ikke noe annet for driftsrolleinnehavere`(avklaringsbehov: Definisjon) = runTest {
 
         val svar = regelService.vurderTilgang(
             RegelInput(
@@ -106,7 +105,7 @@ class RegelServiceTest {
 
     @ParameterizedTest
     @EnumSource(value = Definisjon::class, names = [ "BESTILL_BREV" ], mode = EnumSource.Mode.EXCLUDE)
-    fun `skal kun gi tilgang til å se for leserolle`(avklaringsbehov: Definisjon) {
+    fun `skal kun gi tilgang til å se for leserolle`(avklaringsbehov: Definisjon) = runTest {
 
         val svar = regelService.vurderTilgang(
             RegelInput(
@@ -128,7 +127,7 @@ class RegelServiceTest {
     }
 
     @Test
-    fun `skal returnere false på saksbehandle dersom det ikke finnes noe avklaringsbehov å vurdere `(){
+    fun `skal returnere false på saksbehandle dersom det ikke finnes noe avklaringsbehov å vurdere `() = runTest{
 
         val svar = regelService.vurderTilgang(
             RegelInput(
@@ -150,7 +149,7 @@ class RegelServiceTest {
     }
 
     val graphGateway = object : IMsGraphGateway {
-        override fun hentAdGrupper(currentToken: OidcToken, ident: String): MemberOf {
+        override suspend fun hentAdGrupper(currentToken: OidcToken, ident: String): MemberOf {
             return MemberOf(
                 groups = listOf(
                     Group(
@@ -166,7 +165,7 @@ class RegelServiceTest {
     val prometheus = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
 
     val pdlService = object : IPdlGraphQLGateway {
-        override fun hentPersonBolk(
+        override suspend fun hentPersonBolk(
             personidenter: List<String>,
             callId: String,
         ): List<PersonResultat> {
@@ -179,7 +178,7 @@ class RegelServiceTest {
             }
         }
 
-        override fun hentGeografiskTilknytning(
+        override suspend fun hentGeografiskTilknytning(
             ident: String,
             callId: String,
         ): HentGeografiskTilknytningResult {
@@ -191,11 +190,7 @@ class RegelServiceTest {
             )
         }
     }
-    val skjermingGateway = object : SkjermingGateway(redis, prometheus) {
-        override fun isSkjermet(identer: RelevanteIdenter): Boolean {
-            return false
-        }
-    }
+    val skjermingGateway = object : SkjermingGateway(redis, Fakes.getHttpClient(), prometheus) {}
 
     val skjermingService = SkjermingService(graphGateway)
 
@@ -205,7 +200,7 @@ class RegelServiceTest {
         skjermingGateway,
         skjermingService,
         AdressebeskyttelseService(graphGateway),
-        TilgangsmaskinGateway(redis, prometheus)
+        TilgangsmaskinGateway(redis, Fakes.getHttpClient(), prometheus)
     )
 
     val token = AzureTokenGen("tilgangazure", "tilgang").generate()
