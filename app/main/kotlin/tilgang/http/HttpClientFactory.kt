@@ -1,5 +1,6 @@
 package tilgang.http
 
+import com.fasterxml.jackson.databind.DeserializationFeature
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.HttpRequestRetry
@@ -11,7 +12,7 @@ import kotlin.time.Duration
 fun createHttpClient(timeout: Duration) = HttpClient(CIO) {
     install(ContentNegotiation) {
         jackson {
-            configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
         }
     }
     install(HttpRequestRetry) {

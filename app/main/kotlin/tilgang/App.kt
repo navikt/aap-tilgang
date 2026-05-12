@@ -2,6 +2,7 @@ package tilgang
 
 import com.papsign.ktor.openapigen.model.info.InfoModel
 import com.papsign.ktor.openapigen.route.apiRouting
+import io.ktor.client.plugins.HttpRequestTimeoutException
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationStopPreparing
@@ -117,6 +118,7 @@ fun Application.api(
             prometheus.uhåndtertExceptionTeller(cause.javaClass.name).increment()
 
             when (cause) {
+                is HttpRequestTimeoutException,
                 is HttpTimeoutException -> {
                     LOGGER.warn("Timeout mot '{}'", call.request.local.uri, cause)
                     call.respondText("Timeout mot: '{}'", status = HttpStatusCode.RequestTimeout)
