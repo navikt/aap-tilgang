@@ -7,8 +7,9 @@ class GeoService(private val msGraphGateway: IMsGraphGateway) {
 
     suspend fun hentGeoRoller(currentToken: OidcToken, ident: String): List<GeoRolle> {
         return msGraphGateway.hentAdGrupper(currentToken, ident).groups
-            .filter { it.name.startsWith(GEO_GROUP_PREFIX) }
-            .map { parseGeoRolle(it.name) }
+            .mapNotNull { it.name }
+            .filter { it.startsWith(GEO_GROUP_PREFIX) }
+            .map { parseGeoRolle(it) }
     }
 
     private fun parseGeoRolle(rolleNavn: String): GeoRolle {
@@ -22,11 +23,11 @@ class GeoService(private val msGraphGateway: IMsGraphGateway) {
     }
 
     private fun parseKode(kode: String): GeoRolle {
-        if (kode.length == 4) {
-            return GeoRolle(GeoType.KOMMUNE, kode)
-        } else if (kode.length == 6) {
-            return GeoRolle(GeoType.BYDEL, kode)
-        } else error("Klarte ikke parse geokode")
+        return when (kode.length) {
+            4 -> GeoRolle(GeoType.KOMMUNE, kode)
+            6 -> GeoRolle(GeoType.BYDEL, kode)
+            else -> error("Klarte ikke parse geokode")
+        }
     }
 
     companion object {

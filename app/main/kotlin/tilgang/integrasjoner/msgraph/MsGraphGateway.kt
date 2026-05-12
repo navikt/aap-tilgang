@@ -63,5 +63,5 @@ data class Group(
     @param:JsonProperty("id")
     val id: UUID,
     @param:JsonProperty("mailNickname")
-    val name: String,
+    val name: String? = null,
 )
