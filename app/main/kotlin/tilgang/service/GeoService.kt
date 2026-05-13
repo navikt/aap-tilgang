@@ -26,7 +26,7 @@ class GeoService(private val msGraphGateway: IMsGraphGateway) {
         return when (kode.length) {
             4 -> GeoRolle(GeoType.KOMMUNE, kode)
             6 -> GeoRolle(GeoType.BYDEL, kode)
-            else -> error("Klarte ikke parse geokode")
+            else -> error("Klarte ikke parse geokode $kode")
         }
     }
 
