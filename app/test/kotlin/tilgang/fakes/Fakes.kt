@@ -80,42 +80,42 @@ object Fakes : AutoCloseable {
         Runtime.getRuntime().addShutdownHook(Thread { close() })
 
         // Texas
-        System.setProperty("nais.token.endpoint", "http://localhost:${texas.port()}/token")
-        System.setProperty("nais.token.exchange.endpoint", "http://localhost:${texas.port()}/token/exchange")
-        System.setProperty("nais.token.introspection.endpoint", "http://localhost:${texas.port()}/introspect")
+        System.setProperty("NAIS_TOKEN_ENDPOINT", "http://localhost:${texas.port()}/token")
+        System.setProperty("NAIS_TOKEN_EXCHANGE_ENDPOINT", "http://localhost:${texas.port()}/token/exchange")
+        System.setProperty("NAIS_TOKEN_INTROSPECTION_ENDPOINT", "http://localhost:${texas.port()}/introspect")
 
         // PDL
-        System.setProperty("pdl.base.url", "http://localhost:${pdl.port()}/graphql")
-        System.setProperty("pdl.scope", "pdl")
+        System.setProperty("PDL_BASE_URL", "http://localhost:${pdl.port()}/graphql")
+        System.setProperty("PDL_SCOPE", "pdl")
 
         // Tilgangsmaskinen
-        System.setProperty("integrasjon.tilgangsmaskin.url", "http://localhost:${tilgangsmaskin.port()}")
-        System.setProperty("integrasjon.tilgangsmaskin.scope", "tilgangsmaskin")
+        System.setProperty("INTEGRASJON_TILGANGSMASKIN_URL", "http://localhost:${tilgangsmaskin.port()}")
+        System.setProperty("INTEGRASJON_TILGANGSMASKIN_SCOPE", "tilgangsmaskin")
 
         // SAF
-        System.setProperty("saf.base.url", "http://localhost:${saf.port()}/graphql")
-        System.setProperty("saf.scope", "saf")
+        System.setProperty("SAF_BASE_URL", "http://localhost:${saf.port()}/graphql")
+        System.setProperty("SAF_SCOPE", "saf")
 
         // NOM
-        System.setProperty("nom.base.url", "http://localhost:${nom.port()}/graphql")
-        System.setProperty("nom.scope", "nom")
+        System.setProperty("NOM_BASE_URL", "http://localhost:${nom.port()}/graphql")
+        System.setProperty("NOM_SCOPE", "nom")
 
         // Skjerming
-        System.setProperty("skjerming.base.url", "http://localhost:${skjerming.port()}")
-        System.setProperty("skjerming.scope", "skjerming")
+        System.setProperty("SKJERMING_BASE_URL", "http://localhost:${skjerming.port()}")
+        System.setProperty("SKJERMING_SCOPE", "skjerming")
 
         // Behandlingsflyt
-        System.setProperty("behandlingsflyt.base.url", "http://localhost:${behandlingsflyt.port()}")
-        System.setProperty("behandlingsflyt.scope", "behandlingsflyt")
+        System.setProperty("BEHANDLINGSFLYT_BASE_URL", "http://localhost:${behandlingsflyt.port()}")
+        System.setProperty("BEHANDLINGSFLYT_SCOPE", "behandlingsflyt")
 
         // MS Graph
-        System.setProperty("ms.graph.base.url", "http://localhost:${msGraph.port()}/")
-        System.setProperty("ms.graph.scope", "msgraph")
+        System.setProperty("MS_GRAPH_BASE_URL", "http://localhost:${msGraph.port()}/")
+        System.setProperty("MS_GRAPH_SCOPE", "msgraph")
 
         // Dummy-verdier
-        System.setProperty("skjermede.personer.ad", UUID.randomUUID().toString())
-        System.setProperty("strengt.fortrolig.adresse.ad", UUID.randomUUID().toString())
-        System.setProperty("fortrolig.adresse.ad", UUID.randomUUID().toString())
+        System.setProperty("SKJERMEDE_PERSONER_AD", UUID.randomUUID().toString())
+        System.setProperty("STRENGT_FORTROLIG_ADRESSE_AD", UUID.randomUUID().toString())
+        System.setProperty("FORTROLIG_ADRESSE_AD", UUID.randomUUID().toString())
     }
 }
 

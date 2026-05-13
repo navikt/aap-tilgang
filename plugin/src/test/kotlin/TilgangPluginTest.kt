@@ -90,8 +90,8 @@ class TilgangPluginTest {
         expectSuccess = false
     }
 
-    private val texasExchangeUrl: String = System.getProperty("nais.token.exchange.endpoint")
-    private val texasTokenUrl: String = System.getProperty("nais.token.endpoint")
+    private val texasExchangeUrl: String = System.getProperty("NAIS_TOKEN_EXCHANGE_ENDPOINT")
+    private val texasTokenUrl: String = System.getProperty("NAIS_TOKEN_ENDPOINT")
 
     private suspend fun oboAccessToken(currentToken: OidcToken): String =
         httpClient.post(texasExchangeUrl) {
