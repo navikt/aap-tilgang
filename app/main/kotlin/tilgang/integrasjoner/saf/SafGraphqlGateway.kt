@@ -29,8 +29,8 @@ class SafGraphqlGateway(
 ) {
     private val log = LoggerFactory.getLogger(SafGraphqlGateway::class.java)
 
-    private val baseUrl = requiredConfigForKey("saf.base.url")
-    private val scope = requiredConfigForKey("saf.scope")
+    private val baseUrl = requiredConfigForKey("SAF_BASE_URL")
+    private val scope = requiredConfigForKey("SAF_SCOPE")
 
     companion object {
         private const val JOURNALPOST_PREFIX = "journalpost"

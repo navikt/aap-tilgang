@@ -10,8 +10,8 @@ import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 
 class TexasGateway(private val httpClient: HttpClient) : ITokenProvider {
-    private val texasTokenEndpoint by lazy { requiredConfigForKey("nais.token.endpoint") }
-    private val texasExchangeEndpoint by lazy { requiredConfigForKey("nais.token.exchange.endpoint") }
+    private val texasTokenEndpoint by lazy { requiredConfigForKey("NAIS_TOKEN_ENDPOINT") }
+    private val texasExchangeEndpoint by lazy { requiredConfigForKey("NAIS_TOKEN_EXCHANGE_ENDPOINT") }
 
     override suspend fun m2mToken(scope: String): String {
         return httpClient.post(texasTokenEndpoint) {

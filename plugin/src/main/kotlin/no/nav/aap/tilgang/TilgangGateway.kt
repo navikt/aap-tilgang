@@ -23,10 +23,10 @@ import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 
 object TilgangGateway {
-    private val baseUrl = URI.create(requiredConfigForKey("integrasjon.tilgang.url"))
+    private val baseUrl = URI.create(requiredConfigForKey("INTEGRASJON_TILGANG_URL"))
     private var prometheus: MeterRegistry? = null
-    private val tilgangScope = requiredConfigForKey("integrasjon.tilgang.scope")
-    private val texasUrl = requiredConfigForKey("nais.token.exchange.endpoint")
+    private val tilgangScope = requiredConfigForKey("INTEGRASJON_TILGANG_SCOPE")
+    private val texasUrl = requiredConfigForKey("NAIS_TOKEN_EXCHANGE_ENDPOINT")
 
     private var tilgangGatewayBehandlingCache = Caffeine.newBuilder()
         .maximumSize(2_000)

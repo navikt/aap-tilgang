@@ -30,8 +30,8 @@ class PdlGraphQLGateway(
     private val httpClient: HttpClient,
     private val prometheus: MeterRegistry,
 ) : IPdlGraphQLGateway {
-    private val baseUrl = requiredConfigForKey("pdl.base.url")
-    private val scope = requiredConfigForKey("pdl.scope")
+    private val baseUrl = requiredConfigForKey("PDL_BASE_URL")
+    private val scope = requiredConfigForKey("PDL_SCOPE")
 
     override suspend fun hentPersonBolk(personidenter: List<String>, callId: String): List<PersonResultat>? {
         val cachedById = personidenter.mapNotNull { ident ->

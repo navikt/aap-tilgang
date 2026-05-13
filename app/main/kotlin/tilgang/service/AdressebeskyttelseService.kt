@@ -17,6 +17,6 @@ class AdressebeskyttelseService(private val msGraphClient: IMsGraphGateway) {
 }
 
 enum class AdressebeskyttelseGruppe(val gruppeId: UUID) {
-    STRENGT_FORTROLIG_ADRESSE(UUID.fromString(requiredConfigForKey("strengt.fortrolig.adresse.ad"))), 
-    FORTROLIG_ADRESSE(UUID.fromString(requiredConfigForKey("fortrolig.adresse.ad")))
+    STRENGT_FORTROLIG_ADRESSE(UUID.fromString(requiredConfigForKey("STRENGT_FORTROLIG_ADRESSE_AD"))),
+    FORTROLIG_ADRESSE(UUID.fromString(requiredConfigForKey("FORTROLIG_ADRESSE_AD")))
 }

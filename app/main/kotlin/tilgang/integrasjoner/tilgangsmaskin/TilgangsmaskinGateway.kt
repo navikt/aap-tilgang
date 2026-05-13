@@ -45,12 +45,13 @@ class TilgangsmaskinGateway(
     private val prometheus: MeterRegistry,
     private val tokenProvider: ITokenProvider = TokenProvider,
 ) : ITilgangsmaskinGateway {
-    private val baseUrl = requiredConfigForKey("integrasjon.tilgangsmaskin.url")
+    private val baseUrl = requiredConfigForKey("INTEGRASJON_TILGANGSMASKIN_URL")
+    private val scope = requiredConfigForKey("INTEGRASJON_TILGANGSMASKIN_SCOPE")
 
     override suspend fun harTilgangTilPerson(brukerIdent: String, token: OidcToken): Boolean {
         return try {
             httpClient.post("$baseUrl/api/v1/komplett") {
-                bearerAuth(tokenProvider.oboToken(requiredConfigForKey("integrasjon.tilgangsmaskin.scope"), token))
+                bearerAuth(tokenProvider.oboToken(scope, token))
                 contentType(ContentType.Text.Plain)
                 setBody(brukerIdent)
             }
@@ -76,7 +77,7 @@ class TilgangsmaskinGateway(
 
         return try {
             httpClient.post("$baseUrl/api/v1/kjerne") {
-                bearerAuth(tokenProvider.oboToken(requiredConfigForKey("integrasjon.tilgangsmaskin.scope"), token))
+                bearerAuth(tokenProvider.oboToken(scope, token))
                 contentType(ContentType.Application.Json)
                 setBody(brukerIdent)
             }
@@ -101,7 +102,7 @@ class TilgangsmaskinGateway(
     override suspend fun harTilganger(brukerIdenter: List<BrukerOgRegeltype>, token: OidcToken): Boolean {
         return try {
             httpClient.post("$baseUrl/api/v1/bulk") {
-                bearerAuth(tokenProvider.oboToken(requiredConfigForKey("integrasjon.tilgangsmaskin.scope"), token))
+                bearerAuth(tokenProvider.oboToken(scope, token))
                 contentType(ContentType.Application.Json)
                 setBody(brukerIdenter)
             }

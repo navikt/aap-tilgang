@@ -6,7 +6,7 @@ import tilgang.integrasjoner.msgraph.IMsGraphGateway
 import java.util.*
 
 class SkjermingService(private val msGraphGateway: IMsGraphGateway) {
-    private val skjermedePersonerGruppeId = UUID.fromString(requiredConfigForKey("skjermede.personer.ad"))
+    private val skjermedePersonerGruppeId = UUID.fromString(requiredConfigForKey("SKJERMEDE_PERSONER_AD"))
 
     suspend fun harSkjermedePersonerRolle(
         currentToken: OidcToken, oboIdent: String

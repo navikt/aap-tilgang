@@ -23,8 +23,8 @@ open class SkjermingGateway(
     private val httpClient: HttpClient,
     private val prometheus: PrometheusMeterRegistry,
 ) {
-    private val baseUrl = requiredConfigForKey("skjerming.base.url")
-    private val scope = requiredConfigForKey("skjerming.scope")
+    private val baseUrl = requiredConfigForKey("SKJERMING_BASE_URL")
+    private val scope = requiredConfigForKey("SKJERMING_SCOPE")
 
     open suspend fun isSkjermet(identer: RelevanteIdenter): Boolean {
         redis[Key(SKJERMING_PREFIX, identer.søker.first())]?.let {

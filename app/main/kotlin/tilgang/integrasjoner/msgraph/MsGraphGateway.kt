@@ -28,7 +28,8 @@ class MsGraphGateway(
     private val prometheus: PrometheusMeterRegistry,
     private val tokenProvider: ITokenProvider = TokenProvider,
 ) : IMsGraphGateway {
-    private val baseUrl = requiredConfigForKey("ms.graph.base.url")
+    private val baseUrl = requiredConfigForKey("MS_GRAPH_BASE_URL")
+    private val scope = requiredConfigForKey("MS_GRAPH_SCOPE")
 
     override suspend fun hentAdGrupper(currentToken: OidcToken, ident: String): MemberOf {
         redis[Key(MSGRAPH_PREFIX, ident)]?.let {
@@ -39,7 +40,7 @@ class MsGraphGateway(
 
         val respons = try {
             httpClient.get("$baseUrl/me/memberOf?\$top=500&\$select=id,mailNickname") {
-                bearerAuth(tokenProvider.oboToken(requiredConfigForKey("ms.graph.scope"), currentToken))
+                bearerAuth(tokenProvider.oboToken(scope, currentToken))
             }.body<MemberOf>()
         } catch (e: Exception) {
             throw MsGraphException(e.message ?: "Ukjent feil mot msgraph")
