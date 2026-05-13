@@ -1,0 +1,137 @@
+apiVersion: nais.io/v1alpha1
+kind: Application
+metadata:
+  name: tilgang
+  namespace: aap
+  labels:
+    team: aap
+    sub: tilgang
+spec:
+  image: {{image}}
+  ingresses:
+    - https://aap-tilgang.intern.dev.nav.no
+  azure:
+    application:
+      enabled: true
+      allowAllUsers: true
+      claims:
+        extra:
+          - "NAVident"
+          - "azp_name"
+        groups:
+          - id: f0f6cad5-e3c0-4308-99a2-3630ac60174a # 0000-GA-AAP_BESLUTTER
+          - id: 96e18023-db50-45f7-b023-3251279df28d # 0000-GA-AAP_LES
+          - id: 33e00155-169b-41e5-8a3f-5582ed975a15 # 0000-GA-AAP_SAKSBEHANDLER_OPPFOLGING
+          - id: c3e18aef-a7ac-49df-806e-4fe58b81460d # 0000-GA-AAP_KVALITETSSIKRER
+          - id: 3377dc51-ca61-4e36-b812-21b5fc34474f # 0000-GA-AAP_SAKSBEHANDLER_NASJONAL
+          - id: bc89623f-4624-4978-ac54-acd048c0f2a5 # 0000-GA-AAP_DRIFT
+          - id: c75883f9-4cb2-42c7-b75c-3f0f29ee3ead # 0000-GA-AAP_PRODUKSJONSSTYRING
+  replicas:
+    min: 1
+    max: 4
+  resources:
+    limits:
+      memory: 1536Mi
+    requests:
+      cpu: 500m
+      memory: 1024Mi
+  terminationGracePeriodSeconds: 20
+  liveness:
+    path: /actuator/live
+    initialDelay: 5
+  readiness:
+    path: /actuator/ready
+    initialDelay: 5
+  valkey:
+    - instance: tilgang
+      access: readwrite
+  prometheus:
+    enabled: true
+    path: /actuator/metrics
+  observability:
+    autoInstrumentation:
+      enabled: true
+      runtime: "java"
+    logging:
+      destinations:
+        - id: elastic
+        - id: loki
+
+  env:
+    # Roller
+    - name: AAP_BESLUTTER
+      value: f0f6cad5-e3c0-4308-99a2-3630ac60174a
+    - name: AAP_LES
+      value: 96e18023-db50-45f7-b023-3251279df28d
+    - name: AAP_SAKSBEHANDLER_OPPFOLGING
+      value: 33e00155-169b-41e5-8a3f-5582ed975a15
+    - name: AAP_KVALITETSSIKRER
+      value: c3e18aef-a7ac-49df-806e-4fe58b81460d
+    - name: AAP_SAKSBEHANDLER_NASJONAL
+      value: 3377dc51-ca61-4e36-b812-21b5fc34474f
+    - name: AAP_DRIFT
+      value: bc89623f-4624-4978-ac54-acd048c0f2a5
+    - name: AAP_PRODUKSJONSSTYRING
+      value: c75883f9-4cb2-42c7-b75c-3f0f29ee3ead
+    # Integrasjoner
+    - name: PDL_BASE_URL
+      value: https://pdl-api.dev-fss-pub.nais.io/graphql
+    - name: PDL_AUDIENCE
+      value: dev-fss:pdl:pdl-api
+    - name: PDL_SCOPE
+      value: api://dev-fss.pdl.pdl-api/.default
+    - name: SAF_BASE_URL
+      value: https://saf-q2.dev-fss-pub.nais.io/graphql
+    - name: SAF_SCOPE
+      value: api://dev-fss.teamdokumenthandtering.saf/.default
+    - name: MS_GRAPH_BASE_URL
+      value: https://graph.microsoft.com/v1.0/
+    - name: MS_GRAPH_SCOPE
+      value: https://graph.microsoft.com/.default
+    - name: BEHANDLINGSFLYT_BASE_URL
+      value: http://behandlingsflyt
+    - name: BEHANDLINGSFLYT_SCOPE
+      value: api://dev-gcp.aap.behandlingsflyt/.default
+    - name: SKJERMING_BASE_URL
+      value: http://skjermede-personer-pip.nom
+    - name: SKJERMING_SCOPE
+      value: api://dev-gcp.nom.skjermede-personer-pip/.default
+    - name: NOM_BASE_URL
+      value: http://nom-api.nom/graphql
+    - name: NOM_SCOPE
+      value: api://dev-gcp.nom.nom-api/.default
+    - name: FORTROLIG_ADRESSE_AD
+      value: 2e1dc582-f762-4510-a660-88bf68fb7128 # 0000-GA-Fortrolig_Adresse
+    - name: STRENGT_FORTROLIG_ADRESSE_AD
+      value: a1b518e2-3947-478d-8929-e5d685c47cac #0000-GA-Strengt_Fortrolig_Adresse
+    - name: SKJERMEDE_PERSONER_AD
+      value: dbe4ad45-320b-4e9a-aaa1-73cca4ee124d # 0000-GA-Egne_ansatte
+    - name: INTEGRASJON_TILGANGSMASKIN_URL
+      value: http://populasjonstilgangskontroll.tilgangsmaskin
+    - name: INTEGRASJON_TILGANGSMASKIN_SCOPE
+      value: api://dev-gcp.tilgangsmaskin.populasjonstilgangskontroll/.default
+  accessPolicy:
+    inbound:
+      rules:
+        - application: behandlingsflyt
+        - application: postmottak-backend
+        - application: oppgave
+        - application: saksbehandling
+        - application: dokumentinnhenting
+        - application: api-intern
+        - application: arenavisningsklient
+        - application: saksbehandling-lokal # For lokal utvikling. IKKE kopier denne til prod.yaml
+        - application: azure-token-generator
+          namespace: nais
+    outbound:
+      rules:
+        - application: behandlingsflyt
+        - application: nom-api
+          namespace: nom
+        - application: skjermede-personer-pip
+          namespace: nom
+        - application: populasjonstilgangskontroll
+          namespace: tilgangsmaskin
+      external:
+        - host: saf.dev-fss-pub.nais.io
+        - host: pdl-api.dev-fss-pub.nais.io

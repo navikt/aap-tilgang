@@ -87,12 +87,10 @@ jobs:
     secrets: inherit
     with:
       cluster: dev-gcp
-      vars: .nais/dev.yaml
-      manifest: .nais/nais.yaml
+      manifest: .nais/dev-gcp.yaml
 
   prod:
-    needs: [ dev ] # temp for å teste branch i prod
-#    needs: [ publiser-plugin, dev ]
+    needs: [ dev ]
     if: github.ref == 'refs/heads/main' || github.event.inputs.cluster == 'prod-gcp'
     permissions:
       contents: read
@@ -102,5 +100,4 @@ jobs:
     concurrency: deploy-prod
     with:
       cluster: prod-gcp
-      vars: .nais/prod.yaml
-      manifest: .nais/nais.yaml
+      manifest: .nais/prod-gcp.yaml
