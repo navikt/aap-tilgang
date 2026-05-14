@@ -303,7 +303,8 @@ fun Application.autorisertEksempelApp() {
                                 logger = log,
                                 app = "behandlingsflyt",
                                 brukerIdentResolver = TestResolver()
-                            )
+                            ),
+                            modules = arrayOf(TagModule(listOf(Tags.Tilgangkontrollert)))
                         ) { _, dto ->
                             respond(dto)
                         }

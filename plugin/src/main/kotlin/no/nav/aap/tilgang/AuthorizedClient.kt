@@ -23,6 +23,7 @@ val tilgangkontrollertTag = TagModule(listOf(Tags.Tilgangkontrollert))
 inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.authorizedGet(
     routeConfig: AuthorizationRouteConfig,
     auditLogConfig: AuditLogPathParamConfig? = null,
+    exampleResponse: TResponse? = null,
     vararg modules: RouteOpenAPIModule,
     noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams) -> Unit
 ) {
@@ -44,12 +45,21 @@ inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.a
         else -> throw IllegalArgumentException("Unsupported routeConfig type for GET: $routeConfig")
     }
     @Suppress("UnauthorizedGet")
-    get<TParams, TResponse>(*modules, tilgangkontrollertTag) { params -> body(params) }
+    get<TParams, TResponse>(
+        example = exampleResponse,
+        modules = arrayOf(*modules, tilgangkontrollertTag)
+    ) { params ->
+        body(
+            params
+        )
+    }
 }
 
 inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : Any> NormalOpenAPIRoute.authorizedPost(
     routeConfig: AuthorizationRouteConfig,
     auditLogConfig: AuditLogConfig? = null,
+    exampleResponse: TResponse? = null,
+    exampleRequest: TRequest? = null,
     vararg modules: RouteOpenAPIModule,
     noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams, TRequest) -> Unit
 ) {
@@ -60,7 +70,12 @@ inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : A
             HttpMethod.Post
         )
 
-        is AuthorizationBodyPathConfig -> ktorRoute.installerTilgangBodyPlugin<TRequest>(routeConfig, auditLogConfig, HttpMethod.Post)
+        is AuthorizationBodyPathConfig -> ktorRoute.installerTilgangBodyPlugin<TRequest>(
+            routeConfig,
+            auditLogConfig,
+            HttpMethod.Post
+        )
+
         is AuthorizationMachineToMachineConfig -> ktorRoute.installerTilgangMachineToMachinePlugin(
             routeConfig,
             auditLogConfig,
@@ -73,7 +88,14 @@ inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : A
     }
 
     @Suppress("UnauthorizedPost")
-    post<TParams, TResponse, TRequest>(tilgangkontrollertTag, *modules) { params, request ->
+    post<TParams, TResponse, TRequest>(
+        exampleResponse = exampleResponse,
+        exampleRequest = exampleRequest,
+        modules = arrayOf(
+            tilgangkontrollertTag,
+            *modules
+        )
+    ) { params, request ->
         body(
             params,
             request
@@ -81,23 +103,45 @@ inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : A
     }
 }
 
-inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.getGrunnlag(behandlingPathParam: BehandlingPathParam, avklaringsbehovKode: String, relevanteIdenterResolver: RelevanteIdenterResolver? = null, vararg modules: RouteOpenAPIModule, noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams) -> Unit) {
-    ktorRoute.installerTilgangParamPlugin(AuthorizationParamPathConfig(behandlingPathParam = behandlingPathParam,
-        avklaringsbehovKode = avklaringsbehovKode,
-        relevanteIdenterResolver = relevanteIdenterResolver,
-        operasjonerIKontekst = listOf(
-        Operasjon.SAKSBEHANDLE)), null, HttpMethod.Get)
+inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.getGrunnlag(
+    behandlingPathParam: BehandlingPathParam,
+    avklaringsbehovKode: String,
+    relevanteIdenterResolver: RelevanteIdenterResolver? = null,
+    vararg modules: RouteOpenAPIModule,
+    noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams) -> Unit
+) {
+    ktorRoute.installerTilgangParamPlugin(
+        AuthorizationParamPathConfig(
+            behandlingPathParam = behandlingPathParam,
+            avklaringsbehovKode = avklaringsbehovKode,
+            relevanteIdenterResolver = relevanteIdenterResolver,
+            operasjonerIKontekst = listOf(
+                Operasjon.SAKSBEHANDLE
+            )
+        ), null, HttpMethod.Get
+    )
 
     @Suppress("UnauthorizedGet")
     get<TParams, TResponse>(*modules, tilgangkontrollertTag) { params -> body(params) }
 }
 
-inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.getGrunnlag(behandlingPathParam: BehandlingPathParam, påkrevdRolle: List<Rolle>, relevanteIdenterResolver: RelevanteIdenterResolver? = null, vararg modules: RouteOpenAPIModule, noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams) -> Unit) {
-    ktorRoute.installerTilgangParamPlugin(AuthorizationParamPathConfig(behandlingPathParam = behandlingPathParam,
-        påkrevdRolle = påkrevdRolle,
-        relevanteIdenterResolver = relevanteIdenterResolver,
-        operasjonerIKontekst = listOf(
-            Operasjon.SAKSBEHANDLE)), null, HttpMethod.Get)
+inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.getGrunnlag(
+    behandlingPathParam: BehandlingPathParam,
+    påkrevdRolle: List<Rolle>,
+    relevanteIdenterResolver: RelevanteIdenterResolver? = null,
+    vararg modules: RouteOpenAPIModule,
+    noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams) -> Unit
+) {
+    ktorRoute.installerTilgangParamPlugin(
+        AuthorizationParamPathConfig(
+            behandlingPathParam = behandlingPathParam,
+            påkrevdRolle = påkrevdRolle,
+            relevanteIdenterResolver = relevanteIdenterResolver,
+            operasjonerIKontekst = listOf(
+                Operasjon.SAKSBEHANDLE
+            )
+        ), null, HttpMethod.Get
+    )
 
     @Suppress("UnauthorizedGet")
     get<TParams, TResponse>(*modules, tilgangkontrollertTag) { params -> body(params) }
@@ -122,7 +166,7 @@ inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : A
             auditLogConfig,
             HttpMethod.Put
         )
-        
+
         is RollerConfig -> ktorRoute.installerTilgangRollePlugin(routeConfig, HttpMethod.Put)
         is NoAuthConfig -> håndterNoAuth(this.ktorRoute, auditLogConfig)
 
