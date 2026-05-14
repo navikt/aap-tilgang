@@ -27,7 +27,7 @@ json = { module = "no.nav.aap.kelvin:json", version.ref = "komponenter" }
 httpklient = { module = "no.nav.aap.kelvin:httpklient", version.ref = "komponenter" }
 infrastructure = { module = "no.nav.aap.kelvin:infrastructure", version.ref = "komponenter" }
 server = { module = "no.nav.aap.kelvin:server", version.ref = "komponenter" }
-caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version = "3.2.3" }
+caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version = "3.2.4" }
 
 behandlingsflytKontrakt = { module = "no.nav.aap.behandlingsflyt:kontrakt", version = "0.0.597" }
 postmottakKontrakt = { module = "no.nav.aap.postmottak:kontrakt", version = "6.0.4" }
@@ -38,11 +38,11 @@ logbackClassic = { module = "ch.qos.logback:logback-classic", version = "1.5.32"
 logstashLogbackEncoder = { module = "net.logstash.logback:logstash-logback-encoder", version = "9.0" }
 
 micrometerRegistryPrometheus = { module = "io.micrometer:micrometer-registry-prometheus", version = "1.16.5" }
-jacksonDatatypeJsr310 = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version = "2.21.2" }
+jacksonDatatypeJsr310 = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version = "2.21.3" }
 lettuce = { module = "io.lettuce:lettuce-core", version = "6.5.1.RELEASE" }
-coroutinesReactor = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-reactor", version = "1.10.2" }
-coroutinesTest = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version = "1.10.2" }
-mockOauth2Server = { module = "no.nav.security:mock-oauth2-server", version = "3.0.1" }
+coroutinesReactor = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-reactor", version = "1.11.0" }
+coroutinesTest = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version = "1.11.0" }
+mockOauth2Server = { module = "no.nav.security:mock-oauth2-server", version = "3.0.3" }
 testcontainersRedis = { module = "com.redis:testcontainers-redis", version = "2.2.4" }
 testcontainers = { module = "org.testcontainers:testcontainers", version = "2.0.5" }
 
