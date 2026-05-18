@@ -25,7 +25,8 @@ class BehandlingsflytGateway(
     private val prometheus: PrometheusMeterRegistry,
     private val tokenProvider: ITokenProvider = TokenProvider,
 ) {
-    private val baseUrl = requiredConfigForKey("behandlingsflyt.base.url")
+    private val baseUrl = requiredConfigForKey("BEHANDLINGSFLYT_BASE_URL")
+    private val scope = requiredConfigForKey("BEHANDLINGSFLYT_SCOPE")
 
     suspend fun hentIdenterForSak(saksnummer: String): RelevanteIdenter {
         redis[Key(IDENTER_SAK_PREFIX, saksnummer)]?.let {
@@ -37,7 +38,7 @@ class BehandlingsflytGateway(
         log.info("Kaller behandlingsflyt for å hente identer for sak ($saksnummer)")
         val identer = try {
             httpClient.get("$baseUrl/pip/api/sak/$saksnummer/identer") {
-                bearerAuth(tokenProvider.m2mToken(requiredConfigForKey("behandlingsflyt.scope")))
+                bearerAuth(tokenProvider.m2mToken(scope))
             }.body<RelevanteIdenter>()
         } catch (e: Exception) {
             throw BehandlingsflytException(e.message ?: "Ukjent feil oppsto mot behandlingsflyt")
@@ -56,7 +57,7 @@ class BehandlingsflytGateway(
 
         log.info("Kaller behandlingsflyt for å hente identer for behandling ($behandlingsnummer)")
         val identer = httpClient.get("$baseUrl/pip/api/behandling/$behandlingsnummer/identer") {
-            bearerAuth(tokenProvider.m2mToken(requiredConfigForKey("behandlingsflyt.scope")))
+            bearerAuth(tokenProvider.m2mToken(scope))
         }.body<RelevanteIdenter>()
 
         redis.set(Key(IDENTER_BEHANDLING_PREFIX, behandlingsnummer), identer.serialize())

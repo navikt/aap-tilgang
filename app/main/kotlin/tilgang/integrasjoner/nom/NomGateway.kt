@@ -33,7 +33,8 @@ open class NomGateway(
     private val tokenProvider: ITokenProvider,
     private val prometheus: PrometheusMeterRegistry,
 ) : INomGateway {
-    private val nomBaseUrl = requiredConfigForKey("nom.base.url")
+    private val nomBaseUrl = requiredConfigForKey("NOM_BASE_URL")
+    private val scope = requiredConfigForKey("NOM_SCOPE")
 
     override suspend fun personNummerTilNavIdent(søkerIdent: String, callId: String): String {
         redis[Key(NOM_PREFIX, søkerIdent)]?.let {
@@ -46,7 +47,7 @@ open class NomGateway(
         val query = NomRequest.hentNavIdentFraPersonIdent(søkerIdent)
         val response = try {
             httpClient.post(nomBaseUrl) {
-                bearerAuth(tokenProvider.m2mToken(requiredConfigForKey("nom.scope")))
+                bearerAuth(tokenProvider.m2mToken(scope))
                 accept(ContentType.Application.Json)
                 header("Nav-Call-Id", callId)
                 contentType(ContentType.Application.Json)

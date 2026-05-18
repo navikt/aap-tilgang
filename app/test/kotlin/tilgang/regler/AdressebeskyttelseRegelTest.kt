@@ -13,8 +13,8 @@ class AdressebeskyttelseRegelTest {
         @JvmStatic
         @BeforeAll
         fun beforeAll() {
-            System.setProperty("fortrolig.adresse.ad", UUID.randomUUID().toString())
-            System.setProperty("strengt.fortrolig.adresse.ad", UUID.randomUUID().toString())
+            System.setProperty("FORTROLIG_ADRESSE_AD", UUID.randomUUID().toString())
+            System.setProperty("STRENGT_FORTROLIG_ADRESSE_AD", UUID.randomUUID().toString())
         }
     }
     
