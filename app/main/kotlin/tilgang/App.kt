@@ -2,8 +2,6 @@ package tilgang
 
 import com.papsign.ktor.openapigen.model.info.InfoModel
 import com.papsign.ktor.openapigen.route.apiRouting
-import io.ktor.client.plugins.HttpRequestTimeoutException
-import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationStopPreparing
 import io.ktor.server.application.ApplicationStopped
@@ -15,31 +13,20 @@ import io.ktor.server.engine.connector
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.server.plugins.statuspages.StatusPages
-import io.ktor.server.response.respondText
 import io.ktor.server.routing.routing
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
-import java.net.http.HttpTimeoutException
 import kotlin.time.Duration.Companion.seconds
 import no.nav.aap.komponenter.server.auth.IdentityProvider
 import no.nav.aap.komponenter.server.commonKtorModule
-import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import tilgang.AppConfig.LOGGER
 import tilgang.http.createHttpClient
-import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytException
 import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytGateway
-import tilgang.integrasjoner.msgraph.MsGraphException
 import tilgang.integrasjoner.msgraph.MsGraphGateway
-import tilgang.integrasjoner.nom.NomException
-import tilgang.integrasjoner.pdl.PdlException
 import tilgang.integrasjoner.pdl.PdlGraphQLGateway
-import tilgang.integrasjoner.saf.SafException
 import tilgang.integrasjoner.saf.SafGraphqlGateway
-import tilgang.integrasjoner.skjerming.SkjermingException
 import tilgang.integrasjoner.skjerming.SkjermingGateway
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinGateway
-import tilgang.metrics.uhåndtertExceptionTeller
 import tilgang.redis.Redis
 import tilgang.regler.RegelService
 import tilgang.routes.actuator
@@ -50,8 +37,6 @@ import tilgang.service.SkjermingService
 
 
 internal object AppConfig {
-    val LOGGER: Logger = LoggerFactory.getLogger("aap-tilgang")
-
     // Matcher terminationGracePeriodSeconds for podden i Kubernetes-manifestet ("nais.yaml")
     private val kubernetesTimeout = 20.seconds
 
@@ -75,7 +60,9 @@ internal object AppConfig {
 }
 
 fun main() {
-    Thread.currentThread().setUncaughtExceptionHandler { _, e -> LOGGER.error("Uhåndtert feil", e) }
+    Thread.currentThread().setUncaughtExceptionHandler { _, e ->
+        LoggerFactory.getLogger("aap-tilgang").error("Uhåndtert feil", e)
+    }
 
     embeddedServer(
         Netty,
@@ -113,69 +100,7 @@ fun Application.api(
     )
     val tilgangService = TilgangService(saf, behandlingsflyt, regelService, tilgangsmaskinGateway)
 
-    install(StatusPages) {
-        exception<Throwable> { call, cause ->
-            prometheus.uhåndtertExceptionTeller(cause.javaClass.name).increment()
-
-            when (cause) {
-                is HttpRequestTimeoutException,
-                is HttpTimeoutException -> {
-                    LOGGER.warn("Timeout mot '{}'", call.request.local.uri, cause)
-                    call.respondText("Timeout mot: '{}'", status = HttpStatusCode.RequestTimeout)
-                }
-
-                is PdlException -> {
-                    LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause)
-                    call.respondText(
-                        text = "Feil i PDL: ${cause.message}", status = HttpStatusCode.InternalServerError
-                    )
-                }
-
-                is MsGraphException -> {
-                    LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause)
-                    call.respondText(
-                        text = "Feil i Microsoft Graph: ${cause.message}", status = HttpStatusCode.InternalServerError
-                    )
-                }
-
-                is BehandlingsflytException -> {
-                    LOGGER.error(cause.message ?: "Uhåndtert feil ved kall til '${call.request.local.uri}'", cause)
-                    call.respondText(
-                        text = "Feil i behandlingsflyt: ${cause.message}", status = HttpStatusCode.InternalServerError
-                    )
-                }
-
-                is SafException -> {
-                    LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause)
-                    call.respondText(
-                        text = "Feil i SAF: ${cause.message}", status = HttpStatusCode.InternalServerError
-                    )
-                }
-
-                is NomException -> {
-                    LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause)
-                    call.respondText(
-                        text = "Feil i NOM: ${cause.message}", status = HttpStatusCode.InternalServerError
-                    )
-                }
-
-                is SkjermingException -> {
-                    LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause)
-                    call.respondText(
-                        text = "Feil i skjerming: ${cause.message}", status = HttpStatusCode.InternalServerError
-                    )
-                }
-
-                else -> {
-                    LOGGER.error("Uhåndtert feil ved kall til '{}'", call.request.local.uri, cause)
-                    call.respondText(
-                        text = "Feil i tjeneste: ${cause.message}",
-                        status = HttpStatusCode.InternalServerError
-                    )
-                }
-            }
-        }
-    }
+    install(StatusPages, StatusPagesConfigHelper.setup(prometheus))
 
     commonKtorModule(
         prometheus = prometheus,
