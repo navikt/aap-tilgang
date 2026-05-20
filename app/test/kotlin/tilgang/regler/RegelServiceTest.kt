@@ -3,7 +3,7 @@ package tilgang.regler
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import java.util.UUID
-import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.runBlocking
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.tilgang.Operasjon
@@ -36,8 +36,8 @@ class RegelServiceTest {
     // Bestill brev er deprecated og mangler løses-av
 
     @ParameterizedTest
-    @EnumSource(value = Definisjon::class, names = [ "BESTILL_BREV" ], mode = EnumSource.Mode.EXCLUDE)
-    fun `skal alltid gi false når roller er tom array`(avklaringsbehov: Definisjon) = runTest {
+    @EnumSource(value = Definisjon::class, names = ["BESTILL_BREV"], mode = EnumSource.Mode.EXCLUDE)
+    fun `skal alltid gi false når roller er tom array`(avklaringsbehov: Definisjon) = runBlocking {
             val svar = regelService.vurderTilgang(
                 RegelInput(
                     callId = UUID.randomUUID().toString(),
@@ -55,8 +55,8 @@ class RegelServiceTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = Definisjon::class, names = [ "BESTILL_BREV" ], mode = EnumSource.Mode.EXCLUDE)
-    fun `skal gi tilgang til operasjoner for NAY-steg som saksbehandler nasjonal`(avklaringsbehov: Definisjon) = runTest {
+    @EnumSource(value = Definisjon::class, names = ["BESTILL_BREV"], mode = EnumSource.Mode.EXCLUDE)
+    fun `skal gi tilgang til operasjoner for NAY-steg som saksbehandler nasjonal`(avklaringsbehov: Definisjon) = runBlocking {
         val svar = regelService.vurderTilgang(
             RegelInput(
                 callId = UUID.randomUUID().toString(),
@@ -80,8 +80,8 @@ class RegelServiceTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = Definisjon::class, names = [ "BESTILL_BREV" ], mode = EnumSource.Mode.EXCLUDE)
-    fun `skal gi tilgang til drift, men ikke noe annet for driftsrolleinnehavere`(avklaringsbehov: Definisjon) = runTest {
+    @EnumSource(value = Definisjon::class, names = ["BESTILL_BREV"], mode = EnumSource.Mode.EXCLUDE)
+    fun `skal gi tilgang til drift, men ikke noe annet for driftsrolleinnehavere`(avklaringsbehov: Definisjon) = runBlocking {
 
         val svar = regelService.vurderTilgang(
             RegelInput(
@@ -104,8 +104,8 @@ class RegelServiceTest {
 
 
     @ParameterizedTest
-    @EnumSource(value = Definisjon::class, names = [ "BESTILL_BREV" ], mode = EnumSource.Mode.EXCLUDE)
-    fun `skal kun gi tilgang til å se for leserolle`(avklaringsbehov: Definisjon) = runTest {
+    @EnumSource(value = Definisjon::class, names = ["BESTILL_BREV"], mode = EnumSource.Mode.EXCLUDE)
+    fun `skal kun gi tilgang til å se for leserolle`(avklaringsbehov: Definisjon) = runBlocking {
 
         val svar = regelService.vurderTilgang(
             RegelInput(
@@ -127,8 +127,7 @@ class RegelServiceTest {
     }
 
     @Test
-    fun `skal returnere false på saksbehandle dersom det ikke finnes noe avklaringsbehov å vurdere `() = runTest{
-
+    fun `skal returnere false på saksbehandle dersom det ikke finnes noe avklaringsbehov å vurdere `() = runBlocking {
         val svar = regelService.vurderTilgang(
             RegelInput(
                 callId = UUID.randomUUID().toString(),

@@ -1,6 +1,6 @@
 package tilgang.integrasjoner
 
-import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import tilgang.fakes.Fakes
@@ -14,7 +14,7 @@ class PdlTest {
     private val prometheus = Fakes.getPrometheus()
 
     @Test
-    fun `Kan parse hentPersonBolk`() = runTest {
+    fun `Kan parse hentPersonBolk`() = runBlocking {
         val test = PdlGraphQLGateway(redis, httpClient, prometheus).hentPersonBolk(listOf("1234"), "test")
 
         assertThat(test?.size).isEqualTo(1)
