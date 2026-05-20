@@ -1,5 +1,5 @@
 [versions]
-ktor = "3.4.3"
+ktor = "3.5.0"
 komponenter = "2.0.57"
 junit = "6.0.3"
 
