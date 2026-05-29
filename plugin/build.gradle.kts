@@ -1,7 +1,3 @@
-val ktorVersion = "3.3.3"
-val komponenterVersjon = "1.0.464"
-val junitVersion = "6.0.1"
-
 plugins {
     id("aap.conventions")
     `maven-publish`
