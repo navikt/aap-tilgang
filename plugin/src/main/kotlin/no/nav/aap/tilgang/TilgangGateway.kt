@@ -46,6 +46,12 @@ object TilgangGateway {
         .recordStats()
         .build<JournalpostTilgangRequestMedNavIdent, TilgangResponse>()
 
+    private var tilgangGatewayPersonCache = Caffeine.newBuilder()
+        .maximumSize(2_000)
+        .expireAfterWrite(Duration.ofMinutes(30))
+        .recordStats()
+        .build<PersonTilgangRequestMedNavIdent, TilgangResponse>()
+
 
     fun initialiserPrometheus(registry: MeterRegistry) {
         if (prometheus == null) {
@@ -53,6 +59,7 @@ object TilgangGateway {
             CaffeineCacheMetrics.monitor(registry, tilgangGatewayBehandlingCache, "tilgang_behandling_cache")
             CaffeineCacheMetrics.monitor(registry, tilgangGatewaySakCache, "tilgang_sak_cache")
             CaffeineCacheMetrics.monitor(registry, tilgangGatewayJournalpostCache, "tilgang_journalpost_cache")
+            CaffeineCacheMetrics.monitor(registry, tilgangGatewayPersonCache, "tilgang_person_cache")
         }
     }
 
@@ -92,8 +99,11 @@ object TilgangGateway {
 
 
     private val tilgangPersonUrl = baseUrl.resolve("/tilgang/person").toString()
-    suspend fun harTilgangTilPerson(body: PersonTilgangRequest, currentToken: OidcToken) =
-        post(currentToken, tilgangPersonUrl, body)
+    suspend fun harTilgangTilPerson(body: PersonTilgangRequest, currentToken: OidcToken): TilgangResponse {
+      return get(tilgangGatewayPersonCache, PersonTilgangRequestMedNavIdent(body, currentToken.navIdent())) {
+          post(currentToken, tilgangPersonUrl, body)
+      }
+    }
 
     private val tilgangTilbakekrevingUrl = baseUrl.resolve("/tilgang/tilbakekreving").toString()
     suspend fun harTilgangTilTilbakekreving(body: TilbakekrevingTilgangRequest, currentToken: OidcToken) =
@@ -154,6 +164,10 @@ object TilgangGateway {
         tilgangGatewayJournalpostCache = Caffeine.newBuilder()
             .maximumSize(0)
             .build()
+
+        tilgangGatewayPersonCache = Caffeine.newBuilder()
+            .maximumSize(0)
+            .build()
     }
 }
 
@@ -169,5 +183,10 @@ private data class SakTilgangRequestMedNavIdent(
 
 private data class JournalpostTilgangRequestMedNavIdent(
     val journalpostTilgangRequest: JournalpostTilgangRequest,
+    val navIdent: String
+)
+
+private data class PersonTilgangRequestMedNavIdent(
+    val personReq: PersonTilgangRequest,
     val navIdent: String
 )
