@@ -36,13 +36,9 @@ class BehandlingsflytGateway(
         prometheus.cacheMiss(BEHANDLINGSFLYT).increment()
 
         log.info("Kaller behandlingsflyt for å hente identer for sak ($saksnummer)")
-        val identer = try {
-            httpClient.get("$baseUrl/pip/api/sak/$saksnummer/identer") {
-                bearerAuth(tokenProvider.m2mToken(scope))
-            }.body<RelevanteIdenter>()
-        } catch (e: Exception) {
-            throw BehandlingsflytException(e.message ?: "Ukjent feil oppsto mot behandlingsflyt")
-        }
+        val identer = httpClient.get("$baseUrl/pip/api/sak/$saksnummer/identer") {
+            bearerAuth(tokenProvider.m2mToken(scope))
+        }.body<RelevanteIdenter>()
 
         redis.set(Key(IDENTER_SAK_PREFIX, saksnummer), identer.serialize())
         return identer

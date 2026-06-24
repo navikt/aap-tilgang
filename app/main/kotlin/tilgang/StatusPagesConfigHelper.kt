@@ -7,7 +7,6 @@ import io.ktor.server.response.respondText
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import java.net.http.HttpTimeoutException
 import org.slf4j.LoggerFactory
-import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytException
 import tilgang.integrasjoner.msgraph.MsGraphException
 import tilgang.integrasjoner.nom.NomException
 import tilgang.integrasjoner.pdl.PdlException
@@ -42,13 +41,6 @@ object StatusPagesConfigHelper {
                     logger.error("Uhåndtert feil ved kall til '$uri'", cause)
                     call.respondText(
                         text = "Feil i Microsoft Graph: ${cause.message}", status = HttpStatusCode.InternalServerError
-                    )
-                }
-
-                is BehandlingsflytException -> {
-                    logger.error(cause.message ?: "Uhåndtert feil ved kall til '$uri'", cause)
-                    call.respondText(
-                        text = "Feil i behandlingsflyt: ${cause.message}", status = HttpStatusCode.InternalServerError
                     )
                 }
 
