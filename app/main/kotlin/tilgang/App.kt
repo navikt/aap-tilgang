@@ -89,7 +89,7 @@ fun Application.api(
     val prometheus = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
     val pdl = PdlGraphQLGateway(redis, httpClient, prometheus)
     val msGraph = MsGraphGateway(redis, httpClient, prometheus)
-    val behandlingsflyt = BehandlingsflytGateway(redis, createHttpClient(timeout = 2.seconds), prometheus)
+    val behandlingsflyt = BehandlingsflytGateway(redis, createHttpClient(timeout = 4.seconds), prometheus)
     val saf = SafGraphqlGateway(redis, httpClient, prometheus)
     val geoService = GeoService(msGraph)
     val skjermingGateway = SkjermingGateway(redis, httpClient, prometheus)
