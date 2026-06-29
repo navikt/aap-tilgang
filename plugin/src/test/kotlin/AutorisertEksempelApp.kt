@@ -45,6 +45,7 @@ import no.nav.aap.tilgang.plugin.kontrakt.Personreferanse
 import no.nav.aap.tilgang.plugin.kontrakt.Saksreferanse
 
 val enAnnenReferanseTilbehandlingReferanse = mutableMapOf<String, UUID>()
+val AUTHORIZED_AZP: UUID = UUID.randomUUID()
 
 fun Application.autorisertEksempelApp() {
     commonKtorModule(PrometheusMeterRegistry(PrometheusConfig.DEFAULT), InfoModel(), IdentityProvider.ENTRA_ID)
@@ -231,6 +232,16 @@ fun Application.autorisertEksempelApp() {
                             respond(Saksinfo(saksnummer = req.saksnummer))
                         }
                     }
+                    route("authorized-azps-param") {
+                        authorizedGet<TestReferanse, Saksinfo>(
+                            AuthorizationParamPathConfig(
+                                sakPathParam = SakPathParam("saksnummer"),
+                                authorizedAzps = listOf(AUTHORIZED_AZP)
+                            )
+                        ) { req ->
+                            respond(Saksinfo(saksnummer = req.saksnummer))
+                        }
+                    }
                 }
                 route("testApi/paakrevdRolle") {
                     route("sak/{saksnummer}") {
@@ -305,6 +316,16 @@ fun Application.autorisertEksempelApp() {
                                 brukerIdentResolver = TestResolver()
                             ),
                             modules = arrayOf(TagModule(listOf(Tags.Tilgangkontrollert)))
+                        ) { _, dto ->
+                            respond(dto)
+                        }
+                    }
+                    route("authorized-azps-body") {
+                        authorizedPost<Unit, Saksinfo, Saksinfo>(
+                            AuthorizationBodyPathConfig(
+                                operasjon = Operasjon.SAKSBEHANDLE,
+                                authorizedAzps = listOf(AUTHORIZED_AZP)
+                            )
                         ) { _, dto ->
                             respond(dto)
                         }
