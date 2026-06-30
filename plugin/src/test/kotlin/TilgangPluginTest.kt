@@ -38,7 +38,10 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import org.slf4j.LoggerFactory
+import kotlin.booleanArrayOf
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TilgangPluginTest {
@@ -46,8 +49,8 @@ class TilgangPluginTest {
         private val azureTokenGen = AzureTokenGen("behandlingsflyt", "behandlingsflyt")
         private val fakes = Fakes(azureTokenGen)
 
-        private fun generateToken(isApp: Boolean, roles: List<String> = emptyList()): OidcToken {
-            return OidcToken(azureTokenGen.generate(isApp, roles))
+        private fun generateToken(isApp: Boolean, roles: List<String> = emptyList(), azp: UUID? = null): OidcToken {
+            return OidcToken(azureTokenGen.generate(isApp, roles, azp))
         }
 
         data class Journalpostinfo(@param:PathParam("behandlingReferanse") val behandlingReferanse: String) :
@@ -96,7 +99,13 @@ class TilgangPluginTest {
     private suspend fun oboAccessToken(currentToken: OidcToken): String =
         httpClient.post(texasExchangeUrl) {
             contentType(ContentType.Application.Json)
-            setBody(mapOf("identity_provider" to "entra_id", "target" to "behandlingsflyt", "user_token" to currentToken.token()))
+            setBody(
+                mapOf(
+                    "identity_provider" to "entra_id",
+                    "target" to "behandlingsflyt",
+                    "user_token" to currentToken.token()
+                )
+            )
         }.body<Map<String, String>>()["access_token"]!!
 
     private suspend fun m2mAccessToken(): String =
@@ -150,7 +159,8 @@ class TilgangPluginTest {
         val randomUuid = UUID.randomUUID()
         fakes.gittTilgangTilSak(randomUuid.toString(), true)
         runBlocking {
-            val res = oboGet<Saksinfo>(base("testApi/authorizedGet/$randomUuid/on-behalf-of"), generateToken(isApp = false))
+            val res =
+                oboGet<Saksinfo>(base("testApi/authorizedGet/$randomUuid/on-behalf-of"), generateToken(isApp = false))
             assertThat(res?.saksnummer).isEqualTo(randomUuid)
         }
     }
@@ -168,7 +178,8 @@ class TilgangPluginTest {
     fun `Skal gi tilgang basert på rolle for POST på samme route som GET`() {
         val token = generateToken(isApp = false, roles = listOf(Beslutter.id))
         runBlocking {
-            val res = bearerPost<IngenReferanse, IngenReferanse>(base("kun-roller"), IngenReferanse("input"), token.token())
+            val res =
+                bearerPost<IngenReferanse, IngenReferanse>(base("kun-roller"), IngenReferanse("input"), token.token())
             assertThat(res?.noe).isEqualTo("post-input")
         }
     }
@@ -205,7 +216,10 @@ class TilgangPluginTest {
         val randomUuid = UUID.randomUUID()
         val token = generateToken(isApp = true, roles = listOf("tilgang-rolle"))
         runBlocking {
-            val res = bearerGet<Saksinfo>(base("testApi/authorizedGet/$randomUuid/client-credentials-application-role"), token.token())
+            val res = bearerGet<Saksinfo>(
+                base("testApi/authorizedGet/$randomUuid/client-credentials-application-role"),
+                token.token()
+            )
             assertThat(res?.saksnummer).isEqualTo(randomUuid)
         }
     }
@@ -215,7 +229,12 @@ class TilgangPluginTest {
         val randomUuid = UUID.randomUUID()
         val token = generateToken(isApp = true, roles = listOf("feil-rolle"))
         assertThrows<ManglerTilgangException> {
-            runBlocking { bearerGet<Saksinfo>(base("testApi/authorizedGet/$randomUuid/client-credentials-application-role"), token.token()) }
+            runBlocking {
+                bearerGet<Saksinfo>(
+                    base("testApi/authorizedGet/$randomUuid/client-credentials-application-role"),
+                    token.token()
+                )
+            }
         }
     }
 
@@ -224,13 +243,21 @@ class TilgangPluginTest {
         val person = "234"
         fakes.gittTilgangTilPerson(person, true)
         runBlocking {
-            val res = oboPost<Personinfo, Personinfo>(base("testApi/person/post"), Personinfo(person), generateToken(isApp = false))
+            val res = oboPost<Personinfo, Personinfo>(
+                base("testApi/person/post"),
+                Personinfo(person),
+                generateToken(isApp = false)
+            )
             assertThat(res?.personIdent).isEqualTo("234")
         }
         val person2 = "123456"
         assertThrows<ManglerTilgangException> {
             runBlocking {
-                oboPost<Personinfo, Personinfo>(base("testApi/person/post"), Personinfo(person2), generateToken(isApp = false))
+                oboPost<Personinfo, Personinfo>(
+                    base("testApi/person/post"),
+                    Personinfo(person2),
+                    generateToken(isApp = false)
+                )
             }
         }
     }
@@ -262,9 +289,15 @@ class TilgangPluginTest {
         val randomUuid = UUID.randomUUID()
         fakes.gittTilgangTilSak(randomUuid.toString(), true)
         runBlocking {
-            val res1 = oboGet<Saksinfo>(base("testApi/authorizedGet/$randomUuid/client-credentials-and-on-behalf-of"), generateToken(isApp = false))
+            val res1 = oboGet<Saksinfo>(
+                base("testApi/authorizedGet/$randomUuid/client-credentials-and-on-behalf-of"),
+                generateToken(isApp = false)
+            )
             val token = generateToken(isApp = true, roles = listOf("tilgang-rolle"))
-            val res2 = bearerGet<Saksinfo>(base("testApi/authorizedGet/$randomUuid/client-credentials-and-on-behalf-of"), token.token())
+            val res2 = bearerGet<Saksinfo>(
+                base("testApi/authorizedGet/$randomUuid/client-credentials-and-on-behalf-of"),
+                token.token()
+            )
             assertThat(res1?.saksnummer).isEqualTo(randomUuid)
             assertThat(res2?.saksnummer).isEqualTo(randomUuid)
         }
@@ -275,7 +308,11 @@ class TilgangPluginTest {
         val randomUuid = UUID.randomUUID()
         fakes.gittTilgangTilSak(randomUuid.toString(), true)
         runBlocking {
-            val res = oboPost<Saksinfo, Saksinfo>(base("testApi/authorizedPost/on-behalf-of/saksinfo"), Saksinfo(randomUuid), generateToken(isApp = false))
+            val res = oboPost<Saksinfo, Saksinfo>(
+                base("testApi/authorizedPost/on-behalf-of/saksinfo"),
+                Saksinfo(randomUuid),
+                generateToken(isApp = false)
+            )
             assertThat(res?.saksnummer).isEqualTo(randomUuid)
         }
     }
@@ -287,7 +324,11 @@ class TilgangPluginTest {
         fakes.gittTilgangTilBehandling(behandlingReferanse, true)
         enAnnenReferanseTilbehandlingReferanse.put(enAnnenReferanse.toString(), behandlingReferanse)
         runBlocking {
-            val res = oboPost<Behandlinginfo, Behandlinginfo>(base("testApi/authorizedPost/on-behalf-of/behandlinginfo"), Behandlinginfo(enAnnenReferanse.toString()), generateToken(isApp = false))
+            val res = oboPost<Behandlinginfo, Behandlinginfo>(
+                base("testApi/authorizedPost/on-behalf-of/behandlinginfo"),
+                Behandlinginfo(enAnnenReferanse.toString()),
+                generateToken(isApp = false)
+            )
             assertThat(res?.enAnnenReferanse).isEqualTo(enAnnenReferanse.toString())
         }
     }
@@ -297,7 +338,11 @@ class TilgangPluginTest {
         val randomUuid = UUID.randomUUID()
         val token = generateToken(isApp = true, roles = listOf("tilgang-rolle"))
         runBlocking {
-            val res = bearerPost<IngenReferanse, IngenReferanse>(base("testApi/authorizedPost/client-credentials-application-role"), IngenReferanse(randomUuid.toString()), token.token())
+            val res = bearerPost<IngenReferanse, IngenReferanse>(
+                base("testApi/authorizedPost/client-credentials-application-role"),
+                IngenReferanse(randomUuid.toString()),
+                token.token()
+            )
             assertThat(res?.noe).isEqualTo(randomUuid.toString())
         }
     }
@@ -307,9 +352,17 @@ class TilgangPluginTest {
         val saksnummer = UUID.randomUUID()
         fakes.gittTilgangTilSak(saksnummer.toString(), true)
         runBlocking {
-            val res1 = oboPost<Saksinfo, Saksinfo>(base("testApi/authorizedPost/client-credentials-and-on-behalf-of"), Saksinfo(saksnummer), generateToken(isApp = false))
+            val res1 = oboPost<Saksinfo, Saksinfo>(
+                base("testApi/authorizedPost/client-credentials-and-on-behalf-of"),
+                Saksinfo(saksnummer),
+                generateToken(isApp = false)
+            )
             val token = generateToken(isApp = true, roles = listOf("tilgang-rolle"))
-            val res2 = bearerPost<Saksinfo, Saksinfo>(base("testApi/authorizedPost/client-credentials-and-on-behalf-of"), Saksinfo(saksnummer), token.token())
+            val res2 = bearerPost<Saksinfo, Saksinfo>(
+                base("testApi/authorizedPost/client-credentials-and-on-behalf-of"),
+                Saksinfo(saksnummer),
+                token.token()
+            )
             assertThat(res1?.saksnummer).isEqualTo(saksnummer)
             assertThat(res2?.saksnummer).isEqualTo(saksnummer)
         }
@@ -320,7 +373,11 @@ class TilgangPluginTest {
         val randomUuid = UUID.randomUUID()
         val token = generateToken(isApp = true, roles = listOf("tilgang-rolle"))
         runBlocking {
-            val res = bearerPost<IngenReferanse, IngenReferanse>(base("testApi/authorizedPost/client-credentials-application-role"), IngenReferanse(randomUuid.toString()), token.token())
+            val res = bearerPost<IngenReferanse, IngenReferanse>(
+                base("testApi/authorizedPost/client-credentials-application-role"),
+                IngenReferanse(randomUuid.toString()),
+                token.token()
+            )
             assertThat(res?.noe).isEqualTo(randomUuid.toString())
         }
     }
@@ -330,7 +387,13 @@ class TilgangPluginTest {
         val randomUuid = UUID.randomUUID()
         val token = generateToken(isApp = true, roles = listOf("feil-rolle"))
         assertThrows<ManglerTilgangException> {
-            runBlocking { bearerPost<IngenReferanse, IngenReferanse>(base("testApi/authorizedPost/client-credentials-application-role"), IngenReferanse(randomUuid.toString()), token.token()) }
+            runBlocking {
+                bearerPost<IngenReferanse, IngenReferanse>(
+                    base("testApi/authorizedPost/client-credentials-application-role"),
+                    IngenReferanse(randomUuid.toString()),
+                    token.token()
+                )
+            }
         }
     }
 
@@ -340,7 +403,11 @@ class TilgangPluginTest {
         val journalpostId = 456L
         fakes.gittTilgangTilJournalpost(journalpostId, true)
         runBlocking {
-            val res = oboPost<IngenReferanse, IngenReferanse>(base("testApi/pathForPost/resolve/journalpost/$behandlingsRef"), IngenReferanse("test"), generateToken(isApp = false))
+            val res = oboPost<IngenReferanse, IngenReferanse>(
+                base("testApi/pathForPost/resolve/journalpost/$behandlingsRef"),
+                IngenReferanse("test"),
+                generateToken(isApp = false)
+            )
             assertThat(res?.noe).isEqualTo("test")
         }
     }
@@ -352,51 +419,66 @@ class TilgangPluginTest {
         fakes.gittTilgangTilBehandling(behandlingReferanse, true)
         enAnnenReferanseTilbehandlingReferanse.put(enAnnenReferanse.toString(), behandlingReferanse)
         runBlocking {
-            val res = oboPost<IngenReferanse, IngenReferanse>(base("testApi/pathForPost/resolve/behandlingreferanse/$enAnnenReferanse"), IngenReferanse("test"), generateToken(isApp = false))
+            val res = oboPost<IngenReferanse, IngenReferanse>(
+                base("testApi/pathForPost/resolve/behandlingreferanse/$enAnnenReferanse"),
+                IngenReferanse("test"),
+                generateToken(isApp = false)
+            )
             assertThat(res?.noe).isEqualTo("test")
         }
     }
 
     @Test
-    fun `skal auditlogge - path resolver`() = runBlocking {
-        val randomUuid = UUID.randomUUID()
-        fakes.gittTilgangTilSak(randomUuid.toString(), true)
+    fun `skal auditlogge - path resolver`() {
+        runBlocking {
+            val randomUuid = UUID.randomUUID()
+            fakes.gittTilgangTilSak(randomUuid.toString(), true)
 
-        val logger = LoggerFactory.getLogger(TILGANG_PLUGIN) as Logger
-        val appender = LogCaptureAppender()
-        appender.start()
-        logger.addAppender(appender)
+            val logger = LoggerFactory.getLogger(TILGANG_PLUGIN) as Logger
+            val appender = LogCaptureAppender()
+            appender.start()
+            logger.addAppender(appender)
 
-        val res = oboGet<Saksinfo>(base("testApi/authorizedGet/$randomUuid/on-behalf-of"), generateToken(isApp = false))
-        assertThat(res?.saksnummer).isEqualTo(randomUuid)
+            val res =
+                oboGet<Saksinfo>(base("testApi/authorizedGet/$randomUuid/on-behalf-of"), generateToken(isApp = false))
+            assertThat(res?.saksnummer).isEqualTo(randomUuid)
 
-        val messages = appender.getLoggedMessages()
-        val expected = messages.first { it.contains("CEF:0|Kelvin|behandlingsflyt|1.0|audit:access|Auditlogg|INFO|flexString1=Permit request=/testApi/authorizedGet/$randomUuid/on-behalf-of duid=12345678901 flexString1Label=Decision end=") }
-        assertNotNull(expected)
-        assertTrue(expected.contains("suid=Lokalsaksbehandler"))
+            val messages = appender.getLoggedMessages()
+            val expected =
+                messages.first { it.contains("CEF:0|Kelvin|behandlingsflyt|1.0|audit:access|Auditlogg|INFO|flexString1=Permit request=/testApi/authorizedGet/$randomUuid/on-behalf-of duid=12345678901 flexString1Label=Decision end=") }
+            assertNotNull(expected)
+            assertTrue(expected.contains("suid=Lokalsaksbehandler"))
 
-        logger.detachAppender(appender)
+            logger.detachAppender(appender)
+        }
     }
 
     @Test
-    fun `skal auditlogge - body resolver`() = runBlocking {
-        val randomUuid = UUID.randomUUID()
-        fakes.gittTilgangTilSak(randomUuid.toString(), true)
+    fun `skal auditlogge - body resolver`() {
+        runBlocking {
+            val randomUuid = UUID.randomUUID()
+            fakes.gittTilgangTilSak(randomUuid.toString(), true)
 
-        val logger = LoggerFactory.getLogger(TILGANG_PLUGIN) as Logger
-        val appender = LogCaptureAppender()
-        appender.start()
-        logger.addAppender(appender)
+            val logger = LoggerFactory.getLogger(TILGANG_PLUGIN) as Logger
+            val appender = LogCaptureAppender()
+            appender.start()
+            logger.addAppender(appender)
 
-        val res = oboPost<RequestMedAuditResolver, RequestMedAuditResolver>(base("testApi/authorizedPost/med-audit-resolver"), RequestMedAuditResolver(saksreferanse = randomUuid), generateToken(isApp = false))
-        assertThat(res?.saksreferanse).isEqualTo(randomUuid)
+            val res = oboPost<RequestMedAuditResolver, RequestMedAuditResolver>(
+                base("testApi/authorizedPost/med-audit-resolver"),
+                RequestMedAuditResolver(saksreferanse = randomUuid),
+                generateToken(isApp = false)
+            )
+            assertThat(res?.saksreferanse).isEqualTo(randomUuid)
 
-        val messages = appender.getLoggedMessages()
-        val expected = messages.first { it.contains("CEF:0|Kelvin|behandlingsflyt|1.0|audit:access|Auditlogg|INFO|flexString1=Permit request=/testApi/authorizedPost/med-audit-resolver duid=12345678901 flexString1Label=Decision end=") }
-        assertNotNull(expected)
-        assertTrue(expected.contains("suid=Lokalsaksbehandler"))
+            val messages = appender.getLoggedMessages()
+            val expected =
+                messages.first { it.contains("CEF:0|Kelvin|behandlingsflyt|1.0|audit:access|Auditlogg|INFO|flexString1=Permit request=/testApi/authorizedPost/med-audit-resolver duid=12345678901 flexString1Label=Decision end=") }
+            assertNotNull(expected)
+            assertTrue(expected.contains("suid=Lokalsaksbehandler"))
 
-        logger.detachAppender(appender)
+            logger.detachAppender(appender)
+        }
     }
 
     @Test
@@ -404,7 +486,10 @@ class TilgangPluginTest {
         val randomUuid = UUID.randomUUID()
         val token = generateToken(isApp = true, roles = listOf("tilgang-rolle"))
         runBlocking {
-            val res = bearerGet<Saksinfo>(base("testApi/authorizedGet/$randomUuid/application-role-machine-to-machine"), token.token())
+            val res = bearerGet<Saksinfo>(
+                base("testApi/authorizedGet/$randomUuid/application-role-machine-to-machine"),
+                token.token()
+            )
             assertThat(res?.saksnummer).isEqualTo(randomUuid)
         }
     }
@@ -414,7 +499,12 @@ class TilgangPluginTest {
         val randomUuid = UUID.randomUUID()
         val token = generateToken(isApp = true, roles = listOf("feil-rolle"))
         assertThrows<ManglerTilgangException> {
-            runBlocking { bearerGet<Saksinfo>(base("testApi/authorizedGet/$randomUuid/application-role-machine-to-machine"), token.token()) }
+            runBlocking {
+                bearerGet<Saksinfo>(
+                    base("testApi/authorizedGet/$randomUuid/application-role-machine-to-machine"),
+                    token.token()
+                )
+            }
         }
     }
 
@@ -433,7 +523,12 @@ class TilgangPluginTest {
     fun `get sak med påkrevdRolle gir ikke tilgang`() {
         val randomUuid = UUID.randomUUID()
         assertThrows<ManglerTilgangException> {
-            runBlocking { oboGet<Saksinfo>(base("testApi/paakrevdRolle/sak/$randomUuid"), generateToken(isApp = false)) }
+            runBlocking {
+                oboGet<Saksinfo>(
+                    base("testApi/paakrevdRolle/sak/$randomUuid"),
+                    generateToken(isApp = false)
+                )
+            }
         }
     }
 
@@ -442,7 +537,11 @@ class TilgangPluginTest {
         val randomUuid = UUID.randomUUID()
         fakes.gittTilgangTilSak(randomUuid.toString(), true)
         runBlocking {
-            val res = oboPost<Saksinfo, Saksinfo>(base("testApi/paakrevdRolle/sak/post"), Saksinfo(randomUuid), generateToken(isApp = false))
+            val res = oboPost<Saksinfo, Saksinfo>(
+                base("testApi/paakrevdRolle/sak/post"),
+                Saksinfo(randomUuid),
+                generateToken(isApp = false)
+            )
             assertThat(res?.saksnummer).isEqualTo(randomUuid)
             assertThat(fakes.sistMottattSakTilgangRequest?.påkrevdRolle).isEqualTo(listOf(Rolle.BESLUTTER))
         }
@@ -452,7 +551,13 @@ class TilgangPluginTest {
     fun `post sak med påkrevdRolle gir ikke tilgang`() {
         val randomUuid = UUID.randomUUID()
         assertThrows<ManglerTilgangException> {
-            runBlocking { oboPost<Saksinfo, Saksinfo>(base("testApi/paakrevdRolle/sak/post"), Saksinfo(randomUuid), generateToken(isApp = false)) }
+            runBlocking {
+                oboPost<Saksinfo, Saksinfo>(
+                    base("testApi/paakrevdRolle/sak/post"),
+                    Saksinfo(randomUuid),
+                    generateToken(isApp = false)
+                )
+            }
         }
     }
 
@@ -460,10 +565,104 @@ class TilgangPluginTest {
     fun `skal returnere json ved ikke tilgang`() {
         val randomUuid = UUID.randomUUID()
         assertThatThrownBy {
-            runBlocking { oboGet<Saksinfo>(base("testApi/authorizedGet/$randomUuid/on-behalf-of"), generateToken(isApp = false)) }
+            runBlocking {
+                oboGet<Saksinfo>(
+                    base("testApi/authorizedGet/$randomUuid/on-behalf-of"),
+                    generateToken(isApp = false)
+                )
+            }
         }.isInstanceOf(ManglerTilgangException::class.java)
             .extracting("body")
             .isEqualTo("{\"message\":\"Ingen tilgang\",\"code\":\"UKJENT_FEIL\"}")
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `token med autorisert azp gir tilgang via param-config`(isApp: Boolean) {
+        val saksnummer = UUID.randomUUID()
+        fakes.gittTilgangTilSak(saksnummer.toString(), true)
+        runBlocking {
+            val token = generateToken(isApp = isApp, azp = AUTHORIZED_AZP)
+            val res =
+                bearerGet<Saksinfo>(base("testApi/authorizedGet/$saksnummer/authorized-azps-param"), token.token())
+            assertThat(res?.saksnummer).isEqualTo(saksnummer)
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `token med ikke-autorisert azp gir ikke tilgang via param-config`(isApp: Boolean) {
+        val saksnummer = UUID.randomUUID()
+        fakes.gittTilgangTilSak(saksnummer.toString(), true)
+        assertThrows<ManglerTilgangException> {
+            runBlocking {
+                val token = generateToken(isApp = isApp, azp = UUID.randomUUID())
+                bearerGet<Saksinfo>(base("testApi/authorizedGet/$saksnummer/authorized-azps-param"), token.token())
+            }
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `token uten azp-claim gir ikke tilgang når authorizedAzps er satt via param-config`(isApp: Boolean) {
+        val saksnummer = UUID.randomUUID()
+        fakes.gittTilgangTilSak(saksnummer.toString(), true)
+        assertThrows<ManglerTilgangException> {
+            runBlocking {
+                val token = generateToken(isApp = isApp, azp = null)
+                bearerGet<Saksinfo>(base("testApi/authorizedGet/$saksnummer/authorized-azps-param"), token.token())
+            }
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `token med autorisert azp gir tilgang via body-config`(isApp: Boolean) {
+        val saksnummer = UUID.randomUUID()
+        fakes.gittTilgangTilSak(saksnummer.toString(), true)
+        runBlocking {
+            val token = generateToken(isApp = isApp, azp = AUTHORIZED_AZP)
+            val res = bearerPost<Saksinfo, Saksinfo>(
+                base("testApi/authorizedPost/authorized-azps-body"),
+                Saksinfo(saksnummer),
+                token.token()
+            )
+            assertThat(res?.saksnummer).isEqualTo(saksnummer)
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `token med ikke-autorisert azp gir ikke tilgang via body-config`(isApp: Boolean) {
+        val saksnummer = UUID.randomUUID()
+        fakes.gittTilgangTilSak(saksnummer.toString(), true)
+        assertThrows<ManglerTilgangException> {
+            runBlocking {
+                val token = generateToken(isApp = isApp, azp = UUID.randomUUID())
+                bearerPost<Saksinfo, Saksinfo>(
+                    base("testApi/authorizedPost/authorized-azps-body"),
+                    Saksinfo(saksnummer),
+                    token.token()
+                )
+            }
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `token uten azp-claim gir ikke tilgang når authorizedAzps er satt via body-config`(isApp: Boolean) {
+        val saksnummer = UUID.randomUUID()
+        fakes.gittTilgangTilSak(saksnummer.toString(), true)
+        assertThrows<ManglerTilgangException> {
+            runBlocking {
+                val token = generateToken(isApp = isApp, azp = null)
+                bearerPost<Saksinfo, Saksinfo>(
+                    base("testApi/authorizedPost/authorized-azps-body"),
+                    Saksinfo(saksnummer),
+                    token.token()
+                )
+            }
+        }
     }
 }
 

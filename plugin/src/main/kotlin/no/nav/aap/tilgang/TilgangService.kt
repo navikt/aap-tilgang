@@ -1,6 +1,7 @@
 package no.nav.aap.tilgang
 
 import io.ktor.server.application.ApplicationCall
+import java.util.UUID
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 
 object TilgangService {
@@ -9,12 +10,22 @@ object TilgangService {
         call: ApplicationCall,
         token: OidcToken
     ): TilgangResponse {
+
+        val azp = call.getClaimOrNull<UUID>("azp")
+        val isAuthorizedAzp = azp != null &&
+                authorizedRequest.authorizedAzps != null &&
+                authorizedRequest.authorizedAzps.contains(azp)
+
         if (token.isClientCredentials()) {
-            return TilgangResponse(
-                authorizedRequest.applicationRole != null &&
-                        call.rolesClaim().contains(authorizedRequest.applicationRole)
-            )
+            val isAuthorizedRole = authorizedRequest.applicationRole != null &&
+                    call.rolesClaim().contains(authorizedRequest.applicationRole)
+            return TilgangResponse(isAuthorizedAzp || isAuthorizedRole)
         }
+
+        if (authorizedRequest.authorizedAzps != null && !isAuthorizedAzp) {
+            return TilgangResponse(false)
+        }
+
         if (authorizedRequest.applicationsOnly) {
             return TilgangResponse(false)
         }

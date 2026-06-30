@@ -10,3 +10,7 @@ fun ApplicationCall.ident(): String {
     }.getClaim("NAVident", String::class)
         ?: error("Ident mangler i token claims")
 }
+
+inline fun <reified T : Any> ApplicationCall.getClaimOrNull(claim: String): T? {
+    return principal<JWTPrincipal>()?.getClaim(claim, T::class)
+}

@@ -2,6 +2,7 @@ package no.nav.aap.tilgang
 
 import io.ktor.http.Parameters
 import io.ktor.server.util.getOrFail
+import java.util.UUID
 import no.nav.aap.tilgang.plugin.kontrakt.RelevanteIdenterResolver
 
 /**
@@ -14,6 +15,7 @@ data class AuthorizationParamPathConfig(
     val operasjonerIKontekst: List<Operasjon> = emptyList(),
     val avklaringsbehovKode: String? = null,
     val påkrevdRolle: List<Rolle> = emptyList(),
+    val authorizedAzps: List<UUID>? = null,
     val applicationRole: String? = null,
     val applicationsOnly: Boolean = false,
     val sakPathParam: SakPathParam? = null,
@@ -25,9 +27,16 @@ data class AuthorizationParamPathConfig(
         require(operasjon != Operasjon.SAKSBEHANDLE || avklaringsbehovKode != null || påkrevdRolle.isNotEmpty()) {
             "Avklaringsbehovkode eller påkrevdRolle må være satt for operasjon SAKSBEHANDLE"
         }
+        val hasApplicationRole = applicationRole != null
+        val hasAuthorizedAzps = authorizedAzps != null
+
+        require(!(hasApplicationRole && hasAuthorizedAzps)) {
+            "Kan ikke sette både applicationRole og authorizedAzps"
+        }
+
         if (applicationsOnly) {
-            requireNotNull(applicationRole) {
-                "applicationRole må være satt dersom applicationsOnly = true"
+            require(hasApplicationRole || hasAuthorizedAzps) {
+                "applicationRole eller authorizedAzps må være satt dersom applicationsOnly = true"
             }
         }
     }
@@ -39,6 +48,7 @@ data class AuthorizationParamPathConfig(
             return AuthorizedRequest(
                 applicationsOnly,
                 applicationRole,
+                authorizedAzps,
                 SakTilgangRequest(
                     relevanteIdenter = relevanteIdenter,
                     saksnummer = saksnummer,
@@ -53,6 +63,7 @@ data class AuthorizationParamPathConfig(
             return AuthorizedRequest(
                 applicationsOnly,
                 applicationRole,
+                authorizedAzps,
                 BehandlingTilgangRequest(
                     relevanteIdenter = relevanteIdenter,
                     behandlingsreferanse = behandlingsreferanse,
@@ -69,6 +80,7 @@ data class AuthorizationParamPathConfig(
             return AuthorizedRequest(
                 applicationsOnly,
                 applicationRole,
+                authorizedAzps,
                 JournalpostTilgangRequest(
                     journalpostId = journalpostId,
                     operasjon = operasjon,
@@ -81,6 +93,7 @@ data class AuthorizationParamPathConfig(
         return AuthorizedRequest(
             applicationsOnly = applicationsOnly,
             applicationRole = applicationRole,
+            authorizedAzps = authorizedAzps,
             tilgangRequest = null
         )
     }
