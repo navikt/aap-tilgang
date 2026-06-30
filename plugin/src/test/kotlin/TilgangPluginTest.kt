@@ -607,13 +607,11 @@ class TilgangPluginTest {
     fun `token uten azp-claim gir ikke tilgang når authorizedAzps er satt via param-config`(isApp: Boolean) {
         val saksnummer = UUID.randomUUID()
         fakes.gittTilgangTilSak(saksnummer.toString(), true)
-        runBlocking {
-            // token uten azp-claim
-            val token = generateToken(isApp = isApp)
-            val res = httpClient.get(base("testApi/authorizedGet/$saksnummer/authorized-azps-param")) {
-                bearerAuth(token.token())
+        assertThrows<ManglerTilgangException> {
+            runBlocking {
+                val token = generateToken(isApp = isApp, azp = null)
+                bearerGet<Saksinfo>(base("testApi/authorizedGet/$saksnummer/authorized-azps-param"), token.token())
             }
-            assertThat(res.status).isEqualTo(HttpStatusCode.Forbidden)
         }
     }
 
@@ -655,14 +653,15 @@ class TilgangPluginTest {
     fun `token uten azp-claim gir ikke tilgang når authorizedAzps er satt via body-config`(isApp: Boolean) {
         val saksnummer = UUID.randomUUID()
         fakes.gittTilgangTilSak(saksnummer.toString(), true)
-        runBlocking {
-            val token = generateToken(isApp = isApp)
-            val res = httpClient.post(base("testApi/authorizedPost/authorized-azps-body")) {
-                bearerAuth(token.token())
-                contentType(ContentType.Application.Json)
-                setBody(Saksinfo(saksnummer))
+        assertThrows<ManglerTilgangException> {
+            runBlocking {
+                val token = generateToken(isApp = isApp, azp = null)
+                bearerPost<Saksinfo, Saksinfo>(
+                    base("testApi/authorizedPost/authorized-azps-body"),
+                    Saksinfo(saksnummer),
+                    token.token()
+                )
             }
-            assertThat(res.status).isEqualTo(HttpStatusCode.Forbidden)
         }
     }
 }
