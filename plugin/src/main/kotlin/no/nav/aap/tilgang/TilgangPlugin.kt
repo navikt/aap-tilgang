@@ -115,10 +115,19 @@ fun Route.installerTilgangMachineToMachinePlugin(
         on(AuthenticationChecked) { call ->
             if (call.request.httpMethod != httpMethod) return@on
             val principal = call.principal<JWTPrincipal>() ?: error("mangler principal")
-
+            if (!call.token().isClientCredentials()) {
+                call.respondWithError(IkkeTillattException("Ingen tilgang"))
+                return@on
+            }
             if (config.authorizedAzps.isNotEmpty()) {
                 val azpName = principal.getClaim("azp_name", String::class)
-                val azp = principal.getClaim("azp", UUID::class) ?: error("token uten azp-claim")
+                val azp = principal.getClaim("azp", UUID::class)
+
+                if (azp == null) {
+                    log.error("token uten azp-claim")
+                    call.respondWithError(IkkeTillattException("Ingen tilgang"))
+                    return@on
+                }
 
                 if (azp in config.authorizedAzps) {
                     return@on

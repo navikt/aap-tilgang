@@ -664,6 +664,62 @@ class TilgangPluginTest {
             }
         }
     }
+
+    @Test
+    fun `maskin-til-maskin token med autorisert azp gir tilgang`() {
+        val saksnummer = UUID.randomUUID()
+        runBlocking {
+            val token = generateToken(isApp = true, azp = AUTHORIZED_AZP)
+            val res = bearerGet<Saksinfo>(
+                base("testApi/authorizedGet/$saksnummer/authorized-azps-machine-to-machine"),
+                token.token()
+            )
+            assertThat(res?.saksnummer).isEqualTo(saksnummer)
+        }
+    }
+
+    @Test
+    fun `maskin-til-maskin token med ikke-autorisert azp gir ikke tilgang`() {
+        val saksnummer = UUID.randomUUID()
+        assertThrows<ManglerTilgangException> {
+            runBlocking {
+                val token = generateToken(isApp = true, azp = UUID.randomUUID())
+                bearerGet<Saksinfo>(
+                    base("testApi/authorizedGet/$saksnummer/authorized-azps-machine-to-machine"),
+                    token.token()
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `maskin-til-maskin token uten azp gir ikke tilgang`() {
+        val saksnummer = UUID.randomUUID()
+        assertThrows<ManglerTilgangException> {
+            runBlocking {
+                val token = generateToken(isApp = true, azp = null)
+                bearerGet<Saksinfo>(
+                    base("testApi/authorizedGet/$saksnummer/authorized-azps-machine-to-machine"),
+                    token.token()
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `obo token med autorisert azp gir ikke tilgang`() {
+        val saksnummer = UUID.randomUUID()
+        assertThrows<ManglerTilgangException> {
+            runBlocking {
+                val token = generateToken(isApp = false, azp = AUTHORIZED_AZP)
+                val res = bearerGet<Saksinfo>(
+                    base("testApi/authorizedGet/$saksnummer/authorized-azps-machine-to-machine"),
+                    token.token()
+                )
+                assertThat(res?.saksnummer).isEqualTo(saksnummer)
+            }
+        }
+    }
 }
 
 class LogCaptureAppender : AppenderBase<ILoggingEvent>() {

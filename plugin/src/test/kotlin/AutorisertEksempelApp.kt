@@ -222,6 +222,15 @@ fun Application.autorisertEksempelApp() {
                             respond(Saksinfo(saksnummer = req.saksnummer))
                         }
                     }
+                    route("authorized-azps-machine-to-machine") {
+                        authorizedGet<TestReferanse, Saksinfo>(
+                            AuthorizationMachineToMachineConfig(
+                                authorizedAzps = listOf(AUTHORIZED_AZP)
+                            )
+                        ) { req ->
+                            respond(Saksinfo(saksnummer = req.saksnummer))
+                        }
+                    }
                     route("client-credentials-and-on-behalf-of") {
                         authorizedGet<TestReferanse, Saksinfo>(
                             AuthorizationParamPathConfig(
