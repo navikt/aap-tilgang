@@ -6,9 +6,6 @@ plugins {
 
 group = "no.nav.aap.tilgang"
 
-apply(plugin = "maven-publish")
-apply(plugin = "java-library")
-
 java {
     withSourcesJar()
 }

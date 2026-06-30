@@ -37,7 +37,6 @@ dependencies {
     implementation(libs.ktorClientContentNegotiation)
 
     testImplementation(kotlin("test"))
-    testImplementation(libs.joseJwt)
     testImplementation(libs.junitJupiterParams)
     testImplementation(libs.assertJ)
     testImplementation(libs.mockOauth2Server)
