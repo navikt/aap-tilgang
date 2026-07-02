@@ -106,7 +106,11 @@ fun NormalOpenAPIRoute.tilgang(
         route("/person") {
             post<Unit, TilgangResponse, PersonTilgangRequest> { _, req ->
                 prometheus.httpCallCounter(pipeline.call).increment()
-                val harTilgang = tilgangService.harTilgangTilPerson(req.personIdent, token())
+
+                val callId = pipeline.call.request.header("Nav-CallId") ?: "ukjent"
+                val roller = parseRoller(rolesWithGroupIds = roles, roller())
+
+                val harTilgang = tilgangService.harTilgangTilPerson(ident(), req.personIdent, token(), roller, callId)
                 respond(TilgangResponse(harTilgang))
             }
         }
