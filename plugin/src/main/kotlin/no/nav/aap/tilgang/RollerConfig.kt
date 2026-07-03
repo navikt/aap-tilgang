@@ -5,35 +5,35 @@ import no.nav.aap.komponenter.config.requiredConfigForKey
 /**
  * Kun spesifiserte roller i claims får tilgang. Ingen ytterligere tilgangssjekk
  */
-data class RollerConfig(
+public data class RollerConfig(
     val roller: List<AdGruppe>
 ): AuthorizationRouteConfig
 
-interface AdGruppe {
+public interface AdGruppe {
     /**
      * Id-en til ad-gruppen.
      */
-    val id: String
+    public val id: String
 }
 
-object SaksbehandlerNasjonal : AdGruppe {
+public object SaksbehandlerNasjonal : AdGruppe {
     override val id: String = requiredConfigForKey("AAP_SAKSBEHANDLER_NASJONAL")
 }
-object SaksbehandlerOppfolging : AdGruppe {
+public object SaksbehandlerOppfolging : AdGruppe {
     override val id: String = requiredConfigForKey("AAP_SAKSBEHANDLER_OPPFOLGING")
 }
-object Kvalitetssikrer : AdGruppe {
+public object Kvalitetssikrer : AdGruppe {
     override val id: String = requiredConfigForKey("AAP_KVALITETSSIKRER")
 }
-object Beslutter : AdGruppe {
+public object Beslutter : AdGruppe {
     override val id: String = requiredConfigForKey("AAP_BESLUTTER")
 }
-object Drift : AdGruppe {
+public object Drift : AdGruppe {
     override val id: String = requiredConfigForKey("AAP_DRIFT")
 }
-object Produksjonsstyring : AdGruppe {
+public object Produksjonsstyring : AdGruppe {
     override val id: String = requiredConfigForKey("AAP_PRODUKSJONSSTYRING")
 }
-object Les : AdGruppe {
+public object Les : AdGruppe {
     override val id: String = requiredConfigForKey("AAP_LES")
 }

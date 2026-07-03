@@ -10,7 +10,7 @@ import no.nav.aap.tilgang.plugin.kontrakt.RelevanteIdenterResolver
  *
  * @param avklaringsbehovKode Om operasjonen er [Operasjon.SAKSBEHANDLE], trenger tilgang også å vite hvilket avklaringsbehov som skal saksbehandles.
  */
-data class AuthorizationParamPathConfig(
+public data class AuthorizationParamPathConfig(
     val operasjon: Operasjon = Operasjon.SE,
     val operasjonerIKontekst: List<Operasjon> = emptyList(),
     val avklaringsbehovKode: String? = null,
@@ -41,7 +41,7 @@ data class AuthorizationParamPathConfig(
         }
     }
 
-    suspend fun tilTilgangRequest(parameters: Parameters): AuthorizedRequest {
+    public suspend fun tilTilgangRequest(parameters: Parameters): AuthorizedRequest {
         if (sakPathParam != null) {
             val saksnummer = parameters.getOrFail(sakPathParam.param)
             val relevanteIdenter = relevanteIdenterResolver?.resolve(saksnummer)

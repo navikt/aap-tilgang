@@ -23,12 +23,15 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*
 import no.nav.aap.komponenter.server.auth.token
+import org.jetbrains.annotations.ApiStatus
 
-const val TILGANG_PLUGIN = "TilgangPlugin"
+@ApiStatus.Internal
+public const val TILGANG_PLUGIN: String = "TilgangPlugin"
 
-val log: Logger = LoggerFactory.getLogger(TILGANG_PLUGIN)
+public val log: Logger = LoggerFactory.getLogger(TILGANG_PLUGIN)
 
-inline fun <reified T : Any> Route.installerTilgangBodyPlugin(
+@ApiStatus.Internal
+public inline fun <reified T : Any> Route.installerTilgangBodyPlugin(
     pathConfig: AuthorizationBodyPathConfig,
     auditLogConfig: AuditLogConfig?,
     httpMethod: HttpMethod
@@ -55,7 +58,8 @@ inline fun <reified T : Any> Route.installerTilgangBodyPlugin(
     )
 }
 
-fun Route.installerTilgangParamPlugin(
+@ApiStatus.Internal
+public fun Route.installerTilgangParamPlugin(
     config: AuthorizationParamPathConfig,
     auditLogConfig: AuditLogPathParamConfig?,
     httpMethod: HttpMethod
@@ -75,7 +79,8 @@ fun Route.installerTilgangParamPlugin(
     )
 }
 
-fun Route.installerTilgangRollePlugin(
+@ApiStatus.Internal
+public fun Route.installerTilgangRollePlugin(
     config: RollerConfig,
     httpMethod: HttpMethod
 ) {
@@ -97,7 +102,8 @@ fun Route.installerTilgangRollePlugin(
     })
 }
 
-fun Route.installerTilgangMachineToMachinePlugin(
+@ApiStatus.Internal
+public fun Route.installerTilgangMachineToMachinePlugin(
     config: AuthorizationMachineToMachineConfig,
     auditLogConfig: AuditLogConfig?,
     httpMethod: HttpMethod
@@ -151,8 +157,8 @@ fun Route.installerTilgangMachineToMachinePlugin(
     })
 }
 
-
-inline fun buildTilgangPlugin(
+@ApiStatus.Internal
+public inline fun buildTilgangPlugin(
     httpMethod: HttpMethod,
     auditLogConfig: AuditLogConfig?,
     crossinline parse: suspend (call: ApplicationCall) -> AuthorizedRequest,
@@ -193,20 +199,22 @@ inline fun buildTilgangPlugin(
     }
 }
 
-suspend inline fun <reified T : Any> ApplicationCall.parseGeneric(): T {
+@ApiStatus.Internal
+public suspend inline fun <reified T : Any> ApplicationCall.parseGeneric(): T {
     if (T::class == Unit::class) return Unit as T
     return DefaultJsonMapper.fromJson<T>(receiveText())
 }
 
-fun ApplicationCall.rolesClaim(): List<String> {
+internal fun ApplicationCall.rolesClaim(): List<String> {
     return principal<JWTPrincipal>()?.getListClaim("roles", String::class) ?: emptyList()
 }
 
-fun ApplicationCall.groupsClaim(): List<String> {
+internal fun ApplicationCall.groupsClaim(): List<String> {
     return principal<JWTPrincipal>()?.getListClaim("groups", String::class) ?: emptyList()
 }
 
-suspend fun ApplicationCall.respondWithError(exception: IkkeTillattException) {
+@ApiStatus.Internal
+public suspend fun ApplicationCall.respondWithError(exception: IkkeTillattException) {
     respond(
         exception.status,
         exception.tilApiErrorResponse()
