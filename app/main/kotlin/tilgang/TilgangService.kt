@@ -17,6 +17,7 @@ import tilgang.integrasjoner.saf.SafGraphqlGateway
 import tilgang.integrasjoner.saf.SafJournalpost
 import tilgang.integrasjoner.tilgangsmaskin.BrukerOgRegeltype
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinGateway
+import tilgang.regler.DriftRolleRegel
 import tilgang.regler.RegelInput
 import tilgang.regler.RegelService
 
@@ -140,10 +141,31 @@ class TilgangService(
         return tilgangsmaskinGateway.harTilganger(brukerIdenter, token)
     }
 
-    suspend fun harTilgangTilPerson(brukerIdent: String, token: OidcToken): Boolean {
+    suspend fun harTilgangTilPerson(
+        ansattIdent: String,
+        brukerIdent: String,
+        token: OidcToken,
+        roller: List<Rolle>,
+        callId: String
+    ): Boolean {
+        if (Rolle.DRIFT in roller) {
+            val regelInput = RegelInput(
+                callId = callId,
+                ansattIdent = ansattIdent,
+                currentToken = token,
+                roller = roller,
+                søkerIdenter = RelevanteIdenter(listOf(brukerIdent), emptyList()),
+                avklaringsbehovFraBehandlingsflyt = null,
+                avklaringsbehovFraPostmottak = null,
+                påkrevdRolle = listOf(Rolle.DRIFT),
+                operasjoner = listOf(Operasjon.DRIFTE),
+            )
+
+            return regelService.vurderTilgang(regelInput)[Operasjon.DRIFTE] == true
+        }
+
         return tilgangsmaskinGateway.harTilgangTilPerson(brukerIdent, token)
     }
-
 
     suspend fun harTilgangTilTilbakekreving(
         ansattIdent: String,
