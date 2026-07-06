@@ -42,7 +42,7 @@ jacksonDatatypeJsr310 = { module = "com.fasterxml.jackson.datatype:jackson-datat
 lettuce = { module = "io.lettuce:lettuce-core", version = "7.6.0.RELEASE" }
 coroutinesReactor = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-reactor", version = "1.11.0" }
 coroutinesTest = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version = "1.11.0" }
-mockOauth2Server = { module = "no.nav.security:mock-oauth2-server", version = "5.0.1" }
+mockOauth2Server = { module = "no.nav.security:mock-oauth2-server", version = "5.0.2" }
 testcontainersRedis = { module = "com.redis:testcontainers-redis", version = "2.2.4" }
 testcontainers = { module = "org.testcontainers:testcontainers", version = "2.0.5" }
 
