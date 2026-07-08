@@ -122,6 +122,7 @@ spec:
         - application: saksbehandling-lokal # For lokal utvikling. IKKE kopier denne til prod.yaml
         - application: azure-token-generator
           namespace: nais
+        - application: brev
     outbound:
       rules:
         - application: behandlingsflyt

@@ -117,6 +117,7 @@ spec:
         - application: api-intern
         - application: meldekort-backend
         - application: arenavisningsklient
+        - application: brev
     outbound:
       rules:
         - application: behandlingsflyt
