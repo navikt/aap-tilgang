@@ -34,11 +34,11 @@ postmottakKontrakt = { module = "no.nav.aap.postmottak:kontrakt", version = "6.0
 
 ktorOpenApiGenerator = { module = "no.nav.aap.kelvin:ktor-openapi-generator", version.ref = "komponenter" }
 
-logbackClassic = { module = "ch.qos.logback:logback-classic", version = "1.5.37" }
+logbackClassic = { module = "ch.qos.logback:logback-classic", version = "1.5.38" }
 logstashLogbackEncoder = { module = "net.logstash.logback:logstash-logback-encoder", version = "9.0" }
 
 micrometerRegistryPrometheus = { module = "io.micrometer:micrometer-registry-prometheus", version = "1.17.0" }
-jacksonDatatypeJsr310 = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version = "2.22.0" }
+jacksonDatatypeJsr310 = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version = "2.22.1" }
 lettuce = { module = "io.lettuce:lettuce-core", version = "7.6.0.RELEASE" }
 coroutinesReactor = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-reactor", version = "1.11.0" }
 coroutinesTest = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version = "1.11.0" }
