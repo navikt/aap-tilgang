@@ -123,6 +123,7 @@ spec:
         - application: azure-token-generator
           namespace: nais
         - application: brev
+        - application: utbetal
     outbound:
       rules:
         - application: behandlingsflyt
