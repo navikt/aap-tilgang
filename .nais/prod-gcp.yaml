@@ -118,6 +118,7 @@ spec:
         - application: meldekort-backend
         - application: arenavisningsklient
         - application: brev
+        - application: utbetal
     outbound:
       rules:
         - application: behandlingsflyt
