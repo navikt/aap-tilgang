@@ -107,6 +107,10 @@ fun NormalOpenAPIRoute.tilgang(
             post<Unit, TilgangResponse, PersonTilgangRequest> { _, req ->
                 prometheus.httpCallCounter(pipeline.call).increment()
                 val harTilgang = tilgangService.harTilgangTilPerson(req.personIdent, token())
+
+                if (!harTilgang) {
+                    prometheus.nektetTilgangTeller("person").increment()
+                }
                 respond(TilgangResponse(harTilgang))
             }
         }

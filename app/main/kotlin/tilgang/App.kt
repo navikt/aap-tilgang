@@ -48,15 +48,15 @@ internal object AppConfig {
 
     // Vi skrur opp ktor sin default-verdi, som er "antall CPUer", satt ved -XX:ActiveProcessorCount i Dockerfile,
     // fordi appen vår er veldig I/O-bound når den venter på svar fra andre tjenester.
-    private val ktorParallellitet = 4
+    private const val ktorParallellitet = 4
 
     // Vi følger ktor sin metodikk for å regne ut tuning parametre som funksjon av parallellitet
     // https://github.com/ktorio/ktor/blob/3.3.1/ktor-server/ktor-server-core/common/src/io/ktor/server/engine/ApplicationEngine.kt#L30
-    val connectionGroupSize = ktorParallellitet / 2 + 1
-    val workerGroupSize = ktorParallellitet / 2 + 1
+    const val connectionGroupSize = ktorParallellitet / 2 + 1
+    const val workerGroupSize = ktorParallellitet / 2 + 1
 
     // Vi bruker nå suspend-funksjoner for all I/O, så vi trenger ikke flere tråder enn parallelliteten.
-    val callGroupSize = ktorParallellitet
+    const val callGroupSize = ktorParallellitet
 }
 
 fun main() {
@@ -109,7 +109,7 @@ fun Application.api(
     )
 
     routing {
-        actuator(prometheus)
+        actuator(prometheus, redis)
 
         authenticate(IdentityProvider.ENTRA_ID.value) {
             apiRouting {
