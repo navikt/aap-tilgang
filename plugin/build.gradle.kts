@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.ExplicitApiMode
+
 plugins {
     id("aap.conventions")
     `maven-publish`
@@ -29,6 +31,10 @@ publishing {
             }
         }
     }
+}
+
+kotlin {
+    explicitApi = ExplicitApiMode.Warning
 }
 
 dependencies {

@@ -22,7 +22,7 @@ import kotlin.time.Duration.Companion.seconds
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 
-object TilgangGateway {
+public object TilgangGateway {
     private val baseUrl = URI.create(requiredConfigForKey("INTEGRASJON_TILGANG_URL"))
     private var prometheus: MeterRegistry? = null
     private val tilgangScope = requiredConfigForKey("INTEGRASJON_TILGANG_SCOPE")
@@ -53,7 +53,7 @@ object TilgangGateway {
         .build<PersonTilgangRequestMedNavIdent, TilgangResponse>()
 
 
-    fun initialiserPrometheus(registry: MeterRegistry) {
+    public fun initialiserPrometheus(registry: MeterRegistry) {
         if (prometheus == null) {
             prometheus = registry
             CaffeineCacheMetrics.monitor(registry, tilgangGatewayBehandlingCache, "tilgang_behandling_cache")
@@ -77,21 +77,21 @@ object TilgangGateway {
     }
 
     private val tilgangSakUrl = baseUrl.resolve("/tilgang/sak").toString()
-    suspend fun harTilgangTilSak(body: SakTilgangRequest, currentToken: OidcToken): TilgangResponse {
+    public suspend fun harTilgangTilSak(body: SakTilgangRequest, currentToken: OidcToken): TilgangResponse {
         return get(tilgangGatewaySakCache, SakTilgangRequestMedNavIdent(body, currentToken.navIdent())) {
             post(currentToken, tilgangSakUrl, body)
         }
     }
 
     private val tilgangBehandlingUrl = baseUrl.resolve("/tilgang/behandling").toString()
-    suspend fun harTilgangTilBehandling(body: BehandlingTilgangRequest, currentToken: OidcToken): TilgangResponse {
+    public suspend fun harTilgangTilBehandling(body: BehandlingTilgangRequest, currentToken: OidcToken): TilgangResponse {
         return get(tilgangGatewayBehandlingCache, BehandlingTilgangRequestMedNavIdent(body, currentToken.navIdent())) {
             post(currentToken, tilgangBehandlingUrl, body)
         }
     }
 
     private val tilgangJournalpostUrl = baseUrl.resolve("/tilgang/journalpost").toString()
-    suspend fun harTilgangTilJournalpost(body: JournalpostTilgangRequest, currentToken: OidcToken): TilgangResponse {
+    public suspend fun harTilgangTilJournalpost(body: JournalpostTilgangRequest, currentToken: OidcToken): TilgangResponse {
       return get(tilgangGatewayJournalpostCache, JournalpostTilgangRequestMedNavIdent(body, currentToken.navIdent())) {
         post(currentToken, tilgangJournalpostUrl, body)
       }
@@ -99,18 +99,18 @@ object TilgangGateway {
 
 
     private val tilgangPersonUrl = baseUrl.resolve("/tilgang/person").toString()
-    suspend fun harTilgangTilPerson(body: PersonTilgangRequest, currentToken: OidcToken): TilgangResponse {
+    public suspend fun harTilgangTilPerson(body: PersonTilgangRequest, currentToken: OidcToken): TilgangResponse {
       return get(tilgangGatewayPersonCache, PersonTilgangRequestMedNavIdent(body, currentToken.navIdent())) {
           post(currentToken, tilgangPersonUrl, body)
       }
     }
 
     private val tilgangTilbakekrevingUrl = baseUrl.resolve("/tilgang/tilbakekreving").toString()
-    suspend fun harTilgangTilTilbakekreving(body: TilbakekrevingTilgangRequest, currentToken: OidcToken) =
+    public suspend fun harTilgangTilTilbakekreving(body: TilbakekrevingTilgangRequest, currentToken: OidcToken): TilgangResponse =
         post(currentToken, tilgangTilbakekrevingUrl, body)
 
     /** Oppslag på samme key vil kunne kjøre parallelt. */
-    suspend fun <Key : Any, Value : Any> get(
+    private suspend fun <Key : Any, Value : Any> get(
         cache: Cache<Key, Value>,
         key: Key,
         mapper: suspend (key: Key) -> Value
@@ -152,7 +152,7 @@ object TilgangGateway {
     /** Noen unit-tester i andre apper tester overganger hvor bruker
      * mister eller får tilganger.
      */
-    fun disableCaching() {
+    public fun disableCaching() {
         tilgangGatewayBehandlingCache = Caffeine.newBuilder()
             .maximumSize(0)
             .build()

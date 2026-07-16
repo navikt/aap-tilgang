@@ -4,8 +4,8 @@ import io.ktor.server.application.ApplicationCall
 import java.util.UUID
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 
-object TilgangService {
-    suspend fun harTilgang(
+public object TilgangService {
+    public suspend fun harTilgang(
         authorizedRequest: AuthorizedRequest,
         call: ApplicationCall,
         token: OidcToken
