@@ -3,7 +3,6 @@ package tilgang.integrasjoner.msgraph
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
-import io.ktor.client.plugins.HttpRequestTimeoutException
 import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.get
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
@@ -39,15 +38,9 @@ class MsGraphGateway(
         }
         prometheus.cacheMiss(MSGRAPH_PREFIX).increment()
 
-        val respons = try {
-            httpClient.get("$baseUrl/me/memberOf?\$top=500&\$select=id,mailNickname") {
-                bearerAuth(tokenProvider.oboToken(scope, currentToken))
-            }.body<MemberOf>()
-        } catch (e: HttpRequestTimeoutException) {
-            throw e
-        } catch (e: Exception) {
-            throw MsGraphException(e.message ?: "Ukjent feil mot msgraph")
-        }
+        val respons = httpClient.get("$baseUrl/me/memberOf?\$top=500&\$select=id,mailNickname") {
+            bearerAuth(tokenProvider.oboToken(scope, currentToken))
+        }.body<MemberOf>()
 
         redis.set(Key(MSGRAPH_PREFIX, ident), respons.serialize())
         return respons
