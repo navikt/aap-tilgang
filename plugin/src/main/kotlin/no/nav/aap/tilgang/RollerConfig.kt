@@ -38,6 +38,6 @@ public object Les : AdGruppe {
     override val id: String = requiredConfigForKey("AAP_LES")
 }
 
-object TeamAap : AdGruppe {
+public object TeamAap : AdGruppe {
     override val id: String = requiredConfigForKey("NAIS_TEAM_AAP")
 }
