@@ -1,6 +1,6 @@
 [versions]
 ktor = "3.5.1"
-komponenter = "2.0.107"
+komponenter = "2.0.108"
 junit = "6.1.2"
 
 [libraries]
