@@ -1,5 +1,7 @@
 package tilgang.regler
 
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import tilgang.integrasjoner.skjerming.SkjermingGateway
 import tilgang.service.SkjermingService
 
@@ -18,10 +20,12 @@ class EgenAnsattInputGenerator(
     private val skjermingService: SkjermingService
 ) : InputGenerator<EgenAnsattInput> {
     override suspend fun generer(input: RegelInput): EgenAnsattInput {
-        val skalHaSkjerming = skjermingGateway.isSkjermet(input.søkerIdenter)
-        val harSkjermedePersonerRolle =
-            skjermingService.harSkjermedePersonerRolle(input.currentToken, input.ansattIdent)
-        return EgenAnsattInput(skalHaSkjerming, harSkjermedePersonerRolle)
+        return coroutineScope {
+            val skalHaSkjerming = async { skjermingGateway.isSkjermet(input.søkerIdenter) }
+            val harSkjermedePersonerRolle =
+                async { skjermingService.harSkjermedePersonerRolle(input.currentToken, input.ansattIdent) }
+            EgenAnsattInput(skalHaSkjerming.await(), harSkjermedePersonerRolle.await())
+        }
     }
 }
 
