@@ -1,5 +1,7 @@
 package tilgang.regler
 
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import tilgang.service.AdressebeskyttelseGruppe
 import tilgang.service.AdressebeskyttelseService
 import tilgang.integrasjoner.pdl.Gradering
@@ -41,13 +43,20 @@ class AdressebeskyttelseInputGenerator(
 ) :
     InputGenerator<AdressebeskyttelseInput> {
     override suspend fun generer(input: RegelInput): AdressebeskyttelseInput {
-        val personer = requireNotNull(
-            pdlService.hentPersonBolk(
-                input.søkerIdenter.søker.union(input.søkerIdenter.barn).toList(),
-                input.callId
-            )
-        )
-        val roller = adressebeskyttelseService.hentAdressebeskyttelseRoller(input.currentToken, input.ansattIdent)
-        return AdressebeskyttelseInput(roller, personer)
+        return coroutineScope {
+            val personer = async {
+                requireNotNull(
+                    pdlService.hentPersonBolk(
+                        input.søkerIdenter.søker.union(input.søkerIdenter.barn).toList(),
+                        input.callId
+                    )
+                )
+            }
+            val roller = async {
+                adressebeskyttelseService.hentAdressebeskyttelseRoller(input.currentToken, input.ansattIdent)
+            }
+
+            AdressebeskyttelseInput(roller.await(), personer.await())
+        }
     }
 }
