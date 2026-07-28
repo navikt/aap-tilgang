@@ -1,19 +1,21 @@
 package tilgang.auth
 
-import java.security.MessageDigest
-import java.time.Clock
-import java.time.Instant
 import com.github.benmanes.caffeine.cache.Caffeine
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.TimeUnit
+import io.micrometer.core.instrument.binder.cache.CaffeineCacheMetrics
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
-import kotlin.time.Duration.Companion.seconds
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
+import tilgang.AppConfig
 import tilgang.http.createHttpClient
+import java.security.MessageDigest
+import java.time.Clock
+import java.time.Instant
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.seconds
 
 interface ITokenProvider {
     suspend fun m2mToken(scope: String): String
@@ -30,11 +32,20 @@ object TokenProvider : ITokenProvider {
     private val m2mCache = Caffeine.newBuilder()
         .maximumSize(128)
         .expireAfterAccess(30, TimeUnit.MINUTES)
+        .recordStats()
         .build<String, CachedToken>()
+        .also {
+            CaffeineCacheMetrics.monitor(AppConfig.prometheus, it, "tilgang_token_m2m_cache")
+        }
+
     private val oboCache = Caffeine.newBuilder()
         .maximumSize(10_000)
         .expireAfterAccess(30, TimeUnit.MINUTES)
+        .recordStats()
         .build<String, CachedToken>()
+        .also {
+            CaffeineCacheMetrics.monitor(AppConfig.prometheus, it, "tilgang_token_obo_cache")
+        }
     private val m2mInFlight = ConcurrentHashMap<String, Deferred<CachedToken>>()
     private val oboInFlight = ConcurrentHashMap<String, Deferred<CachedToken>>()
 
