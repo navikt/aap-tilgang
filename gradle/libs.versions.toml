@@ -1,6 +1,6 @@
 [versions]
 ktor = "3.5.1"
-komponenter = "2.0.113"
+komponenter = "2.0.119"
 junit = "6.1.2"
 
 [libraries]
@@ -29,12 +29,12 @@ infrastructure = { module = "no.nav.aap.kelvin:infrastructure", version.ref = "k
 server = { module = "no.nav.aap.kelvin:server", version.ref = "komponenter" }
 caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version = "3.2.4" }
 
-behandlingsflytKontrakt = { module = "no.nav.aap.behandlingsflyt:kontrakt", version = "0.0.640" }
+behandlingsflytKontrakt = { module = "no.nav.aap.behandlingsflyt:kontrakt", version = "0.0.642" }
 postmottakKontrakt = { module = "no.nav.aap.postmottak:kontrakt", version = "6.0.7" }
 
 ktorOpenApiGenerator = { module = "no.nav.aap.kelvin:ktor-openapi-generator", version.ref = "komponenter" }
 
-logbackClassic = { module = "ch.qos.logback:logback-classic", version = "1.5.38" }
+logbackClassic = { module = "ch.qos.logback:logback-classic", version = "1.6.0" }
 logstashLogbackEncoder = { module = "net.logstash.logback:logstash-logback-encoder", version = "9.0" }
 
 micrometerRegistryPrometheus = { module = "io.micrometer:micrometer-registry-prometheus", version = "1.17.0" }
