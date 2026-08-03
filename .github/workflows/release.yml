@@ -29,7 +29,9 @@ jobs:
   publiser-plugin:
     needs: gradle
     if: github.ref == 'refs/heads/main'
-    concurrency: kontrakt
+    concurrency:
+      group: kontrakt
+      queue: max
     permissions:
       contents: write
       packages: write
@@ -82,7 +84,9 @@ jobs:
       contents: read
       id-token: write
     needs: gradle
-    concurrency: deploy-dev
+    concurrency:
+      group: deploy-dev
+      queue: max
     uses: navikt/aap-workflows/.github/workflows/deploy.yml@main
     secrets: inherit
     with:
@@ -97,7 +101,9 @@ jobs:
       id-token: write
     uses: navikt/aap-workflows/.github/workflows/deploy.yml@main
     secrets: inherit
-    concurrency: deploy-prod
+    concurrency:
+      group: deploy-prod
+      queue: max
     with:
       cluster: prod-gcp
       manifest: .nais/prod-gcp.yaml
