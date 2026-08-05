@@ -4,13 +4,13 @@ import io.ktor.server.application.ApplicationCall
 import io.ktor.server.auth.jwt.JWTPrincipal
 import io.ktor.server.auth.principal
 
-fun ApplicationCall.ident(): String {
+public fun ApplicationCall.ident(): String {
     return requireNotNull(principal<JWTPrincipal>()) {
         "principal mangler i ktor auth"
     }.getClaim("NAVident", String::class)
         ?: error("Ident mangler i token claims")
 }
 
-inline fun <reified T : Any> ApplicationCall.getClaimOrNull(claim: String): T? {
+public inline fun <reified T : Any> ApplicationCall.getClaimOrNull(claim: String): T? {
     return principal<JWTPrincipal>()?.getClaim(claim, T::class)
 }

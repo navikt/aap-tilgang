@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.ExplicitApiMode
+
 plugins {
     id("aap.conventions")
     `maven-publish`
@@ -8,6 +10,10 @@ group = "no.nav.aap.tilgang"
 
 java {
     withSourcesJar()
+}
+
+kotlin {
+    explicitApi = ExplicitApiMode.Warning
 }
 
 publishing {

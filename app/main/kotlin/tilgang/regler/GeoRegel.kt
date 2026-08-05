@@ -1,5 +1,7 @@
 package tilgang.regler
 
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.komponenter.miljo.MiljøKode
 import org.slf4j.LoggerFactory
@@ -56,12 +58,17 @@ class GeoInputGenerator(
 ) :
     InputGenerator<GeoInput> {
     override suspend fun generer(input: RegelInput): GeoInput {
-        val geoRoller = geoService.hentGeoRoller(input.currentToken, input.ansattIdent)
-        val søkersGeografiskeTilknytning = pdlClient.hentGeografiskTilknytning(
-            input.søkerIdenter.søker.first(),
-            input.callId
-        )
-        return GeoInput(geoRoller, søkersGeografiskeTilknytning, input.ansattIdent)
+        return coroutineScope {
+            val geoRoller = async { geoService.hentGeoRoller(input.currentToken, input.ansattIdent) }
+            val søkersGeografiskeTilknytning = async {
+                pdlClient.hentGeografiskTilknytning(
+                    input.søkerIdenter.søker.first(),
+                    input.callId
+                )
+            }
+
+            GeoInput(geoRoller.await(), søkersGeografiskeTilknytning.await(), input.ansattIdent)
+        }
     }
 }
 

@@ -111,6 +111,10 @@ fun NormalOpenAPIRoute.tilgang(
                 val roller = parseRoller(rolesWithGroupIds = roles, roller())
 
                 val harTilgang = tilgangService.harTilgangTilPerson(ident(), req.personIdent, token(), roller, callId)
+
+                if (!harTilgang) {
+                    prometheus.nektetTilgangTeller("person").increment()
+                }
                 respond(TilgangResponse(harTilgang))
             }
         }

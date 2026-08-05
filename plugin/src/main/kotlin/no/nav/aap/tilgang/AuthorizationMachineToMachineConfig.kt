@@ -15,7 +15,7 @@ import java.util.*
  * kubectl get azureadapplication -n aap
  * ```
  */
-data class AuthorizationMachineToMachineConfig(
+public data class AuthorizationMachineToMachineConfig(
     /** `CLIENT_ID` til applikasjonen som får lov til å kalle oss. */
     val authorizedAzps: List<UUID> = listOf(),
 

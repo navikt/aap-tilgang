@@ -13,14 +13,15 @@ import io.ktor.server.routing.*
 import no.nav.aap.tilgang.auditlog.AuditLogConfig
 import no.nav.aap.tilgang.auditlog.AuditLogPathParamConfig
 import no.nav.aap.tilgang.plugin.kontrakt.RelevanteIdenterResolver
+import org.jetbrains.annotations.ApiStatus
 
-enum class Tags(override val description: String) : APITag {
+public enum class Tags(override val description: String) : APITag {
     Tilgangkontrollert("Dette endepunktet er tilgangkontrollert.")
 }
 
-val tilgangkontrollertTag = TagModule(listOf(Tags.Tilgangkontrollert))
+public val tilgangkontrollertTag: TagModule = TagModule(listOf(Tags.Tilgangkontrollert))
 
-inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.authorizedGet(
+public inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.authorizedGet(
     routeConfig: AuthorizationRouteConfig,
     auditLogConfig: AuditLogPathParamConfig? = null,
     exampleResponse: TResponse? = null,
@@ -55,7 +56,7 @@ inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.a
     }
 }
 
-inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : Any> NormalOpenAPIRoute.authorizedPost(
+public inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : Any> NormalOpenAPIRoute.authorizedPost(
     routeConfig: AuthorizationRouteConfig,
     auditLogConfig: AuditLogConfig? = null,
     exampleResponse: TResponse? = null,
@@ -103,7 +104,7 @@ inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : A
     }
 }
 
-inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.getGrunnlag(
+public inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.getGrunnlag(
     behandlingPathParam: BehandlingPathParam,
     avklaringsbehovKode: String,
     relevanteIdenterResolver: RelevanteIdenterResolver? = null,
@@ -125,7 +126,7 @@ inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.g
     get<TParams, TResponse>(*modules, tilgangkontrollertTag) { params -> body(params) }
 }
 
-inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.getGrunnlag(
+public inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.getGrunnlag(
     behandlingPathParam: BehandlingPathParam,
     påkrevdRolle: List<Rolle>,
     relevanteIdenterResolver: RelevanteIdenterResolver? = null,
@@ -147,7 +148,7 @@ inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.g
     get<TParams, TResponse>(*modules, tilgangkontrollertTag) { params -> body(params) }
 }
 
-inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : Any> NormalOpenAPIRoute.authorizedPut(
+public inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : Any> NormalOpenAPIRoute.authorizedPut(
     routeConfig: AuthorizationRouteConfig,
     auditLogConfig: AuditLogConfig? = null,
     vararg modules: RouteOpenAPIModule,
@@ -182,8 +183,9 @@ inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : A
     }
 }
 
-fun håndterNoAuth(route: Route, auditLogConfig: AuditLogConfig?) {
-    log.info("Installerer ikke tilgangskontroll for ${route}")
+@ApiStatus.Internal
+public fun håndterNoAuth(route: Route, auditLogConfig: AuditLogConfig?) {
+    log.info("Installerer ikke tilgangskontroll for $route")
     if (auditLogConfig != null) {
         log.warn("Auditlogging er ikke implementert for NoAuthConfig - ignorerer AuditLogConfig")
     }

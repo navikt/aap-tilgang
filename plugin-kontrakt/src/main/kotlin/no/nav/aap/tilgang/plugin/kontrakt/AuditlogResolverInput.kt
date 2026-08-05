@@ -1,5 +1,5 @@
 package no.nav.aap.tilgang.plugin.kontrakt
 
-interface AuditlogResolverInput {
-    fun hentAuditlogResolverInput(): String
+public interface AuditlogResolverInput {
+    public fun hentAuditlogResolverInput(): String
 }

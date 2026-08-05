@@ -53,14 +53,25 @@ class RegelService(
 
     suspend fun vurderTilgang(input: RegelInput): Map<Operasjon, Boolean> {
         val aktuelleOperasjoner = regelOpppsett.filterKeys { it in input.operasjoner }
-
-        val regelResultater: Map<Regel<*>, Boolean> = aktuelleOperasjoner.values
-            .flatten()
-            .toSet()
-            .associateWith { regel -> (regelMedVurdering[regel]?.vurder(input) ?: error("Fant ikke vurdering for regel $regel")) }
+        val regelCache = mutableMapOf<Regel<*>, Boolean>()
 
         return aktuelleOperasjoner.mapValues { (_, regler) ->
-            regler.all { regelResultater[it] == true }
+            regler.all { regel ->
+                hentRegelresultat(regelCache, regel, input)
+            }
         }
+    }
+
+    private suspend fun hentRegelresultat(
+        regelCache: MutableMap<Regel<*>, Boolean>,
+        regel: Regel<*>,
+        input: RegelInput,
+    ): Boolean {
+        regelCache[regel]?.let { return it }
+
+        val vurdering = regelMedVurdering[regel]?.vurder(input)
+            ?: error("Fant ikke vurdering for regel $regel")
+        regelCache[regel] = vurdering
+        return vurdering
     }
 }

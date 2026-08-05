@@ -2,10 +2,10 @@ package no.nav.aap.tilgang
 
 import java.util.UUID
 
-interface AuthorizationRouteConfig
+public interface AuthorizationRouteConfig
 
 
-data class AuthorizedRequest(
+public data class AuthorizedRequest(
     val applicationsOnly: Boolean,
     val applicationRole: String?,
     val authorizedAzps: List<UUID>?,

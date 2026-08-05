@@ -9,7 +9,7 @@ import no.nav.aap.tilgang.plugin.kontrakt.Personreferanse
 import no.nav.aap.tilgang.plugin.kontrakt.RelevanteIdenterResolver
 import no.nav.aap.tilgang.plugin.kontrakt.Saksreferanse
 
-data class AuthorizationBodyPathConfig(
+public data class AuthorizationBodyPathConfig(
     val operasjon: Operasjon,
     val applicationRole: String? = null,
     val authorizedAzps: List<UUID>? = null,
@@ -35,7 +35,7 @@ data class AuthorizationBodyPathConfig(
         }
     }
 
-    suspend fun tilTilgangRequest(request: Any): AuthorizedRequest {
+    public suspend fun tilTilgangRequest(request: Any): AuthorizedRequest {
         when (request) {
             is Saksreferanse -> {
                 val referanse = request.hentSaksreferanse()

@@ -1,3 +1,3 @@
 package no.nav.aap.tilgang
 
-object NoAuthConfig: AuthorizationRouteConfig
+public object NoAuthConfig: AuthorizationRouteConfig
