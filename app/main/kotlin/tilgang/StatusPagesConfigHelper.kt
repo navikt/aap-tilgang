@@ -1,5 +1,6 @@
 package tilgang
 
+import io.ktor.client.network.sockets.ConnectTimeoutException
 import io.ktor.client.plugins.HttpRequestTimeoutException
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.plugins.statuspages.StatusPagesConfig
@@ -24,6 +25,7 @@ object StatusPagesConfigHelper {
             val uri = call.request.local.uri
 
             when (cause) {
+                is ConnectTimeoutException,
                 is HttpRequestTimeoutException,
                 is HttpTimeoutException -> {
                     logger.warn("Timeout mot '$uri'", cause)
