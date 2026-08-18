@@ -46,10 +46,10 @@ fun Application.tilgangsmaskinFake() {
             if (body.contains("456")) {
                 val body = TilgangsmaskinAvvistResponse(
                     type = "https://confluence.adeo.no/display/TM/Tilgangsmaskin+API+og+regelsett",
-                    title = "AVVIST_HABILITET",
+                    title = "AVVIST_GEOGRAFISK",
                     status = 403,
                     navIdent = "Z990883",
-                    begrunnelse = "Inhabil",
+                    begrunnelse = "Du har ikke tilgang til brukerens geografiske område eller enhet.",
                     kanOverstyres = false
                 )
                 call.respond(HttpStatusCode.Forbidden, body)

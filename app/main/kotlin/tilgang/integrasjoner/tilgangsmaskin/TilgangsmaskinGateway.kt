@@ -1,21 +1,16 @@
 package tilgang.integrasjoner.tilgangsmaskin
 
-import io.ktor.client.HttpClient
-import io.ktor.client.call.body
-import io.ktor.client.plugins.ClientRequestException
-import io.ktor.client.request.bearerAuth
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
-import io.ktor.http.ContentType
-import io.ktor.http.HttpStatusCode
-import io.ktor.http.contentType
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.plugins.*
+import io.ktor.client.request.*
+import io.ktor.http.*
 import io.micrometer.core.instrument.MeterRegistry
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import org.slf4j.LoggerFactory
 import tilgang.auth.ITokenProvider
 import tilgang.auth.TokenProvider
-
 import tilgang.metrics.cacheHit
 import tilgang.metrics.cacheMiss
 import tilgang.redis.Key
@@ -31,9 +26,16 @@ interface ITilgangsmaskinGateway {
         token: OidcToken,
         ansattIdent: String,
     ): HarTilgangFraTilgangsmaskinen
+
+    suspend fun harTilgangTilPersonKomplett(
+        brukerIdent: String,
+        token: OidcToken,
+        ansattIdent: String
+    ): HarTilgangFraTilgangsmaskinen
 }
 
 private val log = LoggerFactory.getLogger(TilgangsmaskinGateway::class.java)
+private val redisExpireSec = 21600L
 
 /**
  * Se Confluence for dokumentasjon.
@@ -82,7 +84,7 @@ class TilgangsmaskinGateway(
                 setBody(brukerIdent)
             }
             val tilgang = HarTilgangFraTilgangsmaskinen(true)
-            redis.set(Key(TILGANGSMASKIN_KJERNE_PREFIX, brukerIdent + ansattIdent), tilgang.serialize(), 21600)
+            redis.set(Key(TILGANGSMASKIN_KJERNE_PREFIX, brukerIdent + ansattIdent), tilgang.serialize(), redisExpireSec)
             tilgang
         } catch (e: ClientRequestException) {
             if (e.response.status == HttpStatusCode.Forbidden) {
@@ -93,7 +95,54 @@ class TilgangsmaskinGateway(
                 }.getOrNull()
                 avvistResponse?.let { log.info("403 fra tilgangsmaskin: ${it.title}") }
                 val ikkeTilgang = HarTilgangFraTilgangsmaskinen(false, avvistResponse)
-                redis.set(Key(TILGANGSMASKIN_KJERNE_PREFIX, brukerIdent + ansattIdent), ikkeTilgang.serialize(), 21600)
+                redis.set(
+                    Key(TILGANGSMASKIN_KJERNE_PREFIX, brukerIdent + ansattIdent),
+                    ikkeTilgang.serialize(),
+                    redisExpireSec
+                )
+                ikkeTilgang
+            } else throw e
+        }
+    }
+
+    override suspend fun harTilgangTilPersonKomplett(
+        brukerIdent: String,
+        token: OidcToken,
+        ansattIdent: String
+    ): HarTilgangFraTilgangsmaskinen {
+        redis[Key(TILGANGSMASKIN_KOMPLETT_PREFIX, brukerIdent + ansattIdent)]?.let {
+            prometheus.cacheHit(TILGANGSMASKIN_KOMPLETT_PREFIX).increment()
+            return it.deserialize()
+        }
+        prometheus.cacheMiss(TILGANGSMASKIN_KOMPLETT_PREFIX).increment()
+
+        return try {
+            httpClient.post("$baseUrl/api/v1/komplett") {
+                bearerAuth(tokenProvider.oboToken(scope, token))
+                contentType(ContentType.Application.Json)
+                setBody(brukerIdent)
+            }
+            val tilgang = HarTilgangFraTilgangsmaskinen(true)
+            redis.set(
+                Key(TILGANGSMASKIN_KOMPLETT_PREFIX, brukerIdent + ansattIdent),
+                tilgang.serialize(),
+                redisExpireSec
+            )
+            tilgang
+        } catch (e: ClientRequestException) {
+            if (e.response.status == HttpStatusCode.Forbidden) {
+                val avvistResponse = runCatching {
+                    e.response.body<TilgangsmaskinAvvistResponse>()
+                }.onFailure { parseErr ->
+                    log.warn("Greide ikke parse avvist-respons fra tilgangsmaskinen", parseErr)
+                }.getOrNull()
+                avvistResponse?.let { log.info("403 fra tilgangsmaskin: ${it.title}") }
+                val ikkeTilgang = HarTilgangFraTilgangsmaskinen(false, avvistResponse)
+                redis.set(
+                    Key(TILGANGSMASKIN_KOMPLETT_PREFIX, brukerIdent + ansattIdent),
+                    ikkeTilgang.serialize(),
+                    redisExpireSec
+                )
                 ikkeTilgang
             } else throw e
         }
@@ -117,5 +166,6 @@ class TilgangsmaskinGateway(
 
     companion object {
         private const val TILGANGSMASKIN_KJERNE_PREFIX = "tilgangsmaskinKjerne"
+        private const val TILGANGSMASKIN_KOMPLETT_PREFIX = "tilgangsmaskinKomplett"
     }
 }

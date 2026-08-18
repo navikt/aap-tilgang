@@ -28,4 +28,16 @@ class TilgangsmaskinTest {
         assertFalse(harIkkeTilgangResponse.harTilgang)
         assertTrue(harIkkeTilgangResponse.tilgangsmaskinAvvistResponse?.title == TilgangsmaskinAvvistGrunn.AVVIST_HABILITET.toString())
     }
+
+    @Test
+    fun `Kan parse harTilgangTilPersonKomplett`() = runTest {
+        val token = AzureTokenGen("tilgangazure", "tilgang").generate()
+        val tilgangsmaskinGateway = TilgangsmaskinGateway(redis, httpClient, prometheus)
+        val harTilgangResponse = tilgangsmaskinGateway.harTilgangTilPersonKomplett("123", OidcToken(token), "799")
+        val harIkkeTilgangResponse = tilgangsmaskinGateway.harTilgangTilPersonKomplett("456", OidcToken(token), "799")
+
+        assertTrue(harTilgangResponse.harTilgang)
+        assertFalse(harIkkeTilgangResponse.harTilgang)
+        assertTrue(harIkkeTilgangResponse.tilgangsmaskinAvvistResponse?.title == TilgangsmaskinAvvistGrunn.AVVIST_GEOGRAFISK.toString())
+    }
 }
