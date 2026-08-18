@@ -6,10 +6,6 @@ plugins {
 
 group = "no.nav.aap.tilgang"
 
-repositories {
-    mavenCentral()
-}
-
 java {
     withSourcesJar()
 }
