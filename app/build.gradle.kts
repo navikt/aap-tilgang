@@ -30,6 +30,7 @@ dependencies {
     implementation(libs.logbackClassic)
     implementation(libs.logstashLogbackEncoder)
     implementation(libs.joseJwt)
+    implementation(libs.caffeine)
     implementation(libs.lettuce)
     implementation(libs.coroutinesReactor)
     implementation(libs.ktorClientCore)
