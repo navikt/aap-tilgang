@@ -1,5 +1,6 @@
 package tilgang.regler
 
+import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.tilgang.Operasjon
 import tilgang.integrasjoner.pdl.IPdlGraphQLGateway
 import tilgang.integrasjoner.skjerming.SkjermingGateway
@@ -17,7 +18,27 @@ class RegelService(
     tilgangsmaskinGateway: TilgangsmaskinGateway
 ) {
 
-    private val regelOpppsett = mapOf(
+    private val regelOppsettMedTilgangsmaskinKomplett = mapOf(
+        Operasjon.SE to listOf(
+            LeseRolleRegel,
+            AdressebeskyttelseRegel,
+            TilgangsmaskinKomplettRegel
+        ),
+        Operasjon.DRIFTE to listOf(
+            DriftRolleRegel,
+            TilgangsmaskinKjerneRegel,
+        ),
+        Operasjon.DELEGERE to listOf(
+            AvdelingslederRolleRegel,
+        ),
+        Operasjon.SAKSBEHANDLE to listOf(
+            AvklaringsbehovRolleRegel,
+            AdressebeskyttelseRegel,
+            TilgangsmaskinKomplettRegel
+        )
+    )
+
+    private val regelOppsettUtenTilgangsmaskinKomplett = mapOf(
         Operasjon.SE to listOf(
             LeseRolleRegel,
             TilgangsmaskinKjerneRegel,
@@ -49,10 +70,19 @@ class RegelService(
         DriftRolleRegel to RegelMedInputgenerator(DriftRolleRegel, RolleInputGenerator),
         AvdelingslederRolleRegel to RegelMedInputgenerator(AvdelingslederRolleRegel, RolleInputGenerator),
         AvklaringsbehovRolleRegel to RegelMedInputgenerator(AvklaringsbehovRolleRegel, AvklaringsbehovInputGenerator),
+        TilgangsmaskinKomplettRegel to RegelMedInputgenerator(
+            TilgangsmaskinKomplettRegel,
+            TilgangsmaskinKomplettInputGenerator(tilgangsmaskinGateway)
+        )
     )
 
     suspend fun vurderTilgang(input: RegelInput): Map<Operasjon, Boolean> {
-        val aktuelleOperasjoner = regelOpppsett.filterKeys { it in input.operasjoner }
+        val aktuelleOperasjoner = if (Miljø.erProd()) {
+            regelOppsettUtenTilgangsmaskinKomplett.filterKeys { it in input.operasjoner }
+        } else {
+            regelOppsettMedTilgangsmaskinKomplett.filterKeys { it in input.operasjoner }
+        }
+
         val regelCache = mutableMapOf<Regel<*>, Boolean>()
 
         return aktuelleOperasjoner.mapValues { (_, regler) ->
