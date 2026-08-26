@@ -1,6 +1,6 @@
 [versions]
 ktor = "3.5.2"
-komponenter = "2.0.144"
+komponenter = "2.0.147"
 junit = "6.1.3"
 
 [libraries]
@@ -29,7 +29,7 @@ infrastructure = { module = "no.nav.aap.kelvin:infrastructure", version.ref = "k
 server = { module = "no.nav.aap.kelvin:server", version.ref = "komponenter" }
 caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version = "3.2.4" }
 
-behandlingsflytKontrakt = { module = "no.nav.aap.behandlingsflyt:kontrakt", version = "0.0.652" }
+behandlingsflytKontrakt = { module = "no.nav.aap.behandlingsflyt:kontrakt", version = "0.0.653" }
 postmottakKontrakt = { module = "no.nav.aap.postmottak:kontrakt", version = "6.0.9" }
 
 ktorOpenApiGenerator = { module = "no.nav.aap.kelvin:ktor-openapi-generator", version.ref = "komponenter" }
