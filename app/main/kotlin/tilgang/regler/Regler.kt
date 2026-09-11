@@ -28,10 +28,6 @@ class RegelService(
             DriftRolleRegel,
             TilgangsmaskinKjerneRegel,
         ),
-        Operasjon.DRIFT_LES to listOf(
-            DriftLesRolleRegel,
-            TilgangsmaskinKjerneRegel
-        ),
         Operasjon.DELEGERE to listOf(
             AvdelingslederRolleRegel,
         ),
@@ -54,10 +50,6 @@ class RegelService(
             DriftRolleRegel,
             TilgangsmaskinKjerneRegel,
         ),
-        Operasjon.DRIFT_LES to listOf(
-            DriftLesRolleRegel,
-            TilgangsmaskinKjerneRegel
-        ),
         Operasjon.DELEGERE to listOf(
             AvdelingslederRolleRegel,
         ),
@@ -76,7 +68,6 @@ class RegelService(
         GeoRegel to RegelMedInputgenerator(GeoRegel, GeoInputGenerator(geoService, pdlGateway)),
         EgenAnsattRegel to RegelMedInputgenerator(EgenAnsattRegel, EgenAnsattInputGenerator(skjermetGateway, skjermingService)),
         DriftRolleRegel to RegelMedInputgenerator(DriftRolleRegel, RolleInputGenerator),
-        DriftLesRolleRegel to RegelMedInputgenerator(DriftLesRolleRegel, RolleInputGenerator),
         AvdelingslederRolleRegel to RegelMedInputgenerator(AvdelingslederRolleRegel, RolleInputGenerator),
         AvklaringsbehovRolleRegel to RegelMedInputgenerator(AvklaringsbehovRolleRegel, AvklaringsbehovInputGenerator),
         TilgangsmaskinKomplettRegel to RegelMedInputgenerator(

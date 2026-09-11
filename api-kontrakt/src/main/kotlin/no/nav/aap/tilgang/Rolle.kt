@@ -10,7 +10,6 @@ enum class Rolle {
     BESLUTTER,
     LES,
     PRODUKSJONSSTYRING,
-    DRIFT,
-    DRIFT_LES
+    DRIFT
 }
 
