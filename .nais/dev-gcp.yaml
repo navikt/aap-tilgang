@@ -26,6 +26,7 @@ spec:
           - id: c3e18aef-a7ac-49df-806e-4fe58b81460d # 0000-GA-AAP_KVALITETSSIKRER
           - id: 3377dc51-ca61-4e36-b812-21b5fc34474f # 0000-GA-AAP_SAKSBEHANDLER_NASJONAL
           - id: bc89623f-4624-4978-ac54-acd048c0f2a5 # 0000-GA-AAP_DRIFT
+          - id: 8e5bc6be-a934-41f0-8a92-e974ea7b80d3 # 0000-GA-AAP_DRIFT_LES
           - id: c75883f9-4cb2-42c7-b75c-3f0f29ee3ead # 0000-GA-AAP_PRODUKSJONSSTYRING
   replicas:
     min: 1
@@ -72,6 +73,8 @@ spec:
       value: 3377dc51-ca61-4e36-b812-21b5fc34474f
     - name: AAP_DRIFT
       value: bc89623f-4624-4978-ac54-acd048c0f2a5
+    - name: AAP_DRIFT_LES
+      value: 8e5bc6be-a934-41f0-8a92-e974ea7b80d3
     - name: AAP_PRODUKSJONSSTYRING
       value: c75883f9-4cb2-42c7-b75c-3f0f29ee3ead
     # Integrasjoner
