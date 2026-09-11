@@ -19,5 +19,7 @@ enum class Operasjon {
      */
     DRIFTE,
 
+    DRIFT_LES,
+
     DELEGERE
 }
