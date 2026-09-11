@@ -13,6 +13,7 @@ data class Config(
         Role(Rolle.BESLUTTER, UUID.fromString(getEnvVar("AAP_BESLUTTER"))),
         Role(Rolle.LES, UUID.fromString(getEnvVar("AAP_LES"))),
         Role(Rolle.DRIFT, UUID.fromString(getEnvVar("AAP_DRIFT"))),
+        Role(Rolle.DRIFT_LES, UUID.fromString(getEnvVar("AAP_DRIFT_LES"))),
         Role(Rolle.PRODUKSJONSSTYRING, UUID.fromString(getEnvVar("AAP_PRODUKSJONSSTYRING"))),
         Role(Rolle.KVALITETSSIKRER, UUID.fromString(getEnvVar("AAP_KVALITETSSIKRER"))),
     ),
