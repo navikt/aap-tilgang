@@ -11,7 +11,7 @@ updates:
   - package-ecosystem: github-actions
     directory: /
     commit-message:
-      prefix: "AAP-2194"
+      prefix: "AAP-BAU"
     groups:
         codeql:
           patterns:
