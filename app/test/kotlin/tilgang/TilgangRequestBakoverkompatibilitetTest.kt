@@ -315,7 +315,10 @@ class TilgangRequestBakoverkompatibilitetTest {
         assertThat(request.påkrevdRoller).containsExactly(Rolle.SAKSBEHANDLER_OPPFOLGING, Rolle.KVALITETSSIKRER)
         @Suppress("DEPRECATION")
         assertThat(request.påkrevdRolle).isNull()
-        assertThat(request.effektivePåkrevdRoller()).containsExactly(Rolle.SAKSBEHANDLER_OPPFOLGING, Rolle.KVALITETSSIKRER)
+        assertThat(request.effektivePåkrevdRoller()).containsExactly(
+            Rolle.SAKSBEHANDLER_OPPFOLGING,
+            Rolle.KVALITETSSIKRER
+        )
     }
 
     @Test
@@ -420,12 +423,29 @@ class TilgangRequestBakoverkompatibilitetTest {
 
     @Test
     fun `PersonTilgangRequest - serialisering og deserialisering gir samme objekt`() {
-        val original = PersonTilgangRequest(personIdent = "12345678901")
+        val original = PersonTilgangRequest(
+            personIdent = "12345678901",
+            påkrevdRolle = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
+            operasjon = Operasjon.SAKSBEHANDLE
+        )
 
         val json = objectMapper.writeValueAsString(original)
         val deserialisert = objectMapper.readValue<PersonTilgangRequest>(json)
 
         assertThat(deserialisert).isEqualTo(original)
+    }
+
+    @Test
+    fun `PersonTilgangRequest - gammel struktur deserialiseres riktig`() {
+        val ident = "12345678901"
+        val json = """
+            {
+                "personIdent": "$ident"
+            }
+        """.trimIndent()
+        val deserialisert = objectMapper.readValue<PersonTilgangRequest>(json)
+
+        assertThat(deserialisert.personIdent).isEqualTo(ident)
     }
 
     @Test

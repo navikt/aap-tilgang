@@ -44,6 +44,7 @@ dependencies {
     testImplementation(libs.testcontainersRedis)
     testImplementation(libs.coroutinesTest)
     testImplementation(libs.ktorClientMock)
+    testImplementation(libs.mockk)
     constraints {
         implementation("org.apache.commons:commons-compress:1.28.0") {
             because("https://github.com/advisories/GHSA-4g9r-vxhx-9pgx")

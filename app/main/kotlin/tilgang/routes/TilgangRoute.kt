@@ -110,7 +110,7 @@ fun NormalOpenAPIRoute.tilgang(
                 val callId = pipeline.call.request.header("Nav-CallId") ?: "ukjent"
                 val roller = parseRoller(rolesWithGroupIds = roles, roller())
 
-                val harTilgang = tilgangService.harTilgangTilPerson(ident(), req.personIdent, token(), roller, callId)
+                val harTilgang = tilgangService.harTilgangTilPerson(ident(), req, token(), roller, callId)
 
                 if (!harTilgang) {
                     prometheus.nektetTilgangTeller("person").increment()
