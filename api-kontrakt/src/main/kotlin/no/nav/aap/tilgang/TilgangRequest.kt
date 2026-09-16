@@ -45,13 +45,10 @@ data class PersonTilgangRequest(
 data class TilbakekrevingTilgangRequest(
     val saksnummer: String,
     val behandlingsreferanse: UUID,
-    @Deprecated("Trengs for bakoverkompabilitet da denne allerede er i bruk")
-    val påkrevdRolle: Rolle? = null,
     val påkrevdRoller: List<Rolle>? = null,
     val operasjon: Operasjon,
 ) : TilgangRequest {
-    fun effektivePåkrevdRoller(): List<Rolle> =
-        påkrevdRoller?.ifEmpty { null } ?: listOfNotNull(påkrevdRolle)
+    fun effektivePåkrevdRoller(): List<Rolle> = påkrevdRoller ?: emptyList()
 
     init {
         if (operasjon == Operasjon.SAKSBEHANDLE) {
