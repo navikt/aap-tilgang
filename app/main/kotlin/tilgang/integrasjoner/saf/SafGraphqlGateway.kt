@@ -51,7 +51,7 @@ class SafGraphqlGateway(
         redis.set(Key(JOURNALPOST_PREFIX, journalpostId.toString()), journalpost.serialize())
 
         if (journalpost.bruker?.type != BrukerIdType.FNR) {
-            log.warn("Journalpost $journalpostId har ikke personident")
+            log.warn("Journalpost $journalpostId har ikke personident. Brukertype: ${journalpost.bruker?.type}")
         }
 
         return journalpost
