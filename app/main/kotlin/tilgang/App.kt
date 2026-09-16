@@ -57,6 +57,8 @@ internal object AppConfig {
 
     // Vi bruker nå suspend-funksjoner for all I/O, så vi trenger ikke flere tråder enn parallelliteten.
     const val callGroupSize = ktorParallellitet
+
+    val prometheus = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
 }
 
 fun main() {
@@ -86,7 +88,8 @@ fun Application.api(
 ) {
     val httpClient = createHttpClient(10.seconds)
 
-    val prometheus = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
+    val prometheus = AppConfig.prometheus
+
     val pdl = PdlGraphQLGateway(redis, httpClient, prometheus)
     val msGraph = MsGraphGateway(redis, httpClient, prometheus)
     val behandlingsflyt = BehandlingsflytGateway(redis, createHttpClient(timeout = 4.seconds), prometheus)

@@ -14,13 +14,21 @@ class TexasGateway(private val httpClient: HttpClient) : ITokenProvider {
     private val texasExchangeEndpoint by lazy { requiredConfigForKey("NAIS_TOKEN_EXCHANGE_ENDPOINT") }
 
     override suspend fun m2mToken(scope: String): String {
-        return httpClient.post(texasTokenEndpoint) {
-            contentType(ContentType.Application.Json)
-            setBody(mapOf("identity_provider" to "entra_id", "target" to scope))
-        }.body<Map<String, String>>()["access_token"]!!
+        return machineToMachineToken(scope).access_token
     }
 
     override suspend fun oboToken(scope: String, currentToken: OidcToken): String {
+        return exchangeToken(scope, currentToken).access_token
+    }
+
+    suspend fun machineToMachineToken(scope: String): TexasTokenResponse {
+        return httpClient.post(texasTokenEndpoint) {
+            contentType(ContentType.Application.Json)
+            setBody(mapOf("identity_provider" to "entra_id", "target" to scope))
+        }.body<TexasTokenResponse>()
+    }
+
+    suspend fun exchangeToken(scope: String, currentToken: OidcToken): TexasTokenResponse {
         return httpClient.post(texasExchangeEndpoint) {
             contentType(ContentType.Application.Json)
             setBody(
@@ -30,7 +38,12 @@ class TexasGateway(private val httpClient: HttpClient) : ITokenProvider {
                     "user_token" to currentToken.token()
                 )
             )
-        }.body<Map<String, String>>()["access_token"]!!
+        }.body<TexasTokenResponse>()
     }
 
 }
+
+data class TexasTokenResponse(
+    val access_token: String,
+    val expires_in: Long? = null,
+)

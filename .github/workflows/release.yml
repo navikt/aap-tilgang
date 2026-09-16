@@ -41,12 +41,12 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@v6
         with:
           java-version: 21
           distribution: 'temurin'
-      - uses: gradle/actions/setup-gradle@v6.2.0
-      - uses: paulhatch/semantic-version@v6.0.3
+      - uses: gradle/actions/setup-gradle@v6.3.0
+      - uses: paulhatch/semantic-version@v6.0.4
         id: tag
         with:
           change_path: "plugin/ plugin-kontrakt/ api-kontrakt/ buildSrc/"

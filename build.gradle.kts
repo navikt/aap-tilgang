@@ -1,4 +1,4 @@
-// Kotlin konfigurasjonen er gitt av pluginen 'aap.conventions' i buildSrc
+// Kotlin konfigurasjonen er gitt av pluginen 'aap.conventions' i build-logic
 // og settings.gradle.kts
 
 plugins {

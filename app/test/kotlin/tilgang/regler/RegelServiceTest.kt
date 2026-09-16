@@ -97,11 +97,35 @@ class RegelServiceTest {
             )
         )
         Assertions.assertTrue(svar[Operasjon.DRIFTE] == true)
+        Assertions.assertTrue(svar[Operasjon.DRIFT_LES] == true)
         Assertions.assertTrue(svar[Operasjon.SAKSBEHANDLE] == false)
         Assertions.assertTrue(svar[Operasjon.SE] == false)
         Assertions.assertTrue(svar[Operasjon.DELEGERE] == false)
     }
 
+    @ParameterizedTest
+    @EnumSource(value = Definisjon::class, names = [ "BESTILL_BREV" ], mode = EnumSource.Mode.EXCLUDE)
+    fun `skal gi tilgang til drift_les, men ikke drift for driftsleserolleinnehavere`(avklaringsbehov: Definisjon) = runTest {
+
+        val svar = regelService.vurderTilgang(
+            RegelInput(
+                callId = UUID.randomUUID().toString(),
+                ansattIdent = "123",
+                avklaringsbehovFraBehandlingsflyt = null,
+                avklaringsbehovFraPostmottak = null,
+                currentToken = OidcToken(token),
+                søkerIdenter = RelevanteIdenter(søker = listOf("123"), barn = listOf()),
+                operasjoner = Operasjon.entries,
+                påkrevdRolle = avklaringsbehov.løsesAv,
+                roller = listOf(Rolle.DRIFT_LES)
+            )
+        )
+        Assertions.assertTrue(svar[Operasjon.DRIFT_LES] == true)
+        Assertions.assertTrue(svar[Operasjon.DRIFTE] == false)
+        Assertions.assertTrue(svar[Operasjon.SAKSBEHANDLE] == false)
+        Assertions.assertTrue(svar[Operasjon.SE] == false)
+        Assertions.assertTrue(svar[Operasjon.DELEGERE] == false)
+    }
 
     @ParameterizedTest
     @EnumSource(value = Definisjon::class, names = [ "BESTILL_BREV" ], mode = EnumSource.Mode.EXCLUDE)
@@ -123,6 +147,7 @@ class RegelServiceTest {
         Assertions.assertTrue(svar[Operasjon.SE] == true)
         Assertions.assertTrue(svar[Operasjon.SAKSBEHANDLE] == false)
         Assertions.assertTrue(svar[Operasjon.DRIFTE] == false)
+        Assertions.assertTrue(svar[Operasjon.DRIFT_LES] == false)
         Assertions.assertTrue(svar[Operasjon.DELEGERE] == false)
     }
 

@@ -12,7 +12,9 @@ enum class TilgangsmaskinAvvistGrunn{
     AVVIST_FORTROLIG_ADRESSE,
     AVVIST_SKJERMING,
     AVVIST_VERGE,
-    AVVIST_MANGLENDE_DATA
+    AVVIST_MANGLENDE_DATA,
+    AVVIST_GEOGRAFISK,
+    AVVIST_AVDØD
 }
 
 data class TilgangsmaskinAvvistResponse(
