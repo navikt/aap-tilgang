@@ -6,6 +6,7 @@ import no.nav.aap.postmottak.kontrakt.avklaringsbehov.Definisjon as PostmottakDe
 import no.nav.aap.tilgang.BehandlingTilgangRequest
 import no.nav.aap.tilgang.JournalpostTilgangRequest
 import no.nav.aap.tilgang.Operasjon
+import no.nav.aap.tilgang.PersonTilgangRequest
 import no.nav.aap.tilgang.RelevanteIdenter
 import no.nav.aap.tilgang.Rolle
 import no.nav.aap.tilgang.SakTilgangRequest
@@ -140,10 +141,32 @@ class TilgangService(
         return tilgangsmaskinGateway.harTilganger(brukerIdenter, token)
     }
 
-    suspend fun harTilgangTilPerson(brukerIdent: String, token: OidcToken): Boolean {
-        return tilgangsmaskinGateway.harTilgangTilPerson(brukerIdent, token)
-    }
+    suspend fun harTilgangTilPerson(
+        ansattIdent: String,
+        req: PersonTilgangRequest,
+        token: OidcToken,
+        roller: List<Rolle>,
+        callId: String
+    ): Boolean {
+        // Bruke intern tilgangssjekk på driftsoperasjoner
+        if (req.operasjon == Operasjon.DRIFTE) {
+            val regelInput = RegelInput(
+                callId = callId,
+                ansattIdent = ansattIdent,
+                currentToken = token,
+                roller = roller,
+                søkerIdenter = RelevanteIdenter(listOf(req.personIdent), emptyList()),
+                avklaringsbehovFraBehandlingsflyt = null,
+                avklaringsbehovFraPostmottak = null,
+                påkrevdRolle = req.påkrevdRolle ?: emptyList(),
+                operasjoner = listOf(req.operasjon!!),
+            )
 
+            return regelService.vurderTilgang(regelInput)[req.operasjon] == true
+        }
+
+        return tilgangsmaskinGateway.harTilgangTilPerson(req.personIdent, token)
+    }
 
     suspend fun harTilgangTilTilbakekreving(
         ansattIdent: String,
