@@ -5,7 +5,7 @@ import no.nav.aap.tilgang.Rolle
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
-class RolleRegelTest {
+class SaksbehandleRolleRegelTest {
 
     @Test
     fun `gir tilgang når bruker har riktig rolle for avklaringsbehov fra behandlingsflyt`() {
