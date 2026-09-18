@@ -12,7 +12,6 @@ import io.ktor.server.routing.routing
 import java.util.UUID
 import tilgang.integrasjoner.msgraph.Group
 import tilgang.integrasjoner.msgraph.MemberOf
-import tilgang.service.GeoService.Companion.GEO_GROUP_PREFIX
 
 fun Application.msGraphFake() {
     install(ContentNegotiation) {
@@ -27,8 +26,8 @@ fun Application.msGraphFake() {
             call.respond(
                 MemberOf(
                     groups = listOf(
-                        gruppe("${GEO_GROUP_PREFIX}_NASJONAL"),
-                        gruppe("${GEO_GROUP_PREFIX}_UTLAND"),
+                        gruppe("0000-GA-GEO_NASJONAL"),
+                        gruppe("0000-GA-GEO_UTLAND"),
                     )
                 )
             )

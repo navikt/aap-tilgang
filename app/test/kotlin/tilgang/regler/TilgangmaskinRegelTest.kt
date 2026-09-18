@@ -9,7 +9,7 @@ import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinAvvistResponse
 class TilgangmaskinRegelTest {
     @Test
     fun `Skal avslå når avvist med grunn inhabil`() {
-        val input = TilgangsmaskinKjerneInput(
+        val input = HabilitetRegelInput(
             HarTilgangFraTilgangsmaskinen(
                 harTilgang = false,
                 TilgangsmaskinAvvistResponse(
@@ -22,12 +22,12 @@ class TilgangmaskinRegelTest {
                 )
             )
         )
-        assertFalse(TilgangsmaskinKjerneRegel.vurder(input))
+        assertFalse(HabilitetRegel.vurder(input))
     }
 
     @Test
     fun `Skal gi tilgang når avvist med grunn ulikt inhabil`() {
-        val input = TilgangsmaskinKjerneInput(
+        val input = HabilitetRegelInput(
             HarTilgangFraTilgangsmaskinen(
                 harTilgang = false,
                 TilgangsmaskinAvvistResponse(
@@ -40,12 +40,12 @@ class TilgangmaskinRegelTest {
                 )
             )
         )
-        assertTrue(TilgangsmaskinKjerneRegel.vurder(input))
+        assertTrue(HabilitetRegel.vurder(input))
     }
 
     @Test
     fun `Skal gi tilgang når tilgangsmaskinen gir positivt svar`() {
-        val input = TilgangsmaskinKjerneInput(HarTilgangFraTilgangsmaskinen(true, null))
-        assertTrue(TilgangsmaskinKjerneRegel.vurder(input))
+        val input = HabilitetRegelInput(HarTilgangFraTilgangsmaskinen(true, null))
+        assertTrue(HabilitetRegel.vurder(input))
     }
 }
