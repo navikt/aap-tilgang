@@ -1,24 +1,17 @@
 package tilgang.regler
 
-import no.nav.aap.komponenter.miljo.Miljø
 import no.nav.aap.tilgang.Operasjon
 import tilgang.integrasjoner.pdl.IPdlGraphQLGateway
-import tilgang.integrasjoner.skjerming.SkjermingGateway
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinGateway
 import tilgang.service.AdressebeskyttelseService
-import tilgang.service.GeoService
-import tilgang.service.SkjermingService
 
 class RegelService(
-    geoService: GeoService,
     pdlGateway: IPdlGraphQLGateway,
-    skjermetGateway: SkjermingGateway,
-    skjermingService: SkjermingService,
     adressebeskyttelseService: AdressebeskyttelseService,
     tilgangsmaskinGateway: TilgangsmaskinGateway
 ) {
 
-    private val regelOppsettMedTilgangsmaskinKomplett = mapOf(
+    private val regelOppsett = mapOf(
         Operasjon.SE to listOf(
             LeseRolleRegel,
             AdressebeskyttelseRegel,
@@ -26,11 +19,11 @@ class RegelService(
         ),
         Operasjon.DRIFTE to listOf(
             DriftRolleRegel,
-            TilgangsmaskinKjerneRegel,
+            HabilitetRegel
         ),
         Operasjon.DRIFT_LES to listOf(
             DriftLesRolleRegel,
-            TilgangsmaskinKjerneRegel
+            HabilitetRegel
         ),
         Operasjon.DELEGERE to listOf(
             AvdelingslederRolleRegel,
@@ -42,39 +35,16 @@ class RegelService(
         )
     )
 
-    private val regelOppsettUtenTilgangsmaskinKomplett = mapOf(
-        Operasjon.SE to listOf(
-            LeseRolleRegel,
-            TilgangsmaskinKjerneRegel,
-            AdressebeskyttelseRegel,
-            GeoRegel,
-            EgenAnsattRegel,
-        ),
-        Operasjon.DRIFTE to listOf(
-            DriftRolleRegel,
-            TilgangsmaskinKjerneRegel,
-        ),
-        Operasjon.DRIFT_LES to listOf(
-            DriftLesRolleRegel,
-            TilgangsmaskinKjerneRegel
-        ),
-        Operasjon.DELEGERE to listOf(
-            AvdelingslederRolleRegel,
-        ),
-        Operasjon.SAKSBEHANDLE to listOf(
-            AvklaringsbehovRolleRegel,
-            TilgangsmaskinKjerneRegel,
-            AdressebeskyttelseRegel,
-            GeoRegel,
-            EgenAnsattRegel,
-        )
-    )
     private val regelMedVurdering = mapOf<Regel<*>, RegelMedInputgenerator<*>>(
         LeseRolleRegel to RegelMedInputgenerator(LeseRolleRegel, RolleInputGenerator),
-        TilgangsmaskinKjerneRegel to RegelMedInputgenerator(TilgangsmaskinKjerneRegel, TilgangsmaskinKjerneInputGenerator(tilgangsmaskinGateway)),
-        AdressebeskyttelseRegel to RegelMedInputgenerator(AdressebeskyttelseRegel, AdressebeskyttelseInputGenerator(pdlGateway, adressebeskyttelseService)),
-        GeoRegel to RegelMedInputgenerator(GeoRegel, GeoInputGenerator(geoService, pdlGateway)),
-        EgenAnsattRegel to RegelMedInputgenerator(EgenAnsattRegel, EgenAnsattInputGenerator(skjermetGateway, skjermingService)),
+        HabilitetRegel to RegelMedInputgenerator(
+            HabilitetRegel,
+            HabilitetRegelInputGenerator(tilgangsmaskinGateway)
+        ),
+        AdressebeskyttelseRegel to RegelMedInputgenerator(
+            AdressebeskyttelseRegel,
+            AdressebeskyttelseInputGenerator(pdlGateway, adressebeskyttelseService)
+        ),
         DriftRolleRegel to RegelMedInputgenerator(DriftRolleRegel, RolleInputGenerator),
         DriftLesRolleRegel to RegelMedInputgenerator(DriftLesRolleRegel, RolleInputGenerator),
         AvdelingslederRolleRegel to RegelMedInputgenerator(AvdelingslederRolleRegel, RolleInputGenerator),
@@ -86,11 +56,7 @@ class RegelService(
     )
 
     suspend fun vurderTilgang(input: RegelInput): Map<Operasjon, Boolean> {
-        val aktuelleOperasjoner = if (Miljø.erProd()) {
-            regelOppsettUtenTilgangsmaskinKomplett.filterKeys { it in input.operasjoner }
-        } else {
-            regelOppsettMedTilgangsmaskinKomplett.filterKeys { it in input.operasjoner }
-        }
+        val aktuelleOperasjoner = regelOppsett.filterKeys { it in input.operasjoner }
 
         val regelCache = mutableMapOf<Regel<*>, Boolean>()
 

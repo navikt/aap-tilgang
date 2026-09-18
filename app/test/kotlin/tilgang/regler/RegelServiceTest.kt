@@ -2,7 +2,6 @@ package tilgang.regler
 
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
-import java.util.UUID
 import kotlinx.coroutines.test.runTest
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
@@ -23,11 +22,9 @@ import tilgang.integrasjoner.pdl.HentGeografiskTilknytningResult
 import tilgang.integrasjoner.pdl.IPdlGraphQLGateway
 import tilgang.integrasjoner.pdl.PdlGeoType
 import tilgang.integrasjoner.pdl.PersonResultat
-import tilgang.integrasjoner.skjerming.SkjermingGateway
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinGateway
 import tilgang.service.AdressebeskyttelseService
-import tilgang.service.GeoService
-import tilgang.service.SkjermingService
+import java.util.UUID
 
 @WithFakes
 class RegelServiceTest {
@@ -36,8 +33,28 @@ class RegelServiceTest {
     // Bestill brev er deprecated og mangler løses-av
 
     @ParameterizedTest
-    @EnumSource(value = Definisjon::class, names = [ "BESTILL_BREV" ], mode = EnumSource.Mode.EXCLUDE)
+    @EnumSource(value = Definisjon::class, names = ["BESTILL_BREV"], mode = EnumSource.Mode.EXCLUDE)
     fun `skal alltid gi false når roller er tom array`(avklaringsbehov: Definisjon) = runTest {
+        val svar = regelService.vurderTilgang(
+            RegelInput(
+                callId = UUID.randomUUID().toString(),
+                ansattIdent = "123",
+                avklaringsbehovFraBehandlingsflyt = null,
+                avklaringsbehovFraPostmottak = null,
+                currentToken = OidcToken(token),
+                søkerIdenter = RelevanteIdenter(søker = listOf("123"), barn = listOf()),
+                operasjoner = listOf(Operasjon.SAKSBEHANDLE),
+                påkrevdRolle = avklaringsbehov.løsesAv,
+                roller = listOf()
+            )
+        )
+        Assertions.assertTrue(svar[Operasjon.SAKSBEHANDLE] == false)
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = Definisjon::class, names = ["BESTILL_BREV"], mode = EnumSource.Mode.EXCLUDE)
+    fun `skal gi tilgang til operasjoner for NAY-steg som saksbehandler nasjonal`(avklaringsbehov: Definisjon) =
+        runTest {
             val svar = regelService.vurderTilgang(
                 RegelInput(
                     callId = UUID.randomUUID().toString(),
@@ -46,89 +63,72 @@ class RegelServiceTest {
                     avklaringsbehovFraPostmottak = null,
                     currentToken = OidcToken(token),
                     søkerIdenter = RelevanteIdenter(søker = listOf("123"), barn = listOf()),
-                    operasjoner = listOf(Operasjon.SAKSBEHANDLE),
+                    operasjoner = Operasjon.entries,
                     påkrevdRolle = avklaringsbehov.løsesAv,
-                    roller = listOf()
+                    roller = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
                 )
             )
-            Assertions.assertTrue(svar[Operasjon.SAKSBEHANDLE] == false)
-    }
-
-    @ParameterizedTest
-    @EnumSource(value = Definisjon::class, names = [ "BESTILL_BREV" ], mode = EnumSource.Mode.EXCLUDE)
-    fun `skal gi tilgang til operasjoner for NAY-steg som saksbehandler nasjonal`(avklaringsbehov: Definisjon) = runTest {
-        val svar = regelService.vurderTilgang(
-            RegelInput(
-                callId = UUID.randomUUID().toString(),
-                ansattIdent = "123",
-                avklaringsbehovFraBehandlingsflyt = null,
-                avklaringsbehovFraPostmottak = null,
-                currentToken = OidcToken(token),
-                søkerIdenter = RelevanteIdenter(søker = listOf("123"), barn = listOf()),
-                operasjoner = Operasjon.entries,
-                påkrevdRolle = avklaringsbehov.løsesAv,
-                roller = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
-            )
-        )
-        if (avklaringsbehov.løsesAv.contains(Rolle.SAKSBEHANDLER_NASJONAL)) {
-            Assertions.assertTrue(svar[Operasjon.SAKSBEHANDLE] == true)
-        } else {
-            Assertions.assertTrue(svar[Operasjon.SAKSBEHANDLE] == false)
+            if (avklaringsbehov.løsesAv.contains(Rolle.SAKSBEHANDLER_NASJONAL)) {
+                Assertions.assertTrue(svar[Operasjon.SAKSBEHANDLE] == true)
+            } else {
+                Assertions.assertTrue(svar[Operasjon.SAKSBEHANDLE] == false)
+            }
+            Assertions.assertTrue(svar[Operasjon.DRIFTE] == false)
+            Assertions.assertTrue(svar[Operasjon.DELEGERE] == false)
         }
-        Assertions.assertTrue(svar[Operasjon.DRIFTE] == false)
-        Assertions.assertTrue(svar[Operasjon.DELEGERE] == false)
-    }
 
     @ParameterizedTest
-    @EnumSource(value = Definisjon::class, names = [ "BESTILL_BREV" ], mode = EnumSource.Mode.EXCLUDE)
-    fun `skal gi tilgang til drift, men ikke noe annet for driftsrolleinnehavere`(avklaringsbehov: Definisjon) = runTest {
+    @EnumSource(value = Definisjon::class, names = ["BESTILL_BREV"], mode = EnumSource.Mode.EXCLUDE)
+    fun `skal gi tilgang til drift, men ikke noe annet for driftsrolleinnehavere`(avklaringsbehov: Definisjon) =
+        runTest {
 
-        val svar = regelService.vurderTilgang(
-            RegelInput(
-                callId = UUID.randomUUID().toString(),
-                ansattIdent = "123",
-                avklaringsbehovFraBehandlingsflyt = null,
-                avklaringsbehovFraPostmottak = null,
-                currentToken = OidcToken(token),
-                søkerIdenter = RelevanteIdenter(søker = listOf("123"), barn = listOf()),
-                operasjoner = Operasjon.entries,
-                påkrevdRolle = avklaringsbehov.løsesAv,
-                roller = listOf(Rolle.DRIFT)
+            val svar = regelService.vurderTilgang(
+                RegelInput(
+                    callId = UUID.randomUUID().toString(),
+                    ansattIdent = "123",
+                    avklaringsbehovFraBehandlingsflyt = null,
+                    avklaringsbehovFraPostmottak = null,
+                    currentToken = OidcToken(token),
+                    søkerIdenter = RelevanteIdenter(søker = listOf("123"), barn = listOf()),
+                    operasjoner = Operasjon.entries,
+                    påkrevdRolle = avklaringsbehov.løsesAv,
+                    roller = listOf(Rolle.DRIFT)
+                )
             )
-        )
-        Assertions.assertTrue(svar[Operasjon.DRIFTE] == true)
-        Assertions.assertTrue(svar[Operasjon.DRIFT_LES] == true)
-        Assertions.assertTrue(svar[Operasjon.SAKSBEHANDLE] == false)
-        Assertions.assertTrue(svar[Operasjon.SE] == false)
-        Assertions.assertTrue(svar[Operasjon.DELEGERE] == false)
-    }
+            Assertions.assertTrue(svar[Operasjon.DRIFTE] == true)
+            Assertions.assertTrue(svar[Operasjon.DRIFT_LES] == true)
+            Assertions.assertTrue(svar[Operasjon.SAKSBEHANDLE] == false)
+            Assertions.assertTrue(svar[Operasjon.SE] == false)
+            Assertions.assertTrue(svar[Operasjon.DELEGERE] == false)
+        }
 
     @ParameterizedTest
-    @EnumSource(value = Definisjon::class, names = [ "BESTILL_BREV" ], mode = EnumSource.Mode.EXCLUDE)
-    fun `skal gi tilgang til drift_les, men ikke drift for driftsleserolleinnehavere`(avklaringsbehov: Definisjon) = runTest {
+    @EnumSource(value = Definisjon::class, names = ["BESTILL_BREV"], mode = EnumSource.Mode.EXCLUDE)
+    fun `skal gi tilgang til drift_les, men ikke drift for driftsleserolleinnehavere`(avklaringsbehov: Definisjon) =
+        runTest {
 
-        val svar = regelService.vurderTilgang(
-            RegelInput(
-                callId = UUID.randomUUID().toString(),
-                ansattIdent = "123",
-                avklaringsbehovFraBehandlingsflyt = null,
-                avklaringsbehovFraPostmottak = null,
-                currentToken = OidcToken(token),
-                søkerIdenter = RelevanteIdenter(søker = listOf("123"), barn = listOf()),
-                operasjoner = Operasjon.entries,
-                påkrevdRolle = avklaringsbehov.løsesAv,
-                roller = listOf(Rolle.DRIFT_LES)
+            val svar = regelService.vurderTilgang(
+                RegelInput(
+                    callId = UUID.randomUUID().toString(),
+                    ansattIdent = "123",
+                    avklaringsbehovFraBehandlingsflyt = null,
+                    avklaringsbehovFraPostmottak = null,
+                    currentToken = OidcToken(token),
+                    søkerIdenter = RelevanteIdenter(søker = listOf("123"), barn = listOf()),
+                    operasjoner = Operasjon.entries,
+                    påkrevdRolle = avklaringsbehov.løsesAv,
+                    roller = listOf(Rolle.DRIFT_LES)
+                )
             )
-        )
-        Assertions.assertTrue(svar[Operasjon.DRIFT_LES] == true)
-        Assertions.assertTrue(svar[Operasjon.DRIFTE] == false)
-        Assertions.assertTrue(svar[Operasjon.SAKSBEHANDLE] == false)
-        Assertions.assertTrue(svar[Operasjon.SE] == false)
-        Assertions.assertTrue(svar[Operasjon.DELEGERE] == false)
-    }
+            Assertions.assertTrue(svar[Operasjon.DRIFT_LES] == true)
+            Assertions.assertTrue(svar[Operasjon.DRIFTE] == false)
+            Assertions.assertTrue(svar[Operasjon.SAKSBEHANDLE] == false)
+            Assertions.assertTrue(svar[Operasjon.SE] == false)
+            Assertions.assertTrue(svar[Operasjon.DELEGERE] == false)
+        }
 
     @ParameterizedTest
-    @EnumSource(value = Definisjon::class, names = [ "BESTILL_BREV" ], mode = EnumSource.Mode.EXCLUDE)
+    @EnumSource(value = Definisjon::class, names = ["BESTILL_BREV"], mode = EnumSource.Mode.EXCLUDE)
     fun `skal kun gi tilgang til å se for leserolle`(avklaringsbehov: Definisjon) = runTest {
 
         val svar = regelService.vurderTilgang(
@@ -152,7 +152,7 @@ class RegelServiceTest {
     }
 
     @Test
-    fun `skal returnere false på saksbehandle dersom det ikke finnes noe avklaringsbehov å vurdere `() = runTest{
+    fun `skal returnere false på saksbehandle dersom det ikke finnes noe avklaringsbehov å vurdere `() = runTest {
 
         val svar = regelService.vurderTilgang(
             RegelInput(
@@ -186,7 +186,6 @@ class RegelServiceTest {
         }
     }
 
-    val geoService = GeoService(graphGateway)
     val prometheus = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
 
     val pdlService = object : IPdlGraphQLGateway {
@@ -215,15 +214,9 @@ class RegelServiceTest {
             )
         }
     }
-    val skjermingGateway = object : SkjermingGateway(redis, Fakes.getHttpClient(), prometheus) {}
-
-    val skjermingService = SkjermingService(graphGateway)
 
     val regelService = RegelService(
-        geoService,
         pdlService,
-        skjermingGateway,
-        skjermingService,
         AdressebeskyttelseService(graphGateway),
         TilgangsmaskinGateway(redis, Fakes.getHttpClient(), prometheus)
     )
