@@ -4,9 +4,8 @@ import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.tilgang.Rolle
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 
-class AvklaringsbehovRolleRegelTest {
+class RolleRegelTest {
 
     @Test
     fun `gir tilgang når bruker har riktig rolle for avklaringsbehov fra behandlingsflyt`() {
@@ -16,7 +15,7 @@ class AvklaringsbehovRolleRegelTest {
             påkrevdRolle = emptyList(),
             roller = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING)
         )
-        assertTrue(AvklaringsbehovRolleRegel.vurder(input))
+        assertTrue(SaksbehandleRolleRegel.vurder(input))
     }
 
     @Test
@@ -27,7 +26,7 @@ class AvklaringsbehovRolleRegelTest {
             påkrevdRolle = emptyList(),
             roller = listOf(Rolle.BESLUTTER)
         )
-        assertFalse(AvklaringsbehovRolleRegel.vurder(input))
+        assertFalse(SaksbehandleRolleRegel.vurder(input))
     }
 
     @Test
@@ -38,7 +37,7 @@ class AvklaringsbehovRolleRegelTest {
             påkrevdRolle = listOf(Rolle.BESLUTTER),
             roller = listOf(Rolle.BESLUTTER)
         )
-        assertTrue(AvklaringsbehovRolleRegel.vurder(input))
+        assertTrue(SaksbehandleRolleRegel.vurder(input))
     }
 
     @Test
@@ -49,7 +48,7 @@ class AvklaringsbehovRolleRegelTest {
             påkrevdRolle = listOf(Rolle.BESLUTTER),
             roller = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING)
         )
-        assertFalse(AvklaringsbehovRolleRegel.vurder(input))
+        assertFalse(SaksbehandleRolleRegel.vurder(input))
     }
 
     @Test
@@ -61,7 +60,7 @@ class AvklaringsbehovRolleRegelTest {
             påkrevdRolle = listOf(Rolle.BESLUTTER),
             roller = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING, Rolle.BESLUTTER)
         )
-        assertTrue(AvklaringsbehovRolleRegel.vurder(input))
+        assertTrue(SaksbehandleRolleRegel.vurder(input))
     }
 
     @Test
@@ -72,7 +71,7 @@ class AvklaringsbehovRolleRegelTest {
             påkrevdRolle = listOf(Rolle.BESLUTTER),
             roller = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING)
         )
-        assertFalse(AvklaringsbehovRolleRegel.vurder(input))
+        assertFalse(SaksbehandleRolleRegel.vurder(input))
     }
 
     @Test
@@ -83,7 +82,7 @@ class AvklaringsbehovRolleRegelTest {
             påkrevdRolle = listOf(Rolle.BESLUTTER),
             roller = listOf(Rolle.BESLUTTER)
         )
-        assertFalse(AvklaringsbehovRolleRegel.vurder(input))
+        assertFalse(SaksbehandleRolleRegel.vurder(input))
     }
 
     @Test
@@ -94,6 +93,6 @@ class AvklaringsbehovRolleRegelTest {
             påkrevdRolle = emptyList(),
             roller = listOf(Rolle.BESLUTTER)
         )
-        assertFalse(AvklaringsbehovRolleRegel.vurder(input))
+        assertFalse(SaksbehandleRolleRegel.vurder(input))
     }
 }
