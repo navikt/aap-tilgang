@@ -44,8 +44,8 @@ class TilgangServiceTest {
     inner class TilgangTilPerson {
 
         @ParameterizedTest
-        @EnumSource(value = Operasjon::class, names = ["DRIFTE"], mode = EnumSource.Mode.EXCLUDE)
-        suspend fun `harTilgangTilPerson - skal kalle tilgangsmaskin hvis operasjon ikke er DRIFTE`(operasjon: Operasjon) {
+        @EnumSource(value = Operasjon::class, names = ["DRIFTE", "DRIFT_LES"], mode = EnumSource.Mode.EXCLUDE)
+        suspend fun `harTilgangTilPerson - skal kalle tilgangsmaskin hvis operasjon ikke er DRIFTE eller DRIFT_LES`(operasjon: Operasjon) {
             val personIdent = Random.nextLong().toString()
             val req = PersonTilgangRequest(personIdent, emptyList(), operasjon)
 

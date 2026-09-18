@@ -149,7 +149,7 @@ class TilgangService(
         callId: String
     ): Boolean {
         // Bruke intern tilgangssjekk på driftsoperasjoner
-        if (req.operasjon == Operasjon.DRIFTE) {
+        if (req.operasjon in listOf(Operasjon.DRIFTE, Operasjon.DRIFT_LES)) {
             val regelInput = RegelInput(
                 callId = callId,
                 ansattIdent = ansattIdent,
