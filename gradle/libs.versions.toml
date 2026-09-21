@@ -1,60 +1,18 @@
 [versions]
-ktor = "3.5.2"
 komponenter = "2.0.163"
-junit = "6.1.3"
 
 [libraries]
-ktorServerContentNegotation = { module = "io.ktor:ktor-server-content-negotiation", version.ref = "ktor" }
-ktorServerNetty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor" }
-ktorServerCore = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
-ktorServerAuth = { module = "io.ktor:ktor-server-auth", version.ref = "ktor" }
-ktorServerAuthJwt = { module = "io.ktor:ktor-server-auth-jwt", version.ref = "ktor" }
-ktorServerTestHost = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor" }
-ktorServerStatusPages = { module = "io.ktor:ktor-server-status-pages", version.ref = "ktor" }
-ktorSerializationJackson = { module = "io.ktor:ktor-serialization-jackson", version.ref = "ktor" }
-ktorServerCallLogging = { module = "io.ktor:ktor-server-call-logging", version.ref = "ktor" }
-ktorServerCallLoggingJvm = { module = "io.ktor:ktor-server-call-logging-jvm", version.ref = "ktor" }
-ktorServerDoubleReceive = { module = "io.ktor:ktor-server-double-receive", version.ref = "ktor" }
-ktorServerCallId = { module = "io.ktor:ktor-server-call-id", version.ref = "ktor" }
-ktorServerMetricsMicrometer = { module = "io.ktor:ktor-server-metrics-micrometer", version.ref = "ktor" }
-ktorClientCore= { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
-ktorClientCio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
-ktorClientContentNegotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
-ktorClientMock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
-mockk = { module = "io.mockk:mockk", version = "1.14.11" }
-
 json = { module = "no.nav.aap.kelvin:json", version.ref = "komponenter" }
 httpklient = { module = "no.nav.aap.kelvin:httpklient", version.ref = "komponenter" }
 infrastructure = { module = "no.nav.aap.kelvin:infrastructure", version.ref = "komponenter" }
 server = { module = "no.nav.aap.kelvin:server", version.ref = "komponenter" }
-caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version = "3.2.4" }
 
 behandlingsflytKontrakt = { module = "no.nav.aap.behandlingsflyt:kontrakt", version = "0.0.663" }
 postmottakKontrakt = { module = "no.nav.aap.postmottak:kontrakt", version = "6.0.10" }
 
 ktorOpenApiGenerator = { module = "no.nav.aap.kelvin:ktor-openapi-generator", version.ref = "komponenter" }
 
-logbackClassic = { module = "ch.qos.logback:logback-classic", version = "1.6.3" }
-logstashLogbackEncoder = { module = "net.logstash.logback:logstash-logback-encoder", version = "9.0" }
-
-micrometerRegistryPrometheus = { module = "io.micrometer:micrometer-registry-prometheus", version = "1.17.1" }
-jacksonDatatypeJsr310 = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version = "2.22.2" }
 lettuce = { module = "io.lettuce:lettuce-core", version = "7.7.0.RELEASE" }
 coroutinesReactor = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-reactor", version = "1.11.0" }
 coroutinesTest = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version = "1.11.0" }
-mockOauth2Server = { module = "no.nav.security:mock-oauth2-server", version = "6.0.2" }
 testcontainersRedis = { module = "com.redis:testcontainers-redis", version = "2.2.4" }
-testcontainers = { module = "org.testcontainers:testcontainers", version = "2.0.5" }
-
-joseJwt = { module = "com.nimbusds:nimbus-jose-jwt", version = "10.9.1" }
-junitJupiterApi = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
-junitJupiterEngine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
-junitJupiterParams = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit" }
-junitPlatformLauncher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit" }
-assertJ = { module = "org.assertj:assertj-core", version = "3.27.7" }
-
-[bundles]
-junit = ["junitJupiterApi", "junitJupiterEngine", "junitJupiterParams", "assertJ"]
-
-[plugins]
-ktor = { id = "io.ktor.plugin", version.ref = "ktor" }
