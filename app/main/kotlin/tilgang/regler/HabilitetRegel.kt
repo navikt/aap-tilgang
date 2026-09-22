@@ -4,11 +4,9 @@ import tilgang.integrasjoner.tilgangsmaskin.HarTilgangFraTilgangsmaskinen
 import tilgang.integrasjoner.tilgangsmaskin.ITilgangsmaskinGateway
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinAvvistGrunn
 
-/*
-* Kaller tilgangsmaskinen,
-* Gir avvist hvis egen eller nær familie sin sak
-*
-* */
+/**
+ * Kaller tilgangsmaskinen og avslår hvis egen eller nær familie sin sak
+ */
 data object HabilitetRegel : Regel<HabilitetRegelInput> {
     override fun vurder(input: HabilitetRegelInput): Boolean {
         val avvistMedHabilitetsgrunn =
