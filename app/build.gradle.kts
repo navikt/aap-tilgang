@@ -51,7 +51,7 @@ dependencies {
         implementation("org.apache.commons:commons-compress:1.28.0") {
             because("https://github.com/advisories/GHSA-4g9r-vxhx-9pgx")
         }
-        implementation("io.netty:netty-resolver-dns:4.2.17.Final") {
+        implementation("io.netty:netty-resolver-dns:4.2.18.Final") {
             because("4.2.13 er vulnerability CVE-2026-45674")
         }
     }
