@@ -1,5 +1,5 @@
 [versions]
-komponenter = "2.0.163"
+komponenter = "2.0.172"
 
 [libraries]
 json = { module = "no.nav.aap.kelvin:json", version.ref = "komponenter" }
@@ -7,7 +7,7 @@ httpklient = { module = "no.nav.aap.kelvin:httpklient", version.ref = "komponent
 infrastructure = { module = "no.nav.aap.kelvin:infrastructure", version.ref = "komponenter" }
 server = { module = "no.nav.aap.kelvin:server", version.ref = "komponenter" }
 
-behandlingsflytKontrakt = { module = "no.nav.aap.behandlingsflyt:kontrakt", version = "0.0.663" }
+behandlingsflytKontrakt = { module = "no.nav.aap.behandlingsflyt:kontrakt", version = "0.0.667" }
 postmottakKontrakt = { module = "no.nav.aap.postmottak:kontrakt", version = "6.0.10" }
 
 ktorOpenApiGenerator = { module = "no.nav.aap.kelvin:ktor-openapi-generator", version.ref = "komponenter" }
