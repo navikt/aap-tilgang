@@ -14,7 +14,6 @@ import kotlin.math.pow
 /**
  * Dedikert HTTP-klient for Tilgangsmaskinen, adskilt fra den delte klienten (PDL m.fl.) slik at
  * retry- og timeout-strategien kan tilpasses Tilgangsmaskinen uten å påvirke andre integrasjoner.
- * Inspirert av arenaoppslag sin TilgangMaskinHttpClient.
  */
 object TilgangsmaskinHttpClient {
     // Tilgangsmaskinen er tidvis treg eller utilgjengelig. Vi starter derfor med en kort timeout
@@ -45,6 +44,7 @@ object TilgangsmaskinHttpClient {
             // Fast ett sekund mellom forsøk, likt det tjenesteteamet selv bruker.
             constantDelay(millis = RETRY_DELAY_MS, randomizationMs = 0)
             modifyRequest { request ->
+                // Stigende verdier
                 request.timeout { requestTimeoutMillis = eskalertTimeoutMs(retryCount) }
             }
         }
