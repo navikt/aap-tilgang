@@ -137,8 +137,12 @@ class TilgangService(
         }
     }
 
-    suspend fun harTilgangFraTilgangsmaskin(brukerIdenter: List<BrukerOgRegeltype>, token: OidcToken): Boolean {
-        return tilgangsmaskinGateway.harTilganger(brukerIdenter, token)
+    suspend fun harTilgangFraTilgangsmaskin(
+        brukerIdenter: List<BrukerOgRegeltype>,
+        token: OidcToken,
+        callId: String,
+    ): Boolean {
+        return tilgangsmaskinGateway.harTilganger(brukerIdenter, token, callId)
     }
 
     suspend fun harTilgangTilPerson(
@@ -165,7 +169,7 @@ class TilgangService(
             return regelService.vurderTilgang(regelInput)[req.operasjon] == true
         }
 
-        return tilgangsmaskinGateway.harTilgangTilPerson(req.personIdent, token)
+        return tilgangsmaskinGateway.harTilgangTilPerson(req.personIdent, token, callId)
     }
 
     suspend fun harTilgangTilTilbakekreving(

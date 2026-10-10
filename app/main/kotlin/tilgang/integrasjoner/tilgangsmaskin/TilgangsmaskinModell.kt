@@ -1,5 +1,7 @@
 package tilgang.integrasjoner.tilgangsmaskin
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+
 data class HarTilgangFraTilgangsmaskinen(
     val harTilgang: Boolean,
     val tilgangsmaskinAvvistResponse: TilgangsmaskinAvvistResponse? = null,
@@ -17,6 +19,7 @@ enum class TilgangsmaskinAvvistGrunn{
     AVVIST_AVDØD
 }
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class TilgangsmaskinAvvistResponse(
     val type: String,
     val title: String,
