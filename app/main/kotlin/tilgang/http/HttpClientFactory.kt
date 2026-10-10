@@ -16,7 +16,12 @@ fun createHttpClient(timeout: Duration) = HttpClient(CIO) {
         }
     }
     install(HttpRequestRetry) {
+        // Retry på 5xx-svar (serverfeil).
         retryOnServerErrors(maxRetries = 2)
+        // Retry på transiente nettverks-/I/O-feil (f.eks. connection reset/refused, broken pipe).
+        // retryOnTimeout = false: timeouts (HttpRequestTimeoutException) retryes IKKE. Kansellering
+        // (CancellationException) retryes heller aldri.
+        retryOnException(maxRetries = 2, retryOnTimeout = false)
         exponentialDelay()
     }
     install(HttpTimeout) {
