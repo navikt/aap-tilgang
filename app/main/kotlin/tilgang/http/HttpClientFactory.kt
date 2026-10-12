@@ -3,7 +3,10 @@ package tilgang.http
 import com.fasterxml.jackson.databind.DeserializationFeature
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
+import io.ktor.client.network.sockets.ConnectTimeoutException
+import io.ktor.client.network.sockets.SocketTimeoutException
 import io.ktor.client.plugins.HttpRequestRetry
+import io.ktor.client.plugins.HttpRequestTimeoutException
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.jackson.jackson
@@ -19,9 +22,12 @@ fun createHttpClient(timeout: Duration) = HttpClient(CIO) {
         // Retry på 5xx-svar (serverfeil).
         retryOnServerErrors(maxRetries = 2)
         // Retry på transiente nettverks-/I/O-feil (f.eks. connection reset/refused, broken pipe).
-        // retryOnTimeout = false: timeouts (HttpRequestTimeoutException) retryes IKKE. Kansellering
-        // (CancellationException) retryes heller aldri.
-        retryOnException(maxRetries = 2, retryOnTimeout = false)
+        // Timeouts retryes ikke; kansellering retryes heller aldri.
+        retryOnExceptionIf(maxRetries = 2) { _, cause ->
+            cause !is ConnectTimeoutException &&
+                cause !is SocketTimeoutException &&
+                cause !is HttpRequestTimeoutException
+        }
         exponentialDelay()
     }
     install(HttpTimeout) {
