@@ -21,8 +21,6 @@ object Fakes : AutoCloseable {
     private val pdl by lazy { embeddedServer(Netty, port = 0, module = { pdlFake() }) }
     private val tilgangsmaskin by lazy { embeddedServer(Netty, port = 0, module = { tilgangsmaskinFake() }) }
     private val saf by lazy { embeddedServer(Netty, port = 0, module = { safFake() }) }
-    private val nom by lazy { embeddedServer(Netty, port = 0, module = { nomFake() }) }
-    private val skjerming by lazy { embeddedServer(Netty, port = 0, module = { skjermingFake() }) }
     private val behandlingsflyt by lazy { embeddedServer(Netty, port = 0, module = { behandlingsflytFake() }) }
     private val msGraph by lazy { embeddedServer(Netty, port = 0, module = { msGraphFake() }) }
     private val redis = RedisTestServer()
@@ -40,8 +38,6 @@ object Fakes : AutoCloseable {
         pdl.start()
         tilgangsmaskin.start()
         saf.start()
-        nom.start()
-        skjerming.start()
         behandlingsflyt.start()
         msGraph.start()
         redis.start()
@@ -58,8 +54,6 @@ object Fakes : AutoCloseable {
         pdl.stop()
         tilgangsmaskin.stop()
         saf.stop()
-        nom.stop()
-        skjerming.stop()
         behandlingsflyt.stop()
         msGraph.stop()
         redis.close()
@@ -95,14 +89,6 @@ object Fakes : AutoCloseable {
         // SAF
         System.setProperty("SAF_BASE_URL", "http://localhost:${saf.port()}/graphql")
         System.setProperty("SAF_SCOPE", "saf")
-
-        // NOM
-        System.setProperty("NOM_BASE_URL", "http://localhost:${nom.port()}/graphql")
-        System.setProperty("NOM_SCOPE", "nom")
-
-        // Skjerming
-        System.setProperty("SKJERMING_BASE_URL", "http://localhost:${skjerming.port()}")
-        System.setProperty("SKJERMING_SCOPE", "skjerming")
 
         // Behandlingsflyt
         System.setProperty("BEHANDLINGSFLYT_BASE_URL", "http://localhost:${behandlingsflyt.port()}")

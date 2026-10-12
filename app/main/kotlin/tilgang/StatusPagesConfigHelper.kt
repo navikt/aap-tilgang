@@ -9,10 +9,8 @@ import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import java.net.http.HttpTimeoutException
 import org.slf4j.LoggerFactory
 import tilgang.integrasjoner.msgraph.MsGraphException
-import tilgang.integrasjoner.nom.NomException
 import tilgang.integrasjoner.pdl.PdlException
 import tilgang.integrasjoner.saf.SafException
-import tilgang.integrasjoner.skjerming.SkjermingException
 import tilgang.metrics.uhåndtertExceptionTeller
 
 object StatusPagesConfigHelper {
@@ -50,20 +48,6 @@ object StatusPagesConfigHelper {
                     logger.error("Uhåndtert feil ved kall til '$uri'", cause)
                     call.respondText(
                         text = "Feil i SAF: ${cause.message}", status = HttpStatusCode.InternalServerError
-                    )
-                }
-
-                is NomException -> {
-                    logger.error("Uhåndtert feil ved kall til '$uri'", cause)
-                    call.respondText(
-                        text = "Feil i NOM: ${cause.message}", status = HttpStatusCode.InternalServerError
-                    )
-                }
-
-                is SkjermingException -> {
-                    logger.error("Uhåndtert feil ved kall til '$uri'", cause)
-                    call.respondText(
-                        text = "Feil i skjerming: ${cause.message}", status = HttpStatusCode.InternalServerError
                     )
                 }
 

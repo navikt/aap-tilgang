@@ -25,15 +25,12 @@ import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytGateway
 import tilgang.integrasjoner.msgraph.MsGraphGateway
 import tilgang.integrasjoner.pdl.PdlGraphQLGateway
 import tilgang.integrasjoner.saf.SafGraphqlGateway
-import tilgang.integrasjoner.skjerming.SkjermingGateway
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinGateway
 import tilgang.redis.Redis
 import tilgang.regler.RegelService
 import tilgang.routes.actuator
 import tilgang.routes.tilgang
 import tilgang.service.AdressebeskyttelseService
-import tilgang.service.GeoService
-import tilgang.service.SkjermingService
 
 
 internal object AppConfig {
@@ -94,12 +91,8 @@ fun Application.api(
     val msGraph = MsGraphGateway(redis, httpClient, prometheus)
     val behandlingsflyt = BehandlingsflytGateway(redis, createHttpClient(timeout = 4.seconds), prometheus)
     val saf = SafGraphqlGateway(redis, httpClient, prometheus)
-    val geoService = GeoService(msGraph)
-    val skjermingGateway = SkjermingGateway(redis, httpClient, prometheus)
-    val skjermingService = SkjermingService(msGraph)
     val tilgangsmaskinGateway = TilgangsmaskinGateway(redis, httpClient, prometheus)
-    val regelService = RegelService(
-        geoService, pdl, skjermingGateway, skjermingService, AdressebeskyttelseService(msGraph), tilgangsmaskinGateway
+    val regelService = RegelService(pdl, AdressebeskyttelseService(msGraph), tilgangsmaskinGateway
     )
     val tilgangService = TilgangService(saf, behandlingsflyt, regelService, tilgangsmaskinGateway)
 

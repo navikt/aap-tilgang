@@ -31,6 +31,10 @@ public object Beslutter : AdGruppe {
 public object Drift : AdGruppe {
     override val id: String = requiredConfigForKey("AAP_DRIFT")
 }
+public object DriftLes : AdGruppe {
+    override val id: String = requiredConfigForKey("AAP_DRIFT_LES")
+}
+
 public object Produksjonsstyring : AdGruppe {
     override val id: String = requiredConfigForKey("AAP_PRODUKSJONSSTYRING")
 }

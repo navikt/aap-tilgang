@@ -40,6 +40,8 @@ data class JournalpostTilgangRequest(
 
 data class PersonTilgangRequest(
     val personIdent: String,
+    val påkrevdRolle: List<Rolle>? = null,
+    val operasjon: Operasjon? = null,
 ) : TilgangRequest
 
 data class TilbakekrevingTilgangRequest(
