@@ -1,5 +1,5 @@
 [versions]
-komponenter = "2.0.172"
+komponenter = "2.0.185"
 
 [libraries]
 json = { module = "no.nav.aap.kelvin:json", version.ref = "komponenter" }
