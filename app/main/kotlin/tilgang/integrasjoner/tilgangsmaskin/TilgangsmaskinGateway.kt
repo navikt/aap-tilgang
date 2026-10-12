@@ -50,9 +50,16 @@ interface ITilgangsmaskinGateway {
 
 private val log = LoggerFactory.getLogger(TilgangsmaskinGateway::class.java)
 
-// NB: Denne TTL-en gjelder både positive (tilgang) og negative (avslag) resultater. Et avslag som
-// senere endrer seg (f.eks. skjerming/verge fjernes) blir dermed liggende i cache i inntil 6 timer.
-// Vurder kortere TTL for negative svar dersom ferskhet blir viktigere enn treff i cachen.
+// NB: Denne TTL-en gjelder både positive (tilgang) og negative (avslag) resultater.
+// Et avslag som senere endrer seg (f.eks. skjerming/verge fjernes) blir dermed liggende
+// i cache i inntil 6 timer.
+//
+// PDL synkroniserer i praksis mot Folkeregisteret omtrent én gang i døgnet, så en TTL
+// på 6 timer vurderes som akseptabel.
+//
+// Merk at fremtidig funksjonalitet styrt av `kanOverstyres` kan gi midlertidig tilgang
+// til personer som normalt ikke er tilgjengelige (f.eks. personer som døde for lenge siden).
+// Dersom slike overstyringer skal tre i kraft raskt, bør TTL for negative svar vurderes på nytt.
 private val redisExpireSec = 21600L
 
 /**
