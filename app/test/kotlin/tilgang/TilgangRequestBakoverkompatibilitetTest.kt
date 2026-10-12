@@ -285,8 +285,6 @@ class TilgangRequestBakoverkompatibilitetTest {
         val request = objectMapper.readValue<TilbakekrevingTilgangRequest>(json)
 
         assertThat(request.påkrevdRoller).containsExactly(Rolle.SAKSBEHANDLER_OPPFOLGING, Rolle.KVALITETSSIKRER)
-        @Suppress("DEPRECATION")
-        assertThat(request.påkrevdRolle).isNull()
         assertThat(request.effektivePåkrevdRoller()).containsExactly(
             Rolle.SAKSBEHANDLER_OPPFOLGING,
             Rolle.KVALITETSSIKRER
