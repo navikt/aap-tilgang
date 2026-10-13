@@ -23,7 +23,8 @@ class HabilitetRegelInputGenerator(private val tilgangsmaskinGateway: ITilgangsm
             tilgangsmaskinGateway.harTilgangTilPersonKjerne(
                 input.søkerIdenter.søker.first(),
                 input.currentToken,
-                input.ansattIdent
+                input.ansattIdent,
+                input.callId,
             )
         return HabilitetRegelInput(tilgangsmaskinResponse)
     }
