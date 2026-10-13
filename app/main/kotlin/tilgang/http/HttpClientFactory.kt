@@ -10,6 +10,7 @@ import io.ktor.client.plugins.HttpRequestTimeoutException
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.jackson.jackson
+import io.ktor.utils.io.CancellationException
 import kotlin.time.Duration
 
 fun createHttpClient(timeout: Duration) = HttpClient(CIO) {
@@ -22,11 +23,12 @@ fun createHttpClient(timeout: Duration) = HttpClient(CIO) {
         // Retry på 5xx-svar (serverfeil).
         retryOnServerErrors(maxRetries = 2)
         // Retry på transiente nettverks-/I/O-feil (f.eks. connection reset/refused, broken pipe).
-        // Timeouts retryes ikke; kansellering retryes heller aldri.
+        // Timeouts retryes ikke; kansellering av coroutine (CancellationException) retryes heller aldri.
         retryOnExceptionIf(maxRetries = 2) { _, cause ->
             cause !is ConnectTimeoutException &&
                 cause !is SocketTimeoutException &&
-                cause !is HttpRequestTimeoutException
+                cause !is HttpRequestTimeoutException &&
+                cause !is CancellationException
         }
         exponentialDelay()
     }
