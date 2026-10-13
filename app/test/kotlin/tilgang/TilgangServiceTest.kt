@@ -54,7 +54,7 @@ class TilgangServiceTest {
             coVerify {
                 regelService wasNot Called
 
-                tilgangsmaskinGateway.harTilgangTilPerson(personIdent, any())
+                tilgangsmaskinGateway.harTilgangTilPerson(personIdent, any(), "callId")
             }
         }
 

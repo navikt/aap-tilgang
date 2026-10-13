@@ -13,7 +13,12 @@ class TilgangsmaskinKomplettInputGenerator(private val tilgangsmaskinGateway: IT
     InputGenerator<TilgangsmaskinKomplettInput> {
     override suspend fun generer(input: RegelInput): TilgangsmaskinKomplettInput {
         val tilgangsmaskinResponse =
-            tilgangsmaskinGateway.harTilgangTilPersonKomplett(input.søkerIdenter.søker.first(), input.currentToken, input.ansattIdent)
+            tilgangsmaskinGateway.harTilgangTilPersonKomplett(
+                input.søkerIdenter.søker.first(),
+                input.currentToken,
+                input.ansattIdent,
+                input.callId,
+            )
         return TilgangsmaskinKomplettInput(tilgangsmaskinResponse)
     }
 }
