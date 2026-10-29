@@ -16,6 +16,7 @@ dependencyResolutionManagement {
     }
     @Suppress("UnstableApiUsage")
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    @Suppress("UnstableApiUsage")
     repositories {
         maven("https://github-package-registry-mirror.gc.nav.no/cached/maven-release")
         mavenCentral()
