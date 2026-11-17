@@ -40,8 +40,8 @@ data class JournalpostTilgangRequest(
 
 data class ArenasakTilgangRequest(
     val personIdent: String,
-    val påkrevdRolle: List<Rolle>? = null, // LES og drift.LES
-    val operasjon: Operasjon? = null, // SE
+    val påkrevdRolle: List<Rolle> = Rolle.leseroller(),
+    val operasjon: Operasjon = Operasjon.SE
 ) : TilgangRequest
 
 data class PersonTilgangRequest(

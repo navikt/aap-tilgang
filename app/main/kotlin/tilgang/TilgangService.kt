@@ -132,8 +132,8 @@ class TilgangService(
             søkerIdenter = RelevanteIdenter(listOf(req.personIdent), emptyList()),
             avklaringsbehovFraBehandlingsflyt = null,
             avklaringsbehovFraPostmottak = null,
-            påkrevdRolle = req.påkrevdRolle ?: Rolle.leseroller(),
-            operasjoner = listOf(req.operasjon ?: Operasjon.SE)
+            påkrevdRolle = req.påkrevdRolle,
+            operasjoner = listOf(req.operasjon)
         )
 
         return regelService.vurderTilgang(regelInput)[Operasjon.SE] == true
