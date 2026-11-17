@@ -565,8 +565,9 @@ class TilgangsmaskinHttpClientTest {
         }
     }
 
-    @Test
-    fun `prøver ikke på nytt eller endrer feilen når kallerens kortere frist utløper`() = runTest {
+    @ParameterizedTest
+    @ValueSource(longs = [500, 4_000])
+    fun `prøver ikke på nytt eller endrer feilen når kallerens kortere frist utløper`(timeoutMs: Long) = runTest {
         var attempts = 0
         MockEngine.create {
             dispatcher = StandardTestDispatcher(testScheduler)
@@ -577,12 +578,12 @@ class TilgangsmaskinHttpClientTest {
         }.use { engine ->
             TilgangsmaskinHttpClient.create(engine).use { client ->
                 assertFailsWith<TimeoutCancellationException> {
-                    withTimeout(500.milliseconds) {
+                    withTimeout(timeoutMs.milliseconds) {
                         client.post("https://tilgangsmaskin.test")
                     }
                 }
                 assertThat(attempts).isEqualTo(1)
-                assertThat(testScheduler.currentTime).isEqualTo(500L)
+                assertThat(testScheduler.currentTime).isEqualTo(timeoutMs)
             }
         }
     }

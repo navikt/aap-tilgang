@@ -52,10 +52,10 @@ interface ITilgangsmaskinGateway {
 
 private val log = LoggerFactory.getLogger(TilgangsmaskinGateway::class.java)
 
-// Tilgang caches i 6 timer og avslag i 1 time for å redusere svartid og belastning på Tilgangsmaskinen.
+// Tilgang caches i 6 timer og avslag i 30 minutter for å redusere svartid og belastning på Tilgangsmaskinen.
 // Tilgangsmaskinen cacher selv ansattes AD-grupper i 3 timer og skjerming, Nom og PDL-persondata i 12 timer.
 // Disse cachetidene er relevante for vårt valg av TTL, men vår cache gjelder ferdige tilgangsbeslutninger
-// og kan forsinke endringer med ytterligere 6 timer for tilgang eller 1 time for avslag.
+// og kan forsinke endringer med ytterligere 6 timer for tilgang eller 30 minutter for avslag.
 //
 // Når `kanOverstyres` er true, kan ansatte be om begrunnet enkelttilgang til brukere de normalt
 // ikke har tilgang til. Enkelttilgang er midlertidig og kan ikke overstyre kjerneregler.
@@ -63,7 +63,7 @@ private val log = LoggerFactory.getLogger(TilgangsmaskinGateway::class.java)
 // En cachet godkjenning kan fortsatt bli liggende etter utløp eller tilbakekalling.
 // TTL og invalidering må vurderes hvis slike endringer skal få rask virkning.
 private val redisExpireSec = 6.hours.inWholeSeconds
-private val redisAvslagExpireSec = 15.minutes.inWholeSeconds
+private val redisAvslagExpireSec = 30.minutes.inWholeSeconds
 
 /**
  * Se Confluence for dokumentasjon.

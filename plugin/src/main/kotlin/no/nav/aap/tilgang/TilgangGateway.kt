@@ -98,7 +98,6 @@ public object TilgangGateway {
       }
     }
 
-
     private val tilgangPersonUrl = baseUrl.resolve("/tilgang/person").toString()
     public suspend fun harTilgangTilPerson(body: PersonTilgangRequest, currentToken: OidcToken): TilgangResponse {
       return get(tilgangGatewayPersonCache, PersonTilgangRequestMedNavIdent(body, currentToken.navIdent())) {

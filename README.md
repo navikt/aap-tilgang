@@ -4,19 +4,6 @@ Applikasjon for å sjekke om brukere har tilgang til Kelvin-ressurs.
 ## Plugin
 For integrasjon mot tilgang-tjenesten finnes det en plugin og en http-klient, se [plugin/README.md](plugin/README.md) 
 
-## Timeout mot Tilgangsmaskinen
-
-`TilgangsmaskinHttpClient.create(timeout = 5.seconds)` setter et samlet tidsbudsjett per HTTP-kall,
-inkludert eventuelle nye forsøk og ventetid. Første forsøk kan bruke hele budsjettet. Ved tidlige,
-forbigående feil kan klienten prøve opptil to ganger til. Mellom forsøkene venter den 100–250 ms,
-eller lenger hvis `Retry-After` krever det. Et nytt forsøk får bare tiden som gjenstår av budsjettet.
-
-Standardverdiene følger tilgang-pluginen: 5 sekunder for request- og socket-timeout og 2 sekunder for
-oppkobling. En overstyrt `timeout` gjelder også request- og socket-timeout; oppkobling får maksimalt
-2 sekunder, begrenset av budsjettet. Verdien må være endelig og minst 1 ms.
-Dette endrer ikke tilgang-pluginens timeout og omfatter ikke tokeninnhenting, cacheoppslag eller
-andre deler av tilgangssjekken.
-
 ## Komme i gang
 Bruker gradle wrapper, så bare klon og kjør `./gradlew build`
 

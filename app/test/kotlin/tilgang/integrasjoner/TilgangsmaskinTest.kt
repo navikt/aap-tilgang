@@ -107,11 +107,11 @@ class TilgangsmaskinTest {
     @ParameterizedTest
     @CsvSource(
         "true, 123, true, 21600",
-        "true, 456, false, 900",
+        "true, 456, false, 1800",
         "false, 123, true, 21600",
-        "false, 456, false, 900",
+        "false, 456, false, 1800",
     )
-    fun `Cacher godkjenninger i seks timer og avslag i femten minutter`(
+    fun `Cacher godkjenninger i seks timer og avslag i tretti minutter`(
         kjerneregler: Boolean,
         brukerIdent: String,
         forventetTilgang: Boolean,
