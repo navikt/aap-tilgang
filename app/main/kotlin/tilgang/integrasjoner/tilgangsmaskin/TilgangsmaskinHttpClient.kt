@@ -60,6 +60,8 @@ object TilgangsmaskinHttpClient {
                 response.status.value in setOf(500, 502, 503, 504)
             }
             retryOnExceptionIf(maxRetries = MAKS_ANTALL_RETRIES) { _, cause ->
+                // Ktor kan pakke timeouter i CancellationException, så vi sjekker årsaken.
+                // Kansellering fra kalleren avbryter fortsatt kallet og ventetiden før et nytt forsøk.
                 val unwrapped = cause.unwrapCancellationException()
                 unwrapped is HttpRequestTimeoutException ||
                     unwrapped is ConnectTimeoutException ||
