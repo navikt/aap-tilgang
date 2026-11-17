@@ -26,6 +26,7 @@ import tilgang.integrasjoner.msgraph.MsGraphGateway
 import tilgang.integrasjoner.pdl.PdlGraphQLGateway
 import tilgang.integrasjoner.saf.SafGraphqlGateway
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinGateway
+import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinHttpClient
 import tilgang.redis.Redis
 import tilgang.regler.RegelService
 import tilgang.routes.actuator
@@ -91,7 +92,7 @@ fun Application.api(
     val msGraph = MsGraphGateway(redis, httpClient, prometheus)
     val behandlingsflyt = BehandlingsflytGateway(redis, createHttpClient(timeout = 4.seconds), prometheus)
     val saf = SafGraphqlGateway(redis, httpClient, prometheus)
-    val tilgangsmaskinGateway = TilgangsmaskinGateway(redis, httpClient, prometheus)
+    val tilgangsmaskinGateway = TilgangsmaskinGateway(redis, TilgangsmaskinHttpClient.create(), prometheus)
     val regelService = RegelService(pdl, AdressebeskyttelseService(msGraph), tilgangsmaskinGateway
     )
     val tilgangService = TilgangService(saf, behandlingsflyt, regelService, tilgangsmaskinGateway)

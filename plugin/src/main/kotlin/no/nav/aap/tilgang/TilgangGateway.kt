@@ -8,6 +8,7 @@ import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.HttpRequestRetry
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.retry
 import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -143,6 +144,10 @@ public object TilgangGateway {
         }
 
         return client.post(url) {
+            // Klienten bruker retry for tokenutvekslingen mot Texas. Her slår vi det av bare for tilgangskallet.
+            // Tilgang-tjenesten prøver selv på nytt mot Tilgangsmaskinen. Nye forsøk også her kan starte
+            // flere runder med forsøk i tjenesten og øke både ventetid og belastning.
+            retry { noRetry() }
             bearerAuth(newToken)
             contentType(ContentType.Application.Json)
             setBody(request)

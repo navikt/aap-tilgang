@@ -1,14 +1,25 @@
 package tilgang.integrasjoner
 
+import io.ktor.client.plugins.ClientRequestException
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import tilgang.AzureTokenGen
 import tilgang.fakes.Fakes
 import tilgang.fakes.WithFakes
+import tilgang.integrasjoner.tilgangsmaskin.BrukerOgRegeltype
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinAvvistGrunn
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinGateway
+import tilgang.redis.Key
+import tilgang.redis.Redis
+import tilgang.redis.Redis.Companion.serialize
+import kotlin.test.assertFailsWith
 
 @WithFakes
 class TilgangsmaskinTest {
@@ -25,7 +36,8 @@ class TilgangsmaskinTest {
 
         assertThat(harTilgangResponse.harTilgang).isTrue()
         assertThat(harIkkeTilgangResponse.harTilgang).isFalse()
-        assertThat(harIkkeTilgangResponse.tilgangsmaskinAvvistResponse?.title == TilgangsmaskinAvvistGrunn.AVVIST_HABILITET.toString()).isTrue()
+        assertThat(harIkkeTilgangResponse.tilgangsmaskinAvvistResponse?.title)
+            .isEqualTo(TilgangsmaskinAvvistGrunn.AVVIST_HABILITET.toString())
     }
 
     @Test
@@ -37,6 +49,95 @@ class TilgangsmaskinTest {
 
         assertThat(harTilgangResponse.harTilgang).isTrue()
         assertThat(harIkkeTilgangResponse.harTilgang).isFalse()
-        assertThat(harIkkeTilgangResponse.tilgangsmaskinAvvistResponse?.title == TilgangsmaskinAvvistGrunn.AVVIST_GEOGRAFISK.toString()).isTrue()
+        assertThat(harIkkeTilgangResponse.tilgangsmaskinAvvistResponse?.title)
+            .isEqualTo(TilgangsmaskinAvvistGrunn.AVVIST_GEOGRAFISK.toString())
+    }
+
+    @Test
+    fun `Kan hente tilgang for en person`() = runTest {
+        val token = OidcToken(AzureTokenGen("tilgangazure", "tilgang").generate())
+        val gateway = TilgangsmaskinGateway(redis, httpClient, prometheus)
+
+        assertThat(gateway.harTilgangTilPerson("123", token)).isTrue()
+        assertThat(gateway.harTilgangTilPerson("456", token)).isFalse()
+    }
+
+    @Test
+    fun `Kan hente flere tilganger`() = runTest {
+        val token = OidcToken(AzureTokenGen("tilgangazure", "tilgang").generate())
+        val gateway = TilgangsmaskinGateway(redis, httpClient, prometheus)
+
+        assertThat(gateway.harTilganger(listOf(BrukerOgRegeltype("123", "KJERNE")), token)).isTrue()
+        assertThat(gateway.harTilganger(listOf(BrukerOgRegeltype("456", "KJERNE")), token)).isFalse()
+    }
+
+    @Test
+    fun `Propagerer andre klientfeil enn 403`() = runTest {
+        val token = OidcToken(AzureTokenGen("tilgangazure", "tilgang").generate())
+        val gateway = TilgangsmaskinGateway(redis, httpClient, prometheus)
+
+        assertFailsWith<ClientRequestException> {
+            // trigger en 4xx-respons utover 403 fra tilgangsmaskinen-fake
+            gateway.harTilgangTilPerson("400", token)
+        }
+    }
+
+    @Test
+    fun `Cacher kjerneavgjørelser per ansatt`() = runTest {
+        val token = OidcToken(AzureTokenGen("tilgangazure", "tilgang").generate())
+        val gateway = TilgangsmaskinGateway(redis, httpClient, prometheus)
+        val brukerIdent = "456"
+        val ansattIdent = "ansatt-1"
+        val cacheHitFør = prometheus.counter("cache_hit", "service", "tilgangsmaskinKjerne").count()
+        val cacheMissFør = prometheus.counter("cache_miss", "service", "tilgangsmaskinKjerne").count()
+
+        val første = gateway.harTilgangTilPersonKjerne(brukerIdent, token, ansattIdent)
+        val gjentatt = gateway.harTilgangTilPersonKjerne(brukerIdent, token, ansattIdent)
+        val annenAnsatt = gateway.harTilgangTilPersonKjerne(brukerIdent, token, "ansatt-2")
+
+        assertThat(første.harTilgang).isFalse()
+        assertThat(gjentatt).isEqualTo(første)
+        assertThat(annenAnsatt).isEqualTo(første)
+        assertThat(prometheus.counter("cache_hit", "service", "tilgangsmaskinKjerne").count() - cacheHitFør)
+            .isEqualTo(1.0)
+        assertThat(prometheus.counter("cache_miss", "service", "tilgangsmaskinKjerne").count() - cacheMissFør)
+            .isEqualTo(2.0)
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+        "true, 123, true, 21600",
+        "true, 456, false, 900",
+        "false, 123, true, 21600",
+        "false, 456, false, 900",
+    )
+    fun `Cacher godkjenninger i seks timer og avslag i femten minutter`(
+        kjerneregler: Boolean,
+        brukerIdent: String,
+        forventetTilgang: Boolean,
+        forventetLevetidSekunder: Long,
+    ) = runTest {
+        val cache = mockk<Redis>()
+        coEvery { cache[any()] } returns null
+        coEvery { cache.set(any(), any(), any()) } returns Unit
+        val token = OidcToken(AzureTokenGen("tilgangazure", "tilgang").generate())
+        val gateway = TilgangsmaskinGateway(cache, httpClient, prometheus)
+        val ansattIdent = "ansatt-cachetid"
+        val cachePrefix = if (kjerneregler) "tilgangsmaskinKjerne" else "tilgangsmaskinKomplett"
+
+        val resultat = if (kjerneregler) {
+            gateway.harTilgangTilPersonKjerne(brukerIdent, token, ansattIdent)
+        } else {
+            gateway.harTilgangTilPersonKomplett(brukerIdent, token, ansattIdent)
+        }
+
+        assertThat(resultat.harTilgang).isEqualTo(forventetTilgang)
+        coVerify(exactly = 1) {
+            cache.set(
+                Key(cachePrefix, brukerIdent + ansattIdent),
+                resultat.serialize(),
+                forventetLevetidSekunder,
+            )
+        }
     }
 }
