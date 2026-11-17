@@ -11,6 +11,12 @@ enum class Rolle {
     LES,
     PRODUKSJONSSTYRING,
     DRIFT,
-    DRIFT_LES
+    DRIFT_LES;
+
+    companion object {
+        fun leseroller() = listOf(LES, DRIFT_LES)
+    }
+
 }
+
 
