@@ -15,6 +15,7 @@ import io.ktor.client.plugins.api.createClientPlugin
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.utils.unwrapCancellationException
 import io.ktor.serialization.jackson.jackson
+import io.ktor.utils.io.ClosedReadChannelException
 import kotlinx.coroutines.withTimeoutOrNull
 import java.io.EOFException
 import java.net.SocketException
@@ -62,13 +63,19 @@ object TilgangsmaskinHttpClient {
             retryOnExceptionIf(maxRetries = MAKS_ANTALL_RETRIES) { _, cause ->
                 // Ktor kan pakke timeouter i CancellationException, så vi sjekker årsaken.
                 // Kansellering fra kalleren avbryter fortsatt kallet og ventetiden før et nytt forsøk.
-                val unwrapped = cause.unwrapCancellationException()
-                unwrapped is HttpRequestTimeoutException ||
-                    unwrapped is ConnectTimeoutException ||
-                    unwrapped is SocketTimeoutException ||
-                    cause is SocketException ||
-                    cause is EOFException ||
-                    cause is ClosedChannelException
+                val failure = cause.unwrapCancellationException()
+
+                // CIO pakker EOF før responsheaderne i ClosedReadChannelException.
+                val wrappedEof = failure is ClosedReadChannelException &&
+                        failure.cause is EOFException
+
+                failure is HttpRequestTimeoutException ||
+                        failure is ConnectTimeoutException ||
+                        failure is SocketTimeoutException ||
+                        failure is SocketException ||
+                        failure is EOFException ||
+                        failure is ClosedChannelException ||
+                        wrappedEof
             }
             constantDelay(
                 millis = RETRY_DELAY_MS,
