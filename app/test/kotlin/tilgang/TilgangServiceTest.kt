@@ -1,19 +1,16 @@
 package tilgang
 
 import io.mockk.Called
-import io.mockk.InternalPlatformDsl.toStr
 import io.mockk.clearAllMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.slot
-import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.tilgang.ArenasakTilgangRequest
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.PersonTilgangRequest
-import no.nav.aap.tilgang.RelevanteIdenter
 import no.nav.aap.tilgang.Rolle
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
@@ -80,6 +77,32 @@ class TilgangServiceTest {
             RegelService(pdlGateway, adressebeskyttelseService, tilgangsmaskinGateway),
             tilgangsmaskinGateway
         )
+
+        @ParameterizedTest
+        @CsvSource(
+            "LES, true",
+            "SAKSBEHANDLER_NASJONAL, true",
+            "SAKSBEHANDLER_OPPFOLGING, true",
+            "KVALITETSSIKRER, true",
+            "BESLUTTER, true",
+            "DRIFT_LES, false",
+            "DRIFT, false",
+            "PRODUKSJONSSTYRING, false"
+        )
+        fun `sjekker hvilke roller som kan lese arenasaker`(rolle: Rolle, forventetTilgang: Boolean) = runTest {
+            coEvery { pdlGateway.hentPersonBolk(listOf(personIdent), "callId") } returns
+                    listOf(PersonResultat(personIdent, listOf(Gradering.UGRADERT), "ok"))
+            coEvery { adressebeskyttelseService.hentAdressebeskyttelseRoller(token, "ansattIdent") } returns emptyList()
+            coEvery {
+                tilgangsmaskinGateway.harTilgangTilPersonKomplett(personIdent, token, "ansattIdent", "callId")
+            } returns HarTilgangFraTilgangsmaskinen(true)
+
+            val harTilgang = serviceMedRegler.harTilgangTilArensakerForPerson(
+                "ansattIdent", ArenasakTilgangRequest(personIdent), token, listOf(rolle), "callId"
+            )
+
+            assertThat(harTilgang).isEqualTo(forventetTilgang)
+        }
 
         @ParameterizedTest
         @CsvSource(
@@ -178,7 +201,13 @@ class TilgangServiceTest {
             assertThat(input.captured.søkerIdenter.barn).isEmpty()
             assertThat(input.captured.avklaringsbehovFraBehandlingsflyt).isNull()
             assertThat(input.captured.avklaringsbehovFraPostmottak).isNull()
-            assertThat(input.captured.påkrevdRolle).containsExactly(Rolle.LES, Rolle.DRIFT_LES)
+            assertThat(input.captured.påkrevdRolle).containsExactly(
+                Rolle.LES,
+                Rolle.SAKSBEHANDLER_NASJONAL,
+                Rolle.SAKSBEHANDLER_OPPFOLGING,
+                Rolle.KVALITETSSIKRER,
+                Rolle.BESLUTTER
+            )
             assertThat(input.captured.operasjoner).containsExactly(Operasjon.SE)
             coVerify(exactly = 1) { regelService.vurderTilgang(any()) }
             coVerify {
