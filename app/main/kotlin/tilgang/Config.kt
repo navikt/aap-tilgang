@@ -21,7 +21,8 @@ data class Config(
     val redis: RedisConfig = RedisConfig(),
     val behandlingsflyt: BehandlingsflytConfig = BehandlingsflytConfig(),
     val saf: SafConfig = SafConfig(),
-    val pdl: PdlConfig = PdlConfig()
+    val pdl: PdlConfig = PdlConfig(),
+    val msGraph: MsGraphConfig = MsGraphConfig()
 )
 
 data class Role(
@@ -48,4 +49,9 @@ data class SafConfig(
 data class PdlConfig(
     val baseUrl: URI = URI(requiredConfigForKey("PDL_BASE_URL")),
     val scope: String = requiredConfigForKey("PDL_SCOPE"),
+)
+
+data class MsGraphConfig(
+    val baseUrl: URI = URI(requiredConfigForKey("MS_GRAPH_BASE_URL")),
+    val scope: String = requiredConfigForKey("MS_GRAPH_SCOPE"),
 )

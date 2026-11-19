@@ -24,6 +24,7 @@ import tilgang.http.createHttpClient
 import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytGateway
 import tilgang.integrasjoner.behandlingsflyt.createBehandlingsflytClient
 import tilgang.integrasjoner.msgraph.MsGraphGateway
+import tilgang.integrasjoner.msgraph.createMsGraphClient
 import tilgang.integrasjoner.pdl.PdlGraphQLGateway
 import tilgang.integrasjoner.pdl.createPdlClient
 import tilgang.integrasjoner.saf.SafGraphqlGateway
@@ -92,7 +93,8 @@ fun Application.api(
 
     val pdlClient = createPdlClient(config.pdl)
     val pdl = PdlGraphQLGateway(redis, pdlClient, prometheus)
-    val msGraph = MsGraphGateway(redis, httpClient, prometheus)
+    val msGraphClient = createMsGraphClient(config.msGraph)
+    val msGraph = MsGraphGateway(redis, msGraphClient, prometheus)
     val behandlingsflytClient = createBehandlingsflytClient(config.behandlingsflyt)
     val behandlingsflyt = BehandlingsflytGateway(redis, behandlingsflytClient, prometheus)
     val safClient = createSafClient(config.saf)
@@ -128,6 +130,7 @@ fun Application.api(
     }
     monitor.subscribe(ApplicationStopped) { environment ->
         pdlClient.close()
+        msGraphClient.close()
         behandlingsflytClient.close()
         safClient.close()
         environment.log.info("ktor har fullført nedstoppingen sin. Eventuelle requester og annet arbeid som ikke ble fullført innen timeout ble avbrutt.")

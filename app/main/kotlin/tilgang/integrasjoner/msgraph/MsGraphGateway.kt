@@ -3,14 +3,10 @@ package tilgang.integrasjoner.msgraph
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
-import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.get
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import java.util.UUID
-import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
-import tilgang.auth.ITokenProvider
-import tilgang.auth.TokenProvider
 import tilgang.metrics.cacheHit
 import tilgang.metrics.cacheMiss
 import tilgang.redis.Key
@@ -26,11 +22,7 @@ class MsGraphGateway(
     private val redis: Redis,
     private val httpClient: HttpClient,
     private val prometheus: PrometheusMeterRegistry,
-    private val tokenProvider: ITokenProvider = TokenProvider,
 ) : IMsGraphGateway {
-    private val baseUrl = requiredConfigForKey("MS_GRAPH_BASE_URL")
-    private val scope = requiredConfigForKey("MS_GRAPH_SCOPE")
-
     override suspend fun hentAdGrupper(currentToken: OidcToken, ident: String): MemberOf {
         redis[Key(MSGRAPH_PREFIX, ident)]?.let {
             prometheus.cacheHit(MSGRAPH_PREFIX).increment()
@@ -38,8 +30,8 @@ class MsGraphGateway(
         }
         prometheus.cacheMiss(MSGRAPH_PREFIX).increment()
 
-        val respons = httpClient.get("$baseUrl/me/memberOf?\$top=500&\$select=id,mailNickname") {
-            bearerAuth(tokenProvider.oboToken(scope, currentToken))
+        val respons = httpClient.get("me/memberOf?\$top=500&\$select=id,mailNickname") {
+            attributes.put(msGraphCurrentTokenKey, currentToken)
         }.body<MemberOf>()
 
         redis.set(Key(MSGRAPH_PREFIX, ident), respons.serialize())
