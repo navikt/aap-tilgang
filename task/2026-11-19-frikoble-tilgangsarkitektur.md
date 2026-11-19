@@ -5,7 +5,7 @@
 Fullført dato: 2026-11-19.
 Oppgavegren: `test/architect-review`.
 Basegren: `main`, commit `e1f6b6d`.
-Implementasjon: `c8e8f49`.
+Implementasjon inkludert filorganisering: `3709d89`.
 Sesjon: `655c2699-5b66-4c28-871c-c6d1fcb8ba86`.
 Utviklerens effektive Git-e-post: `petter.ekrann@nav.no`.
 Jira: ikke oppgitt.
@@ -31,6 +31,10 @@ Eksisterende API og tilgangsavgjørelser skulle beholdes.
   adaptere i `App.kt`.
 - Navn og filinndeling er ryddet, med én type per fil der det var hensiktsmessig.
   Offentlig pluginmetode og eksisterende metrikketiketter er beholdt.
+- Tilgangsservice, egne inputtyper og kontrakter er samlet i `tilgang.kontroll`,
+  med regler i `tilgang.kontroll.regler`. Adressebeskyttelsesadapteren ligger ved
+  MS Graph-integrasjonen og statushåndtering i `tilgang.http`. Rotpakken har bare
+  `App.kt` og `Config.kt`; relevante tester følger den nye strukturen.
 - Tester dekker blant annet klientkonfigurasjon, tokenlivssyklus, HTTP-grensen,
   kontekstisolasjon, adapterfeil, avklaringsbehov og eksisterende regelutfall.
 
@@ -56,6 +60,7 @@ habilitetsuttrykk, regelrekkefølge, kortslutning, lokal regelcache og HTTP 200 
 | `ec260e8` | Navnerydding i TilgangService |
 | `eebb9fd` | Forenklet håndtering av personoperasjoner |
 | `c8e8f49` | Regelmotor frikoblet fra integrasjonstyper |
+| `3709d89` | Samlet tilgangskontroll og regler i egne pakker |
 
 ## Validering
 
@@ -105,6 +110,35 @@ og opprettelse av PR mot `main`.
 og workflow-skanning med disse verktøyene er derfor ikke kjørt. Dette notatet
 hevder ikke at en slik skanning har bestått. Ingen utrulling eller verifisering
 mot produksjon er utført.
+
+### Oppfølging: filorganisering og ny push
+
+Etter første publisering av [PR #710](https://github.com/navikt/aap-tilgang/pull/710)
+ble `main` hentet med fast-forward-only pull. Den var allerede oppdatert.
+Ved retur til oppgavegrenen var lokal `main` allerede innlemmet, og ingen
+mergecommit ble opprettet.
+
+Utvikleren godkjente deretter omorganisering av filene. Commit `3709d89` flytter
+44 produksjonsfiler og åtte testfiler. Alle 107 Kotlin-filer i appens
+produksjons- og testkildekataloger ble sammenlignet med forrige commit; bare
+pakker, importer og blanklinjer var endret. Begge bygde app-JAR-er ble kontrollert
+for at de nye klassene var med og de gamle pakkene borte.
+
+Full `./gradlew build` med flaggene ovenfor, inkludert `--rerun-tasks`, bestod
+etter flyttingen: 2 minutter og 30 sekunder, 34 oppgaver kjørt på nytt,
+637 tester uten feil eller hoppet over.
+
+Før denne pushen ble `git fetch origin` og
+`git merge --ff-only origin/test/architect-review` kjørt
+2026-11-19T20:47:25+01:00. Remote lå på `b77bd00`; ingen innfletting var nødvendig.
+Ny full validering ved `3709d89` etter synkroniseringen bestod:
+`BUILD SUCCESSFUL in 2m 20s`, alle 34 oppgaver kjørt på nytt.
+JUnit XML viste 587 app-tester og 50 plugin-tester, totalt 637, uten feil eller
+hoppet over. Kontraktmodulene hadde fortsatt ingen testkilder.
+`git diff --check` bestod for oppdateringen av sluttnotatet.
+
+GitHub varslet ved første push om 48 avhengighetssårbarheter på standardgrenen:
+20 høye og 28 moderate. Disse er ikke utredet i denne refaktoreringen.
 
 ## Gjenstående og overlevering
 
@@ -161,6 +195,12 @@ Agentens svar er oppsummert etter meldingslisten.
 | 37 | Utvikler | done |
 | 38 | Utvikler, valg i avklaring | Fullfør med sluttnotat, push og pull request |
 | 39 | Utvikler, godkjenning av egen sluttnotat-commit før push og PR | true |
+| 40 | Utvikler | pull main |
+| 41 | Utvikler | check ut forrige branch og merge inn main |
+| 42 | Utvikler | kan vi organisere filene bedre |
+| 43 | Utvikler | kjør på |
+| 44 | Utvikler | push |
+| 45 | Utvikler, godkjenning av oppdatert sluttnotat-commit før push | true |
 
 Agentoppsummering: Arbeidet ble utført stegvis og committet mellom stegene.
 Klientoppsettet ble flyttet først, deretter TokenProvider-livssyklus,
@@ -174,3 +214,11 @@ Agenten avklarte eksplisitt lokal avslutning mot sluttnotat, push og PR, og
 utvikleren valgte sistnevnte.
 Agenten lagret sluttnotatet, kjørte full validering på nytt etter fetch og ba
 om separat commit-godkjenning. Utvikleren godkjente dette.
+Etter publisering ble grenbyttene og main-synkroniseringen utført som beskrevet
+ovenfor. Agenten foreslo en samlet kontrollpakke, og utvikleren godkjente
+omorganiseringen. Filene ble flyttet uten logikkendringer, hele byggingen bestod,
+og endringen ble committet separat som `3709d89` uten push. Utvikleren ba deretter
+om push; agenten synkroniserte oppgavegrenen og startet ny full validering før
+oppdatering av dette notatet og eksisterende PR.
+Alle 637 tester bestod også etter siste synkronisering, og utvikleren godkjente
+en separat dokumentasjonscommit av det oppdaterte sluttnotatet før push.
