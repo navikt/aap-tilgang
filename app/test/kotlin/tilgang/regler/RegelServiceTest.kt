@@ -9,10 +9,12 @@ import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.RelevanteIdenter
 import no.nav.aap.tilgang.Rolle
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import tilgang.AzureTokenGen
+import tilgang.TilgangsmaskinConfig
 import tilgang.fakes.Fakes
 import tilgang.fakes.WithFakes
 import tilgang.integrasjoner.msgraph.Group
@@ -23,12 +25,19 @@ import tilgang.integrasjoner.pdl.IPdlGraphQLGateway
 import tilgang.integrasjoner.pdl.PdlGeoType
 import tilgang.integrasjoner.pdl.PersonResultat
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinGateway
+import tilgang.integrasjoner.tilgangsmaskin.createTilgangsmaskinClient
 import tilgang.service.AdressebeskyttelseService
 import java.util.UUID
 
 @WithFakes
 class RegelServiceTest {
     private val redis = Fakes.getRedisServer()
+    private val tilgangsmaskinClient = createTilgangsmaskinClient(TilgangsmaskinConfig())
+
+    @AfterEach
+    fun closeClient() {
+        tilgangsmaskinClient.close()
+    }
 
     // Bestill brev er deprecated og mangler løses-av
 
@@ -218,7 +227,7 @@ class RegelServiceTest {
     val regelService = RegelService(
         pdlService,
         AdressebeskyttelseService(graphGateway),
-        TilgangsmaskinGateway(redis, Fakes.getHttpClient(), prometheus)
+        TilgangsmaskinGateway(redis, tilgangsmaskinClient, prometheus)
     )
 
     val token = AzureTokenGen("tilgangazure", "tilgang").generate()

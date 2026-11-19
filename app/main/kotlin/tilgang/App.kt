@@ -20,7 +20,6 @@ import kotlin.time.Duration.Companion.seconds
 import no.nav.aap.komponenter.server.auth.IdentityProvider
 import no.nav.aap.komponenter.server.commonKtorModule
 import org.slf4j.LoggerFactory
-import tilgang.http.createHttpClient
 import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytGateway
 import tilgang.integrasjoner.behandlingsflyt.createBehandlingsflytClient
 import tilgang.integrasjoner.msgraph.MsGraphGateway
@@ -30,6 +29,7 @@ import tilgang.integrasjoner.pdl.createPdlClient
 import tilgang.integrasjoner.saf.SafGraphqlGateway
 import tilgang.integrasjoner.saf.createSafClient
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinGateway
+import tilgang.integrasjoner.tilgangsmaskin.createTilgangsmaskinClient
 import tilgang.redis.Redis
 import tilgang.regler.RegelService
 import tilgang.routes.actuator
@@ -87,8 +87,6 @@ fun main() {
 fun Application.api(
     config: Config = Config(), redis: Redis = Redis.from(config.redis),
 ) {
-    val httpClient = createHttpClient(10.seconds)
-
     val prometheus = AppConfig.prometheus
 
     val pdlClient = createPdlClient(config.pdl)
@@ -99,7 +97,8 @@ fun Application.api(
     val behandlingsflyt = BehandlingsflytGateway(redis, behandlingsflytClient, prometheus)
     val safClient = createSafClient(config.saf)
     val saf = SafGraphqlGateway(redis, safClient, prometheus)
-    val tilgangsmaskinGateway = TilgangsmaskinGateway(redis, httpClient, prometheus)
+    val tilgangsmaskinClient = createTilgangsmaskinClient(config.tilgangsmaskin)
+    val tilgangsmaskinGateway = TilgangsmaskinGateway(redis, tilgangsmaskinClient, prometheus)
     val regelService = RegelService(pdl, AdressebeskyttelseService(msGraph), tilgangsmaskinGateway
     )
     val tilgangService = TilgangService(saf, behandlingsflyt, regelService, tilgangsmaskinGateway)
@@ -133,6 +132,7 @@ fun Application.api(
         msGraphClient.close()
         behandlingsflytClient.close()
         safClient.close()
+        tilgangsmaskinClient.close()
         environment.log.info("ktor har fullført nedstoppingen sin. Eventuelle requester og annet arbeid som ikke ble fullført innen timeout ble avbrutt.")
     }
 }

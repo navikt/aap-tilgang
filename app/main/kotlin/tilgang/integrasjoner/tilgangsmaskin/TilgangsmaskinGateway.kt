@@ -4,7 +4,6 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.request.HttpRequestBuilder
-import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -13,11 +12,8 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.micrometer.core.instrument.MeterRegistry
-import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import org.slf4j.LoggerFactory
-import tilgang.auth.ITokenProvider
-import tilgang.auth.TokenProvider
 import tilgang.metrics.cacheHit
 import tilgang.metrics.cacheMiss
 import tilgang.redis.Key
@@ -70,15 +66,11 @@ class TilgangsmaskinGateway(
     private val redis: Redis,
     private val httpClient: HttpClient,
     private val prometheus: MeterRegistry,
-    private val tokenProvider: ITokenProvider = TokenProvider,
 ) : ITilgangsmaskinGateway {
-    private val baseUrl = requiredConfigForKey("INTEGRASJON_TILGANGSMASKIN_URL")
-    private val scope = requiredConfigForKey("INTEGRASJON_TILGANGSMASKIN_SCOPE")
-
     override suspend fun harTilgangTilPerson(brukerIdent: String, token: OidcToken, callId: String?): Boolean {
         return try {
-            httpClient.post("$baseUrl/api/v1/komplett") {
-                bearerAuth(tokenProvider.oboToken(scope, token))
+            httpClient.post("api/v1/komplett") {
+                attributes.put(tilgangsmaskinCurrentTokenKey, token)
                 tilgangsmaskinSporingsHeaders(callId)
                 contentType(ContentType.Text.Plain)
                 setBody(brukerIdent)
@@ -105,8 +97,8 @@ class TilgangsmaskinGateway(
         prometheus.cacheMiss(TILGANGSMASKIN_KJERNE_PREFIX).increment()
 
         return try {
-            httpClient.post("$baseUrl/api/v1/kjerne") {
-                bearerAuth(tokenProvider.oboToken(scope, token))
+            httpClient.post("api/v1/kjerne") {
+                attributes.put(tilgangsmaskinCurrentTokenKey, token)
                 tilgangsmaskinSporingsHeaders(callId)
                 contentType(ContentType.Application.Json)
                 setBody(brukerIdent)
@@ -146,8 +138,8 @@ class TilgangsmaskinGateway(
         prometheus.cacheMiss(TILGANGSMASKIN_KOMPLETT_PREFIX).increment()
 
         return try {
-            httpClient.post("$baseUrl/api/v1/komplett") {
-                bearerAuth(tokenProvider.oboToken(scope, token))
+            httpClient.post("api/v1/komplett") {
+                attributes.put(tilgangsmaskinCurrentTokenKey, token)
                 tilgangsmaskinSporingsHeaders(callId)
                 contentType(ContentType.Application.Json)
                 setBody(brukerIdent)
@@ -184,8 +176,8 @@ class TilgangsmaskinGateway(
         callId: String?,
     ): Boolean {
         return try {
-            httpClient.post("$baseUrl/api/v1/bulk") {
-                bearerAuth(tokenProvider.oboToken(scope, token))
+            httpClient.post("api/v1/bulk") {
+                attributes.put(tilgangsmaskinCurrentTokenKey, token)
                 tilgangsmaskinSporingsHeaders(callId)
                 contentType(ContentType.Application.Json)
                 setBody(brukerIdenter)
@@ -202,15 +194,10 @@ class TilgangsmaskinGateway(
     companion object {
         private const val TILGANGSMASKIN_KJERNE_PREFIX = "tilgangsmaskinKjerne"
         private const val TILGANGSMASKIN_KOMPLETT_PREFIX = "tilgangsmaskinKomplett"
-        private const val NAV_CONSUMER_ID_HEADER = "Nav-Consumer-Id"
-        private val consumerId = System.getenv("NAIS_APP_NAME") ?: "tilgang"
     }
 
-    // Tilgangsmaskinen leser X-Correlation-ID for sporing på tvers av tjenester, og Nav-Consumer-Id
-    // for å identifisere kallende applikasjon. Kalleren sender med callId-en fra inngående request
-    // (samme som PDL-/SAF-gatewayene bruker); er den ikke satt bruker vi verdikonvensjonen med 'ukjent'.
+    // Tilgangsmaskinen bruker X-Correlation-ID for callId fra inngående request, ikke Nav-Call-Id.
     private fun HttpRequestBuilder.tilgangsmaskinSporingsHeaders(callId: String?) {
         header(HttpHeaders.XCorrelationId, callId ?: "ukjent")
-        header(NAV_CONSUMER_ID_HEADER, consumerId)
     }
 }

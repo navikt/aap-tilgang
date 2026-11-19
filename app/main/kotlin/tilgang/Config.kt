@@ -22,7 +22,8 @@ data class Config(
     val behandlingsflyt: BehandlingsflytConfig = BehandlingsflytConfig(),
     val saf: SafConfig = SafConfig(),
     val pdl: PdlConfig = PdlConfig(),
-    val msGraph: MsGraphConfig = MsGraphConfig()
+    val msGraph: MsGraphConfig = MsGraphConfig(),
+    val tilgangsmaskin: TilgangsmaskinConfig = TilgangsmaskinConfig()
 )
 
 data class Role(
@@ -54,4 +55,10 @@ data class PdlConfig(
 data class MsGraphConfig(
     val baseUrl: URI = URI(requiredConfigForKey("MS_GRAPH_BASE_URL")),
     val scope: String = requiredConfigForKey("MS_GRAPH_SCOPE"),
+)
+
+data class TilgangsmaskinConfig(
+    val baseUrl: URI = URI(requiredConfigForKey("INTEGRASJON_TILGANGSMASKIN_URL")),
+    val scope: String = requiredConfigForKey("INTEGRASJON_TILGANGSMASKIN_SCOPE"),
+    val consumerId: String = System.getenv("NAIS_APP_NAME") ?: "tilgang",
 )
