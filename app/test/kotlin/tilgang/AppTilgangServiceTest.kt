@@ -25,8 +25,15 @@ import tilgang.integrasjoner.saf.Sak
 import tilgang.integrasjoner.saf.Sakstype
 import tilgang.integrasjoner.tilgangsmaskin.BrukerOgRegeltype
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinGateway
-import tilgang.regler.RegelInput
-import tilgang.regler.RegelService
+import tilgang.kontroll.AvklaringsbehovType
+import tilgang.kontroll.BehandlingstilgangInput
+import tilgang.kontroll.BrukerToken
+import tilgang.kontroll.JournalposttilgangInput
+import tilgang.kontroll.Personregel
+import tilgang.kontroll.PersontilgangInput
+import tilgang.kontroll.Tilgangskontekst
+import tilgang.kontroll.regler.RegelInput
+import tilgang.kontroll.regler.RegelService
 import java.util.UUID
 import kotlin.test.assertFails
 import kotlin.test.assertFailsWith

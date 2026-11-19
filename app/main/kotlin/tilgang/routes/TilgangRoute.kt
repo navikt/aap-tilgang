@@ -21,22 +21,22 @@ import no.nav.aap.tilgang.SakTilgangRequest
 import no.nav.aap.tilgang.TilbakekrevingTilgangRequest
 import no.nav.aap.tilgang.TilgangResponse
 import tilgang.Role
-import tilgang.BrukerToken
-import tilgang.Personregel
-import tilgang.TilgangService
-import tilgang.Tilgangskontekst
-import tilgang.ArenasakstilgangInput
-import tilgang.BehandlingstilgangInput
-import tilgang.JournalposttilgangInput
-import tilgang.PersontilgangInput
-import tilgang.SakstilgangInput
-import tilgang.TilbakekrevingstilgangInput
 import tilgang.auth.ident
 import tilgang.auth.roller
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinRequest
+import tilgang.kontroll.ArenasakstilgangInput
+import tilgang.kontroll.BehandlingstilgangInput
+import tilgang.kontroll.BrukerToken
+import tilgang.kontroll.JournalposttilgangInput
+import tilgang.kontroll.Personregel
+import tilgang.kontroll.PersontilgangInput
+import tilgang.kontroll.SakstilgangInput
+import tilgang.kontroll.TilbakekrevingstilgangInput
+import tilgang.kontroll.TilgangService
+import tilgang.kontroll.Tilgangskontekst
+import tilgang.kontroll.regler.parseRoller
 import tilgang.metrics.httpCallCounter
 import tilgang.metrics.nektetTilgangTeller
-import tilgang.regler.parseRoller
 
 private val log = org.slf4j.LoggerFactory.getLogger("tilgang.routes.TilgangRoute")
 

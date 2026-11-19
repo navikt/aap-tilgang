@@ -15,14 +15,16 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.ValueSource
+import tilgang.integrasjoner.msgraph.AdressebeskyttelseService
 import tilgang.integrasjoner.pdl.Gradering
 import tilgang.integrasjoner.pdl.IPdlGraphQLGateway
 import tilgang.integrasjoner.pdl.PersonResultat
 import tilgang.integrasjoner.tilgangsmaskin.HarTilgangFraTilgangsmaskinen
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinAvvistResponse
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinGateway
-import tilgang.regler.RegelInput
-import tilgang.service.AdressebeskyttelseService
+import tilgang.kontroll.BrukerToken
+import tilgang.kontroll.Tilgangskontekst
+import tilgang.kontroll.regler.RegelInput
 import kotlin.test.assertFailsWith
 
 class AppRegelServiceTest {
