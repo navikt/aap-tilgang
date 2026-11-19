@@ -2,6 +2,7 @@ package tilgang
 
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
+import no.nav.aap.tilgang.ArenasakTilgangRequest
 import no.nav.aap.postmottak.kontrakt.avklaringsbehov.Definisjon as PostmottakDefinisjon
 import no.nav.aap.tilgang.BehandlingTilgangRequest
 import no.nav.aap.tilgang.JournalpostTilgangRequest
@@ -113,6 +114,28 @@ class TilgangService(
             påkrevdRolle = req.påkrevdRolle ?: emptyList(),
             operasjoner = listOf(req.operasjon),
         )
+        return regelService.vurderTilgang(regelInput)[req.operasjon] == true
+    }
+
+    suspend fun harTilgangTilArensakerForPerson(
+        ansattIdent: String,
+        req: ArenasakTilgangRequest,
+        token: OidcToken,
+        roller: List<Rolle>,
+        callId: String
+    ): Boolean {
+        val regelInput = RegelInput(
+            callId = callId,
+            ansattIdent = ansattIdent,
+            currentToken = token,
+            roller = roller,
+            søkerIdenter = RelevanteIdenter(listOf(req.personIdent), emptyList()),
+            avklaringsbehovFraBehandlingsflyt = null,
+            avklaringsbehovFraPostmottak = null,
+            påkrevdRolle = req.påkrevdRolle,
+            operasjoner = listOf(req.operasjon)
+        )
+
         return regelService.vurderTilgang(regelInput)[req.operasjon] == true
     }
 
