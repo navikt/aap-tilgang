@@ -10,7 +10,6 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import org.slf4j.LoggerFactory
-import tilgang.JournalpostOppslag
 import tilgang.metrics.cacheHit
 import tilgang.metrics.cacheMiss
 import tilgang.redis.Key
@@ -22,14 +21,14 @@ class SafGraphqlGateway(
     private val redis: Redis,
     private val httpClient: HttpClient,
     private val prometheus: PrometheusMeterRegistry,
-) : JournalpostOppslag {
+) {
     private val log = LoggerFactory.getLogger(SafGraphqlGateway::class.java)
 
     companion object {
         private const val JOURNALPOST_PREFIX = "journalpost"
     }
 
-    override suspend fun hentJournalpostInfo(journalpostId: Long, callId: String): SafJournalpost {
+    suspend fun hentJournalpostInfo(journalpostId: Long, callId: String): SafJournalpost {
         redis[Key(JOURNALPOST_PREFIX, journalpostId.toString())]?.let {
             prometheus.cacheHit(JOURNALPOST_PREFIX).increment()
             return it.deserialize()

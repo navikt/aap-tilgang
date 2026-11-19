@@ -17,8 +17,11 @@ import io.ktor.server.routing.routing
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlin.time.Duration.Companion.seconds
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.komponenter.server.auth.IdentityProvider
 import no.nav.aap.komponenter.server.commonKtorModule
+import no.nav.aap.tilgang.Operasjon
+import no.nav.aap.tilgang.RelevanteIdenter
 import org.slf4j.LoggerFactory
 import tilgang.auth.TexasGateway
 import tilgang.auth.TokenProvider
@@ -30,11 +33,14 @@ import tilgang.integrasjoner.msgraph.createMsGraphClient
 import tilgang.integrasjoner.pdl.PdlGraphQLGateway
 import tilgang.integrasjoner.pdl.createPdlClient
 import tilgang.integrasjoner.saf.SafGraphqlGateway
+import tilgang.integrasjoner.saf.BrukerIdType
 import tilgang.integrasjoner.saf.createSafClient
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinGateway
+import tilgang.integrasjoner.tilgangsmaskin.BrukerOgRegeltype
 import tilgang.integrasjoner.tilgangsmaskin.createTilgangsmaskinClient
 import tilgang.redis.Redis
 import tilgang.regler.RegelService
+import tilgang.regler.RegelInput
 import tilgang.routes.actuator
 import tilgang.routes.tilgang
 import tilgang.service.AdressebeskyttelseService
@@ -108,7 +114,7 @@ fun Application.api(
     val tilgangsmaskinGateway = TilgangsmaskinGateway(redis, tilgangsmaskinClient, prometheus)
     val regelService = RegelService(pdl, AdressebeskyttelseService(msGraph), tilgangsmaskinGateway
     )
-    val tilgangService = TilgangService(saf, behandlingsflyt, regelService, tilgangsmaskinGateway)
+    val tilgangService = createTilgangService(saf, behandlingsflyt, regelService, tilgangsmaskinGateway)
 
     install(StatusPages, StatusPagesConfigHelper.setup(prometheus))
 
@@ -146,3 +152,62 @@ fun Application.api(
         environment.log.info("ktor har fullført nedstoppingen sin. Eventuelle requester og annet arbeid som ikke ble fullført innen timeout ble avbrutt.")
     }
 }
+
+internal fun createTilgangService(
+    saf: SafGraphqlGateway,
+    behandlingsflyt: BehandlingsflytGateway,
+    regelService: RegelService,
+    tilgangsmaskin: TilgangsmaskinGateway,
+): TilgangService = TilgangService(
+    journalpostOppslag = object : JournalpostOppslag {
+        override suspend fun hentJournalpostInfo(journalpostId: Long, callId: String): JournalpostInfo {
+            val journalpost = saf.hentJournalpostInfo(journalpostId, callId)
+            return JournalpostInfo(
+                journalpostId = journalpost.journalpostId,
+                søkerIdent = journalpost.bruker?.id,
+                gjelderOrganisasjon = journalpost.bruker?.type == BrukerIdType.ORGNR,
+                saksnummer = journalpost.sak?.takeIf { it.fagsaksystem == "KELVIN" }?.fagsakId,
+            )
+        }
+    },
+    identOppslag = object : IdentOppslag {
+        override suspend fun hentIdenterForSak(saksnummer: String): RelevanteIdenter =
+            behandlingsflyt.hentIdenterForSak(saksnummer)
+
+        override suspend fun hentIdenterForBehandling(behandlingsnummer: String): RelevanteIdenter =
+            behandlingsflyt.hentIdenterForBehandling(behandlingsnummer)
+    },
+    tilgangsvurdering = object : Tilgangsvurdering {
+        override suspend fun vurderTilgang(input: Tilgangsgrunnlag): Map<Operasjon, Boolean> =
+            regelService.vurderTilgang(
+                RegelInput(
+                    callId = input.callId,
+                    ansattIdent = input.ansattIdent,
+                    currentToken = OidcToken(input.brukerToken.verdi),
+                    roller = input.roller,
+                    søkerIdenter = input.søkerIdenter,
+                    avklaringsbehovFraBehandlingsflyt = input.avklaringsbehovFraBehandlingsflyt,
+                    avklaringsbehovFraPostmottak = input.avklaringsbehovFraPostmottak,
+                    påkrevdRolle = input.påkrevdRolle,
+                    operasjoner = input.operasjoner,
+                )
+            )
+    },
+    persontilgang = object : Persontilgang {
+        override suspend fun harTilgangTilPerson(
+            brukerIdent: String,
+            token: BrukerToken,
+            callId: String,
+        ): Boolean = tilgangsmaskin.harTilgangTilPerson(brukerIdent, OidcToken(token.verdi), callId)
+
+        override suspend fun harTilganger(
+            brukerIdenter: List<Personregel>,
+            token: BrukerToken,
+            callId: String,
+        ): Boolean = tilgangsmaskin.harTilganger(
+            brukerIdenter.map { BrukerOgRegeltype(it.personIdent, it.regeltype) },
+            OidcToken(token.verdi),
+            callId,
+        )
+    },
+)

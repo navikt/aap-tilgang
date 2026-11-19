@@ -14,7 +14,6 @@ import io.ktor.http.contentType
 import io.micrometer.core.instrument.MeterRegistry
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import org.slf4j.LoggerFactory
-import tilgang.Persontilgang
 import tilgang.metrics.cacheHit
 import tilgang.metrics.cacheMiss
 import tilgang.redis.Key
@@ -67,7 +66,7 @@ class TilgangsmaskinGateway(
     private val redis: Redis,
     private val httpClient: HttpClient,
     private val prometheus: MeterRegistry,
-) : ITilgangsmaskinGateway, Persontilgang {
+) : ITilgangsmaskinGateway {
     override suspend fun harTilgangTilPerson(brukerIdent: String, token: OidcToken, callId: String?): Boolean {
         return try {
             httpClient.post("api/v1/komplett") {

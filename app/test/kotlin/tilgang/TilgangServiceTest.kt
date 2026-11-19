@@ -7,7 +7,6 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.test.runTest
-import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.tilgang.ArenasakTilgangRequest
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.PersonTilgangRequest
@@ -24,11 +23,12 @@ import org.junit.jupiter.params.provider.ValueSource
 import tilgang.integrasjoner.pdl.Gradering
 import tilgang.integrasjoner.pdl.IPdlGraphQLGateway
 import tilgang.integrasjoner.pdl.PersonResultat
+import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytGateway
+import tilgang.integrasjoner.saf.SafGraphqlGateway
 import tilgang.integrasjoner.tilgangsmaskin.HarTilgangFraTilgangsmaskinen
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinAvvistGrunn
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinAvvistResponse
-import tilgang.integrasjoner.tilgangsmaskin.ITilgangsmaskinGateway
-import tilgang.regler.RegelInput
+import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinGateway
 import tilgang.regler.RegelService
 import tilgang.service.AdressebeskyttelseGruppe
 import tilgang.service.AdressebeskyttelseService
@@ -67,14 +67,16 @@ class TilgangServiceTest {
     inner class TilgangTilArenasakerMedRegler {
         private val pdlGateway = mockk<IPdlGraphQLGateway>()
         private val adressebeskyttelseService = mockk<AdressebeskyttelseService>()
-        private val tilgangsmaskinGateway = mockk<ITilgangsmaskinGateway>()
-        private val token = mockk<OidcToken>()
+        private val tilgangsmaskinGateway = mockk<TilgangsmaskinGateway>()
+        private val safGateway = mockk<SafGraphqlGateway>()
+        private val behandlingsflytGateway = mockk<BehandlingsflytGateway>()
+        private val token = BrukerToken(AzureTokenGen("issuer", "audience").generate())
         private val personIdent = "12345678901"
-        private val serviceMedRegler = TilgangService(
-            journalpostOppslag,
-            identOppslag,
+        private val serviceMedRegler = createTilgangService(
+            safGateway,
+            behandlingsflytGateway,
             RegelService(pdlGateway, adressebeskyttelseService, tilgangsmaskinGateway),
-            persontilgang
+            tilgangsmaskinGateway
         )
 
         @ParameterizedTest
@@ -91,9 +93,15 @@ class TilgangServiceTest {
         fun `sjekker hvilke roller som kan lese arenasaker`(rolle: Rolle, forventetTilgang: Boolean) = runTest {
             coEvery { pdlGateway.hentPersonBolk(listOf(personIdent), "callId") } returns
                     listOf(PersonResultat(personIdent, listOf(Gradering.UGRADERT), "ok"))
-            coEvery { adressebeskyttelseService.hentAdressebeskyttelseRoller(token, "ansattIdent") } returns emptyList()
             coEvery {
-                tilgangsmaskinGateway.harTilgangTilPersonKomplett(personIdent, token, "ansattIdent", "callId")
+                adressebeskyttelseService.hentAdressebeskyttelseRoller(
+                    match { it.token() == token.verdi }, "ansattIdent"
+                )
+            } returns emptyList()
+            coEvery {
+                tilgangsmaskinGateway.harTilgangTilPersonKomplett(
+                    personIdent, match { it.token() == token.verdi }, "ansattIdent", "callId"
+                )
             } returns HarTilgangFraTilgangsmaskinen(true)
 
             val harTilgang = serviceMedRegler.harTilgangTilArensakerForPerson(
@@ -122,10 +130,15 @@ class TilgangServiceTest {
         ) = runTest {
             coEvery { pdlGateway.hentPersonBolk(listOf(personIdent), "callId") } returns
                     listOf(PersonResultat(personIdent, listOf(gradering), "ok"))
-            coEvery { adressebeskyttelseService.hentAdressebeskyttelseRoller(token, "ansattIdent") } returns
-                    listOfNotNull(adressebeskyttelseRolle)
             coEvery {
-                tilgangsmaskinGateway.harTilgangTilPersonKomplett(personIdent, token, "ansattIdent", "callId")
+                adressebeskyttelseService.hentAdressebeskyttelseRoller(
+                    match { it.token() == token.verdi }, "ansattIdent"
+                )
+            } returns listOfNotNull(adressebeskyttelseRolle)
+            coEvery {
+                tilgangsmaskinGateway.harTilgangTilPersonKomplett(
+                    personIdent, match { it.token() == token.verdi }, "ansattIdent", "callId"
+                )
             } returns HarTilgangFraTilgangsmaskinen(true)
 
             val harTilgang = serviceMedRegler.harTilgangTilArensakerForPerson(
@@ -134,11 +147,13 @@ class TilgangServiceTest {
 
             assertThat(harTilgang).isEqualTo(forventetTilgang)
             coVerify(exactly = if (forventetTilgang) 1 else 0) {
-                tilgangsmaskinGateway.harTilgangTilPersonKomplett(personIdent, token, "ansattIdent", "callId")
+                tilgangsmaskinGateway.harTilgangTilPersonKomplett(
+                    personIdent, match { it.token() == token.verdi }, "ansattIdent", "callId"
+                )
             }
             coVerify {
-                journalpostOppslag wasNot Called
-                identOppslag wasNot Called
+                safGateway wasNot Called
+                behandlingsflytGateway wasNot Called
             }
         }
 
@@ -149,9 +164,15 @@ class TilgangServiceTest {
         ) = runTest {
             coEvery { pdlGateway.hentPersonBolk(listOf(personIdent), "callId") } returns
                     listOf(PersonResultat(personIdent, listOf(Gradering.UGRADERT), "ok"))
-            coEvery { adressebeskyttelseService.hentAdressebeskyttelseRoller(token, "ansattIdent") } returns emptyList()
             coEvery {
-                tilgangsmaskinGateway.harTilgangTilPersonKomplett(personIdent, token, "ansattIdent", "callId")
+                adressebeskyttelseService.hentAdressebeskyttelseRoller(
+                    match { it.token() == token.verdi }, "ansattIdent"
+                )
+            } returns emptyList()
+            coEvery {
+                tilgangsmaskinGateway.harTilgangTilPersonKomplett(
+                    personIdent, match { it.token() == token.verdi }, "ansattIdent", "callId"
+                )
             } returns HarTilgangFraTilgangsmaskinen(
                 false,
                 TilgangsmaskinAvvistResponse(
@@ -170,7 +191,9 @@ class TilgangServiceTest {
 
             assertThat(harTilgang).isFalse()
             coVerify(exactly = 1) {
-                tilgangsmaskinGateway.harTilgangTilPersonKomplett(personIdent, token, "ansattIdent", "callId")
+                tilgangsmaskinGateway.harTilgangTilPersonKomplett(
+                    personIdent, match { it.token() == token.verdi }, "ansattIdent", "callId"
+                )
             }
             coVerify(exactly = 0) {
                 tilgangsmaskinGateway.harTilgangTilPersonKjerne(any(), any(), any(), any())
@@ -184,9 +207,9 @@ class TilgangServiceTest {
         @Test
         suspend fun `bruker leseroller og SE som standard og sender kontekst til regelservice`() {
             val req = ArenasakTilgangRequest(personIdent = "12345678901")
-            val token = mockk<OidcToken>()
+            val token = BrukerToken("test-token")
             val roller = listOf(Rolle.LES)
-            val input = slot<RegelInput>()
+            val input = slot<Tilgangsgrunnlag>()
             coEvery { tilgangsvurdering.vurderTilgang(capture(input)) } returns mapOf(Operasjon.SE to true)
 
             val harTilgang = service.harTilgangTilArensakerForPerson("ansattIdent", req, token, roller, "callId")
@@ -194,7 +217,7 @@ class TilgangServiceTest {
             assertThat(harTilgang).isTrue()
             assertThat(input.captured.callId).isEqualTo("callId")
             assertThat(input.captured.ansattIdent).isEqualTo("ansattIdent")
-            assertThat(input.captured.currentToken).isSameAs(token)
+            assertThat(input.captured.brukerToken).isSameAs(token)
             assertThat(input.captured.roller).containsExactly(Rolle.LES)
             assertThat(input.captured.søkerIdenter.søker).containsExactly(req.personIdent)
             assertThat(input.captured.søkerIdenter.barn).isEmpty()
@@ -222,7 +245,7 @@ class TilgangServiceTest {
             coEvery { tilgangsvurdering.vurderTilgang(any()) } returns mapOf(Operasjon.SE to harTilgang)
 
             val resultat = service.harTilgangTilArensakerForPerson(
-                "ansattIdent", ArenasakTilgangRequest("12345678901"), mockk(), emptyList(), "callId"
+                "ansattIdent", ArenasakTilgangRequest("12345678901"), BrukerToken("test-token"), emptyList(), "callId"
             )
 
             assertThat(resultat).isEqualTo(harTilgang)
@@ -233,7 +256,7 @@ class TilgangServiceTest {
             coEvery { tilgangsvurdering.vurderTilgang(any()) } returns emptyMap()
 
             val harTilgang = service.harTilgangTilArensakerForPerson(
-                "ansattIdent", ArenasakTilgangRequest("12345678901"), mockk(), emptyList(), "callId"
+                "ansattIdent", ArenasakTilgangRequest("12345678901"), BrukerToken("test-token"), emptyList(), "callId"
             )
 
             assertThat(harTilgang).isFalse()
@@ -244,10 +267,10 @@ class TilgangServiceTest {
         suspend fun `bevarer eksplisitt angitte roller og operasjon`(tomRolleliste: Boolean) {
             val påkrevdRolle = if (tomRolleliste) emptyList() else listOf(Rolle.BESLUTTER)
             val req = ArenasakTilgangRequest("12345678901", påkrevdRolle, Operasjon.SE)
-            val input = slot<RegelInput>()
+            val input = slot<Tilgangsgrunnlag>()
             coEvery { tilgangsvurdering.vurderTilgang(capture(input)) } returns mapOf(Operasjon.SE to true)
 
-            service.harTilgangTilArensakerForPerson("ansattIdent", req, mockk(), emptyList(), "callId")
+            service.harTilgangTilArensakerForPerson("ansattIdent", req, BrukerToken("test-token"), emptyList(), "callId")
 
             assertThat(input.captured.påkrevdRolle).isEqualTo(påkrevdRolle)
             assertThat(input.captured.operasjoner).containsExactly(Operasjon.SE)
@@ -263,7 +286,7 @@ class TilgangServiceTest {
             val personIdent = Random.nextLong().toString()
             val req = PersonTilgangRequest(personIdent, emptyList(), operasjon)
 
-            service.harTilgangTilPerson("ansattIdent", req, mockk(), emptyList(), "callId")
+            service.harTilgangTilPerson("ansattIdent", req, BrukerToken("test-token"), emptyList(), "callId")
 
             coVerify {
                 tilgangsvurdering wasNot Called
@@ -277,7 +300,7 @@ class TilgangServiceTest {
             val personIdent = Random.nextLong().toString()
             val req = PersonTilgangRequest(personIdent, emptyList(), Operasjon.DRIFTE)
 
-            service.harTilgangTilPerson("ansattIdent", req, mockk(), emptyList(), "callId")
+            service.harTilgangTilPerson("ansattIdent", req, BrukerToken("test-token"), emptyList(), "callId")
 
             coVerify {
                 tilgangsvurdering.vurderTilgang(any())

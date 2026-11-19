@@ -6,7 +6,6 @@ import io.ktor.client.request.get
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import no.nav.aap.tilgang.RelevanteIdenter
 import org.slf4j.LoggerFactory
-import tilgang.IdentOppslag
 import tilgang.metrics.cacheHit
 import tilgang.metrics.cacheMiss
 import tilgang.redis.Key
@@ -20,8 +19,8 @@ class BehandlingsflytGateway(
     private val redis: Redis,
     private val httpClient: HttpClient,
     private val prometheus: PrometheusMeterRegistry,
-) : IdentOppslag {
-    override suspend fun hentIdenterForSak(saksnummer: String): RelevanteIdenter {
+) {
+    suspend fun hentIdenterForSak(saksnummer: String): RelevanteIdenter {
         redis[Key(IDENTER_SAK_PREFIX, saksnummer)]?.let {
             prometheus.cacheHit(BEHANDLINGSFLYT).increment()
             return it.deserialize()
@@ -35,7 +34,7 @@ class BehandlingsflytGateway(
         return identer
     }
 
-    override suspend fun hentIdenterForBehandling(behandlingsnummer: String): RelevanteIdenter {
+    suspend fun hentIdenterForBehandling(behandlingsnummer: String): RelevanteIdenter {
         redis[Key(IDENTER_BEHANDLING_PREFIX, behandlingsnummer)]?.let {
             prometheus.cacheHit(BEHANDLINGSFLYT).increment()
             return it.deserialize()
