@@ -26,6 +26,7 @@ import kotlinx.coroutines.runBlocking
 import no.nav.aap.komponenter.httpklient.httpclient.error.ManglerTilgangException
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.tilgang.Beslutter
+import no.nav.aap.tilgang.ArenasakTilgangRequest
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.Rolle
 import no.nav.aap.tilgang.SakTilgangRequest
@@ -156,6 +157,40 @@ class TilgangPluginTest {
     }
 
     private fun base(path: String) = URI.create("http://localhost:8082/").resolve(path).toString()
+
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `gateway sjekker tilgang til arenasaker`(harTilgang: Boolean): Unit = runBlocking {
+        val request = ArenasakTilgangRequest(
+            personIdent = UUID.randomUUID().toString(),
+            påkrevdRolle = listOf(Rolle.LES, Rolle.DRIFT_LES),
+            operasjon = Operasjon.SE
+        )
+        fakes.gittTilgangTilArenasaker(request.personIdent, harTilgang)
+
+        val response = TilgangGateway.harTilgangTilArensakerForPerson(request, generateToken(isApp = false))
+
+        assertThat(response.tilgang).isEqualTo(harTilgang)
+    }
+
+    @Test
+    fun `gateway skiller mellom arenasakrequests i cache`(): Unit = runBlocking {
+        val request = ArenasakTilgangRequest(UUID.randomUUID().toString())
+        val annenPerson = request.copy(personIdent = UUID.randomUUID().toString())
+        val annenRolle = request.copy(påkrevdRolle = listOf(Rolle.BESLUTTER))
+        val annenOperasjon = request.copy(operasjon = Operasjon.SAKSBEHANDLE)
+        val token = generateToken(isApp = false)
+        fakes.gittTilgangTilArenasaker(request.personIdent, true)
+        fakes.gittTilgangTilArenasaker(annenPerson.personIdent, false)
+
+        assertThat(TilgangGateway.harTilgangTilArensakerForPerson(request, token).tilgang).isTrue()
+        fakes.gittTilgangTilArenasaker(request.personIdent, false)
+        assertThat(TilgangGateway.harTilgangTilArensakerForPerson(annenPerson, token).tilgang).isFalse()
+        assertThat(TilgangGateway.harTilgangTilArensakerForPerson(annenRolle, token).tilgang).isFalse()
+        assertThat(TilgangGateway.harTilgangTilArensakerForPerson(annenOperasjon, token).tilgang).isFalse()
+
+        assertThat(TilgangGateway.harTilgangTilArensakerForPerson(request, token).tilgang).isTrue()
+    }
 
     @Test
     fun `tilgangskall prøves ikke på nytt og tekniske feil caches ikke`() {
@@ -769,4 +804,3 @@ class LogCaptureAppender : AppenderBase<ILoggingEvent>() {
 
     fun getLoggedMessages(): List<String> = events.map { it.formattedMessage }
 }
-

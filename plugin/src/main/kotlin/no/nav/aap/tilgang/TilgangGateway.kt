@@ -47,6 +47,12 @@ public object TilgangGateway {
         .recordStats()
         .build<JournalpostTilgangRequestMedNavIdent, TilgangResponse>()
 
+    private var tilgangGatewayArenasakCache = Caffeine.newBuilder()
+        .maximumSize(2_000)
+        .expireAfterWrite(Duration.ofMinutes(30))
+        .recordStats()
+        .build<ArenasakTilgangRequestMedNavIdent, TilgangResponse>()
+
     private var tilgangGatewayPersonCache = Caffeine.newBuilder()
         .maximumSize(2_000)
         .expireAfterWrite(Duration.ofMinutes(30))
@@ -60,6 +66,7 @@ public object TilgangGateway {
             CaffeineCacheMetrics.monitor(registry, tilgangGatewayBehandlingCache, "tilgang_behandling_cache")
             CaffeineCacheMetrics.monitor(registry, tilgangGatewaySakCache, "tilgang_sak_cache")
             CaffeineCacheMetrics.monitor(registry, tilgangGatewayJournalpostCache, "tilgang_journalpost_cache")
+            CaffeineCacheMetrics.monitor(registry, tilgangGatewayArenasakCache, "tilgang_arenasak_cache")
             CaffeineCacheMetrics.monitor(registry, tilgangGatewayPersonCache, "tilgang_person_cache")
         }
     }
@@ -96,6 +103,13 @@ public object TilgangGateway {
       return get(tilgangGatewayJournalpostCache, JournalpostTilgangRequestMedNavIdent(body, currentToken.navIdent())) {
         post(currentToken, tilgangJournalpostUrl, body)
       }
+    }
+
+    private val tilgangArenasakUrl = baseUrl.resolve("/tilgang/arenasaker").toString()
+    public suspend fun harTilgangTilArensakerForPerson(body: ArenasakTilgangRequest, currentToken: OidcToken): TilgangResponse {
+        return get(tilgangGatewayArenasakCache, ArenasakTilgangRequestMedNavIdent(body, currentToken.navIdent())) {
+            post(currentToken, tilgangArenasakUrl, body)
+        }
     }
 
     private val tilgangPersonUrl = baseUrl.resolve("/tilgang/person").toString()
@@ -169,6 +183,10 @@ public object TilgangGateway {
             .maximumSize(0)
             .build()
 
+        tilgangGatewayArenasakCache = Caffeine.newBuilder()
+            .maximumSize(0)
+            .build()
+
         tilgangGatewayPersonCache = Caffeine.newBuilder()
             .maximumSize(0)
             .build()
@@ -187,6 +205,11 @@ private data class SakTilgangRequestMedNavIdent(
 
 private data class JournalpostTilgangRequestMedNavIdent(
     val journalpostTilgangRequest: JournalpostTilgangRequest,
+    val navIdent: String
+)
+
+private data class ArenasakTilgangRequestMedNavIdent(
+    val arenasakTilgangRequest: ArenasakTilgangRequest,
     val navIdent: String
 )
 
