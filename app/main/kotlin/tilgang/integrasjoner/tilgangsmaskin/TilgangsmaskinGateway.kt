@@ -27,11 +27,6 @@ import tilgang.redis.Redis.Companion.serialize
 
 interface ITilgangsmaskinGateway {
     suspend fun harTilgangTilPerson(brukerIdent: String, token: OidcToken, callId: String? = null): Boolean
-    suspend fun harTilganger(
-        brukerIdenter: List<BrukerOgRegeltype>,
-        token: OidcToken,
-        callId: String? = null,
-    ): Boolean
 
     suspend fun harTilgangTilPersonKjerne(
         brukerIdent: String,
@@ -166,27 +161,6 @@ class TilgangsmaskinGateway(
                     redisExpireSec
                 )
                 ikkeTilgang
-            } else throw e
-        }
-    }
-
-    override suspend fun harTilganger(
-        brukerIdenter: List<BrukerOgRegeltype>,
-        token: OidcToken,
-        callId: String?,
-    ): Boolean {
-        return try {
-            httpClient.post("$baseUrl/api/v1/bulk") {
-                bearerAuth(tokenProvider.oboToken(scope, token))
-                tilgangsmaskinSporingsHeaders(callId)
-                contentType(ContentType.Application.Json)
-                setBody(brukerIdenter)
-            }
-            true
-        } catch (e: ClientRequestException) {
-            if (e.response.status == HttpStatusCode.Forbidden) {
-                log.info("Kall til tilgangsmaskin returnerte 403")
-                false
             } else throw e
         }
     }

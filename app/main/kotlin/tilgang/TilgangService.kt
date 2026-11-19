@@ -137,14 +137,6 @@ class TilgangService(
         }
     }
 
-    suspend fun harTilgangFraTilgangsmaskin(
-        brukerIdenter: List<BrukerOgRegeltype>,
-        token: OidcToken,
-        callId: String,
-    ): Boolean {
-        return tilgangsmaskinGateway.harTilganger(brukerIdenter, token, callId)
-    }
-
     suspend fun harTilgangTilPerson(
         ansattIdent: String,
         req: PersonTilgangRequest,
