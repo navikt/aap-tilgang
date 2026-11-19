@@ -71,10 +71,14 @@ private val redisAvslagExpireSec = 30.minutes.inWholeSeconds
  */
 class TilgangsmaskinGateway(
     private val redis: Redis,
-    private val httpClient: HttpClient,
+    httpClient: HttpClient,
     private val prometheus: MeterRegistry,
     private val tokenProvider: ITokenProvider = TokenProvider,
+    private val httpClientProvider: () -> HttpClient = { httpClient },
 ) : ITilgangsmaskinGateway {
+    private val httpClient: HttpClient
+        get() = httpClientProvider()
+
     private val baseUrl = requiredConfigForKey("INTEGRASJON_TILGANGSMASKIN_URL")
     private val scope = requiredConfigForKey("INTEGRASJON_TILGANGSMASKIN_SCOPE")
 

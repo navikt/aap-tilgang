@@ -1,9 +1,14 @@
 package tilgang.integrasjoner
 
+import io.getunleash.FakeUnleash
+import io.ktor.client.engine.mock.MockEngine
+import io.ktor.client.engine.mock.respond
 import io.ktor.client.plugins.ClientRequestException
+import io.ktor.http.HttpStatusCode
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import org.assertj.core.api.Assertions.assertThat
@@ -11,14 +16,18 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import tilgang.AzureTokenGen
+import tilgang.auth.ITokenProvider
 import tilgang.fakes.Fakes
 import tilgang.fakes.WithFakes
 import tilgang.integrasjoner.tilgangsmaskin.BrukerOgRegeltype
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinAvvistGrunn
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinGateway
+import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinHttpClient
 import tilgang.redis.Key
 import tilgang.redis.Redis
 import tilgang.redis.Redis.Companion.serialize
+import tilgang.unleash.FeatureToggle
+import tilgang.unleash.UnleashService
 import kotlin.test.assertFailsWith
 
 @WithFakes
@@ -26,6 +35,73 @@ class TilgangsmaskinTest {
     private val redis = Fakes.getRedisServer()
     private val httpClient = Fakes.getHttpClient()
     private val prometheus = Fakes.getPrometheus()
+
+    @ParameterizedTest
+    @CsvSource(
+        "person, true",
+        "person, false",
+        "kjerne, true",
+        "kjerne, false",
+        "komplett, true",
+        "komplett, false",
+        "bulk, true",
+        "bulk, false",
+    )
+    fun `switches client without restart for every access check`(endpoint: String, allowed: Boolean) = runTest {
+        val calls = mutableListOf<String>()
+        val status = if (allowed) HttpStatusCode.OK else HttpStatusCode.Forbidden
+        val cache = mockk<Redis>()
+        coEvery { cache[any()] } returns null
+        coEvery { cache.set(any(), any(), any()) } returns Unit
+        val fakeUnleash = FakeUnleash()
+        val feature = FeatureToggle.raskRobustTilgangsmaskin
+        val token = OidcToken(AzureTokenGen("tilgangazure", "tilgang").generate())
+        val tokenProvider = mockk<ITokenProvider>()
+        coEvery { tokenProvider.oboToken(any(), any()) } returns "test-token"
+
+        UnleashService(fakeUnleash).use { unleash ->
+            MockEngine.create {
+                dispatcher = StandardTestDispatcher(testScheduler)
+                addHandler {
+                    calls.add("standard")
+                    respond("", status)
+                }
+            }.use { standardEngine ->
+                MockEngine.create {
+                    dispatcher = StandardTestDispatcher(testScheduler)
+                    addHandler {
+                        calls.add("robust")
+                        respond("", status)
+                    }
+                }.use { robustEngine ->
+                    TilgangsmaskinHttpClient.create(standardEngine).use { standardClient ->
+                        TilgangsmaskinHttpClient.create(robustEngine).use { robustClient ->
+                            val gateway = TilgangsmaskinGateway(
+                                cache, standardClient, prometheus, tokenProvider,
+                                httpClientProvider = {
+                                    if (unleash.isEnabled(feature)) robustClient else standardClient
+                                },
+                            )
+
+                            for (enabled in listOf(false, true, false)) {
+                                if (enabled) fakeUnleash.enable(feature.key()) else fakeUnleash.disable(feature.key())
+                                val result = when (endpoint) {
+                                    "person" -> gateway.harTilgangTilPerson("123", token)
+                                    "kjerne" -> gateway.harTilgangTilPersonKjerne("123", token, "ansatt").harTilgang
+                                    "komplett" -> gateway.harTilgangTilPersonKomplett("123", token, "ansatt").harTilgang
+                                    "bulk" -> gateway.harTilganger(listOf(BrukerOgRegeltype("123", "KJERNE")), token)
+                                    else -> error("Unknown endpoint: $endpoint")
+                                }
+                                assertThat(result).isEqualTo(allowed)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        assertThat(calls).containsExactly("standard", "robust", "standard")
+    }
 
     @Test
     fun `Kan parse harTilgangTilPersonKjerne`() = runTest {

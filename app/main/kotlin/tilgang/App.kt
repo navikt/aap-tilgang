@@ -96,12 +96,15 @@ fun Application.api(
     val behandlingsflyt = BehandlingsflytGateway(redis, createHttpClient(timeout = 4.seconds), prometheus)
     val saf = SafGraphqlGateway(redis, httpClient, prometheus)
 
-    val tilgangmaskinClient = if (unleash.isEnabled(FeatureToggle.raskRobustTilgangsmaskin)) {
-        TilgangsmaskinHttpClient.create()
-    } else {
-        httpClient
-    }
-    val tilgangsmaskinGateway = TilgangsmaskinGateway(redis, httpClient, prometheus)
+    val tilgangmaskinClient = TilgangsmaskinHttpClient.create()
+    val tilgangsmaskinGateway = TilgangsmaskinGateway(redis, httpClient, prometheus, httpClientProvider = {
+        // Vi sender det inn dynamisk her slik at vi kan bytte i Unleash uten å restarte containeren.
+        if (unleash.isEnabled(FeatureToggle.raskRobustTilgangsmaskin)) {
+            tilgangmaskinClient
+        } else {
+            httpClient
+        }
+    })
     monitor.subscribe(ApplicationStopped) {
         tilgangmaskinClient.close()
         unleash.close()
