@@ -62,7 +62,7 @@ class TilgangService(
         roller: List<Rolle>,
         token: OidcToken,
         callId: String,
-    ): Map<Operasjon, Boolean> {
+    ): Map<Operasjon, RegelResultat> {
         log.info("Sjekker tilgang til behandling ${req.behandlingsreferanse}")
         val identer = req.relevanteIdenter ?: behandlingsflytGateway
             .hentIdenterForBehandling(req.behandlingsreferanse.toString())
@@ -81,7 +81,7 @@ class TilgangService(
             påkrevdRolle = req.påkrevdRolle ?: emptyList(),
             operasjoner = Operasjon.entries
         )
-        return regelService.vurderTilgang(regelInput).mapValues { (_, resultat) -> resultat.harTilgang }
+        return regelService.vurderTilgang(regelInput)
     }
 
     suspend fun harTilgangTilJournalpost(

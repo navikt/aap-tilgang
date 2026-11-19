@@ -16,6 +16,7 @@ import io.ktor.http.contentType
 import io.ktor.server.testing.testApplication
 import java.util.UUID
 import no.nav.aap.komponenter.json.DefaultJsonMapper
+import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.Rolle
 import no.nav.aap.tilgang.TilgangResponse
 import no.nav.security.mock.oauth2.MockOAuth2Server
@@ -113,6 +114,50 @@ class TilgangApiTest {
             assertThat(response.status).isEqualTo(HttpStatusCode.OK)
             val tilgang = DefaultJsonMapper.objectMapper().readValue<TilgangResponse>(response.bodyAsText())
             assertThat(tilgang.tilgang).isEqualTo(forventetTilgang)
+            if (forventetTilgang || rolle == Rolle.DRIFT) {
+                val json = DefaultJsonMapper.objectMapper().readTree(response.bodyAsText())
+                assertThat(json.path("avvistResponse").isNull || json.path("avvistResponse").isMissingNode).isTrue()
+            }
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource("45600000000, false", "45600000001, true")
+    fun `returns denial details without upstream fields`(personIdent: String, kanOverstyres: Boolean) {
+        val gruppeId = UUID.randomUUID()
+        testApplication {
+            application {
+                api(
+                    Config(
+                        roles = listOf(Role(Rolle.LES, gruppeId)),
+                        redis = Fakes.getRedisConfig(),
+                    ),
+                    redis = Fakes.getRedisServer()
+                )
+            }
+
+            val response = client.post("/tilgang/arenasaker") {
+                bearerAuth(issueToken(listOf(gruppeId.toString())).serialize())
+                contentType(ContentType.Application.Json)
+                setBody("""{"personIdent":"$personIdent"}""")
+            }
+
+            assertThat(response.status).isEqualTo(HttpStatusCode.OK)
+            val mapper = DefaultJsonMapper.objectMapper()
+            val json = mapper.readTree(response.bodyAsText())
+            assertThat(json.path("tilgang").booleanValue()).isFalse()
+            assertThat(json.path("avvistResponse")).isEqualTo(
+                mapper.readTree(
+                    """{
+                        "title": "AVVIST_GEOGRAFISK",
+                        "begrunnelse": "Du har ikke tilgang til brukerens geografiske område eller enhet.",
+                        "kanOverstyres": $kanOverstyres
+                    }"""
+                )
+            )
+            assertThat(json.has("navIdent") || json.has("type") || json.has("status")).isFalse()
+            val gammelKontrakt = mapper.readValue<TilgangResponse>(response.bodyAsText())
+            assertThat(gammelKontrakt.tilgang).isFalse()
         }
     }
 
@@ -136,6 +181,39 @@ class TilgangApiTest {
             assertThat(response.status).isEqualTo(HttpStatusCode.OK)
             val tilgang = DefaultJsonMapper.objectMapper().readValue<TilgangResponse>(response.bodyAsText())
             assertThat(tilgang.tilgang).isFalse()
+            val json = DefaultJsonMapper.objectMapper().readTree(response.bodyAsText())
+            assertThat(json.path("avvistResponse").isNull || json.path("avvistResponse").isMissingNode).isTrue()
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource("SE, true", "SAKSBEHANDLE, false")
+    fun `treatment response preserves boolean access decisions`(operasjon: Operasjon, forventetTilgang: Boolean) {
+        val gruppeId = UUID.randomUUID()
+        testApplication {
+            application {
+                api(
+                    Config(roles = listOf(Role(Rolle.LES, gruppeId)), redis = Fakes.getRedisConfig()),
+                    redis = Fakes.getRedisServer()
+                )
+            }
+            val response = client.post("/tilgang/behandling") {
+                bearerAuth(issueToken(listOf(gruppeId.toString())).serialize())
+                contentType(ContentType.Application.Json)
+                setBody(
+                    """{"behandlingsreferanse":"${UUID.randomUUID()}","operasjon":"$operasjon",
+                        "relevanteIdenter":{"søker":["12300000000"],"barn":[]}}"""
+                )
+            }
+
+            assertThat(response.status).isEqualTo(HttpStatusCode.OK)
+            val mapper = DefaultJsonMapper.objectMapper()
+            assertThat(mapper.readTree(response.bodyAsText())).isEqualTo(
+                mapper.readTree(
+                    """{"tilgang":$forventetTilgang,"tilgangIKontekst":
+                        {"SE":true,"SAKSBEHANDLE":false,"DRIFTE":false,"DRIFT_LES":false,"DELEGERE":false}}"""
+                )
+            )
         }
     }
 

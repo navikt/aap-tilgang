@@ -17,7 +17,7 @@ data class RegelResultat(
                     begrunnelse = it.begrunnelse,
                     kanOverstyres = it.kanOverstyres
                 )
-            }
+            },
         )
 }
 

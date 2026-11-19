@@ -9,9 +9,14 @@ import io.mockk.slot
 import kotlinx.coroutines.test.runTest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.tilgang.ArenasakTilgangRequest
+import no.nav.aap.tilgang.BehandlingTilgangRequest
+import no.nav.aap.tilgang.JournalpostTilgangRequest
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.PersonTilgangRequest
+import no.nav.aap.tilgang.RelevanteIdenter
 import no.nav.aap.tilgang.Rolle
+import no.nav.aap.tilgang.SakTilgangRequest
+import no.nav.aap.tilgang.TilbakekrevingTilgangRequest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
@@ -23,6 +28,9 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.ValueSource
 import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytGateway
 import tilgang.integrasjoner.saf.SafGraphqlGateway
+import tilgang.integrasjoner.saf.Bruker
+import tilgang.integrasjoner.saf.BrukerIdType
+import tilgang.integrasjoner.saf.SafJournalpost
 import tilgang.integrasjoner.pdl.Gradering
 import tilgang.integrasjoner.pdl.IPdlGraphQLGateway
 import tilgang.integrasjoner.pdl.PersonResultat
@@ -64,6 +72,220 @@ class TilgangServiceTest {
     @AfterEach
     fun afterEach() {
         clearAllMocks()
+    }
+
+    @Nested
+    inner class TilgangMedReelleRegler {
+        private val pdlGateway = mockk<IPdlGraphQLGateway>()
+        private val adressebeskyttelseService = mockk<AdressebeskyttelseService>()
+        private val serviceMedRegler = TilgangService(
+            safGateway,
+            behandlingsflytGateway,
+            RegelService(pdlGateway, adressebeskyttelseService, tilgangsmaskinGateway),
+            tilgangsmaskinGateway
+        )
+
+        @ParameterizedTest
+        @CsvSource(
+            "INGEN, INGEN, UGRADERT, false, false, false, false, false",
+            "LES, INGEN, UGRADERT, true, false, false, false, false",
+            "SAKSBEHANDLER_NASJONAL, INGEN, UGRADERT, true, true, false, false, false",
+            "DRIFT, INGEN, UGRADERT, false, false, true, true, false",
+            "DRIFT_LES, INGEN, UGRADERT, false, false, false, true, false",
+            "PRODUKSJONSSTYRING, INGEN, UGRADERT, false, false, false, false, true",
+            "SAKSBEHANDLER_NASJONAL, AVVIST_HABILITET, UGRADERT, false, false, false, false, false",
+            "DRIFT, AVVIST_HABILITET, UGRADERT, false, false, false, false, false",
+            "DRIFT_LES, AVVIST_HABILITET, UGRADERT, false, false, false, false, false",
+            "SAKSBEHANDLER_NASJONAL, AVVIST_MANGLENDE_DATA, UGRADERT, false, false, false, false, false",
+            "DRIFT, AVVIST_MANGLENDE_DATA, UGRADERT, false, false, true, true, false",
+            "DRIFT_LES, AVVIST_MANGLENDE_DATA, UGRADERT, false, false, false, true, false",
+            "SAKSBEHANDLER_NASJONAL, INGEN, FORTROLIG, false, false, false, false, false",
+            "DRIFT, INGEN, FORTROLIG, false, false, true, true, false",
+            "LES, AVVIST_GEOGRAFISK, UGRADERT, false, false, false, false, false",
+            "PRODUKSJONSSTYRING, AVVIST_HABILITET, UGRADERT, false, false, false, false, true",
+            nullValues = ["INGEN"]
+        )
+        fun `preserves access decisions across service entry points`(
+            rolle: Rolle?,
+            avvistGrunn: TilgangsmaskinAvvistGrunn?,
+            gradering: Gradering,
+            se: Boolean,
+            saksbehandle: Boolean,
+            drifte: Boolean,
+            driftLes: Boolean,
+            delegere: Boolean,
+        ) = runTest {
+            val token = mockk<OidcToken>()
+            val identer = RelevanteIdenter(listOf("123"), emptyList())
+            val roller = listOfNotNull(rolle)
+            val påkrevdRolle = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
+            val referanse = UUID.randomUUID()
+            val avvist = avvistGrunn?.let {
+                TilgangsmaskinAvvistResponse("avvist", it.name, 403, "ansattIdent", "Ikke tilgang", false)
+            }
+            val tilgangsmaskinResponse = HarTilgangFraTilgangsmaskinen(avvistGrunn == null, avvist)
+            coEvery { pdlGateway.hentPersonBolk(listOf("123"), "callId") } returns
+                    listOf(PersonResultat("123", listOf(gradering), "ok"))
+            coEvery { adressebeskyttelseService.hentAdressebeskyttelseRoller(token, "ansattIdent") } returns emptyList()
+            coEvery {
+                tilgangsmaskinGateway.harTilgangTilPersonKomplett("123", token, "ansattIdent", "callId")
+            } returns tilgangsmaskinResponse
+            coEvery {
+                tilgangsmaskinGateway.harTilgangTilPersonKjerne("123", token, "ansattIdent", "callId")
+            } returns tilgangsmaskinResponse
+            coEvery { behandlingsflytGateway.hentIdenterForSak("sak") } returns identer
+            coEvery { behandlingsflytGateway.hentIdenterForBehandling(referanse.toString()) } returns identer
+            coEvery { safGateway.hentJournalpostInfo(1L, "callId") } returns
+                    SafJournalpost(1L, bruker = Bruker("123", BrukerIdType.FNR))
+            val forventet = mapOf(
+                Operasjon.SE to se,
+                Operasjon.SAKSBEHANDLE to saksbehandle,
+                Operasjon.DRIFTE to drifte,
+                Operasjon.DRIFT_LES to driftLes,
+                Operasjon.DELEGERE to delegere,
+            )
+
+            for ((operasjon, harTilgang) in forventet) {
+                assertThat(
+                    serviceMedRegler.harTilgangTilSak(
+                        "ansattIdent", SakTilgangRequest("sak", påkrevdRolle, operasjon), roller, token, "callId"
+                    )
+                ).describedAs("sak: %s", operasjon).isEqualTo(harTilgang)
+                assertThat(
+                    serviceMedRegler.harTilgangTilJournalpost(
+                        "ansattIdent", JournalpostTilgangRequest(1L, påkrevdRolle = påkrevdRolle, operasjon = operasjon),
+                        roller, token, "callId"
+                    )
+                ).describedAs("journalpost: %s", operasjon).isEqualTo(harTilgang)
+                assertThat(
+                    serviceMedRegler.harTilgangTilTilbakekreving(
+                        "ansattIdent", TilbakekrevingTilgangRequest("sak", referanse, påkrevdRolle, operasjon),
+                        roller, token, "callId"
+                    )
+                ).describedAs("tilbakekreving: %s", operasjon).isEqualTo(harTilgang)
+                val arenaResultat = serviceMedRegler.harTilgangTilArensakerForPerson(
+                    "ansattIdent", ArenasakTilgangRequest("123", påkrevdRolle, operasjon), token, roller, "callId"
+                )
+                assertThat(arenaResultat?.harTilgang == true).describedAs("arenasaker: %s", operasjon).isEqualTo(harTilgang)
+                if (operasjon in listOf(Operasjon.DRIFTE, Operasjon.DRIFT_LES)) {
+                    assertThat(
+                        serviceMedRegler.harTilgangTilPerson(
+                            "ansattIdent", PersonTilgangRequest("123", påkrevdRolle, operasjon), token, roller, "callId"
+                        )
+                    ).describedAs("person: %s", operasjon).isEqualTo(harTilgang)
+                }
+                assertThat(
+                    serviceMedRegler.harTilgangTilBehandling(
+                        "ansattIdent",
+                        BehandlingTilgangRequest(referanse, påkrevdRolle = påkrevdRolle, operasjon = operasjon),
+                        roller, token, "callId"
+                    ).mapValues { (_, resultat) -> resultat.harTilgang }
+                ).describedAs("behandling: %s", operasjon).isEqualTo(forventet)
+            }
+        }
+    }
+
+    @Nested
+    inner class BooleanResultater {
+        private val token = mockk<OidcToken>()
+        private val identer = RelevanteIdenter(listOf("123"), emptyList())
+        private val avvist = TilgangsmaskinAvvistResponse(
+            type = "avvist",
+            title = "AVVIST_GEOGRAFISK",
+            status = 403,
+            navIdent = "ansattIdent",
+            begrunnelse = "Ikke tilgang",
+            kanOverstyres = true
+        )
+
+        @ParameterizedTest
+        @CsvSource("true", "false", "NULL", nullValues = ["NULL"])
+        fun `maps the requested case operation to a boolean`(harTilgang: Boolean?) = runTest {
+            mockRegelresultat(harTilgang)
+
+            val resultat = service.harTilgangTilSak(
+                "ansattIdent",
+                SakTilgangRequest("sak", operasjon = Operasjon.SE, relevanteIdenter = identer),
+                emptyList(), token, "callId"
+            )
+
+            assertThat(resultat).isEqualTo(harTilgang == true)
+        }
+
+        @ParameterizedTest
+        @CsvSource("true", "false", "NULL", nullValues = ["NULL"])
+        fun `maps the requested journal operation to a boolean`(harTilgang: Boolean?) = runTest {
+            mockRegelresultat(harTilgang)
+            coEvery { safGateway.hentJournalpostInfo(1L, "callId") } returns
+                    SafJournalpost(1L, bruker = Bruker("123", BrukerIdType.FNR))
+
+            val resultat = service.harTilgangTilJournalpost(
+                "ansattIdent", JournalpostTilgangRequest(1L, operasjon = Operasjon.SE),
+                emptyList(), token, "callId"
+            )
+
+            assertThat(resultat).isEqualTo(harTilgang == true)
+        }
+
+        @ParameterizedTest
+        @CsvSource("true", "false", "NULL", nullValues = ["NULL"])
+        fun `maps the requested recovery operation to a boolean`(harTilgang: Boolean?) = runTest {
+            mockRegelresultat(harTilgang)
+            coEvery { behandlingsflytGateway.hentIdenterForSak("sak") } returns identer
+
+            val resultat = service.harTilgangTilTilbakekreving(
+                "ansattIdent", TilbakekrevingTilgangRequest("sak", UUID.randomUUID(), operasjon = Operasjon.SE),
+                emptyList(), token, "callId"
+            )
+
+            assertThat(resultat).isEqualTo(harTilgang == true)
+        }
+
+        @ParameterizedTest
+        @CsvSource(
+            "DRIFTE, true", "DRIFTE, false", "DRIFTE, NULL",
+            "DRIFT_LES, true", "DRIFT_LES, false", "DRIFT_LES, NULL",
+            nullValues = ["NULL"]
+        )
+        fun `maps the requested drift operation to a boolean`(operasjon: Operasjon, harTilgang: Boolean?) = runTest {
+            mockRegelresultat(harTilgang, operasjon)
+
+            val resultat = service.harTilgangTilPerson(
+                "ansattIdent", PersonTilgangRequest("123", operasjon = operasjon),
+                token, emptyList(), "callId"
+            )
+
+            assertThat(resultat).isEqualTo(harTilgang == true)
+            coVerify { tilgangsmaskinGateway wasNot Called }
+        }
+
+        @ParameterizedTest
+        @ValueSource(booleans = [true, false])
+        fun `preserves treatment results including denial details and missing operations`(tomtResultat: Boolean) = runTest {
+            val regelresultater = if (tomtResultat) emptyMap() else mapOf(
+                Operasjon.SE to RegelResultat(true),
+                Operasjon.SAKSBEHANDLE to RegelResultat(false, avvist),
+                Operasjon.DRIFTE to RegelResultat(false),
+                Operasjon.DRIFT_LES to RegelResultat(true)
+            )
+            coEvery { regelService.vurderTilgang(any()) } returns regelresultater
+
+            val resultat = service.harTilgangTilBehandling(
+                "ansattIdent",
+                BehandlingTilgangRequest(UUID.randomUUID(), operasjon = Operasjon.SE, relevanteIdenter = identer),
+                emptyList(), token, "callId"
+            )
+
+            assertThat(resultat).isEqualTo(regelresultater)
+        }
+
+        private fun mockRegelresultat(harTilgang: Boolean?, operasjon: Operasjon = Operasjon.SE) {
+            val resultater = mutableMapOf(Operasjon.DELEGERE to RegelResultat(true))
+            if (harTilgang != null) {
+                resultater[operasjon] = RegelResultat(harTilgang, avvist.takeUnless { harTilgang })
+            }
+            coEvery { regelService.vurderTilgang(any()) } returns resultater
+        }
     }
 
     @Nested
