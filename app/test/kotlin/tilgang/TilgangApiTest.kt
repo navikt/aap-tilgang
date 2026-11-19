@@ -1,23 +1,30 @@
 package tilgang
 
 import com.nimbusds.jwt.SignedJWT
+import com.fasterxml.jackson.module.kotlin.readValue
 import io.ktor.client.HttpClient
 import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.get
 import io.ktor.client.request.header
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.server.testing.testApplication
 import java.util.UUID
+import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.tilgang.Rolle
+import no.nav.aap.tilgang.TilgangResponse
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import tilgang.fakes.Fakes
 import tilgang.fakes.WithFakes
 
@@ -68,6 +75,65 @@ class TilgangApiTest {
         }
     }
 
+    @ParameterizedTest
+    @CsvSource(
+        "LES, 12300000000, true",
+        "SAKSBEHANDLER_OPPFOLGING, 12300000000, true",
+        "DRIFT, 12300000000, false",
+        "LES, 45678901000, false"
+    )
+    fun `sjekker tilgang til arenasaker med standardverdier`(
+        rolle: Rolle,
+        personIdent: String,
+        forventetTilgang: Boolean
+    ) {
+        val gruppeId = UUID.randomUUID()
+        testApplication {
+            application {
+                api(
+                    Config(
+                        roles = listOf(Role(rolle, gruppeId)),
+                        redis = Fakes.getRedisConfig(),
+                    ),
+                    redis = Fakes.getRedisServer()
+                )
+            }
+
+            val response = client.post("/tilgang/arenasaker") {
+                bearerAuth(issueToken(listOf(gruppeId.toString())).serialize())
+                header("Nav-CallId", UUID.randomUUID().toString())
+                contentType(ContentType.Application.Json)
+                setBody("""{"personIdent":"$personIdent"}""")
+            }
+
+            assertThat(response.status).isEqualTo(HttpStatusCode.OK)
+            val tilgang = DefaultJsonMapper.objectMapper().readValue<TilgangResponse>(response.bodyAsText())
+            assertThat(tilgang.tilgang).isEqualTo(forventetTilgang)
+        }
+    }
+
+    @Test
+    fun `nekter tilgang til arenasaker uten roller`() {
+        testApplication {
+            application {
+                api(
+                    Config(roles = emptyList(), redis = Fakes.getRedisConfig()),
+                    redis = Fakes.getRedisServer()
+                )
+            }
+
+            val response = client.post("/tilgang/arenasaker") {
+                bearerAuth(issueToken(emptyList()).serialize())
+                contentType(ContentType.Application.Json)
+                setBody("""{"personIdent":"12345678901","operasjon":"SE"}""")
+            }
+
+            assertThat(response.status).isEqualTo(HttpStatusCode.OK)
+            val tilgang = DefaultJsonMapper.objectMapper().readValue<TilgangResponse>(response.bodyAsText())
+            assertThat(tilgang.tilgang).isFalse()
+        }
+    }
+
     private suspend fun sendGetRequest(
         client: HttpClient,
         jwt: SignedJWT,
@@ -82,6 +148,7 @@ class TilgangApiTest {
         issuerId = "default",
         claims = mapOf(
             "groups" to groups,
+            "NAVident" to "Z990883",
         ),
     )
 }
