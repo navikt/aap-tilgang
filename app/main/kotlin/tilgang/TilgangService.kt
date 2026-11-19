@@ -13,20 +13,20 @@ import no.nav.aap.tilgang.Rolle
 import no.nav.aap.tilgang.SakTilgangRequest
 import no.nav.aap.tilgang.TilbakekrevingTilgangRequest
 import org.slf4j.LoggerFactory
-import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytGateway
+import tilgang.integrasjoner.behandlingsflyt.IBehandlingsflytGateway
 import tilgang.integrasjoner.saf.BrukerIdType
-import tilgang.integrasjoner.saf.SafGraphqlGateway
+import tilgang.integrasjoner.saf.ISafGraphqlGateway
 import tilgang.integrasjoner.saf.SafJournalpost
 import tilgang.integrasjoner.tilgangsmaskin.BrukerOgRegeltype
-import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinGateway
+import tilgang.integrasjoner.tilgangsmaskin.ITilgangsmaskinGateway
+import tilgang.regler.IRegelService
 import tilgang.regler.RegelInput
-import tilgang.regler.RegelService
 
 class TilgangService(
-    private val safGateway: SafGraphqlGateway,
-    private val behandlingsflytGateway: BehandlingsflytGateway,
-    private val regelService: RegelService,
-    private val tilgangsmaskinGateway: TilgangsmaskinGateway
+    private val safGateway: ISafGraphqlGateway,
+    private val behandlingsflytGateway: IBehandlingsflytGateway,
+    private val regelService: IRegelService,
+    private val tilgangsmaskinGateway: ITilgangsmaskinGateway
 ) {
     private val log = LoggerFactory.getLogger(TilgangService::class.java)
 

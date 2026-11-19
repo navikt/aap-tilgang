@@ -17,18 +17,22 @@ import tilgang.redis.Redis
 import tilgang.redis.Redis.Companion.deserialize
 import tilgang.redis.Redis.Companion.serialize
 
+interface ISafGraphqlGateway {
+    suspend fun hentJournalpostInfo(journalpostId: Long, callId: String): SafJournalpost
+}
+
 class SafGraphqlGateway(
     private val redis: Redis,
     private val httpClient: HttpClient,
     private val prometheus: PrometheusMeterRegistry,
-) {
+) : ISafGraphqlGateway {
     private val log = LoggerFactory.getLogger(SafGraphqlGateway::class.java)
 
     companion object {
         private const val JOURNALPOST_PREFIX = "journalpost"
     }
 
-    suspend fun hentJournalpostInfo(journalpostId: Long, callId: String): SafJournalpost {
+    override suspend fun hentJournalpostInfo(journalpostId: Long, callId: String): SafJournalpost {
         redis[Key(JOURNALPOST_PREFIX, journalpostId.toString())]?.let {
             prometheus.cacheHit(JOURNALPOST_PREFIX).increment()
             return it.deserialize()

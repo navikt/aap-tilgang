@@ -21,15 +21,16 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.ValueSource
-import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytGateway
-import tilgang.integrasjoner.saf.SafGraphqlGateway
+import tilgang.integrasjoner.behandlingsflyt.IBehandlingsflytGateway
+import tilgang.integrasjoner.saf.ISafGraphqlGateway
 import tilgang.integrasjoner.pdl.Gradering
 import tilgang.integrasjoner.pdl.IPdlGraphQLGateway
 import tilgang.integrasjoner.pdl.PersonResultat
 import tilgang.integrasjoner.tilgangsmaskin.HarTilgangFraTilgangsmaskinen
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinAvvistGrunn
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinAvvistResponse
-import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinGateway
+import tilgang.integrasjoner.tilgangsmaskin.ITilgangsmaskinGateway
+import tilgang.regler.IRegelService
 import tilgang.regler.RegelInput
 import tilgang.regler.RegelService
 import tilgang.service.AdressebeskyttelseGruppe
@@ -48,10 +49,10 @@ class TilgangServiceTest {
         }
     }
 
-    private val safGateway = mockk<SafGraphqlGateway>()
-    private val behandlingsflytGateway = mockk<BehandlingsflytGateway>()
-    private val regelService = mockk<RegelService>(relaxed = true)
-    private val tilgangsmaskinGateway = mockk<TilgangsmaskinGateway>(relaxed = true)
+    private val safGateway = mockk<ISafGraphqlGateway>()
+    private val behandlingsflytGateway = mockk<IBehandlingsflytGateway>()
+    private val regelService = mockk<IRegelService>(relaxed = true)
+    private val tilgangsmaskinGateway = mockk<ITilgangsmaskinGateway>(relaxed = true)
 
     private val service = TilgangService(
         safGateway = safGateway,

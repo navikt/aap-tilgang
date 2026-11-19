@@ -2,14 +2,18 @@ package tilgang.regler
 
 import no.nav.aap.tilgang.Operasjon
 import tilgang.integrasjoner.pdl.IPdlGraphQLGateway
-import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinGateway
+import tilgang.integrasjoner.tilgangsmaskin.ITilgangsmaskinGateway
 import tilgang.service.AdressebeskyttelseService
+
+interface IRegelService {
+    suspend fun vurderTilgang(input: RegelInput): Map<Operasjon, Boolean>
+}
 
 class RegelService(
     pdlGateway: IPdlGraphQLGateway,
     adressebeskyttelseService: AdressebeskyttelseService,
-    tilgangsmaskinGateway: TilgangsmaskinGateway
-) {
+    tilgangsmaskinGateway: ITilgangsmaskinGateway
+) : IRegelService {
 
     private val regelOppsett = mapOf(
         Operasjon.SE to listOf(
@@ -55,7 +59,7 @@ class RegelService(
         )
     )
 
-    suspend fun vurderTilgang(input: RegelInput): Map<Operasjon, Boolean> {
+    override suspend fun vurderTilgang(input: RegelInput): Map<Operasjon, Boolean> {
         val aktuelleOperasjoner = regelOppsett.filterKeys { it in input.operasjoner }
 
         val regelCache = mutableMapOf<Regel<*>, Boolean>()

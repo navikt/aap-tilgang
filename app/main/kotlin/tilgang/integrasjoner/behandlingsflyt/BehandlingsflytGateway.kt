@@ -15,12 +15,17 @@ import tilgang.redis.Redis.Companion.serialize
 
 private val log = LoggerFactory.getLogger(BehandlingsflytGateway::class.java)
 
+interface IBehandlingsflytGateway {
+    suspend fun hentIdenterForSak(saksnummer: String): RelevanteIdenter
+    suspend fun hentIdenterForBehandling(behandlingsnummer: String): RelevanteIdenter
+}
+
 class BehandlingsflytGateway(
     private val redis: Redis,
     private val httpClient: HttpClient,
     private val prometheus: PrometheusMeterRegistry,
-) {
-    suspend fun hentIdenterForSak(saksnummer: String): RelevanteIdenter {
+) : IBehandlingsflytGateway {
+    override suspend fun hentIdenterForSak(saksnummer: String): RelevanteIdenter {
         redis[Key(IDENTER_SAK_PREFIX, saksnummer)]?.let {
             prometheus.cacheHit(BEHANDLINGSFLYT).increment()
             return it.deserialize()
@@ -34,7 +39,7 @@ class BehandlingsflytGateway(
         return identer
     }
 
-    suspend fun hentIdenterForBehandling(behandlingsnummer: String): RelevanteIdenter {
+    override suspend fun hentIdenterForBehandling(behandlingsnummer: String): RelevanteIdenter {
         redis[Key(IDENTER_BEHANDLING_PREFIX, behandlingsnummer)]?.let {
             prometheus.cacheHit(BEHANDLINGSFLYT).increment()
             return it.deserialize()
