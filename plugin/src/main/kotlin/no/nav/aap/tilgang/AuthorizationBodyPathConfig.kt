@@ -59,7 +59,11 @@ public data class AuthorizationBodyPathConfig(
                     applicationsOnly,
                     applicationRole,
                     authorizedAzps,
-                    PersonTilgangRequest(referanse)
+                    PersonTilgangRequest(
+                        personIdent = referanse,
+                        påkrevdRolle = påkrevdRolle,
+                        operasjon = operasjon,
+                    )
                 )
             }
 

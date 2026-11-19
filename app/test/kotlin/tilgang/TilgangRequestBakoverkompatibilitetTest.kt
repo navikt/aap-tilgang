@@ -120,11 +120,9 @@ class TilgangRequestBakoverkompatibilitetTest {
         val request = objectMapper.readValue<BehandlingTilgangRequest>(json)
 
         assertThat(request.behandlingsreferanse).isEqualTo(uuid)
-        assertThat(request.avklaringsbehovKode).isNull()
         assertThat(request.operasjon).isEqualTo(Operasjon.SE)
         assertThat(request.påkrevdRolle).isEmpty()
         assertThat(request.relevanteIdenter).isNull()
-        assertThat(request.operasjonerIKontekst).isEmpty()
     }
 
     @Test
@@ -147,11 +145,9 @@ class TilgangRequestBakoverkompatibilitetTest {
         val request = objectMapper.readValue<BehandlingTilgangRequest>(json)
 
         assertThat(request.behandlingsreferanse).isEqualTo(uuid)
-        assertThat(request.avklaringsbehovKode).isEqualTo("5003")
         assertThat(request.påkrevdRolle).containsExactly(Rolle.SAKSBEHANDLER_OPPFOLGING, Rolle.KVALITETSSIKRER)
         assertThat(request.operasjon).isEqualTo(Operasjon.SAKSBEHANDLE)
         assertThat(request.relevanteIdenter).isNotNull
-        assertThat(request.operasjonerIKontekst).containsExactly(Operasjon.SE, Operasjon.SAKSBEHANDLE)
     }
 
     @Test
@@ -275,30 +271,6 @@ class TilgangRequestBakoverkompatibilitetTest {
     // --- TilbakekrevingTilgangRequest ---
 
     @Test
-    fun `TilbakekrevingTilgangRequest - med kun gammel påkrevdRolle-felt (bakoverkompatibilitet)`() {
-        val uuid = UUID.randomUUID()
-        val json = """
-            {
-                "saksnummer": "12345",
-                "behandlingsreferanse": "$uuid",
-                "påkrevdRolle": "SAKSBEHANDLER_OPPFOLGING",
-                "operasjon": "SAKSBEHANDLE"
-            }
-        """.trimIndent()
-
-        @Suppress("DEPRECATION")
-        val request = objectMapper.readValue<TilbakekrevingTilgangRequest>(json)
-
-        assertThat(request.saksnummer).isEqualTo("12345")
-        assertThat(request.behandlingsreferanse).isEqualTo(uuid)
-        @Suppress("DEPRECATION")
-        assertThat(request.påkrevdRolle).isEqualTo(Rolle.SAKSBEHANDLER_OPPFOLGING)
-        assertThat(request.påkrevdRoller).isNull()
-        assertThat(request.operasjon).isEqualTo(Operasjon.SAKSBEHANDLE)
-        assertThat(request.effektivePåkrevdRoller()).containsExactly(Rolle.SAKSBEHANDLER_OPPFOLGING)
-    }
-
-    @Test
     fun `TilbakekrevingTilgangRequest - med nytt påkrevdRoller-felt`() {
         val uuid = UUID.randomUUID()
         val json = """
@@ -313,9 +285,10 @@ class TilgangRequestBakoverkompatibilitetTest {
         val request = objectMapper.readValue<TilbakekrevingTilgangRequest>(json)
 
         assertThat(request.påkrevdRoller).containsExactly(Rolle.SAKSBEHANDLER_OPPFOLGING, Rolle.KVALITETSSIKRER)
-        @Suppress("DEPRECATION")
-        assertThat(request.påkrevdRolle).isNull()
-        assertThat(request.effektivePåkrevdRoller()).containsExactly(Rolle.SAKSBEHANDLER_OPPFOLGING, Rolle.KVALITETSSIKRER)
+        assertThat(request.effektivePåkrevdRoller()).containsExactly(
+            Rolle.SAKSBEHANDLER_OPPFOLGING,
+            Rolle.KVALITETSSIKRER
+        )
     }
 
     @Test
@@ -420,12 +393,29 @@ class TilgangRequestBakoverkompatibilitetTest {
 
     @Test
     fun `PersonTilgangRequest - serialisering og deserialisering gir samme objekt`() {
-        val original = PersonTilgangRequest(personIdent = "12345678901")
+        val original = PersonTilgangRequest(
+            personIdent = "12345678901",
+            påkrevdRolle = listOf(Rolle.SAKSBEHANDLER_NASJONAL),
+            operasjon = Operasjon.SAKSBEHANDLE
+        )
 
         val json = objectMapper.writeValueAsString(original)
         val deserialisert = objectMapper.readValue<PersonTilgangRequest>(json)
 
         assertThat(deserialisert).isEqualTo(original)
+    }
+
+    @Test
+    fun `PersonTilgangRequest - gammel struktur deserialiseres riktig`() {
+        val ident = "12345678901"
+        val json = """
+            {
+                "personIdent": "$ident"
+            }
+        """.trimIndent()
+        val deserialisert = objectMapper.readValue<PersonTilgangRequest>(json)
+
+        assertThat(deserialisert.personIdent).isEqualTo(ident)
     }
 
     @Test

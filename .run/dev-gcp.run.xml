@@ -27,7 +27,7 @@
       <env name="REDIS_USERNAME_TILGANG" value="" />
       <env name="SAF_BASE_URL" value="https://saf-q2.dev-fss-pub.nais.io/graphql" />
       <env name="SAF_SCOPE" value="api://dev-fss.teamdokumenthandtering.saf/.default" />
-      <env name="SKJERMEDE_PERSONER_AD" value="dbe4ad45-320b-4e9a-aaa1-73cca4ee124d" />
+      <env name="SKJERMEDE_PERSONER_AD" value="8df187e3-f6ab-4a5d-8830-61bf148e59fe" />
       <env name="SKJERMING_BASE_URL" value="https://skjermede-personer-pip.intern.dev.nav.no" />
       <env name="SKJERMING_SCOPE" value="api://dev-gcp.nom.skjermede-personer-pip/.default" />
       <env name="STRENGT_FORTROLIG_ADRESSE_AD" value="5ef775f2-61f8-4283-bf3d-8d03f428aa14" />

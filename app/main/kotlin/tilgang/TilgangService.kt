@@ -2,10 +2,12 @@ package tilgang
 
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
+import no.nav.aap.tilgang.ArenasakTilgangRequest
 import no.nav.aap.postmottak.kontrakt.avklaringsbehov.Definisjon as PostmottakDefinisjon
 import no.nav.aap.tilgang.BehandlingTilgangRequest
 import no.nav.aap.tilgang.JournalpostTilgangRequest
 import no.nav.aap.tilgang.Operasjon
+import no.nav.aap.tilgang.PersonTilgangRequest
 import no.nav.aap.tilgang.RelevanteIdenter
 import no.nav.aap.tilgang.Rolle
 import no.nav.aap.tilgang.SakTilgangRequest
@@ -115,6 +117,28 @@ class TilgangService(
         return regelService.vurderTilgang(regelInput)[req.operasjon] == true
     }
 
+    suspend fun harTilgangTilArensakerForPerson(
+        ansattIdent: String,
+        req: ArenasakTilgangRequest,
+        token: OidcToken,
+        roller: List<Rolle>,
+        callId: String
+    ): Boolean {
+        val regelInput = RegelInput(
+            callId = callId,
+            ansattIdent = ansattIdent,
+            currentToken = token,
+            roller = roller,
+            søkerIdenter = RelevanteIdenter(listOf(req.personIdent), emptyList()),
+            avklaringsbehovFraBehandlingsflyt = null,
+            avklaringsbehovFraPostmottak = null,
+            påkrevdRolle = req.påkrevdRolle,
+            operasjoner = listOf(req.operasjon)
+        )
+
+        return regelService.vurderTilgang(regelInput)[req.operasjon] == true
+    }
+
     private suspend fun finnIdenterForJournalpost(journalpost: SafJournalpost): RelevanteIdenter {
         val saksnummer = finnKelvinSaksnummerForJournalpost(journalpost)
         log.info("Finner identer på journalpost med saksnummer $saksnummer.")
@@ -136,14 +160,40 @@ class TilgangService(
         }
     }
 
-    suspend fun harTilgangFraTilgangsmaskin(brukerIdenter: List<BrukerOgRegeltype>, token: OidcToken): Boolean {
-        return tilgangsmaskinGateway.harTilganger(brukerIdenter, token)
+    suspend fun harTilgangFraTilgangsmaskin(
+        brukerIdenter: List<BrukerOgRegeltype>,
+        token: OidcToken,
+        callId: String,
+    ): Boolean {
+        return tilgangsmaskinGateway.harTilganger(brukerIdenter, token, callId)
     }
 
-    suspend fun harTilgangTilPerson(brukerIdent: String, token: OidcToken): Boolean {
-        return tilgangsmaskinGateway.harTilgangTilPerson(brukerIdent, token)
-    }
+    suspend fun harTilgangTilPerson(
+        ansattIdent: String,
+        req: PersonTilgangRequest,
+        token: OidcToken,
+        roller: List<Rolle>,
+        callId: String
+    ): Boolean {
+        // Bruke intern tilgangssjekk på driftsoperasjoner
+        if (req.operasjon in listOf(Operasjon.DRIFTE, Operasjon.DRIFT_LES)) {
+            val regelInput = RegelInput(
+                callId = callId,
+                ansattIdent = ansattIdent,
+                currentToken = token,
+                roller = roller,
+                søkerIdenter = RelevanteIdenter(listOf(req.personIdent), emptyList()),
+                avklaringsbehovFraBehandlingsflyt = null,
+                avklaringsbehovFraPostmottak = null,
+                påkrevdRolle = req.påkrevdRolle ?: emptyList(),
+                operasjoner = listOf(req.operasjon!!),
+            )
 
+            return regelService.vurderTilgang(regelInput)[req.operasjon] == true
+        }
+
+        return tilgangsmaskinGateway.harTilgangTilPerson(req.personIdent, token, callId)
+    }
 
     suspend fun harTilgangTilTilbakekreving(
         ansattIdent: String,

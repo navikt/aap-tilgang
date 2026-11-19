@@ -10,6 +10,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.header
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import no.nav.aap.komponenter.server.auth.token
+import no.nav.aap.tilgang.ArenasakTilgangRequest
 import no.nav.aap.tilgang.BehandlingTilgangRequest
 import no.nav.aap.tilgang.JournalpostTilgangRequest
 import no.nav.aap.tilgang.Operasjon
@@ -71,6 +72,27 @@ fun NormalOpenAPIRoute.tilgang(
                 respond(TilgangResponse(harTilgang[req.operasjon] == true, harTilgang))
             }
         }
+
+        route("/arenasaker") {
+            // Brukes av Arena-visningsklienten for å sjekke om en bruker har tilgang til å se arenasaker for en person
+            post<Unit, TilgangResponse, ArenasakTilgangRequest> { _, req ->
+                prometheus.httpCallCounter(pipeline.call).increment()
+
+                val callId = pipeline.call.request.header("Nav-CallId") ?: "ukjent"
+                val token = token()
+                val roller = parseRoller(rolesWithGroupIds = roles, roller())
+
+                val harTilgang =
+                    tilgangService.harTilgangTilArensakerForPerson(ident(), req, token, roller, callId)
+
+                if (!harTilgang) {
+                    prometheus.nektetTilgangTeller("arensaker").increment()
+                }
+
+                respond(TilgangResponse(harTilgang))
+            }
+        }
+
         route("/journalpost") {
             post<Unit, TilgangResponse, JournalpostTilgangRequest> { _, req ->
                 prometheus.httpCallCounter(pipeline.call).increment()
@@ -97,8 +119,9 @@ fun NormalOpenAPIRoute.tilgang(
         route("/test/tilgangsmaskinen") {
             post<Unit, TilgangResponse, TilgangsmaskinRequest> { _, req ->
                 prometheus.httpCallCounter(pipeline.call).increment()
+                val callId = pipeline.call.request.header("Nav-CallId") ?: "ukjent"
                 val harTilgang =
-                    tilgangService.harTilgangFraTilgangsmaskin(req.brukerIdenter, token())
+                    tilgangService.harTilgangFraTilgangsmaskin(req.brukerIdenter, token(), callId)
                 respond(TilgangResponse(harTilgang))
             }
         }
@@ -106,7 +129,11 @@ fun NormalOpenAPIRoute.tilgang(
         route("/person") {
             post<Unit, TilgangResponse, PersonTilgangRequest> { _, req ->
                 prometheus.httpCallCounter(pipeline.call).increment()
-                val harTilgang = tilgangService.harTilgangTilPerson(req.personIdent, token())
+
+                val callId = pipeline.call.request.header("Nav-CallId") ?: "ukjent"
+                val roller = parseRoller(rolesWithGroupIds = roles, roller())
+
+                val harTilgang = tilgangService.harTilgangTilPerson(ident(), req, token(), roller, callId)
 
                 if (!harTilgang) {
                     prometheus.nektetTilgangTeller("person").increment()

@@ -38,20 +38,25 @@ data class JournalpostTilgangRequest(
     val operasjon: Operasjon
 ) : TilgangRequest
 
+data class ArenasakTilgangRequest(
+    val personIdent: String,
+    val påkrevdRolle: List<Rolle> = Rolle.kanLeseSaker(),
+    val operasjon: Operasjon = Operasjon.SE
+) : TilgangRequest
+
 data class PersonTilgangRequest(
     val personIdent: String,
+    val påkrevdRolle: List<Rolle>? = null,
+    val operasjon: Operasjon? = null,
 ) : TilgangRequest
 
 data class TilbakekrevingTilgangRequest(
     val saksnummer: String,
     val behandlingsreferanse: UUID,
-    @Deprecated("Trengs for bakoverkompabilitet da denne allerede er i bruk")
-    val påkrevdRolle: Rolle? = null,
     val påkrevdRoller: List<Rolle>? = null,
     val operasjon: Operasjon,
 ) : TilgangRequest {
-    fun effektivePåkrevdRoller(): List<Rolle> =
-        påkrevdRoller?.ifEmpty { null } ?: listOfNotNull(påkrevdRolle)
+    fun effektivePåkrevdRoller(): List<Rolle> = påkrevdRoller ?: emptyList()
 
     init {
         if (operasjon == Operasjon.SAKSBEHANDLE) {
