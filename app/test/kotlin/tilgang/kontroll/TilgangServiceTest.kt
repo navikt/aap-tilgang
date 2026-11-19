@@ -6,6 +6,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.slot
+import io.mockk.verifySequence
 import kotlinx.coroutines.test.runTest
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.RelevanteIdenter
@@ -52,12 +53,14 @@ class TilgangServiceTest {
     private val identOppslag = mockk<IdentOppslag>()
     private val tilgangsvurdering = mockk<Tilgangsvurdering>(relaxed = true)
     private val persontilgang = mockk<Persontilgang>(relaxed = true)
+    private val log = mockk<ILogger>(relaxUnitFun = true)
 
     private val service = TilgangService(
         journalpostOppslag = journalpostOppslag,
         identOppslag = identOppslag,
         tilgangsvurdering = tilgangsvurdering,
-        persontilgang = persontilgang
+        persontilgang = persontilgang,
+        log = log,
     )
 
     @AfterEach
@@ -72,6 +75,23 @@ class TilgangServiceTest {
         }
 
         assertThat(feil).hasMessage("Påkrevd rolle må være satt for operasjon SAKSBEHANDLE")
+    }
+
+    @Test
+    fun `sender info og organisasjonsadvarsel til injisert logger`() = runTest {
+        val kontekst = Tilgangskontekst("ansatt", emptyList(), BrukerToken("test-token"), "call-id")
+        coEvery { journalpostOppslag.hentJournalpostInfo(123, "call-id") } returns
+                JournalpostInfo(123, null, true, null)
+
+        val harTilgang = service.harTilgangTilJournalpost(
+            JournalposttilgangInput(123, null, emptyList(), Operasjon.SE), kontekst
+        )
+
+        assertThat(harTilgang).isTrue()
+        verifySequence {
+            log.info("Sjekker tilgang til journalpost 123")
+            log.warn("Journalpost 123 har orgnr som bruker – tilgang vil vurderes som OK.")
+        }
     }
 
     @ParameterizedTest

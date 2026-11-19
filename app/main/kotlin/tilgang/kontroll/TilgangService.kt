@@ -2,16 +2,14 @@ package tilgang.kontroll
 
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.RelevanteIdenter
-import org.slf4j.LoggerFactory
 
 class TilgangService(
     private val journalpostOppslag: JournalpostOppslag,
     private val identOppslag: IdentOppslag,
     private val tilgangsvurdering: Tilgangsvurdering,
-    private val persontilgang: Persontilgang
+    private val persontilgang: Persontilgang,
+    private val log: ILogger,
 ) {
-    private val log = LoggerFactory.getLogger(TilgangService::class.java)
-
     suspend fun harTilgangTilSak(
         input: SakstilgangInput,
         kontekst: Tilgangskontekst,

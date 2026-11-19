@@ -48,6 +48,7 @@ import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinGateway
 import tilgang.integrasjoner.tilgangsmaskin.createTilgangsmaskinClient
 import tilgang.kontroll.AvklaringsbehovType
 import tilgang.kontroll.BrukerToken
+import tilgang.kontroll.ILogger
 import tilgang.kontroll.IdentOppslag
 import tilgang.kontroll.JournalpostInfo
 import tilgang.kontroll.JournalpostOppslag
@@ -236,6 +237,12 @@ internal fun createTilgangService(
             OidcToken(token.verdi),
             callId,
         )
+    },
+    log = object : ILogger {
+        private val logger = LoggerFactory.getLogger(TilgangService::class.java)
+
+        override fun info(message: String) = logger.info(message)
+        override fun warn(message: String) = logger.warn(message)
     },
 )
 
