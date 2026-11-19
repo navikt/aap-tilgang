@@ -17,6 +17,9 @@ enum class TilgangsmaskinAvvistGrunn{
     AVVIST_AVDØD
 }
 
+/**
+ * Utvalgte felter fra problem+json-svaret Tilgangsmaskinen returnerer ved avslag (403).
+ */
 data class TilgangsmaskinAvvistResponse(
     val type: String,
     val title: String,

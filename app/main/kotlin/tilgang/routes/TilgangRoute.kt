@@ -19,6 +19,7 @@ import no.nav.aap.tilgang.Rolle
 import no.nav.aap.tilgang.SakTilgangRequest
 import no.nav.aap.tilgang.TilbakekrevingTilgangRequest
 import no.nav.aap.tilgang.TilgangResponse
+import no.nav.aap.tilgang.BegrunnetTilgangsResponse
 import tilgang.Role
 import tilgang.TilgangService
 import tilgang.auth.ident
@@ -75,21 +76,22 @@ fun NormalOpenAPIRoute.tilgang(
 
         route("/arenasaker") {
             // Brukes av Arena-visningsklienten for å sjekke om en bruker har tilgang til å se arenasaker for en person
-            post<Unit, TilgangResponse, ArenasakTilgangRequest> { _, req ->
+            post<Unit, BegrunnetTilgangsResponse, ArenasakTilgangRequest> { _, req ->
                 prometheus.httpCallCounter(pipeline.call).increment()
 
                 val callId = pipeline.call.request.header("Nav-CallId") ?: "ukjent"
                 val token = token()
                 val roller = parseRoller(rolesWithGroupIds = roles, roller())
 
-                val harTilgang =
+                val tilgang =
                     tilgangService.harTilgangTilArensakerForPerson(ident(), req, token, roller, callId)
 
-                if (!harTilgang) {
+                if (tilgang?.harTilgang != true) {
                     prometheus.nektetTilgangTeller("arensaker").increment()
                 }
 
-                respond(TilgangResponse(harTilgang))
+                val response = tilgang?.tilKontrakt() ?: BegrunnetTilgangsResponse(tilgang = false)
+                respond(response)
             }
         }
 

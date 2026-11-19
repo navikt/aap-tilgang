@@ -55,23 +55,23 @@ class RegelService(
         )
     )
 
-    suspend fun vurderTilgang(input: RegelInput): Map<Operasjon, Boolean> {
+    suspend fun vurderTilgang(input: RegelInput): Map<Operasjon, RegelResultat> {
         val aktuelleOperasjoner = regelOppsett.filterKeys { it in input.operasjoner }
 
-        val regelCache = mutableMapOf<Regel<*>, Boolean>()
+        val regelCache = mutableMapOf<Regel<*>, RegelResultat>()
 
         return aktuelleOperasjoner.mapValues { (_, regler) ->
-            regler.all { regel ->
-                hentRegelresultat(regelCache, regel, input)
-            }
+            regler.firstNotNullOfOrNull { regel ->
+                hentRegelresultat(regelCache, regel, input).takeUnless { it.harTilgang }
+            } ?: RegelResultat(harTilgang = true)
         }
     }
 
     private suspend fun hentRegelresultat(
-        regelCache: MutableMap<Regel<*>, Boolean>,
+        regelCache: MutableMap<Regel<*>, RegelResultat>,
         regel: Regel<*>,
         input: RegelInput,
-    ): Boolean {
+    ): RegelResultat {
         regelCache[regel]?.let { return it }
 
         val vurdering = regelMedVurdering[regel]?.vurder(input)
