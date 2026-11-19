@@ -136,7 +136,7 @@ class TilgangService(
             operasjoner = listOf(req.operasjon)
         )
 
-        return regelService.vurderTilgang(regelInput)[Operasjon.SE] == true
+        return regelService.vurderTilgang(regelInput)[req.operasjon] == true
     }
 
     private suspend fun finnIdenterForJournalpost(journalpost: SafJournalpost): RelevanteIdenter {

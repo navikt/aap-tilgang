@@ -65,6 +65,7 @@ public object TilgangGateway {
             CaffeineCacheMetrics.monitor(registry, tilgangGatewayBehandlingCache, "tilgang_behandling_cache")
             CaffeineCacheMetrics.monitor(registry, tilgangGatewaySakCache, "tilgang_sak_cache")
             CaffeineCacheMetrics.monitor(registry, tilgangGatewayJournalpostCache, "tilgang_journalpost_cache")
+            CaffeineCacheMetrics.monitor(registry, tilgangGatewayArenasakCache, "tilgang_arenasak_cache")
             CaffeineCacheMetrics.monitor(registry, tilgangGatewayPersonCache, "tilgang_person_cache")
         }
     }
@@ -174,6 +175,10 @@ public object TilgangGateway {
             .build()
 
         tilgangGatewayJournalpostCache = Caffeine.newBuilder()
+            .maximumSize(0)
+            .build()
+
+        tilgangGatewayArenasakCache = Caffeine.newBuilder()
             .maximumSize(0)
             .build()
 
