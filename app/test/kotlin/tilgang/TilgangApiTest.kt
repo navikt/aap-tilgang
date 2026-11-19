@@ -136,6 +136,35 @@ class TilgangApiTest {
         }
     }
 
+    @Test
+    fun `henter roller fra token for hvert kall i samme applikasjon`() {
+        val lesegruppe = UUID.randomUUID()
+        val driftsgruppe = UUID.randomUUID()
+        testApplication {
+            application {
+                api(
+                    Config(
+                        roles = listOf(Role(Rolle.LES, lesegruppe), Role(Rolle.DRIFT, driftsgruppe)),
+                        redis = Fakes.getRedisConfig(),
+                    ),
+                    redis = Fakes.getRedisServer()
+                )
+            }
+
+            for ((gruppe, forventetTilgang) in listOf(lesegruppe to true, driftsgruppe to false, lesegruppe to true)) {
+                val response = client.post("/tilgang/arenasaker") {
+                    bearerAuth(issueToken(listOf(gruppe.toString())).serialize())
+                    contentType(ContentType.Application.Json)
+                    setBody("""{"personIdent":"12300000000"}""")
+                }
+
+                assertThat(response.status).isEqualTo(HttpStatusCode.OK)
+                val tilgang = DefaultJsonMapper.objectMapper().readValue<TilgangResponse>(response.bodyAsText())
+                assertThat(tilgang.tilgang).isEqualTo(forventetTilgang)
+            }
+        }
+    }
+
     @ParameterizedTest
     @MethodSource("requestBoundaryCases")
     fun `bevarer API-felter og standardverdier ved oversetting til serviceinput`(

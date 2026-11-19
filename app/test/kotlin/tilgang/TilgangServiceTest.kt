@@ -73,33 +73,75 @@ class TilgangServiceTest {
     }
 
     @ParameterizedTest
+    @ValueSource(strings = ["sak", "behandling", "journalpost", "arenasaker", "person", "tilbakekreving"])
+    fun `sender riktig kallkontekst til hver regelvurdering`(ressurs: String) = runTest {
+        val input = slot<Tilgangsgrunnlag>()
+        val identer = RelevanteIdenter(listOf("søker-ident"), emptyList())
+        coEvery { identOppslag.hentIdenterForSak("sak-1") } returns identer
+        coEvery { tilgangsvurdering.vurderTilgang(capture(input)) } returns
+                mapOf(Operasjon.SE to true, Operasjon.DRIFTE to true)
+
+        for (indeks in 1..2) {
+            val kontekst = Tilgangskontekst(
+                ansattIdent = "ansatt-$indeks",
+                roller = if (indeks == 1) listOf(Rolle.LES) else listOf(Rolle.DRIFT),
+                brukerToken = BrukerToken("token-$indeks"),
+                callId = "call-$indeks",
+            )
+            coEvery { journalpostOppslag.hentJournalpostInfo(123, kontekst.callId) } returns
+                    JournalpostInfo(123, "søker-ident", false, null)
+
+            when (ressurs) {
+                "sak" -> service.harTilgangTilSak(
+                    SakstilgangInput("sak-1", emptyList(), Operasjon.SE, identer), kontekst
+                )
+                "behandling" -> service.harTilgangTilBehandling(
+                    BehandlingstilgangInput(UUID.randomUUID(), null, emptyList(), identer), kontekst
+                )
+                "journalpost" -> {
+                    service.harTilgangTilJournalpost(
+                        JournalposttilgangInput(123, null, emptyList(), Operasjon.SE), kontekst
+                    )
+                    coVerify(exactly = 1) { journalpostOppslag.hentJournalpostInfo(123, kontekst.callId) }
+                }
+                "arenasaker" -> service.harTilgangTilArensakerForPerson(
+                    ArenasakstilgangInput("søker-ident", Rolle.kanLeseSaker(), Operasjon.SE), kontekst
+                )
+                "person" -> service.harTilgangTilPerson(
+                    PersontilgangInput("søker-ident", emptyList(), Operasjon.DRIFTE), kontekst
+                )
+                "tilbakekreving" -> service.harTilgangTilTilbakekreving(
+                    TilbakekrevingstilgangInput("sak-1", UUID.randomUUID(), emptyList(), Operasjon.SE), kontekst
+                )
+                else -> error("Ukjent ressurs: $ressurs")
+            }
+
+            assertThat(input.captured.kontekst).isSameAs(kontekst)
+        }
+    }
+
+    @ParameterizedTest
     @EnumSource(AvklaringsbehovType::class)
     fun `sender kode og behovstype videre uten eksterne definisjoner`(type: AvklaringsbehovType) = runTest {
         val input = slot<Tilgangsgrunnlag>()
-        val token = BrukerToken("test-token")
+        val kontekst = Tilgangskontekst("ansatt", emptyList(), BrukerToken("test-token"), "call-id")
         coEvery { tilgangsvurdering.vurderTilgang(capture(input)) } returns mapOf(Operasjon.SE to true)
         coEvery { journalpostOppslag.hentJournalpostInfo(123, "call-id") } returns
                 JournalpostInfo(123, "søker-ident", false, null)
 
         val resultat = when (type) {
             AvklaringsbehovType.BEHANDLING -> service.harTilgangTilBehandling(
-                "ansatt",
                 BehandlingstilgangInput(
                     behandlingsreferanse = UUID.randomUUID(),
                     avklaringsbehovKode = "kode-fra-klient",
                     påkrevdRolle = emptyList(),
                     relevanteIdenter = RelevanteIdenter(listOf("søker-ident"), emptyList()),
                 ),
-                emptyList(),
-                token,
-                "call-id",
+                kontekst,
             )[Operasjon.SE]
             AvklaringsbehovType.JOURNALPOST -> service.harTilgangTilJournalpost(
-                "ansatt",
                 JournalposttilgangInput(123, "kode-fra-klient", emptyList(), Operasjon.SE),
-                emptyList(),
-                token,
-                "call-id",
+                kontekst,
             )
         }
 
@@ -149,11 +191,8 @@ class TilgangServiceTest {
             } returns HarTilgangFraTilgangsmaskinen(true)
 
             val harTilgang = serviceMedRegler.harTilgangTilArensakerForPerson(
-                "ansattIdent",
                 ArenasakstilgangInput(personIdent, Rolle.kanLeseSaker(), Operasjon.SE),
-                token,
-                listOf(rolle),
-                "callId",
+                Tilgangskontekst("ansattIdent", listOf(rolle), token, "callId"),
             )
 
             assertThat(harTilgang).isEqualTo(forventetTilgang)
@@ -190,11 +229,8 @@ class TilgangServiceTest {
             } returns HarTilgangFraTilgangsmaskinen(true)
 
             val harTilgang = serviceMedRegler.harTilgangTilArensakerForPerson(
-                "ansattIdent",
                 ArenasakstilgangInput(personIdent, Rolle.kanLeseSaker(), Operasjon.SE),
-                token,
-                listOf(Rolle.LES),
-                "callId",
+                Tilgangskontekst("ansattIdent", listOf(Rolle.LES), token, "callId"),
             )
 
             assertThat(harTilgang).isEqualTo(forventetTilgang)
@@ -238,11 +274,8 @@ class TilgangServiceTest {
             )
 
             val harTilgang = serviceMedRegler.harTilgangTilArensakerForPerson(
-                "ansattIdent",
                 ArenasakstilgangInput(personIdent, Rolle.kanLeseSaker(), Operasjon.SE),
-                token,
-                listOf(Rolle.LES),
-                "callId",
+                Tilgangskontekst("ansattIdent", listOf(Rolle.LES), token, "callId"),
             )
 
             assertThat(harTilgang).isFalse()
@@ -265,16 +298,14 @@ class TilgangServiceTest {
             val req = ArenasakstilgangInput("12345678901", Rolle.kanLeseSaker(), Operasjon.SE)
             val token = BrukerToken("test-token")
             val roller = listOf(Rolle.LES)
+            val kontekst = Tilgangskontekst("ansattIdent", roller, token, "callId")
             val input = slot<Tilgangsgrunnlag>()
             coEvery { tilgangsvurdering.vurderTilgang(capture(input)) } returns mapOf(Operasjon.SE to true)
 
-            val harTilgang = service.harTilgangTilArensakerForPerson("ansattIdent", req, token, roller, "callId")
+            val harTilgang = service.harTilgangTilArensakerForPerson(req, kontekst)
 
             assertThat(harTilgang).isTrue()
-            assertThat(input.captured.callId).isEqualTo("callId")
-            assertThat(input.captured.ansattIdent).isEqualTo("ansattIdent")
-            assertThat(input.captured.brukerToken).isSameAs(token)
-            assertThat(input.captured.roller).containsExactly(Rolle.LES)
+            assertThat(input.captured.kontekst).isSameAs(kontekst)
             assertThat(input.captured.søkerIdenter.søker).containsExactly(req.personIdent)
             assertThat(input.captured.søkerIdenter.barn).isEmpty()
             assertThat(input.captured.avklaringsbehov).isNull()
@@ -300,11 +331,8 @@ class TilgangServiceTest {
             coEvery { tilgangsvurdering.vurderTilgang(any()) } returns mapOf(Operasjon.SE to harTilgang)
 
             val resultat = service.harTilgangTilArensakerForPerson(
-                "ansattIdent",
                 ArenasakstilgangInput("12345678901", Rolle.kanLeseSaker(), Operasjon.SE),
-                BrukerToken("test-token"),
-                emptyList(),
-                "callId",
+                Tilgangskontekst("ansattIdent", emptyList(), BrukerToken("test-token"), "callId"),
             )
 
             assertThat(resultat).isEqualTo(harTilgang)
@@ -315,11 +343,8 @@ class TilgangServiceTest {
             coEvery { tilgangsvurdering.vurderTilgang(any()) } returns emptyMap()
 
             val harTilgang = service.harTilgangTilArensakerForPerson(
-                "ansattIdent",
                 ArenasakstilgangInput("12345678901", Rolle.kanLeseSaker(), Operasjon.SE),
-                BrukerToken("test-token"),
-                emptyList(),
-                "callId",
+                Tilgangskontekst("ansattIdent", emptyList(), BrukerToken("test-token"), "callId"),
             )
 
             assertThat(harTilgang).isFalse()
@@ -333,7 +358,9 @@ class TilgangServiceTest {
             val input = slot<Tilgangsgrunnlag>()
             coEvery { tilgangsvurdering.vurderTilgang(capture(input)) } returns mapOf(Operasjon.SE to true)
 
-            service.harTilgangTilArensakerForPerson("ansattIdent", req, BrukerToken("test-token"), emptyList(), "callId")
+            service.harTilgangTilArensakerForPerson(
+                req, Tilgangskontekst("ansattIdent", emptyList(), BrukerToken("test-token"), "callId")
+            )
 
             assertThat(input.captured.påkrevdRolle).isEqualTo(påkrevdRolle)
             assertThat(input.captured.operasjoner).containsExactly(Operasjon.SE)
@@ -349,7 +376,9 @@ class TilgangServiceTest {
             val personIdent = Random.nextLong().toString()
             val req = PersontilgangInput(personIdent, emptyList(), operasjon)
 
-            service.harTilgangTilPerson("ansattIdent", req, BrukerToken("test-token"), emptyList(), "callId")
+            service.harTilgangTilPerson(
+                req, Tilgangskontekst("ansattIdent", emptyList(), BrukerToken("test-token"), "callId")
+            )
 
             coVerify {
                 tilgangsvurdering wasNot Called
@@ -363,7 +392,9 @@ class TilgangServiceTest {
             val personIdent = Random.nextLong().toString()
             val req = PersontilgangInput(personIdent, emptyList(), Operasjon.DRIFTE)
 
-            service.harTilgangTilPerson("ansattIdent", req, BrukerToken("test-token"), emptyList(), "callId")
+            service.harTilgangTilPerson(
+                req, Tilgangskontekst("ansattIdent", emptyList(), BrukerToken("test-token"), "callId")
+            )
 
             coVerify {
                 tilgangsvurdering.vurderTilgang(any())

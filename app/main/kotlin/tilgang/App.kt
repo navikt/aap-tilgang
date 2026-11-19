@@ -183,10 +183,10 @@ internal fun createTilgangService(
         override suspend fun vurderTilgang(input: Tilgangsgrunnlag): Map<Operasjon, Boolean> =
             regelService.vurderTilgang(
                 RegelInput(
-                    callId = input.callId,
-                    ansattIdent = input.ansattIdent,
-                    currentToken = OidcToken(input.brukerToken.verdi),
-                    roller = input.roller,
+                    callId = input.kontekst.callId,
+                    ansattIdent = input.kontekst.ansattIdent,
+                    currentToken = OidcToken(input.kontekst.brukerToken.verdi),
+                    roller = input.kontekst.roller,
                     søkerIdenter = input.søkerIdenter,
                     avklaringsbehovFraBehandlingsflyt = input.avklaringsbehov?.let { behov ->
                         when (behov.type) {

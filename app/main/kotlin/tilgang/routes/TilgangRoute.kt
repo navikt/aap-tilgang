@@ -3,6 +3,7 @@ package tilgang.routes
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.path.normal.post
+import com.papsign.ktor.openapigen.route.response.OpenAPIPipelineContext
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.response.respondWithStatus
 import com.papsign.ktor.openapigen.route.route
@@ -23,6 +24,7 @@ import tilgang.Role
 import tilgang.BrukerToken
 import tilgang.Personregel
 import tilgang.TilgangService
+import tilgang.Tilgangskontekst
 import tilgang.ArenasakstilgangInput
 import tilgang.BehandlingstilgangInput
 import tilgang.JournalposttilgangInput
@@ -48,9 +50,7 @@ fun NormalOpenAPIRoute.tilgang(
             post<Unit, TilgangResponse, SakTilgangRequest> { _, req ->
                 prometheus.httpCallCounter(pipeline.call).increment()
 
-                val callId = pipeline.call.request.header("Nav-CallId") ?: "ukjent"
-                val token = BrukerToken(token().token())
-                val roller = parseRoller(rolesWithGroupIds = roles, roller())
+                val kontekst = tilgangskontekst(roles)
 
                 val input = SakstilgangInput(
                     saksnummer = req.saksnummer,
@@ -59,7 +59,7 @@ fun NormalOpenAPIRoute.tilgang(
                     relevanteIdenter = req.relevanteIdenter,
                 )
                 val harTilgang =
-                    tilgangService.harTilgangTilSak(ident(), input, roller, token, callId)
+                    tilgangService.harTilgangTilSak(input, kontekst)
 
                 if (!harTilgang) {
                     prometheus.nektetTilgangTeller("sak").increment()
@@ -72,9 +72,7 @@ fun NormalOpenAPIRoute.tilgang(
             post<Unit, TilgangResponse, BehandlingTilgangRequest> { _, req ->
                 prometheus.httpCallCounter(pipeline.call).increment()
 
-                val callId = pipeline.call.request.header("Nav-CallId") ?: "ukjent"
-                val token = BrukerToken(token().token())
-                val roller = parseRoller(rolesWithGroupIds = roles, roller())
+                val kontekst = tilgangskontekst(roles)
 
                 val input = BehandlingstilgangInput(
                     behandlingsreferanse = req.behandlingsreferanse,
@@ -83,7 +81,7 @@ fun NormalOpenAPIRoute.tilgang(
                     relevanteIdenter = req.relevanteIdenter,
                 )
                 val harTilgang =
-                    tilgangService.harTilgangTilBehandling(ident(), input, roller, token, callId)
+                    tilgangService.harTilgangTilBehandling(input, kontekst)
 
                 if (harTilgang[req.operasjon] != true) {
                     prometheus.nektetTilgangTeller("behandling").increment()
@@ -98,9 +96,7 @@ fun NormalOpenAPIRoute.tilgang(
             post<Unit, TilgangResponse, ArenasakTilgangRequest> { _, req ->
                 prometheus.httpCallCounter(pipeline.call).increment()
 
-                val callId = pipeline.call.request.header("Nav-CallId") ?: "ukjent"
-                val token = BrukerToken(token().token())
-                val roller = parseRoller(rolesWithGroupIds = roles, roller())
+                val kontekst = tilgangskontekst(roles)
 
                 val input = ArenasakstilgangInput(
                     personIdent = req.personIdent,
@@ -108,7 +104,7 @@ fun NormalOpenAPIRoute.tilgang(
                     operasjon = req.operasjon,
                 )
                 val harTilgang =
-                    tilgangService.harTilgangTilArensakerForPerson(ident(), input, token, roller, callId)
+                    tilgangService.harTilgangTilArensakerForPerson(input, kontekst)
 
                 if (!harTilgang) {
                     prometheus.nektetTilgangTeller("arensaker").increment()
@@ -127,9 +123,7 @@ fun NormalOpenAPIRoute.tilgang(
                     respondWithStatus(HttpStatusCode.BadRequest)
                 }
 
-                val callId = pipeline.call.request.header("Nav-CallId") ?: "ukjent"
-                val token = BrukerToken(token().token())
-                val roller = parseRoller(rolesWithGroupIds = roles, roller())
+                val kontekst = tilgangskontekst(roles)
 
                 val input = JournalposttilgangInput(
                     journalpostId = req.journalpostId,
@@ -138,7 +132,7 @@ fun NormalOpenAPIRoute.tilgang(
                     operasjon = req.operasjon,
                 )
                 val harTilgang =
-                    tilgangService.harTilgangTilJournalpost(ident(), input, roller, token, callId)
+                    tilgangService.harTilgangTilJournalpost(input, kontekst)
 
                 if (!harTilgang) {
                     prometheus.nektetTilgangTeller("journalpost").increment()
@@ -165,8 +159,7 @@ fun NormalOpenAPIRoute.tilgang(
             post<Unit, TilgangResponse, PersonTilgangRequest> { _, req ->
                 prometheus.httpCallCounter(pipeline.call).increment()
 
-                val callId = pipeline.call.request.header("Nav-CallId") ?: "ukjent"
-                val roller = parseRoller(rolesWithGroupIds = roles, roller())
+                val kontekst = tilgangskontekst(roles)
 
                 val input = PersontilgangInput(
                     personIdent = req.personIdent,
@@ -174,7 +167,7 @@ fun NormalOpenAPIRoute.tilgang(
                     operasjon = req.operasjon,
                 )
                 val harTilgang = tilgangService.harTilgangTilPerson(
-                    ident(), input, BrukerToken(token().token()), roller, callId
+                    input, kontekst
                 )
 
                 if (!harTilgang) {
@@ -188,9 +181,7 @@ fun NormalOpenAPIRoute.tilgang(
             post<Unit, TilgangResponse, TilbakekrevingTilgangRequest> { _, req ->
                 prometheus.httpCallCounter(pipeline.call).increment()
 
-                val callId = pipeline.call.request.header("Nav-CallId") ?: "ukjent"
-                val token = BrukerToken(token().token())
-                val roller = parseRoller(rolesWithGroupIds = roles, roller())
+                val kontekst = tilgangskontekst(roles)
 
                 val input = TilbakekrevingstilgangInput(
                     saksnummer = req.saksnummer,
@@ -199,7 +190,7 @@ fun NormalOpenAPIRoute.tilgang(
                     operasjon = req.operasjon,
                 )
                 val harTilgang =
-                    tilgangService.harTilgangTilTilbakekreving(ident(), input, roller, token, callId)
+                    tilgangService.harTilgangTilTilbakekreving(input, kontekst)
 
                 if (!harTilgang) {
                     prometheus.nektetTilgangTeller("tilbakekreving").increment()
@@ -220,3 +211,11 @@ fun NormalOpenAPIRoute.tilgang(
         }
     }
 }
+
+private fun OpenAPIPipelineContext.tilgangskontekst(roles: List<Role>): Tilgangskontekst =
+    Tilgangskontekst(
+        ansattIdent = ident(),
+        roller = parseRoller(rolesWithGroupIds = roles, roller()),
+        brukerToken = BrukerToken(pipeline.call.token().token()),
+        callId = pipeline.call.request.header("Nav-CallId") ?: "ukjent",
+    )

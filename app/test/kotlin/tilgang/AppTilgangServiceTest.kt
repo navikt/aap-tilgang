@@ -39,6 +39,7 @@ class AppTilgangServiceTest {
     private val tilgangsmaskin = mockk<TilgangsmaskinGateway>()
     private val service = createTilgangService(saf, behandlingsflyt, regelService, tilgangsmaskin)
     private val token = BrukerToken(AzureTokenGen("issuer", "audience").generate())
+    private val kontekst = Tilgangskontekst("ansatt", emptyList(), token, "call-id")
 
     @ParameterizedTest
     @CsvSource("KELVIN, true", "ANNET, false", "NULL, false", nullValues = ["NULL"])
@@ -57,7 +58,7 @@ class AppTilgangServiceTest {
         coEvery { regelService.vurderTilgang(capture(input)) } returns mapOf(Operasjon.SE to false)
 
         val resultat = service.harTilgangTilJournalpost(
-            "ansatt", JournalposttilgangInput(123, null, emptyList(), Operasjon.SE), emptyList(), token, "call-id"
+            JournalposttilgangInput(123, null, emptyList(), Operasjon.SE), kontekst
         )
 
         assertThat(resultat).isFalse()
@@ -81,11 +82,8 @@ class AppTilgangServiceTest {
         )
 
         val resultat = service.harTilgangTilJournalpost(
-            "ansatt",
             JournalposttilgangInput(123, "ukjent", emptyList(), Operasjon.SE),
-            emptyList(),
-            token,
-            "call-id",
+            kontekst,
         )
 
         assertThat(resultat).isTrue()
@@ -106,7 +104,7 @@ class AppTilgangServiceTest {
 
         assertFailsWith<IllegalArgumentException> {
             service.harTilgangTilJournalpost(
-                "ansatt", JournalposttilgangInput(123, null, emptyList(), Operasjon.SE), emptyList(), token, "call-id"
+                JournalposttilgangInput(123, null, emptyList(), Operasjon.SE), kontekst
             )
         }
 
@@ -133,7 +131,7 @@ class AppTilgangServiceTest {
             relevanteIdenter = null,
         )
 
-        val resultat = service.harTilgangTilBehandling("ansatt", req, roller, token, "call-id")
+        val resultat = service.harTilgangTilBehandling(req, Tilgangskontekst("ansatt", roller, token, "call-id"))
 
         assertThat(resultat).isEqualTo(forventet)
         assertThat(input.captured.ansattIdent).isEqualTo("ansatt")
@@ -158,16 +156,13 @@ class AppTilgangServiceTest {
         coEvery { regelService.vurderTilgang(capture(input)) } returns mapOf(Operasjon.SAKSBEHANDLE to true)
 
         val resultat = service.harTilgangTilJournalpost(
-            "ansatt",
             JournalposttilgangInput(
                 journalpostId = 123,
                 avklaringsbehovKode = definisjon.kode.name,
                 påkrevdRolle = emptyList(),
                 operasjon = Operasjon.SAKSBEHANDLE,
             ),
-            emptyList(),
-            token,
-            "call-id",
+            kontekst,
         )
 
         assertThat(resultat).isTrue()
@@ -192,23 +187,17 @@ class AppTilgangServiceTest {
         val feil = assertFails {
             when (type) {
                 AvklaringsbehovType.BEHANDLING -> service.harTilgangTilBehandling(
-                    "ansatt",
                     BehandlingstilgangInput(
                         behandlingsreferanse = UUID.randomUUID(),
                         avklaringsbehovKode = "ukjent",
                         påkrevdRolle = emptyList(),
                         relevanteIdenter = RelevanteIdenter(listOf("søker-ident"), emptyList()),
                     ),
-                    emptyList(),
-                    token,
-                    "call-id",
+                    kontekst,
                 )
                 AvklaringsbehovType.JOURNALPOST -> service.harTilgangTilJournalpost(
-                    "ansatt",
                     JournalposttilgangInput(123, "ukjent", emptyList(), Operasjon.SE),
-                    emptyList(),
-                    token,
-                    "call-id",
+                    kontekst,
                 )
             }
         }
@@ -229,12 +218,14 @@ class AppTilgangServiceTest {
 
         assertThat(
             service.harTilgangTilPerson(
-                "ansatt-1", PersontilgangInput("person-1", emptyList(), null), token, emptyList(), "call-1"
+                PersontilgangInput("person-1", emptyList(), null),
+                Tilgangskontekst("ansatt-1", emptyList(), token, "call-1"),
             )
         ).isTrue()
         assertThat(
             service.harTilgangTilPerson(
-                "ansatt-2", PersontilgangInput("person-2", emptyList(), null), annetToken, emptyList(), "call-2"
+                PersontilgangInput("person-2", emptyList(), null),
+                Tilgangskontekst("ansatt-2", emptyList(), annetToken, "call-2"),
             )
         ).isFalse()
         coVerify { regelService wasNot Called }
