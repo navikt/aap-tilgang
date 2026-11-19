@@ -238,7 +238,7 @@ class AppTilgangServiceTest {
             tilgangsmaskin.harTilganger(forventet, match { it.token() == token.verdi }, "call-id")
         } returns false
 
-        val resultat = service.harTilgangFraTilgangsmaskin(
+        val resultat = service.harTilgangTilPersoner(
             listOf(Personregel("person-1", "KJERNE"), Personregel("person-2", "KOMPLETT")),
             token,
             "call-id",

@@ -104,7 +104,7 @@ fun NormalOpenAPIRoute.tilgang(
                     operasjon = req.operasjon,
                 )
                 val harTilgang =
-                    tilgangService.harTilgangTilArensakerForPerson(input, kontekst)
+                    tilgangService.harTilgangTilArenasakerForPerson(input, kontekst)
 
                 if (!harTilgang) {
                     prometheus.nektetTilgangTeller("arensaker").increment()
@@ -146,7 +146,7 @@ fun NormalOpenAPIRoute.tilgang(
                 prometheus.httpCallCounter(pipeline.call).increment()
                 val callId = pipeline.call.request.header("Nav-CallId") ?: "ukjent"
                 val harTilgang =
-                    tilgangService.harTilgangFraTilgangsmaskin(
+                    tilgangService.harTilgangTilPersoner(
                         req.brukerIdenter.map { Personregel(it.brukerId, it.type) },
                         BrukerToken(token().token()),
                         callId,

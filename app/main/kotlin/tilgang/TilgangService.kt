@@ -13,51 +13,51 @@ class TilgangService(
     private val log = LoggerFactory.getLogger(TilgangService::class.java)
 
     suspend fun harTilgangTilSak(
-        req: SakstilgangInput,
+        input: SakstilgangInput,
         kontekst: Tilgangskontekst,
     ): Boolean {
-        log.info("Sjekker tilgang til sak ${req.saksnummer}")
-        val identer = req.relevanteIdenter ?: identOppslag
-            .hentIdenterForSak(req.saksnummer)
+        log.info("Sjekker tilgang til sak ${input.saksnummer}")
+        val identer = input.relevanteIdenter ?: identOppslag
+            .hentIdenterForSak(input.saksnummer)
 
-        val regelInput = Tilgangsgrunnlag(
+        val grunnlag = Tilgangsgrunnlag(
             kontekst = kontekst,
             søkerIdenter = identer,
             avklaringsbehov = null,
-            påkrevdRolle = req.påkrevdRolle,
-            operasjoner = listOf(req.operasjon)
+            påkrevdRolle = input.påkrevdRolle,
+            operasjoner = listOf(input.operasjon)
         )
-        return tilgangsvurdering.vurderTilgang(regelInput)[req.operasjon] == true
+        return tilgangsvurdering.vurderTilgang(grunnlag)[input.operasjon] == true
     }
 
     suspend fun harTilgangTilBehandling(
-        req: BehandlingstilgangInput,
+        input: BehandlingstilgangInput,
         kontekst: Tilgangskontekst,
     ): Map<Operasjon, Boolean> {
-        log.info("Sjekker tilgang til behandling ${req.behandlingsreferanse}")
-        val identer = req.relevanteIdenter ?: identOppslag
-            .hentIdenterForBehandling(req.behandlingsreferanse.toString())
+        log.info("Sjekker tilgang til behandling ${input.behandlingsreferanse}")
+        val identer = input.relevanteIdenter ?: identOppslag
+            .hentIdenterForBehandling(input.behandlingsreferanse.toString())
 
-        val avklaringsbehov = req.avklaringsbehovKode?.let {
+        val avklaringsbehov = input.avklaringsbehovKode?.let {
             Avklaringsbehov(it, AvklaringsbehovType.BEHANDLING)
         }
 
-        val regelInput = Tilgangsgrunnlag(
+        val grunnlag = Tilgangsgrunnlag(
             kontekst = kontekst,
             søkerIdenter = identer,
             avklaringsbehov = avklaringsbehov,
-            påkrevdRolle = req.påkrevdRolle,
+            påkrevdRolle = input.påkrevdRolle,
             operasjoner = Operasjon.entries
         )
-        return tilgangsvurdering.vurderTilgang(regelInput)
+        return tilgangsvurdering.vurderTilgang(grunnlag)
     }
 
     suspend fun harTilgangTilJournalpost(
-        req: JournalposttilgangInput,
+        input: JournalposttilgangInput,
         kontekst: Tilgangskontekst,
     ): Boolean {
-        log.info("Sjekker tilgang til journalpost ${req.journalpostId}")
-        val journalpostInfo = journalpostOppslag.hentJournalpostInfo(req.journalpostId, kontekst.callId)
+        log.info("Sjekker tilgang til journalpost ${input.journalpostId}")
+        val journalpostInfo = journalpostOppslag.hentJournalpostInfo(input.journalpostId, kontekst.callId)
 
         if (journalpostInfo.gjelderOrganisasjon) {
             log.warn("Journalpost ${journalpostInfo.journalpostId} har orgnr som bruker – tilgang vil vurderes som OK.")
@@ -66,33 +66,33 @@ class TilgangService(
 
         val identer = finnIdenterForJournalpost(journalpostInfo)
 
-        val avklaringsbehov = req.avklaringsbehovKode?.let {
+        val avklaringsbehov = input.avklaringsbehovKode?.let {
             Avklaringsbehov(it, AvklaringsbehovType.JOURNALPOST)
         }
 
-        val regelInput = Tilgangsgrunnlag(
+        val grunnlag = Tilgangsgrunnlag(
             kontekst = kontekst,
             søkerIdenter = identer,
             avklaringsbehov = avklaringsbehov,
-            påkrevdRolle = req.påkrevdRolle,
-            operasjoner = listOf(req.operasjon),
+            påkrevdRolle = input.påkrevdRolle,
+            operasjoner = listOf(input.operasjon),
         )
-        return tilgangsvurdering.vurderTilgang(regelInput)[req.operasjon] == true
+        return tilgangsvurdering.vurderTilgang(grunnlag)[input.operasjon] == true
     }
 
-    suspend fun harTilgangTilArensakerForPerson(
-        req: ArenasakstilgangInput,
+    suspend fun harTilgangTilArenasakerForPerson(
+        input: ArenasakstilgangInput,
         kontekst: Tilgangskontekst,
     ): Boolean {
-        val regelInput = Tilgangsgrunnlag(
+        val grunnlag = Tilgangsgrunnlag(
             kontekst = kontekst,
-            søkerIdenter = RelevanteIdenter(listOf(req.personIdent), emptyList()),
+            søkerIdenter = RelevanteIdenter(listOf(input.personIdent), emptyList()),
             avklaringsbehov = null,
-            påkrevdRolle = req.påkrevdRolle,
-            operasjoner = listOf(req.operasjon)
+            påkrevdRolle = input.påkrevdRolle,
+            operasjoner = listOf(input.operasjon)
         )
 
-        return tilgangsvurdering.vurderTilgang(regelInput)[req.operasjon] == true
+        return tilgangsvurdering.vurderTilgang(grunnlag)[input.operasjon] == true
     }
 
     private suspend fun finnIdenterForJournalpost(journalpost: JournalpostInfo): RelevanteIdenter {
@@ -109,7 +109,7 @@ class TilgangService(
         }
     }
 
-    suspend fun harTilgangFraTilgangsmaskin(
+    suspend fun harTilgangTilPersoner(
         brukerIdenter: List<Personregel>,
         token: BrukerToken,
         callId: String,
@@ -118,40 +118,40 @@ class TilgangService(
     }
 
     suspend fun harTilgangTilPerson(
-        req: PersontilgangInput,
+        input: PersontilgangInput,
         kontekst: Tilgangskontekst,
     ): Boolean {
         // Bruke intern tilgangssjekk på driftsoperasjoner
-        if (req.operasjon in listOf(Operasjon.DRIFTE, Operasjon.DRIFT_LES)) {
-            val regelInput = Tilgangsgrunnlag(
+        if (input.operasjon in listOf(Operasjon.DRIFTE, Operasjon.DRIFT_LES)) {
+            val grunnlag = Tilgangsgrunnlag(
                 kontekst = kontekst,
-                søkerIdenter = RelevanteIdenter(listOf(req.personIdent), emptyList()),
+                søkerIdenter = RelevanteIdenter(listOf(input.personIdent), emptyList()),
                 avklaringsbehov = null,
-                påkrevdRolle = req.påkrevdRolle,
-                operasjoner = listOf(req.operasjon!!),
+                påkrevdRolle = input.påkrevdRolle,
+                operasjoner = listOf(input.operasjon!!),
             )
 
-            return tilgangsvurdering.vurderTilgang(regelInput)[req.operasjon] == true
+            return tilgangsvurdering.vurderTilgang(grunnlag)[input.operasjon] == true
         }
 
-        return persontilgang.harTilgangTilPerson(req.personIdent, kontekst.brukerToken, kontekst.callId)
+        return persontilgang.harTilgangTilPerson(input.personIdent, kontekst.brukerToken, kontekst.callId)
     }
 
     suspend fun harTilgangTilTilbakekreving(
-        req: TilbakekrevingstilgangInput,
+        input: TilbakekrevingstilgangInput,
         kontekst: Tilgangskontekst,
     ): Boolean {
-        log.info("Sjekker tilgang til tilbakekrevingsbehandling ${req.behandlingsreferanse}")
-        val identer = identOppslag.hentIdenterForSak(req.saksnummer)
+        log.info("Sjekker tilgang til tilbakekrevingsbehandling ${input.behandlingsreferanse}")
+        val identer = identOppslag.hentIdenterForSak(input.saksnummer)
 
-        val regelInput = Tilgangsgrunnlag(
+        val grunnlag = Tilgangsgrunnlag(
             kontekst = kontekst,
             søkerIdenter = identer,
             avklaringsbehov = null,
-            påkrevdRolle = req.påkrevdRolle,
-            operasjoner = listOf(req.operasjon)
+            påkrevdRolle = input.påkrevdRolle,
+            operasjoner = listOf(input.operasjon)
         )
-        return tilgangsvurdering.vurderTilgang(regelInput)[req.operasjon] == true
+        return tilgangsvurdering.vurderTilgang(grunnlag)[input.operasjon] == true
     }
 
 }

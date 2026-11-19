@@ -104,7 +104,7 @@ class TilgangServiceTest {
                     )
                     coVerify(exactly = 1) { journalpostOppslag.hentJournalpostInfo(123, kontekst.callId) }
                 }
-                "arenasaker" -> service.harTilgangTilArensakerForPerson(
+                "arenasaker" -> service.harTilgangTilArenasakerForPerson(
                     ArenasakstilgangInput("søker-ident", Rolle.kanLeseSaker(), Operasjon.SE), kontekst
                 )
                 "person" -> service.harTilgangTilPerson(
@@ -190,7 +190,7 @@ class TilgangServiceTest {
                 )
             } returns HarTilgangFraTilgangsmaskinen(true)
 
-            val harTilgang = serviceMedRegler.harTilgangTilArensakerForPerson(
+            val harTilgang = serviceMedRegler.harTilgangTilArenasakerForPerson(
                 ArenasakstilgangInput(personIdent, Rolle.kanLeseSaker(), Operasjon.SE),
                 Tilgangskontekst("ansattIdent", listOf(rolle), token, "callId"),
             )
@@ -228,7 +228,7 @@ class TilgangServiceTest {
                 )
             } returns HarTilgangFraTilgangsmaskinen(true)
 
-            val harTilgang = serviceMedRegler.harTilgangTilArensakerForPerson(
+            val harTilgang = serviceMedRegler.harTilgangTilArenasakerForPerson(
                 ArenasakstilgangInput(personIdent, Rolle.kanLeseSaker(), Operasjon.SE),
                 Tilgangskontekst("ansattIdent", listOf(Rolle.LES), token, "callId"),
             )
@@ -273,7 +273,7 @@ class TilgangServiceTest {
                 )
             )
 
-            val harTilgang = serviceMedRegler.harTilgangTilArensakerForPerson(
+            val harTilgang = serviceMedRegler.harTilgangTilArenasakerForPerson(
                 ArenasakstilgangInput(personIdent, Rolle.kanLeseSaker(), Operasjon.SE),
                 Tilgangskontekst("ansattIdent", listOf(Rolle.LES), token, "callId"),
             )
@@ -302,7 +302,7 @@ class TilgangServiceTest {
             val input = slot<Tilgangsgrunnlag>()
             coEvery { tilgangsvurdering.vurderTilgang(capture(input)) } returns mapOf(Operasjon.SE to true)
 
-            val harTilgang = service.harTilgangTilArensakerForPerson(req, kontekst)
+            val harTilgang = service.harTilgangTilArenasakerForPerson(req, kontekst)
 
             assertThat(harTilgang).isTrue()
             assertThat(input.captured.kontekst).isSameAs(kontekst)
@@ -330,7 +330,7 @@ class TilgangServiceTest {
         suspend fun `returnerer regelservice sitt resultat for SE`(harTilgang: Boolean) {
             coEvery { tilgangsvurdering.vurderTilgang(any()) } returns mapOf(Operasjon.SE to harTilgang)
 
-            val resultat = service.harTilgangTilArensakerForPerson(
+            val resultat = service.harTilgangTilArenasakerForPerson(
                 ArenasakstilgangInput("12345678901", Rolle.kanLeseSaker(), Operasjon.SE),
                 Tilgangskontekst("ansattIdent", emptyList(), BrukerToken("test-token"), "callId"),
             )
@@ -342,7 +342,7 @@ class TilgangServiceTest {
         suspend fun `nekter tilgang når regelservice mangler resultat for SE`() {
             coEvery { tilgangsvurdering.vurderTilgang(any()) } returns emptyMap()
 
-            val harTilgang = service.harTilgangTilArensakerForPerson(
+            val harTilgang = service.harTilgangTilArenasakerForPerson(
                 ArenasakstilgangInput("12345678901", Rolle.kanLeseSaker(), Operasjon.SE),
                 Tilgangskontekst("ansattIdent", emptyList(), BrukerToken("test-token"), "callId"),
             )
@@ -358,7 +358,7 @@ class TilgangServiceTest {
             val input = slot<Tilgangsgrunnlag>()
             coEvery { tilgangsvurdering.vurderTilgang(capture(input)) } returns mapOf(Operasjon.SE to true)
 
-            service.harTilgangTilArensakerForPerson(
+            service.harTilgangTilArenasakerForPerson(
                 req, Tilgangskontekst("ansattIdent", emptyList(), BrukerToken("test-token"), "callId")
             )
 
