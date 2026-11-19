@@ -2,6 +2,7 @@ package tilgang.http
 
 import com.fasterxml.jackson.databind.DeserializationFeature
 import io.ktor.client.HttpClient
+import io.ktor.client.HttpClientConfig
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.network.sockets.ConnectTimeoutException
 import io.ktor.client.network.sockets.SocketTimeoutException
@@ -13,7 +14,10 @@ import io.ktor.serialization.jackson.jackson
 import io.ktor.utils.io.CancellationException
 import kotlin.time.Duration
 
-fun createHttpClient(timeout: Duration) = HttpClient(CIO) {
+fun createHttpClient(
+    timeout: Duration,
+    configure: HttpClientConfig<*>.() -> Unit = {},
+) = HttpClient(CIO) {
     install(ContentNegotiation) {
         jackson {
             configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
@@ -36,4 +40,5 @@ fun createHttpClient(timeout: Duration) = HttpClient(CIO) {
         requestTimeoutMillis = timeout.inWholeMilliseconds
     }
     expectSuccess = true
+    configure()
 }

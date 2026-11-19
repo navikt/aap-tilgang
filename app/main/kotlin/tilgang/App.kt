@@ -22,9 +22,11 @@ import no.nav.aap.komponenter.server.commonKtorModule
 import org.slf4j.LoggerFactory
 import tilgang.http.createHttpClient
 import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytGateway
+import tilgang.integrasjoner.behandlingsflyt.createBehandlingsflytClient
 import tilgang.integrasjoner.msgraph.MsGraphGateway
 import tilgang.integrasjoner.pdl.PdlGraphQLGateway
 import tilgang.integrasjoner.saf.SafGraphqlGateway
+import tilgang.integrasjoner.saf.createSafClient
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinGateway
 import tilgang.redis.Redis
 import tilgang.regler.RegelService
@@ -89,8 +91,10 @@ fun Application.api(
 
     val pdl = PdlGraphQLGateway(redis, httpClient, prometheus)
     val msGraph = MsGraphGateway(redis, httpClient, prometheus)
-    val behandlingsflyt = BehandlingsflytGateway(redis, createHttpClient(timeout = 4.seconds), prometheus)
-    val saf = SafGraphqlGateway(redis, httpClient, prometheus)
+    val behandlingsflytClient = createBehandlingsflytClient(config.behandlingsflyt)
+    val behandlingsflyt = BehandlingsflytGateway(redis, behandlingsflytClient, prometheus)
+    val safClient = createSafClient(config.saf)
+    val saf = SafGraphqlGateway(redis, safClient, prometheus)
     val tilgangsmaskinGateway = TilgangsmaskinGateway(redis, httpClient, prometheus)
     val regelService = RegelService(pdl, AdressebeskyttelseService(msGraph), tilgangsmaskinGateway
     )
@@ -121,6 +125,8 @@ fun Application.api(
         environment.log.info("ktor stopper nå å ta imot nye requester, og lar mottatte requester kjøre frem til timeout.")
     }
     monitor.subscribe(ApplicationStopped) { environment ->
+        behandlingsflytClient.close()
+        safClient.close()
         environment.log.info("ktor har fullført nedstoppingen sin. Eventuelle requester og annet arbeid som ikke ble fullført innen timeout ble avbrutt.")
     }
 }

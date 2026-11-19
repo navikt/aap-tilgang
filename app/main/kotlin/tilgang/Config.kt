@@ -2,6 +2,7 @@ package tilgang
 
 import java.net.URI
 import java.util.UUID
+import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.tilgang.Rolle
 
 private fun getEnvVar(envar: String) = System.getenv(envar) ?: error("missing envvar $envar")
@@ -17,7 +18,9 @@ data class Config(
         Role(Rolle.PRODUKSJONSSTYRING, UUID.fromString(getEnvVar("AAP_PRODUKSJONSSTYRING"))),
         Role(Rolle.KVALITETSSIKRER, UUID.fromString(getEnvVar("AAP_KVALITETSSIKRER"))),
     ),
-    val redis: RedisConfig = RedisConfig()
+    val redis: RedisConfig = RedisConfig(),
+    val behandlingsflyt: BehandlingsflytConfig = BehandlingsflytConfig(),
+    val saf: SafConfig = SafConfig()
 )
 
 data class Role(
@@ -29,4 +32,14 @@ data class RedisConfig(
     val uri: URI = URI(getEnvVar("REDIS_URI_TILGANG")),
     val username: String = getEnvVar("REDIS_USERNAME_TILGANG"),
     val password: String = getEnvVar("REDIS_PASSWORD_TILGANG"),
+)
+
+data class BehandlingsflytConfig(
+    val baseUrl: URI = URI(requiredConfigForKey("BEHANDLINGSFLYT_BASE_URL")),
+    val scope: String = requiredConfigForKey("BEHANDLINGSFLYT_SCOPE"),
+)
+
+data class SafConfig(
+    val baseUrl: URI = URI(requiredConfigForKey("SAF_BASE_URL")),
+    val scope: String = requiredConfigForKey("SAF_SCOPE"),
 )
