@@ -115,6 +115,9 @@ spec:
   accessPolicy:
     inbound:
       rules:
+        - application: arenaoppslag
+          namespace: aap
+          cluster: dev-fss
         - application: behandlingsflyt
         - application: postmottak-backend
         - application: oppgave

@@ -9,6 +9,8 @@ metadata:
     systemkatalog.nav.no/system: SK-268
 spec:
   image: {{image}}
+  ingresses:
+    - https://aap-tilgang.intern.nav.no
   azure:
     application:
       enabled: true
@@ -113,6 +115,9 @@ spec:
   accessPolicy:
     inbound:
       rules:
+        - application: arenaoppslag
+          namespace: aap
+          cluster: prod-fss
         - application: behandlingsflyt
         - application: postmottak-backend
         - application: oppgave
