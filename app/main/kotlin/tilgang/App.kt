@@ -17,6 +17,7 @@ import io.ktor.server.routing.routing
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlin.time.Duration.Companion.seconds
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.komponenter.server.auth.IdentityProvider
 import no.nav.aap.komponenter.server.commonKtorModule
@@ -44,6 +45,7 @@ import tilgang.regler.RegelInput
 import tilgang.routes.actuator
 import tilgang.routes.tilgang
 import tilgang.service.AdressebeskyttelseService
+import no.nav.aap.postmottak.kontrakt.avklaringsbehov.Definisjon as PostmottakDefinisjon
 
 
 internal object AppConfig {
@@ -186,8 +188,18 @@ internal fun createTilgangService(
                     currentToken = OidcToken(input.brukerToken.verdi),
                     roller = input.roller,
                     søkerIdenter = input.søkerIdenter,
-                    avklaringsbehovFraBehandlingsflyt = input.avklaringsbehovFraBehandlingsflyt,
-                    avklaringsbehovFraPostmottak = input.avklaringsbehovFraPostmottak,
+                    avklaringsbehovFraBehandlingsflyt = input.avklaringsbehov?.let { behov ->
+                        when (behov.type) {
+                            AvklaringsbehovType.BEHANDLING -> Definisjon.forKode(behov.kode)
+                            AvklaringsbehovType.JOURNALPOST -> null
+                        }
+                    },
+                    avklaringsbehovFraPostmottak = input.avklaringsbehov?.let { behov ->
+                        when (behov.type) {
+                            AvklaringsbehovType.BEHANDLING -> null
+                            AvklaringsbehovType.JOURNALPOST -> PostmottakDefinisjon.forKode(behov.kode)
+                        }
+                    },
                     påkrevdRolle = input.påkrevdRolle,
                     operasjoner = input.operasjoner,
                 )

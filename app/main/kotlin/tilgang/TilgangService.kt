@@ -1,8 +1,6 @@
 package tilgang
 
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.tilgang.ArenasakTilgangRequest
-import no.nav.aap.postmottak.kontrakt.avklaringsbehov.Definisjon as PostmottakDefinisjon
 import no.nav.aap.tilgang.BehandlingTilgangRequest
 import no.nav.aap.tilgang.JournalpostTilgangRequest
 import no.nav.aap.tilgang.Operasjon
@@ -38,8 +36,7 @@ class TilgangService(
             brukerToken = token,
             roller = roller,
             søkerIdenter = identer,
-            avklaringsbehovFraBehandlingsflyt = null,
-            avklaringsbehovFraPostmottak = null, 
+            avklaringsbehov = null,
             påkrevdRolle = req.påkrevdRolle ?: emptyList(),
             operasjoner = listOf(req.operasjon)
         )
@@ -57,8 +54,9 @@ class TilgangService(
         val identer = req.relevanteIdenter ?: identOppslag
             .hentIdenterForBehandling(req.behandlingsreferanse.toString())
 
-        val avklaringsbehov =
-            if (req.avklaringsbehovKode != null) Definisjon.forKode(req.avklaringsbehovKode!!) else null
+        val avklaringsbehov = req.avklaringsbehovKode?.let {
+            Avklaringsbehov(it, AvklaringsbehovType.BEHANDLING)
+        }
 
         val regelInput = Tilgangsgrunnlag(
             callId = callId,
@@ -66,8 +64,7 @@ class TilgangService(
             brukerToken = token,
             roller = roller,
             søkerIdenter = identer,
-            avklaringsbehovFraBehandlingsflyt = avklaringsbehov,
-            avklaringsbehovFraPostmottak = null,
+            avklaringsbehov = avklaringsbehov,
             påkrevdRolle = req.påkrevdRolle ?: emptyList(),
             operasjoner = Operasjon.entries
         )
@@ -91,8 +88,9 @@ class TilgangService(
 
         val identer = finnIdenterForJournalpost(journalpostInfo)
 
-        val avklaringsbehov =
-            if (req.avklaringsbehovKode != null) PostmottakDefinisjon.forKode(req.avklaringsbehovKode!!) else null
+        val avklaringsbehov = req.avklaringsbehovKode?.let {
+            Avklaringsbehov(it, AvklaringsbehovType.JOURNALPOST)
+        }
 
         val regelInput = Tilgangsgrunnlag(
             callId = callId,
@@ -100,8 +98,7 @@ class TilgangService(
             brukerToken = token,
             roller = roller,
             søkerIdenter = identer,
-            avklaringsbehovFraBehandlingsflyt = null,
-            avklaringsbehovFraPostmottak = avklaringsbehov,
+            avklaringsbehov = avklaringsbehov,
             påkrevdRolle = req.påkrevdRolle ?: emptyList(),
             operasjoner = listOf(req.operasjon),
         )
@@ -121,8 +118,7 @@ class TilgangService(
             brukerToken = token,
             roller = roller,
             søkerIdenter = RelevanteIdenter(listOf(req.personIdent), emptyList()),
-            avklaringsbehovFraBehandlingsflyt = null,
-            avklaringsbehovFraPostmottak = null,
+            avklaringsbehov = null,
             påkrevdRolle = req.påkrevdRolle,
             operasjoner = listOf(req.operasjon)
         )
@@ -167,8 +163,7 @@ class TilgangService(
                 brukerToken = token,
                 roller = roller,
                 søkerIdenter = RelevanteIdenter(listOf(req.personIdent), emptyList()),
-                avklaringsbehovFraBehandlingsflyt = null,
-                avklaringsbehovFraPostmottak = null,
+                avklaringsbehov = null,
                 påkrevdRolle = req.påkrevdRolle ?: emptyList(),
                 operasjoner = listOf(req.operasjon!!),
             )
@@ -195,8 +190,7 @@ class TilgangService(
             brukerToken = token,
             roller = roller,
             søkerIdenter = identer,
-            avklaringsbehovFraBehandlingsflyt = null,
-            avklaringsbehovFraPostmottak = null,
+            avklaringsbehov = null,
             påkrevdRolle = req.effektivePåkrevdRoller(),
             operasjoner = listOf(req.operasjon)
         )

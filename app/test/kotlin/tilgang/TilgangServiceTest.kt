@@ -8,8 +8,11 @@ import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.test.runTest
 import no.nav.aap.tilgang.ArenasakTilgangRequest
+import no.nav.aap.tilgang.BehandlingTilgangRequest
+import no.nav.aap.tilgang.JournalpostTilgangRequest
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.PersonTilgangRequest
+import no.nav.aap.tilgang.RelevanteIdenter
 import no.nav.aap.tilgang.Rolle
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
@@ -61,6 +64,41 @@ class TilgangServiceTest {
     @AfterEach
     fun afterEach() {
         clearAllMocks()
+    }
+
+    @ParameterizedTest
+    @EnumSource(AvklaringsbehovType::class)
+    fun `sender kode og behovstype videre uten eksterne definisjoner`(type: AvklaringsbehovType) = runTest {
+        val input = slot<Tilgangsgrunnlag>()
+        val token = BrukerToken("test-token")
+        coEvery { tilgangsvurdering.vurderTilgang(capture(input)) } returns mapOf(Operasjon.SE to true)
+        coEvery { journalpostOppslag.hentJournalpostInfo(123, "call-id") } returns
+                JournalpostInfo(123, "søker-ident", false, null)
+
+        val resultat = when (type) {
+            AvklaringsbehovType.BEHANDLING -> service.harTilgangTilBehandling(
+                "ansatt",
+                BehandlingTilgangRequest(
+                    behandlingsreferanse = UUID.randomUUID(),
+                    avklaringsbehovKode = "kode-fra-klient",
+                    operasjon = Operasjon.SE,
+                    relevanteIdenter = RelevanteIdenter(listOf("søker-ident"), emptyList()),
+                ),
+                emptyList(),
+                token,
+                "call-id",
+            )[Operasjon.SE]
+            AvklaringsbehovType.JOURNALPOST -> service.harTilgangTilJournalpost(
+                "ansatt",
+                JournalpostTilgangRequest(123, avklaringsbehovKode = "kode-fra-klient", operasjon = Operasjon.SE),
+                emptyList(),
+                token,
+                "call-id",
+            )
+        }
+
+        assertThat(resultat).isTrue()
+        assertThat(input.captured.avklaringsbehov).isEqualTo(Avklaringsbehov("kode-fra-klient", type))
     }
 
     @Nested
@@ -221,8 +259,7 @@ class TilgangServiceTest {
             assertThat(input.captured.roller).containsExactly(Rolle.LES)
             assertThat(input.captured.søkerIdenter.søker).containsExactly(req.personIdent)
             assertThat(input.captured.søkerIdenter.barn).isEmpty()
-            assertThat(input.captured.avklaringsbehovFraBehandlingsflyt).isNull()
-            assertThat(input.captured.avklaringsbehovFraPostmottak).isNull()
+            assertThat(input.captured.avklaringsbehov).isNull()
             assertThat(input.captured.påkrevdRolle).containsExactly(
                 Rolle.LES,
                 Rolle.SAKSBEHANDLER_NASJONAL,

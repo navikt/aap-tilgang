@@ -17,6 +17,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
+import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.ValueSource
 import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytGateway
 import tilgang.integrasjoner.saf.Bruker
@@ -30,7 +31,9 @@ import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinGateway
 import tilgang.regler.RegelInput
 import tilgang.regler.RegelService
 import java.util.UUID
+import kotlin.test.assertFails
 import kotlin.test.assertFailsWith
+import no.nav.aap.postmottak.kontrakt.avklaringsbehov.Definisjon as PostmottakDefinisjon
 
 class AppTilgangServiceTest {
     private val saf = mockk<SafGraphqlGateway>()
@@ -81,7 +84,11 @@ class AppTilgangServiceTest {
         )
 
         val resultat = service.harTilgangTilJournalpost(
-            "ansatt", JournalpostTilgangRequest(123, operasjon = Operasjon.SE), emptyList(), token, "call-id"
+            "ansatt",
+            JournalpostTilgangRequest(123, avklaringsbehovKode = "ukjent", operasjon = Operasjon.SE),
+            emptyList(),
+            token,
+            "call-id",
         )
 
         assertThat(resultat).isTrue()
@@ -141,6 +148,75 @@ class AppTilgangServiceTest {
         assertThat(input.captured.avklaringsbehovFraPostmottak).isNull()
         assertThat(input.captured.påkrevdRolle).containsExactlyElementsOf(påkrevdeRoller)
         assertThat(input.captured.operasjoner).containsExactlyElementsOf(Operasjon.entries)
+    }
+
+    @Test
+    fun `oversetter journalpostbehov bare til Postmottak sin definisjon`() = runTest {
+        val definisjon = PostmottakDefinisjon.entries.first()
+        val input = slot<RegelInput>()
+        coEvery { saf.hentJournalpostInfo(123, "call-id") } returns SafJournalpost(
+            journalpostId = 123,
+            bruker = Bruker("søker-ident", BrukerIdType.FNR),
+        )
+        coEvery { regelService.vurderTilgang(capture(input)) } returns mapOf(Operasjon.SAKSBEHANDLE to true)
+
+        val resultat = service.harTilgangTilJournalpost(
+            "ansatt",
+            JournalpostTilgangRequest(
+                journalpostId = 123,
+                avklaringsbehovKode = definisjon.kode.name,
+                operasjon = Operasjon.SAKSBEHANDLE,
+            ),
+            emptyList(),
+            token,
+            "call-id",
+        )
+
+        assertThat(resultat).isTrue()
+        assertThat(input.captured.avklaringsbehovFraBehandlingsflyt).isNull()
+        assertThat(input.captured.avklaringsbehovFraPostmottak).isEqualTo(definisjon)
+    }
+
+    @ParameterizedTest
+    @EnumSource(AvklaringsbehovType::class)
+    fun `bevarer feil for ukjent kode og avviser før regelvurdering`(type: AvklaringsbehovType) = runTest {
+        val forventetFeil = assertFails {
+            when (type) {
+                AvklaringsbehovType.BEHANDLING -> Definisjon.forKode("ukjent")
+                AvklaringsbehovType.JOURNALPOST -> PostmottakDefinisjon.forKode("ukjent")
+            }
+        }
+        coEvery { saf.hentJournalpostInfo(123, "call-id") } returns SafJournalpost(
+            journalpostId = 123,
+            bruker = Bruker("søker-ident", BrukerIdType.FNR),
+        )
+
+        val feil = assertFails {
+            when (type) {
+                AvklaringsbehovType.BEHANDLING -> service.harTilgangTilBehandling(
+                    "ansatt",
+                    BehandlingTilgangRequest(
+                        behandlingsreferanse = UUID.randomUUID(),
+                        avklaringsbehovKode = "ukjent",
+                        operasjon = Operasjon.SE,
+                        relevanteIdenter = RelevanteIdenter(listOf("søker-ident"), emptyList()),
+                    ),
+                    emptyList(),
+                    token,
+                    "call-id",
+                )
+                AvklaringsbehovType.JOURNALPOST -> service.harTilgangTilJournalpost(
+                    "ansatt",
+                    JournalpostTilgangRequest(123, avklaringsbehovKode = "ukjent", operasjon = Operasjon.SE),
+                    emptyList(),
+                    token,
+                    "call-id",
+                )
+            }
+        }
+
+        assertThat(feil).isExactlyInstanceOf(forventetFeil.javaClass).hasMessage(forventetFeil.message)
+        coVerify { regelService wasNot Called }
     }
 
     @Test
