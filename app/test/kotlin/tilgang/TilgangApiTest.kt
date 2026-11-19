@@ -2,6 +2,7 @@ package tilgang
 
 import com.nimbusds.jwt.SignedJWT
 import com.fasterxml.jackson.module.kotlin.readValue
+import io.getunleash.FakeUnleash
 import io.ktor.client.HttpClient
 import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.get
@@ -27,6 +28,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import tilgang.fakes.Fakes
 import tilgang.fakes.WithFakes
+import tilgang.unleash.UnleashService
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @WithFakes
@@ -62,7 +64,8 @@ class TilgangApiTest {
                         roles = alleRoller,
                         redis = Fakes.getRedisConfig(),
                     ),
-                    redis = Fakes.getRedisServer()
+                    redis = Fakes.getRedisServer(),
+                    unleash = UnleashService(FakeUnleash()),
                 )
             }
 
@@ -95,7 +98,8 @@ class TilgangApiTest {
                         roles = listOf(Role(rolle, gruppeId)),
                         redis = Fakes.getRedisConfig(),
                     ),
-                    redis = Fakes.getRedisServer()
+                    redis = Fakes.getRedisServer(),
+                    unleash = UnleashService(FakeUnleash()),
                 )
             }
 
@@ -118,7 +122,8 @@ class TilgangApiTest {
             application {
                 api(
                     Config(roles = emptyList(), redis = Fakes.getRedisConfig()),
-                    redis = Fakes.getRedisServer()
+                    redis = Fakes.getRedisServer(),
+                    unleash = UnleashService(FakeUnleash()),
                 )
             }
 

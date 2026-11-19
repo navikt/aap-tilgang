@@ -32,6 +32,17 @@ Denne opprettes på Github ved å gå til settings -> developer settings.
 Husk `read:packages`-rettighet og enable SSO.
 
 
+## Unleash
+
+Feature toggle `raskRobustTilgangsmaskin` velger den dedikerte HTTP-klienten for Tilgangsmaskinen.
+Når togglen er av eller ukjent, bruker appen den delte HTTP-klienten.
+Appen sjekker togglen før hvert utgående kall. Endringer gjelder når Unleash-SDK-en har hentet dem, uten omstart.
+Cachede tilgangsbeslutninger gjelder fortsatt.
+
+Appen trenger `NAIS_APP_NAME`, `UNLEASH_SERVER_API_URL` og `UNLEASH_SERVER_API_TOKEN`.
+Nais-manifestene henter Unleash-konfigurasjonen fra secret `kelvin-unleash-api-token`, som i Postmottak.
+Den lokale `TestApp` bruker `FakeUnleash` med togglen av.
+
 ## Henvendelser
 Spørsmål knyttet til koden eller prosjektet kan stilles som issues her på GitHub
 

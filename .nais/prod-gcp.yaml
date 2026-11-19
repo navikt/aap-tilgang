@@ -57,6 +57,8 @@ spec:
         - id: elastic
         - id: loki
 
+  envFrom:
+    - secret: kelvin-unleash-api-token
   env:
     # Roller
     - name: AAP_BESLUTTER
@@ -133,5 +135,6 @@ spec:
         - application: populasjonstilgangskontroll
           namespace: tilgangsmaskin
       external:
+        - host: aap-unleash-api.nav.cloud.nais.io
         - host: saf.prod-fss-pub.nais.io
         - host: pdl-api.prod-fss-pub.nais.io

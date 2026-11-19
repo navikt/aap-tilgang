@@ -32,6 +32,8 @@ import tilgang.regler.RegelService
 import tilgang.routes.actuator
 import tilgang.routes.tilgang
 import tilgang.service.AdressebeskyttelseService
+import tilgang.unleash.FeatureToggle
+import tilgang.unleash.UnleashService
 
 
 internal object AppConfig {
@@ -83,6 +85,7 @@ fun main() {
 
 fun Application.api(
     config: Config = Config(), redis: Redis = Redis.from(config.redis),
+    unleash: UnleashService = UnleashService(),
 ) {
     val httpClient = createHttpClient(10.seconds)
 
@@ -92,7 +95,18 @@ fun Application.api(
     val msGraph = MsGraphGateway(redis, httpClient, prometheus)
     val behandlingsflyt = BehandlingsflytGateway(redis, createHttpClient(timeout = 4.seconds), prometheus)
     val saf = SafGraphqlGateway(redis, httpClient, prometheus)
-    val tilgangsmaskinGateway = TilgangsmaskinGateway(redis, TilgangsmaskinHttpClient.create(), prometheus)
+
+    val tilgangmaskinClient = if (unleash.isEnabled(FeatureToggle.raskRobustTilgangsmaskin)) {
+        TilgangsmaskinHttpClient.create()
+    } else {
+        httpClient
+    }
+    val tilgangsmaskinGateway = TilgangsmaskinGateway(redis, httpClient, prometheus)
+    monitor.subscribe(ApplicationStopped) {
+        tilgangmaskinClient.close()
+        unleash.close()
+    }
+
     val regelService = RegelService(pdl, AdressebeskyttelseService(msGraph), tilgangsmaskinGateway
     )
     val tilgangService = TilgangService(saf, behandlingsflyt, regelService, tilgangsmaskinGateway)
