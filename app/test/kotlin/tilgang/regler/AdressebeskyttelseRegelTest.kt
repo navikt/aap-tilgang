@@ -1,37 +1,20 @@
 package tilgang.regler
 
 import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
-import tilgang.service.AdressebeskyttelseGruppe
-import tilgang.integrasjoner.pdl.Gradering
-import tilgang.integrasjoner.pdl.PersonResultat
-import java.util.*
 
 class AdressebeskyttelseRegelTest {
-    companion object {
-        @JvmStatic
-        @BeforeAll
-        fun beforeAll() {
-            System.setProperty("FORTROLIG_ADRESSE_AD", UUID.randomUUID().toString())
-            System.setProperty("STRENGT_FORTROLIG_ADRESSE_AD", UUID.randomUUID().toString())
-        }
-    }
-    
     @Test
     fun `Saksbehandler uten fortrolige-roller skal ikke kunne lese fortrolige adresser`() {
-        val personListe1 = listOf(
-            PersonResultat("1111", listOf(Gradering.UGRADERT), "kode"),
-            PersonResultat("1000", listOf(Gradering.FORTROLIG), "kode")
-        )
-        val personListe2 = listOf(PersonResultat("1234", listOf(Gradering.STRENGT_FORTROLIG), "kode"))
-        val personListe3 = listOf(PersonResultat("5678", listOf(Gradering.STRENGT_FORTROLIG_UTLAND), "kode"))
+        val graderinger1 = listOf(Adressegradering.UGRADERT, Adressegradering.FORTROLIG)
+        val graderinger2 = listOf(Adressegradering.STRENGT_FORTROLIG)
+        val graderinger3 = listOf(Adressegradering.STRENGT_FORTROLIG_UTLAND)
 
         assertFalse(
             AdressebeskyttelseRegel.vurder(
                 AdressebeskyttelseInput(
                     emptyList(),
-                    personListe1
+                    graderinger1
                 )
             )
         )
@@ -39,7 +22,7 @@ class AdressebeskyttelseRegelTest {
             AdressebeskyttelseRegel.vurder(
                 AdressebeskyttelseInput(
                     emptyList(),
-                    personListe2
+                    graderinger2
                 )
             )
         )
@@ -47,7 +30,7 @@ class AdressebeskyttelseRegelTest {
             AdressebeskyttelseRegel.vurder(
                 AdressebeskyttelseInput(
                     emptyList(),
-                    personListe3
+                    graderinger3
                 )
             )
         )
@@ -55,17 +38,17 @@ class AdressebeskyttelseRegelTest {
 
     @Test
     fun `Rolle STRENGT_FORTROLIG_ADRESSE har tilgang til person med fortrolig og strengt fortrolig adresse`() {
-        val personer = listOf(
-            PersonResultat("1000", listOf(Gradering.FORTROLIG), "kode"),
-            PersonResultat("1234", listOf(Gradering.STRENGT_FORTROLIG), "kode"),
-            PersonResultat("5678", listOf(Gradering.STRENGT_FORTROLIG_UTLAND), "kode")
+        val graderinger = listOf(
+            Adressegradering.FORTROLIG,
+            Adressegradering.STRENGT_FORTROLIG,
+            Adressegradering.STRENGT_FORTROLIG_UTLAND
         )
         assertTrue(
             AdressebeskyttelseRegel.vurder(
                 AdressebeskyttelseInput(
                     listOf(
-                        AdressebeskyttelseGruppe.STRENGT_FORTROLIG_ADRESSE
-                    ), personer
+                        Adressebeskyttelsesrolle.STRENGT_FORTROLIG_ADRESSE
+                    ), graderinger
                 )
             )
         )
@@ -73,15 +56,13 @@ class AdressebeskyttelseRegelTest {
 
     @Test
     fun `Rolle STRENGT_FORTROLIG_ADRESSE har tilgang til person med strengt fortrolig adresse utland`() {
-        val personer = listOf(
-            PersonResultat("5678", listOf(Gradering.STRENGT_FORTROLIG_UTLAND), "kode")
-        )
+        val graderinger = listOf(Adressegradering.STRENGT_FORTROLIG_UTLAND)
         assertTrue(
             AdressebeskyttelseRegel.vurder(
                 AdressebeskyttelseInput(
                     listOf(
-                        AdressebeskyttelseGruppe.STRENGT_FORTROLIG_ADRESSE
-                    ), personer
+                        Adressebeskyttelsesrolle.STRENGT_FORTROLIG_ADRESSE
+                    ), graderinger
                 )
             )
         )
@@ -89,18 +70,18 @@ class AdressebeskyttelseRegelTest {
 
     @Test
     fun `Rolle FORTROLIG_ADRESSE har tilgang til person med fortrolig, men ikke strengt fortrolig, adresse`() {
-        val personListe1 = listOf(PersonResultat("1000", listOf(Gradering.FORTROLIG), "kode"))
-        val personListe2 = listOf(
-            PersonResultat("1000", listOf(Gradering.FORTROLIG), "kode"),
-            PersonResultat("1234", listOf(Gradering.STRENGT_FORTROLIG), "kode"),
-            PersonResultat("5678", listOf(Gradering.STRENGT_FORTROLIG_UTLAND), "kode")
+        val graderinger1 = listOf(Adressegradering.FORTROLIG)
+        val graderinger2 = listOf(
+            Adressegradering.FORTROLIG,
+            Adressegradering.STRENGT_FORTROLIG,
+            Adressegradering.STRENGT_FORTROLIG_UTLAND
         )
         assertTrue(
             AdressebeskyttelseRegel.vurder(
                 AdressebeskyttelseInput(
                     listOf(
-                        AdressebeskyttelseGruppe.FORTROLIG_ADRESSE
-                    ), personListe1
+                        Adressebeskyttelsesrolle.FORTROLIG_ADRESSE
+                    ), graderinger1
                 )
             )
         )
@@ -108,8 +89,8 @@ class AdressebeskyttelseRegelTest {
             AdressebeskyttelseRegel.vurder(
                 AdressebeskyttelseInput(
                     listOf(
-                        AdressebeskyttelseGruppe.FORTROLIG_ADRESSE
-                    ), personListe2
+                        Adressebeskyttelsesrolle.FORTROLIG_ADRESSE
+                    ), graderinger2
                 )
             )
         )

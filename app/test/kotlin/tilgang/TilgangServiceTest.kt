@@ -28,7 +28,6 @@ import tilgang.integrasjoner.tilgangsmaskin.HarTilgangFraTilgangsmaskinen
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinAvvistGrunn
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinAvvistResponse
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinGateway
-import tilgang.regler.RegelService
 import tilgang.service.AdressebeskyttelseGruppe
 import tilgang.service.AdressebeskyttelseService
 import java.util.UUID
@@ -161,7 +160,7 @@ class TilgangServiceTest {
         private val serviceMedRegler = createTilgangService(
             safGateway,
             behandlingsflytGateway,
-            RegelService(pdlGateway, adressebeskyttelseService, tilgangsmaskinGateway),
+            createRegelService(pdlGateway, adressebeskyttelseService, tilgangsmaskinGateway),
             tilgangsmaskinGateway
         )
 

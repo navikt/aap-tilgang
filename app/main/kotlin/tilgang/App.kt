@@ -32,19 +32,30 @@ import tilgang.integrasjoner.behandlingsflyt.createBehandlingsflytClient
 import tilgang.integrasjoner.msgraph.MsGraphGateway
 import tilgang.integrasjoner.msgraph.createMsGraphClient
 import tilgang.integrasjoner.pdl.PdlGraphQLGateway
+import tilgang.integrasjoner.pdl.Gradering
+import tilgang.integrasjoner.pdl.IPdlGraphQLGateway
 import tilgang.integrasjoner.pdl.createPdlClient
 import tilgang.integrasjoner.saf.SafGraphqlGateway
 import tilgang.integrasjoner.saf.BrukerIdType
 import tilgang.integrasjoner.saf.createSafClient
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinGateway
 import tilgang.integrasjoner.tilgangsmaskin.BrukerOgRegeltype
+import tilgang.integrasjoner.tilgangsmaskin.ITilgangsmaskinGateway
+import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinAvvistGrunn
 import tilgang.integrasjoner.tilgangsmaskin.createTilgangsmaskinClient
 import tilgang.redis.Redis
 import tilgang.regler.RegelService
 import tilgang.regler.RegelInput
+import tilgang.regler.AdressebeskyttelseOppslag
+import tilgang.regler.Adressebeskyttelsesrolle
+import tilgang.regler.Adressebeskyttelsesroller
+import tilgang.regler.Adressegradering
+import tilgang.regler.Habilitetsgrunnlag
+import tilgang.regler.Personkontroll
 import tilgang.routes.actuator
 import tilgang.routes.tilgang
 import tilgang.service.AdressebeskyttelseService
+import tilgang.service.AdressebeskyttelseGruppe
 import no.nav.aap.postmottak.kontrakt.avklaringsbehov.Definisjon as PostmottakDefinisjon
 
 
@@ -114,8 +125,7 @@ fun Application.api(
     val saf = SafGraphqlGateway(redis, safClient, prometheus)
     val tilgangsmaskinClient = createTilgangsmaskinClient(config.tilgangsmaskin, tokenProvider)
     val tilgangsmaskinGateway = TilgangsmaskinGateway(redis, tilgangsmaskinClient, prometheus)
-    val regelService = RegelService(pdl, AdressebeskyttelseService(msGraph), tilgangsmaskinGateway
-    )
+    val regelService = createRegelService(pdl, AdressebeskyttelseService(msGraph), tilgangsmaskinGateway)
     val tilgangService = createTilgangService(saf, behandlingsflyt, regelService, tilgangsmaskinGateway)
 
     install(StatusPages, StatusPagesConfigHelper.setup(prometheus))
@@ -183,23 +193,16 @@ internal fun createTilgangService(
         override suspend fun vurderTilgang(input: Tilgangsgrunnlag): Map<Operasjon, Boolean> =
             regelService.vurderTilgang(
                 RegelInput(
-                    callId = input.kontekst.callId,
-                    ansattIdent = input.kontekst.ansattIdent,
-                    currentToken = OidcToken(input.kontekst.brukerToken.verdi),
-                    roller = input.kontekst.roller,
+                    kontekst = input.kontekst,
                     søkerIdenter = input.søkerIdenter,
-                    avklaringsbehovFraBehandlingsflyt = input.avklaringsbehov?.let { behov ->
-                        when (behov.type) {
-                            AvklaringsbehovType.BEHANDLING -> Definisjon.forKode(behov.kode)
-                            AvklaringsbehovType.JOURNALPOST -> null
+                    avklaringsbehovRoller = listOfNotNull(
+                        input.avklaringsbehov?.let { behov ->
+                            when (behov.type) {
+                                AvklaringsbehovType.BEHANDLING -> Definisjon.forKode(behov.kode).løsesAv.toList()
+                                AvklaringsbehovType.JOURNALPOST -> PostmottakDefinisjon.forKode(behov.kode).løsesAv.toList()
+                            }
                         }
-                    },
-                    avklaringsbehovFraPostmottak = input.avklaringsbehov?.let { behov ->
-                        when (behov.type) {
-                            AvklaringsbehovType.BEHANDLING -> null
-                            AvklaringsbehovType.JOURNALPOST -> PostmottakDefinisjon.forKode(behov.kode)
-                        }
-                    },
+                    ),
                     påkrevdRolle = input.påkrevdRolle,
                     operasjoner = input.operasjoner,
                 )
@@ -221,5 +224,55 @@ internal fun createTilgangService(
             OidcToken(token.verdi),
             callId,
         )
+    },
+)
+
+internal fun createRegelService(
+    pdl: IPdlGraphQLGateway,
+    adressebeskyttelseService: AdressebeskyttelseService,
+    tilgangsmaskin: ITilgangsmaskinGateway,
+): RegelService = RegelService(
+    adressebeskyttelseOppslag = object : AdressebeskyttelseOppslag {
+        override suspend fun hentGraderinger(personIdenter: List<String>, callId: String): List<Adressegradering> =
+            requireNotNull(pdl.hentPersonBolk(personIdenter, callId)).flatMap { person ->
+                person.adressebeskyttelse.map { gradering ->
+                    when (gradering) {
+                        Gradering.FORTROLIG -> Adressegradering.FORTROLIG
+                        Gradering.STRENGT_FORTROLIG_UTLAND -> Adressegradering.STRENGT_FORTROLIG_UTLAND
+                        Gradering.STRENGT_FORTROLIG -> Adressegradering.STRENGT_FORTROLIG
+                        Gradering.UGRADERT -> Adressegradering.UGRADERT
+                    }
+                }
+            }
+    },
+    adressebeskyttelsesroller = object : Adressebeskyttelsesroller {
+        override suspend fun hentRoller(token: BrukerToken, ansattIdent: String): List<Adressebeskyttelsesrolle> =
+            adressebeskyttelseService.hentAdressebeskyttelseRoller(OidcToken(token.verdi), ansattIdent).map { rolle ->
+                when (rolle) {
+                    AdressebeskyttelseGruppe.STRENGT_FORTROLIG_ADRESSE ->
+                        Adressebeskyttelsesrolle.STRENGT_FORTROLIG_ADRESSE
+                    AdressebeskyttelseGruppe.FORTROLIG_ADRESSE -> Adressebeskyttelsesrolle.FORTROLIG_ADRESSE
+                }
+            }
+    },
+    personkontroll = object : Personkontroll {
+        override suspend fun hentHabilitetsgrunnlag(
+            personIdent: String,
+            kontekst: Tilgangskontekst,
+        ): Habilitetsgrunnlag {
+            val resultat = tilgangsmaskin.harTilgangTilPersonKjerne(
+                personIdent, OidcToken(kontekst.brukerToken.verdi), kontekst.ansattIdent, kontekst.callId
+            )
+            return Habilitetsgrunnlag(
+                harTilgang = resultat.harTilgang,
+                avvistForHabilitet = resultat.tilgangsmaskinAvvistResponse?.title ==
+                        TilgangsmaskinAvvistGrunn.AVVIST_HABILITET.toString(),
+            )
+        }
+
+        override suspend fun harTilgangTilPerson(personIdent: String, kontekst: Tilgangskontekst): Boolean =
+            tilgangsmaskin.harTilgangTilPersonKomplett(
+                personIdent, OidcToken(kontekst.brukerToken.verdi), kontekst.ansattIdent, kontekst.callId
+            ).harTilgang
     },
 )

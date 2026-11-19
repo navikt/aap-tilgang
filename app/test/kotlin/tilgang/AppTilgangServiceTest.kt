@@ -65,8 +65,7 @@ class AppTilgangServiceTest {
         assertThat(input.captured.søkerIdenter).isEqualTo(
             if (brukerSaksidenter) saksidenter else RelevanteIdenter(listOf("journalpost-ident"), emptyList())
         )
-        assertThat(input.captured.currentToken.token()).isEqualTo(token.verdi)
-        assertThat(input.captured.callId).isEqualTo("call-id")
+        assertThat(input.captured.kontekst).isSameAs(kontekst)
         coVerify(exactly = if (brukerSaksidenter) 1 else 0) {
             behandlingsflyt.hentIdenterForSak(any())
         }
@@ -134,19 +133,18 @@ class AppTilgangServiceTest {
         val resultat = service.harTilgangTilBehandling(req, Tilgangskontekst("ansatt", roller, token, "call-id"))
 
         assertThat(resultat).isEqualTo(forventet)
-        assertThat(input.captured.ansattIdent).isEqualTo("ansatt")
-        assertThat(input.captured.callId).isEqualTo("call-id")
-        assertThat(input.captured.currentToken.token()).isEqualTo(token.verdi)
-        assertThat(input.captured.roller).containsExactlyElementsOf(roller)
+        assertThat(input.captured.kontekst.ansattIdent).isEqualTo("ansatt")
+        assertThat(input.captured.kontekst.callId).isEqualTo("call-id")
+        assertThat(input.captured.kontekst.brukerToken).isSameAs(token)
+        assertThat(input.captured.kontekst.roller).containsExactlyElementsOf(roller)
         assertThat(input.captured.søkerIdenter).isEqualTo(identer)
-        assertThat(input.captured.avklaringsbehovFraBehandlingsflyt).isEqualTo(Definisjon.forKode("5003"))
-        assertThat(input.captured.avklaringsbehovFraPostmottak).isNull()
+        assertThat(input.captured.avklaringsbehovRoller).containsExactly(Definisjon.forKode("5003").løsesAv)
         assertThat(input.captured.påkrevdRolle).containsExactlyElementsOf(påkrevdeRoller)
         assertThat(input.captured.operasjoner).containsExactlyElementsOf(Operasjon.entries)
     }
 
     @Test
-    fun `oversetter journalpostbehov bare til Postmottak sin definisjon`() = runTest {
+    fun `oversetter journalpostbehov til roller fra Postmottak`() = runTest {
         val definisjon = PostmottakDefinisjon.entries.first()
         val input = slot<RegelInput>()
         coEvery { saf.hentJournalpostInfo(123, "call-id") } returns SafJournalpost(
@@ -166,8 +164,7 @@ class AppTilgangServiceTest {
         )
 
         assertThat(resultat).isTrue()
-        assertThat(input.captured.avklaringsbehovFraBehandlingsflyt).isNull()
-        assertThat(input.captured.avklaringsbehovFraPostmottak).isEqualTo(definisjon)
+        assertThat(input.captured.avklaringsbehovRoller).containsExactly(definisjon.løsesAv.toList())
     }
 
     @ParameterizedTest

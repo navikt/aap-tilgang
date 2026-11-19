@@ -1,21 +1,18 @@
 package tilgang.regler
 
 import no.nav.aap.tilgang.Operasjon
-import tilgang.integrasjoner.pdl.IPdlGraphQLGateway
-import tilgang.integrasjoner.tilgangsmaskin.ITilgangsmaskinGateway
-import tilgang.service.AdressebeskyttelseService
 
 class RegelService(
-    pdlGateway: IPdlGraphQLGateway,
-    adressebeskyttelseService: AdressebeskyttelseService,
-    tilgangsmaskinGateway: ITilgangsmaskinGateway
+    adressebeskyttelseOppslag: AdressebeskyttelseOppslag,
+    adressebeskyttelsesroller: Adressebeskyttelsesroller,
+    personkontroll: Personkontroll
 ) {
 
     private val regelOppsett = mapOf(
         Operasjon.SE to listOf(
             LeseRolleRegel,
             AdressebeskyttelseRegel,
-            TilgangsmaskinKomplettRegel
+            PersontilgangRegel
         ),
         Operasjon.DRIFTE to listOf(
             DriftRolleRegel,
@@ -31,7 +28,7 @@ class RegelService(
         Operasjon.SAKSBEHANDLE to listOf(
             AvklaringsbehovRolleRegel,
             AdressebeskyttelseRegel,
-            TilgangsmaskinKomplettRegel
+            PersontilgangRegel
         )
     )
 
@@ -39,19 +36,19 @@ class RegelService(
         LeseRolleRegel to RegelMedInputgenerator(LeseRolleRegel, RolleInputGenerator),
         HabilitetRegel to RegelMedInputgenerator(
             HabilitetRegel,
-            HabilitetRegelInputGenerator(tilgangsmaskinGateway)
+            HabilitetRegelInputGenerator(personkontroll)
         ),
         AdressebeskyttelseRegel to RegelMedInputgenerator(
             AdressebeskyttelseRegel,
-            AdressebeskyttelseInputGenerator(pdlGateway, adressebeskyttelseService)
+            AdressebeskyttelseInputGenerator(adressebeskyttelseOppslag, adressebeskyttelsesroller)
         ),
         DriftRolleRegel to RegelMedInputgenerator(DriftRolleRegel, RolleInputGenerator),
         DriftLesRolleRegel to RegelMedInputgenerator(DriftLesRolleRegel, RolleInputGenerator),
         AvdelingslederRolleRegel to RegelMedInputgenerator(AvdelingslederRolleRegel, RolleInputGenerator),
         AvklaringsbehovRolleRegel to RegelMedInputgenerator(AvklaringsbehovRolleRegel, AvklaringsbehovInputGenerator),
-        TilgangsmaskinKomplettRegel to RegelMedInputgenerator(
-            TilgangsmaskinKomplettRegel,
-            TilgangsmaskinKomplettInputGenerator(tilgangsmaskinGateway)
+        PersontilgangRegel to RegelMedInputgenerator(
+            PersontilgangRegel,
+            PersontilgangInputGenerator(personkontroll)
         )
     )
 

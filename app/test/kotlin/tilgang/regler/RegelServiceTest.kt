@@ -16,6 +16,9 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import tilgang.AzureTokenGen
+import tilgang.BrukerToken
+import tilgang.Tilgangskontekst
+import tilgang.createRegelService
 import tilgang.TilgangsmaskinConfig
 import tilgang.auth.ITokenProvider
 import tilgang.fakes.Fakes
@@ -52,15 +55,10 @@ class RegelServiceTest {
     fun `skal alltid gi false når roller er tom array`(avklaringsbehov: Definisjon) = runTest {
         val svar = regelService.vurderTilgang(
             RegelInput(
-                callId = UUID.randomUUID().toString(),
-                ansattIdent = "123",
-                avklaringsbehovFraBehandlingsflyt = null,
-                avklaringsbehovFraPostmottak = null,
-                currentToken = OidcToken(token),
+                kontekst = Tilgangskontekst("123", emptyList(), BrukerToken(token), UUID.randomUUID().toString()),
                 søkerIdenter = RelevanteIdenter(søker = listOf("123"), barn = listOf()),
                 operasjoner = listOf(Operasjon.SAKSBEHANDLE),
                 påkrevdRolle = avklaringsbehov.løsesAv,
-                roller = listOf()
             )
         )
         Assertions.assertTrue(svar[Operasjon.SAKSBEHANDLE] == false)
@@ -72,15 +70,12 @@ class RegelServiceTest {
         runTest {
             val svar = regelService.vurderTilgang(
                 RegelInput(
-                    callId = UUID.randomUUID().toString(),
-                    ansattIdent = "123",
-                    avklaringsbehovFraBehandlingsflyt = null,
-                    avklaringsbehovFraPostmottak = null,
-                    currentToken = OidcToken(token),
+                    kontekst = Tilgangskontekst(
+                        "123", listOf(Rolle.SAKSBEHANDLER_NASJONAL), BrukerToken(token), UUID.randomUUID().toString()
+                    ),
                     søkerIdenter = RelevanteIdenter(søker = listOf("123"), barn = listOf()),
                     operasjoner = Operasjon.entries,
                     påkrevdRolle = avklaringsbehov.løsesAv,
-                    roller = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
                 )
             )
             if (avklaringsbehov.løsesAv.contains(Rolle.SAKSBEHANDLER_NASJONAL)) {
@@ -99,15 +94,12 @@ class RegelServiceTest {
 
             val svar = regelService.vurderTilgang(
                 RegelInput(
-                    callId = UUID.randomUUID().toString(),
-                    ansattIdent = "123",
-                    avklaringsbehovFraBehandlingsflyt = null,
-                    avklaringsbehovFraPostmottak = null,
-                    currentToken = OidcToken(token),
+                    kontekst = Tilgangskontekst(
+                        "123", listOf(Rolle.DRIFT), BrukerToken(token), UUID.randomUUID().toString()
+                    ),
                     søkerIdenter = RelevanteIdenter(søker = listOf("123"), barn = listOf()),
                     operasjoner = Operasjon.entries,
                     påkrevdRolle = avklaringsbehov.løsesAv,
-                    roller = listOf(Rolle.DRIFT)
                 )
             )
             Assertions.assertTrue(svar[Operasjon.DRIFTE] == true)
@@ -124,15 +116,12 @@ class RegelServiceTest {
 
             val svar = regelService.vurderTilgang(
                 RegelInput(
-                    callId = UUID.randomUUID().toString(),
-                    ansattIdent = "123",
-                    avklaringsbehovFraBehandlingsflyt = null,
-                    avklaringsbehovFraPostmottak = null,
-                    currentToken = OidcToken(token),
+                    kontekst = Tilgangskontekst(
+                        "123", listOf(Rolle.DRIFT_LES), BrukerToken(token), UUID.randomUUID().toString()
+                    ),
                     søkerIdenter = RelevanteIdenter(søker = listOf("123"), barn = listOf()),
                     operasjoner = Operasjon.entries,
                     påkrevdRolle = avklaringsbehov.løsesAv,
-                    roller = listOf(Rolle.DRIFT_LES)
                 )
             )
             Assertions.assertTrue(svar[Operasjon.DRIFT_LES] == true)
@@ -148,15 +137,12 @@ class RegelServiceTest {
 
         val svar = regelService.vurderTilgang(
             RegelInput(
-                callId = UUID.randomUUID().toString(),
-                ansattIdent = "123",
-                avklaringsbehovFraBehandlingsflyt = null,
-                avklaringsbehovFraPostmottak = null,
-                currentToken = OidcToken(token),
+                kontekst = Tilgangskontekst(
+                    "123", listOf(Rolle.LES), BrukerToken(token), UUID.randomUUID().toString()
+                ),
                 søkerIdenter = RelevanteIdenter(søker = listOf("123"), barn = listOf()),
                 operasjoner = Operasjon.entries,
                 påkrevdRolle = avklaringsbehov.løsesAv,
-                roller = listOf(Rolle.LES)
             )
         )
         Assertions.assertTrue(svar[Operasjon.SE] == true)
@@ -171,15 +157,12 @@ class RegelServiceTest {
 
         val svar = regelService.vurderTilgang(
             RegelInput(
-                callId = UUID.randomUUID().toString(),
-                ansattIdent = "123",
-                avklaringsbehovFraBehandlingsflyt = null,
-                avklaringsbehovFraPostmottak = null,
-                currentToken = OidcToken(token),
+                kontekst = Tilgangskontekst(
+                    "123", listOf(Rolle.SAKSBEHANDLER_NASJONAL), BrukerToken(token), UUID.randomUUID().toString()
+                ),
                 søkerIdenter = RelevanteIdenter(søker = listOf("123"), barn = listOf()),
                 operasjoner = Operasjon.entries,
                 påkrevdRolle = emptyList(),
-                roller = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
             )
         )
         Assertions.assertTrue(svar[Operasjon.SAKSBEHANDLE] == false)
@@ -230,7 +213,7 @@ class RegelServiceTest {
         }
     }
 
-    val regelService = RegelService(
+    val regelService = createRegelService(
         pdlService,
         AdressebeskyttelseService(graphGateway),
         TilgangsmaskinGateway(redis, tilgangsmaskinClient, prometheus)

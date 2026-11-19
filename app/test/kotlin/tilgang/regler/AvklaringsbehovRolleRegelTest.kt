@@ -11,8 +11,7 @@ class AvklaringsbehovRolleRegelTest {
     @Test
     fun `gir tilgang når bruker har riktig rolle for avklaringsbehov fra behandlingsflyt`() {
         val input = AvklaringsbehovRolleInput(
-            avklaringsbehovFraBehandlingsflyt = Definisjon.MANUELT_SATT_PÅ_VENT,
-            avklaringsbehovFraPostmottak = null,
+            avklaringsbehovRoller = listOf(Definisjon.MANUELT_SATT_PÅ_VENT.løsesAv),
             påkrevdRolle = emptyList(),
             roller = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING)
         )
@@ -22,8 +21,7 @@ class AvklaringsbehovRolleRegelTest {
     @Test
     fun `gir ikke tilgang når bruker mangler rolle for avklaringsbehov fra behandlingsflyt`() {
         val input = AvklaringsbehovRolleInput(
-            avklaringsbehovFraBehandlingsflyt = Definisjon.MANUELT_SATT_PÅ_VENT,
-            avklaringsbehovFraPostmottak = null,
+            avklaringsbehovRoller = listOf(Definisjon.MANUELT_SATT_PÅ_VENT.løsesAv),
             påkrevdRolle = emptyList(),
             roller = listOf(Rolle.BESLUTTER)
         )
@@ -33,8 +31,7 @@ class AvklaringsbehovRolleRegelTest {
     @Test
     fun `gir tilgang med påkrevdRolle når bruker har rollen`() {
         val input = AvklaringsbehovRolleInput(
-            avklaringsbehovFraBehandlingsflyt = null,
-            avklaringsbehovFraPostmottak = null,
+            avklaringsbehovRoller = emptyList(),
             påkrevdRolle = listOf(Rolle.BESLUTTER),
             roller = listOf(Rolle.BESLUTTER)
         )
@@ -44,8 +41,7 @@ class AvklaringsbehovRolleRegelTest {
     @Test
     fun `gir ikke tilgang med påkrevdRolle når bruker mangler rollen`() {
         val input = AvklaringsbehovRolleInput(
-            avklaringsbehovFraBehandlingsflyt = null,
-            avklaringsbehovFraPostmottak = null,
+            avklaringsbehovRoller = emptyList(),
             påkrevdRolle = listOf(Rolle.BESLUTTER),
             roller = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING)
         )
@@ -56,8 +52,7 @@ class AvklaringsbehovRolleRegelTest {
     fun `krever både avklaringsbehov-rolle og påkrevdRolle når begge er satt`() {
         // Bruker har SAKSBEHANDLER_OPPFOLGING som kan løse MANUELT_SATT_PÅ_VENT, og BESLUTTER som er påkrevdRolle
         val input = AvklaringsbehovRolleInput(
-            avklaringsbehovFraBehandlingsflyt = Definisjon.MANUELT_SATT_PÅ_VENT,
-            avklaringsbehovFraPostmottak = null,
+            avklaringsbehovRoller = listOf(Definisjon.MANUELT_SATT_PÅ_VENT.løsesAv),
             påkrevdRolle = listOf(Rolle.BESLUTTER),
             roller = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING, Rolle.BESLUTTER)
         )
@@ -67,8 +62,7 @@ class AvklaringsbehovRolleRegelTest {
     @Test
     fun `gir ikke tilgang når avklaringsbehov passer men påkrevdRolle mangler`() {
         val input = AvklaringsbehovRolleInput(
-            avklaringsbehovFraBehandlingsflyt = Definisjon.MANUELT_SATT_PÅ_VENT,
-            avklaringsbehovFraPostmottak = null,
+            avklaringsbehovRoller = listOf(Definisjon.MANUELT_SATT_PÅ_VENT.løsesAv),
             påkrevdRolle = listOf(Rolle.BESLUTTER),
             roller = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING)
         )
@@ -78,8 +72,7 @@ class AvklaringsbehovRolleRegelTest {
     @Test
     fun `gir ikke tilgang når påkrevdRolle passer men avklaringsbehov-rolle mangler`() {
         val input = AvklaringsbehovRolleInput(
-            avklaringsbehovFraBehandlingsflyt = Definisjon.MANUELT_SATT_PÅ_VENT,
-            avklaringsbehovFraPostmottak = null,
+            avklaringsbehovRoller = listOf(Definisjon.MANUELT_SATT_PÅ_VENT.løsesAv),
             påkrevdRolle = listOf(Rolle.BESLUTTER),
             roller = listOf(Rolle.BESLUTTER)
         )
@@ -89,11 +82,37 @@ class AvklaringsbehovRolleRegelTest {
     @Test
     fun `kaster feil når verken avklaringsbehov eller påkrevdRolle er satt`() {
         val input = AvklaringsbehovRolleInput(
-            avklaringsbehovFraBehandlingsflyt = null,
-            avklaringsbehovFraPostmottak = null,
+            avklaringsbehovRoller = emptyList(),
             påkrevdRolle = emptyList(),
             roller = listOf(Rolle.BESLUTTER)
         )
+        assertFalse(AvklaringsbehovRolleRegel.vurder(input))
+    }
+
+    @Test
+    fun `krever rolle for hvert avklaringsbehov`() {
+        val krav = listOf(listOf(Rolle.SAKSBEHANDLER_OPPFOLGING), listOf(Rolle.BESLUTTER))
+
+        assertFalse(
+            AvklaringsbehovRolleRegel.vurder(
+                AvklaringsbehovRolleInput(krav, roller = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING))
+            )
+        )
+        assertTrue(
+            AvklaringsbehovRolleRegel.vurder(
+                AvklaringsbehovRolleInput(krav, roller = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING, Rolle.BESLUTTER))
+            )
+        )
+    }
+
+    @Test
+    fun `tomt rollekrav for et behov kan ikke erstattes av påkrevd rolle`() {
+        val input = AvklaringsbehovRolleInput(
+            avklaringsbehovRoller = listOf(emptyList()),
+            påkrevdRolle = listOf(Rolle.BESLUTTER),
+            roller = listOf(Rolle.BESLUTTER),
+        )
+
         assertFalse(AvklaringsbehovRolleRegel.vurder(input))
     }
 }
