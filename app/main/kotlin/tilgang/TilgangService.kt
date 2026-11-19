@@ -110,11 +110,11 @@ class TilgangService(
     }
 
     suspend fun harTilgangTilPersoner(
-        brukerIdenter: List<Personregel>,
+        personregler: List<Personregel>,
         token: BrukerToken,
         callId: String,
     ): Boolean {
-        return persontilgang.harTilganger(brukerIdenter, token, callId)
+        return persontilgang.harTilganger(personregler, token, callId)
     }
 
     suspend fun harTilgangTilPerson(
@@ -122,16 +122,17 @@ class TilgangService(
         kontekst: Tilgangskontekst,
     ): Boolean {
         // Bruke intern tilgangssjekk på driftsoperasjoner
-        if (input.operasjon in listOf(Operasjon.DRIFTE, Operasjon.DRIFT_LES)) {
+        val operasjon = input.operasjon
+        if (operasjon == Operasjon.DRIFTE || operasjon == Operasjon.DRIFT_LES) {
             val grunnlag = Tilgangsgrunnlag(
                 kontekst = kontekst,
                 søkerIdenter = RelevanteIdenter(listOf(input.personIdent), emptyList()),
                 avklaringsbehov = null,
                 påkrevdRolle = input.påkrevdRolle,
-                operasjoner = listOf(input.operasjon!!),
+                operasjoner = listOf(operasjon),
             )
 
-            return tilgangsvurdering.vurderTilgang(grunnlag)[input.operasjon] == true
+            return tilgangsvurdering.vurderTilgang(grunnlag)[operasjon] == true
         }
 
         return persontilgang.harTilgangTilPerson(input.personIdent, kontekst.brukerToken, kontekst.callId)
