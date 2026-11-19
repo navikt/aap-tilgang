@@ -54,7 +54,7 @@ class TilgangsmaskinTest {
         coEvery { cache[any()] } returns null
         coEvery { cache.set(any(), any(), any()) } returns Unit
         val fakeUnleash = FakeUnleash()
-        val feature = FeatureToggle.raskRobustTilgangsmaskin
+        val feature = FeatureToggle.TilgangsmaskinRaskRobustHttpklient
         val token = OidcToken(AzureTokenGen("tilgangazure", "tilgang").generate())
         val tokenProvider = mockk<ITokenProvider>()
         coEvery { tokenProvider.oboToken(any(), any()) } returns "test-token"

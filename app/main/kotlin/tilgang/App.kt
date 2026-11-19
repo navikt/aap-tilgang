@@ -99,15 +99,15 @@ fun Application.api(
     val tilgangmaskinClient = TilgangsmaskinHttpClient.create()
     val tilgangsmaskinGateway = TilgangsmaskinGateway(redis, httpClient, prometheus, httpClientProvider = {
         // Vi sender det inn dynamisk her slik at vi kan bytte i Unleash uten å restarte containeren.
-        if (unleash.isEnabled(FeatureToggle.raskRobustTilgangsmaskin)) {
+        if (unleash.isEnabled(FeatureToggle.TilgangsmaskinRaskRobustHttpklient)) {
             tilgangmaskinClient
         } else {
             httpClient
         }
     })
     monitor.subscribe(ApplicationStopped) {
+        // Lukk connections på en ryddig måte ovenfor remote server
         tilgangmaskinClient.close()
-        unleash.close()
     }
 
     val regelService = RegelService(pdl, AdressebeskyttelseService(msGraph), tilgangsmaskinGateway

@@ -12,9 +12,9 @@ class UnleashServiceTest {
     fun `unknown toggle is disabled and changes are evaluated on each call`() {
         val unleash = FakeUnleash()
         val service = UnleashService(unleash)
-        val feature = FeatureToggle.raskRobustTilgangsmaskin
+        val feature = FeatureToggle.TilgangsmaskinRaskRobustHttpklient
 
-        assertThat(feature.key()).isEqualTo("raskRobustTilgangsmaskin")
+        assertThat(feature.key()).isEqualTo("TilgangsmaskinRaskRobustHttpklient")
         assertThat(service.isEnabled(feature)).isFalse()
 
         unleash.enable(feature.key())
@@ -27,7 +27,7 @@ class UnleashServiceTest {
     @Test
     fun `passes user ID to Unleash context`() {
         val unleash = FakeUnleash()
-        val feature = FeatureToggle.raskRobustTilgangsmaskin
+        val feature = FeatureToggle.TilgangsmaskinRaskRobustHttpklient
         unleash.conditionallyEnable({ it.userId.orElse("") == "test-user" }, feature.key())
         val service = UnleashService(unleash)
 
