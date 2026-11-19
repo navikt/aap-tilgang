@@ -7,11 +7,7 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.test.runTest
-import no.nav.aap.tilgang.ArenasakTilgangRequest
-import no.nav.aap.tilgang.BehandlingTilgangRequest
-import no.nav.aap.tilgang.JournalpostTilgangRequest
 import no.nav.aap.tilgang.Operasjon
-import no.nav.aap.tilgang.PersonTilgangRequest
 import no.nav.aap.tilgang.RelevanteIdenter
 import no.nav.aap.tilgang.Rolle
 import org.assertj.core.api.Assertions.assertThat
@@ -37,6 +33,7 @@ import tilgang.service.AdressebeskyttelseGruppe
 import tilgang.service.AdressebeskyttelseService
 import java.util.UUID
 import kotlin.random.Random
+import kotlin.test.assertFailsWith
 
 class TilgangServiceTest {
 
@@ -66,6 +63,15 @@ class TilgangServiceTest {
         clearAllMocks()
     }
 
+    @Test
+    fun `krever rolle ved saksbehandling av tilbakekreving`() {
+        val feil = assertFailsWith<IllegalArgumentException> {
+            TilbakekrevingstilgangInput("sak-1", UUID.randomUUID(), emptyList(), Operasjon.SAKSBEHANDLE)
+        }
+
+        assertThat(feil).hasMessage("Påkrevd rolle må være satt for operasjon SAKSBEHANDLE")
+    }
+
     @ParameterizedTest
     @EnumSource(AvklaringsbehovType::class)
     fun `sender kode og behovstype videre uten eksterne definisjoner`(type: AvklaringsbehovType) = runTest {
@@ -78,10 +84,10 @@ class TilgangServiceTest {
         val resultat = when (type) {
             AvklaringsbehovType.BEHANDLING -> service.harTilgangTilBehandling(
                 "ansatt",
-                BehandlingTilgangRequest(
+                BehandlingstilgangInput(
                     behandlingsreferanse = UUID.randomUUID(),
                     avklaringsbehovKode = "kode-fra-klient",
-                    operasjon = Operasjon.SE,
+                    påkrevdRolle = emptyList(),
                     relevanteIdenter = RelevanteIdenter(listOf("søker-ident"), emptyList()),
                 ),
                 emptyList(),
@@ -90,7 +96,7 @@ class TilgangServiceTest {
             )[Operasjon.SE]
             AvklaringsbehovType.JOURNALPOST -> service.harTilgangTilJournalpost(
                 "ansatt",
-                JournalpostTilgangRequest(123, avklaringsbehovKode = "kode-fra-klient", operasjon = Operasjon.SE),
+                JournalposttilgangInput(123, "kode-fra-klient", emptyList(), Operasjon.SE),
                 emptyList(),
                 token,
                 "call-id",
@@ -143,7 +149,11 @@ class TilgangServiceTest {
             } returns HarTilgangFraTilgangsmaskinen(true)
 
             val harTilgang = serviceMedRegler.harTilgangTilArensakerForPerson(
-                "ansattIdent", ArenasakTilgangRequest(personIdent), token, listOf(rolle), "callId"
+                "ansattIdent",
+                ArenasakstilgangInput(personIdent, Rolle.kanLeseSaker(), Operasjon.SE),
+                token,
+                listOf(rolle),
+                "callId",
             )
 
             assertThat(harTilgang).isEqualTo(forventetTilgang)
@@ -180,7 +190,11 @@ class TilgangServiceTest {
             } returns HarTilgangFraTilgangsmaskinen(true)
 
             val harTilgang = serviceMedRegler.harTilgangTilArensakerForPerson(
-                "ansattIdent", ArenasakTilgangRequest(personIdent), token, listOf(Rolle.LES), "callId"
+                "ansattIdent",
+                ArenasakstilgangInput(personIdent, Rolle.kanLeseSaker(), Operasjon.SE),
+                token,
+                listOf(Rolle.LES),
+                "callId",
             )
 
             assertThat(harTilgang).isEqualTo(forventetTilgang)
@@ -224,7 +238,11 @@ class TilgangServiceTest {
             )
 
             val harTilgang = serviceMedRegler.harTilgangTilArensakerForPerson(
-                "ansattIdent", ArenasakTilgangRequest(personIdent), token, listOf(Rolle.LES), "callId"
+                "ansattIdent",
+                ArenasakstilgangInput(personIdent, Rolle.kanLeseSaker(), Operasjon.SE),
+                token,
+                listOf(Rolle.LES),
+                "callId",
             )
 
             assertThat(harTilgang).isFalse()
@@ -243,8 +261,8 @@ class TilgangServiceTest {
     inner class TilgangTilArenasaker {
 
         @Test
-        suspend fun `bruker leseroller og SE som standard og sender kontekst til regelservice`() {
-            val req = ArenasakTilgangRequest(personIdent = "12345678901")
+        suspend fun `sender leseroller og SE sammen med kontekst til regelservice`() {
+            val req = ArenasakstilgangInput("12345678901", Rolle.kanLeseSaker(), Operasjon.SE)
             val token = BrukerToken("test-token")
             val roller = listOf(Rolle.LES)
             val input = slot<Tilgangsgrunnlag>()
@@ -282,7 +300,11 @@ class TilgangServiceTest {
             coEvery { tilgangsvurdering.vurderTilgang(any()) } returns mapOf(Operasjon.SE to harTilgang)
 
             val resultat = service.harTilgangTilArensakerForPerson(
-                "ansattIdent", ArenasakTilgangRequest("12345678901"), BrukerToken("test-token"), emptyList(), "callId"
+                "ansattIdent",
+                ArenasakstilgangInput("12345678901", Rolle.kanLeseSaker(), Operasjon.SE),
+                BrukerToken("test-token"),
+                emptyList(),
+                "callId",
             )
 
             assertThat(resultat).isEqualTo(harTilgang)
@@ -293,7 +315,11 @@ class TilgangServiceTest {
             coEvery { tilgangsvurdering.vurderTilgang(any()) } returns emptyMap()
 
             val harTilgang = service.harTilgangTilArensakerForPerson(
-                "ansattIdent", ArenasakTilgangRequest("12345678901"), BrukerToken("test-token"), emptyList(), "callId"
+                "ansattIdent",
+                ArenasakstilgangInput("12345678901", Rolle.kanLeseSaker(), Operasjon.SE),
+                BrukerToken("test-token"),
+                emptyList(),
+                "callId",
             )
 
             assertThat(harTilgang).isFalse()
@@ -303,7 +329,7 @@ class TilgangServiceTest {
         @ValueSource(booleans = [true, false])
         suspend fun `bevarer eksplisitt angitte roller og operasjon`(tomRolleliste: Boolean) {
             val påkrevdRolle = if (tomRolleliste) emptyList() else listOf(Rolle.BESLUTTER)
-            val req = ArenasakTilgangRequest("12345678901", påkrevdRolle, Operasjon.SE)
+            val req = ArenasakstilgangInput("12345678901", påkrevdRolle, Operasjon.SE)
             val input = slot<Tilgangsgrunnlag>()
             coEvery { tilgangsvurdering.vurderTilgang(capture(input)) } returns mapOf(Operasjon.SE to true)
 
@@ -321,7 +347,7 @@ class TilgangServiceTest {
         @EnumSource(value = Operasjon::class, names = ["DRIFTE", "DRIFT_LES"], mode = EnumSource.Mode.EXCLUDE)
         suspend fun `harTilgangTilPerson - skal kalle tilgangsmaskin hvis operasjon ikke er DRIFTE eller DRIFT_LES`(operasjon: Operasjon) {
             val personIdent = Random.nextLong().toString()
-            val req = PersonTilgangRequest(personIdent, emptyList(), operasjon)
+            val req = PersontilgangInput(personIdent, emptyList(), operasjon)
 
             service.harTilgangTilPerson("ansattIdent", req, BrukerToken("test-token"), emptyList(), "callId")
 
@@ -335,7 +361,7 @@ class TilgangServiceTest {
         @Test
         suspend fun `harTilgangTilPerson - skal kun kalle RegelService hvis operasjon er DRIFTE`() {
             val personIdent = Random.nextLong().toString()
-            val req = PersonTilgangRequest(personIdent, emptyList(), Operasjon.DRIFTE)
+            val req = PersontilgangInput(personIdent, emptyList(), Operasjon.DRIFTE)
 
             service.harTilgangTilPerson("ansattIdent", req, BrukerToken("test-token"), emptyList(), "callId")
 

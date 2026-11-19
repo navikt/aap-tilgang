@@ -2,6 +2,7 @@ package tilgang.fakes
 
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import io.ktor.http.ContentType
 import io.ktor.serialization.jackson.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.contentnegotiation.*
@@ -21,7 +22,7 @@ fun Application.safFake() {
         post("/graphql") {
             val body = call.receive<String>()
             if (body.contains("journalpost")) {
-                call.respondText(genererJournalpostRespons())
+                call.respondText(genererJournalpostRespons(), ContentType.Application.Json)
             } else {
                 throw NotImplementedError("Mangler implementasjon for fake SAF-spørring")
             }

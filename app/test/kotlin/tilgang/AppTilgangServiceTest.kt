@@ -7,10 +7,7 @@ import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.test.runTest
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.tilgang.BehandlingTilgangRequest
-import no.nav.aap.tilgang.JournalpostTilgangRequest
 import no.nav.aap.tilgang.Operasjon
-import no.nav.aap.tilgang.PersonTilgangRequest
 import no.nav.aap.tilgang.RelevanteIdenter
 import no.nav.aap.tilgang.Rolle
 import org.assertj.core.api.Assertions.assertThat
@@ -60,7 +57,7 @@ class AppTilgangServiceTest {
         coEvery { regelService.vurderTilgang(capture(input)) } returns mapOf(Operasjon.SE to false)
 
         val resultat = service.harTilgangTilJournalpost(
-            "ansatt", JournalpostTilgangRequest(123, operasjon = Operasjon.SE), emptyList(), token, "call-id"
+            "ansatt", JournalposttilgangInput(123, null, emptyList(), Operasjon.SE), emptyList(), token, "call-id"
         )
 
         assertThat(resultat).isFalse()
@@ -85,7 +82,7 @@ class AppTilgangServiceTest {
 
         val resultat = service.harTilgangTilJournalpost(
             "ansatt",
-            JournalpostTilgangRequest(123, avklaringsbehovKode = "ukjent", operasjon = Operasjon.SE),
+            JournalposttilgangInput(123, "ukjent", emptyList(), Operasjon.SE),
             emptyList(),
             token,
             "call-id",
@@ -109,7 +106,7 @@ class AppTilgangServiceTest {
 
         assertFailsWith<IllegalArgumentException> {
             service.harTilgangTilJournalpost(
-                "ansatt", JournalpostTilgangRequest(123, operasjon = Operasjon.SE), emptyList(), token, "call-id"
+                "ansatt", JournalposttilgangInput(123, null, emptyList(), Operasjon.SE), emptyList(), token, "call-id"
             )
         }
 
@@ -129,11 +126,11 @@ class AppTilgangServiceTest {
         val forventet = mapOf(Operasjon.SE to true, Operasjon.SAKSBEHANDLE to false)
         coEvery { behandlingsflyt.hentIdenterForBehandling(referanse.toString()) } returns identer
         coEvery { regelService.vurderTilgang(capture(input)) } returns forventet
-        val req = BehandlingTilgangRequest(
+        val req = BehandlingstilgangInput(
             behandlingsreferanse = referanse,
             avklaringsbehovKode = "5003",
             påkrevdRolle = påkrevdeRoller,
-            operasjon = Operasjon.SAKSBEHANDLE,
+            relevanteIdenter = null,
         )
 
         val resultat = service.harTilgangTilBehandling("ansatt", req, roller, token, "call-id")
@@ -162,9 +159,10 @@ class AppTilgangServiceTest {
 
         val resultat = service.harTilgangTilJournalpost(
             "ansatt",
-            JournalpostTilgangRequest(
+            JournalposttilgangInput(
                 journalpostId = 123,
                 avklaringsbehovKode = definisjon.kode.name,
+                påkrevdRolle = emptyList(),
                 operasjon = Operasjon.SAKSBEHANDLE,
             ),
             emptyList(),
@@ -195,10 +193,10 @@ class AppTilgangServiceTest {
             when (type) {
                 AvklaringsbehovType.BEHANDLING -> service.harTilgangTilBehandling(
                     "ansatt",
-                    BehandlingTilgangRequest(
+                    BehandlingstilgangInput(
                         behandlingsreferanse = UUID.randomUUID(),
                         avklaringsbehovKode = "ukjent",
-                        operasjon = Operasjon.SE,
+                        påkrevdRolle = emptyList(),
                         relevanteIdenter = RelevanteIdenter(listOf("søker-ident"), emptyList()),
                     ),
                     emptyList(),
@@ -207,7 +205,7 @@ class AppTilgangServiceTest {
                 )
                 AvklaringsbehovType.JOURNALPOST -> service.harTilgangTilJournalpost(
                     "ansatt",
-                    JournalpostTilgangRequest(123, avklaringsbehovKode = "ukjent", operasjon = Operasjon.SE),
+                    JournalposttilgangInput(123, "ukjent", emptyList(), Operasjon.SE),
                     emptyList(),
                     token,
                     "call-id",
@@ -230,10 +228,14 @@ class AppTilgangServiceTest {
         } returns false
 
         assertThat(
-            service.harTilgangTilPerson("ansatt-1", PersonTilgangRequest("person-1"), token, emptyList(), "call-1")
+            service.harTilgangTilPerson(
+                "ansatt-1", PersontilgangInput("person-1", emptyList(), null), token, emptyList(), "call-1"
+            )
         ).isTrue()
         assertThat(
-            service.harTilgangTilPerson("ansatt-2", PersonTilgangRequest("person-2"), annetToken, emptyList(), "call-2")
+            service.harTilgangTilPerson(
+                "ansatt-2", PersontilgangInput("person-2", emptyList(), null), annetToken, emptyList(), "call-2"
+            )
         ).isFalse()
         coVerify { regelService wasNot Called }
     }

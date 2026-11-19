@@ -1,14 +1,8 @@
 package tilgang
 
-import no.nav.aap.tilgang.ArenasakTilgangRequest
-import no.nav.aap.tilgang.BehandlingTilgangRequest
-import no.nav.aap.tilgang.JournalpostTilgangRequest
 import no.nav.aap.tilgang.Operasjon
-import no.nav.aap.tilgang.PersonTilgangRequest
 import no.nav.aap.tilgang.RelevanteIdenter
 import no.nav.aap.tilgang.Rolle
-import no.nav.aap.tilgang.SakTilgangRequest
-import no.nav.aap.tilgang.TilbakekrevingTilgangRequest
 import org.slf4j.LoggerFactory
 
 class TilgangService(
@@ -21,7 +15,7 @@ class TilgangService(
 
     suspend fun harTilgangTilSak(
         ansattIdent: String,
-        req: SakTilgangRequest,
+        req: SakstilgangInput,
         roller: List<Rolle>,
         token: BrukerToken,
         callId: String
@@ -37,7 +31,7 @@ class TilgangService(
             roller = roller,
             søkerIdenter = identer,
             avklaringsbehov = null,
-            påkrevdRolle = req.påkrevdRolle ?: emptyList(),
+            påkrevdRolle = req.påkrevdRolle,
             operasjoner = listOf(req.operasjon)
         )
         return tilgangsvurdering.vurderTilgang(regelInput)[req.operasjon] == true
@@ -45,7 +39,7 @@ class TilgangService(
 
     suspend fun harTilgangTilBehandling(
         ansattIdent: String,
-        req: BehandlingTilgangRequest,
+        req: BehandlingstilgangInput,
         roller: List<Rolle>,
         token: BrukerToken,
         callId: String,
@@ -65,7 +59,7 @@ class TilgangService(
             roller = roller,
             søkerIdenter = identer,
             avklaringsbehov = avklaringsbehov,
-            påkrevdRolle = req.påkrevdRolle ?: emptyList(),
+            påkrevdRolle = req.påkrevdRolle,
             operasjoner = Operasjon.entries
         )
         return tilgangsvurdering.vurderTilgang(regelInput)
@@ -73,7 +67,7 @@ class TilgangService(
 
     suspend fun harTilgangTilJournalpost(
         ansattIdent: String,
-        req: JournalpostTilgangRequest,
+        req: JournalposttilgangInput,
         roller: List<Rolle>,
         token: BrukerToken,
         callId: String
@@ -99,7 +93,7 @@ class TilgangService(
             roller = roller,
             søkerIdenter = identer,
             avklaringsbehov = avklaringsbehov,
-            påkrevdRolle = req.påkrevdRolle ?: emptyList(),
+            påkrevdRolle = req.påkrevdRolle,
             operasjoner = listOf(req.operasjon),
         )
         return tilgangsvurdering.vurderTilgang(regelInput)[req.operasjon] == true
@@ -107,7 +101,7 @@ class TilgangService(
 
     suspend fun harTilgangTilArensakerForPerson(
         ansattIdent: String,
-        req: ArenasakTilgangRequest,
+        req: ArenasakstilgangInput,
         token: BrukerToken,
         roller: List<Rolle>,
         callId: String
@@ -150,7 +144,7 @@ class TilgangService(
 
     suspend fun harTilgangTilPerson(
         ansattIdent: String,
-        req: PersonTilgangRequest,
+        req: PersontilgangInput,
         token: BrukerToken,
         roller: List<Rolle>,
         callId: String
@@ -164,7 +158,7 @@ class TilgangService(
                 roller = roller,
                 søkerIdenter = RelevanteIdenter(listOf(req.personIdent), emptyList()),
                 avklaringsbehov = null,
-                påkrevdRolle = req.påkrevdRolle ?: emptyList(),
+                påkrevdRolle = req.påkrevdRolle,
                 operasjoner = listOf(req.operasjon!!),
             )
 
@@ -176,7 +170,7 @@ class TilgangService(
 
     suspend fun harTilgangTilTilbakekreving(
         ansattIdent: String,
-        req: TilbakekrevingTilgangRequest,
+        req: TilbakekrevingstilgangInput,
         roller: List<Rolle>,
         token: BrukerToken,
         callId: String,
@@ -191,7 +185,7 @@ class TilgangService(
             roller = roller,
             søkerIdenter = identer,
             avklaringsbehov = null,
-            påkrevdRolle = req.effektivePåkrevdRoller(),
+            påkrevdRolle = req.påkrevdRolle,
             operasjoner = listOf(req.operasjon)
         )
         return tilgangsvurdering.vurderTilgang(regelInput)[req.operasjon] == true

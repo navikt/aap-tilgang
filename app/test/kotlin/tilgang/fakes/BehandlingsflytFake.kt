@@ -2,6 +2,7 @@ package tilgang.fakes
 
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import io.ktor.http.ContentType
 import io.ktor.serialization.jackson.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.contentnegotiation.*
@@ -18,11 +19,11 @@ fun Application.behandlingsflytFake() {
 
     routing {
         get("/pip/api/sak/{saksnummer}/identer") {
-            call.respondText(genererRelevanteIdenter())
+            call.respondText(genererRelevanteIdenter(), ContentType.Application.Json)
         }
 
         get("/pip/api/behandling/{behandlingsnummer}/identer") {
-            call.respondText(genererRelevanteIdenter())
+            call.respondText(genererRelevanteIdenter(), ContentType.Application.Json)
         }
     }
 }

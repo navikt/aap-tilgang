@@ -25,6 +25,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
 import tilgang.fakes.Fakes
 import tilgang.fakes.WithFakes
 
@@ -132,6 +134,106 @@ class TilgangApiTest {
             val tilgang = DefaultJsonMapper.objectMapper().readValue<TilgangResponse>(response.bodyAsText())
             assertThat(tilgang.tilgang).isFalse()
         }
+    }
+
+    @ParameterizedTest
+    @MethodSource("requestBoundaryCases")
+    fun `bevarer API-felter og standardverdier ved oversetting til serviceinput`(
+        ressurs: String,
+        payload: String,
+        forventetTilgang: Boolean,
+    ) {
+        val gruppeId = UUID.randomUUID()
+        testApplication {
+            application {
+                api(
+                    Config(
+                        roles = listOf(Role(Rolle.LES, gruppeId)),
+                        redis = Fakes.getRedisConfig(),
+                    ),
+                    redis = Fakes.getRedisServer()
+                )
+            }
+
+            val response = client.post("/tilgang/$ressurs") {
+                bearerAuth(issueToken(listOf(gruppeId.toString())).serialize())
+                header("Nav-CallId", UUID.randomUUID().toString())
+                contentType(ContentType.Application.Json)
+                setBody(payload)
+            }
+
+            assertThat(response.status).isEqualTo(HttpStatusCode.OK)
+            val tilgang = DefaultJsonMapper.objectMapper().readValue<TilgangResponse>(response.bodyAsText())
+            assertThat(tilgang.tilgang).isEqualTo(forventetTilgang)
+        }
+    }
+
+    private fun requestBoundaryCases(): List<Arguments> {
+        val referanse = UUID.randomUUID()
+        return listOf(
+            Arguments.of(
+                "sak",
+                """
+                    {
+                      "saksnummer": "sak-1",
+                      "påkrevdRolle": null,
+                      "operasjon": "SE",
+                      "relevanteIdenter": {"søker": ["45678901000"], "barn": []}
+                    }
+                """.trimIndent(),
+                false,
+            ),
+            Arguments.of(
+                "behandling",
+                """
+                    {
+                      "behandlingsreferanse": "$referanse",
+                      "påkrevdRolle": ["LES"],
+                      "operasjon": "SAKSBEHANDLE",
+                      "relevanteIdenter": {"søker": ["12300000000"], "barn": []},
+                      "operasjonerIKontekst": ["SE"]
+                    }
+                """.trimIndent(),
+                true,
+            ),
+            Arguments.of(
+                "journalpost",
+                """{"journalpostId":123,"påkrevdRolle":["LES"],"operasjon":"SAKSBEHANDLE"}""",
+                false,
+            ),
+            Arguments.of(
+                "arenasaker",
+                """{"personIdent":"12300000000"}""",
+                true,
+            ),
+            Arguments.of(
+                "arenasaker",
+                """{"personIdent":"12300000000","påkrevdRolle":[],"operasjon":"DRIFTE"}""",
+                false,
+            ),
+            Arguments.of(
+                "person",
+                """{"personIdent":"12300000000","påkrevdRolle":null}""",
+                true,
+            ),
+            Arguments.of(
+                "person",
+                """{"personIdent":"12300000000","operasjon":"DRIFTE"}""",
+                false,
+            ),
+            Arguments.of(
+                "tilbakekreving",
+                """
+                    {
+                      "saksnummer": "sak-1",
+                      "behandlingsreferanse": "$referanse",
+                      "påkrevdRoller": ["LES"],
+                      "operasjon": "SAKSBEHANDLE"
+                    }
+                """.trimIndent(),
+                false,
+            ),
+        )
     }
 
     private suspend fun sendGetRequest(
