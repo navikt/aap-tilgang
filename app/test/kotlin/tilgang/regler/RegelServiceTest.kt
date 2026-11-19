@@ -2,6 +2,8 @@ package tilgang.regler
 
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
+import io.mockk.coEvery
+import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
@@ -15,6 +17,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import tilgang.AzureTokenGen
 import tilgang.TilgangsmaskinConfig
+import tilgang.auth.ITokenProvider
 import tilgang.fakes.Fakes
 import tilgang.fakes.WithFakes
 import tilgang.integrasjoner.msgraph.Group
@@ -32,7 +35,10 @@ import java.util.UUID
 @WithFakes
 class RegelServiceTest {
     private val redis = Fakes.getRedisServer()
-    private val tilgangsmaskinClient = createTilgangsmaskinClient(TilgangsmaskinConfig())
+    private val tokenProvider = mockk<ITokenProvider> {
+        coEvery { oboToken(any(), any()) } returns "test-token"
+    }
+    private val tilgangsmaskinClient = createTilgangsmaskinClient(TilgangsmaskinConfig(), tokenProvider)
 
     @AfterEach
     fun closeClient() {

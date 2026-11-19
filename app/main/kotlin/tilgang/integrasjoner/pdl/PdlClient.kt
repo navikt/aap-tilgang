@@ -6,13 +6,12 @@ import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.bearerAuth
 import tilgang.PdlConfig
 import tilgang.auth.ITokenProvider
-import tilgang.auth.TokenProvider
 import tilgang.http.createHttpClient
 import kotlin.time.Duration.Companion.seconds
 
 fun createPdlClient(
     config: PdlConfig,
-    tokenProvider: ITokenProvider = TokenProvider,
+    tokenProvider: ITokenProvider,
 ): HttpClient = createHttpClient(10.seconds) {
     defaultRequest {
         url(config.baseUrl.toString())

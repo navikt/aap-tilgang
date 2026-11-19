@@ -6,13 +6,12 @@ import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.bearerAuth
 import tilgang.BehandlingsflytConfig
 import tilgang.auth.ITokenProvider
-import tilgang.auth.TokenProvider
 import tilgang.http.createHttpClient
 import kotlin.time.Duration.Companion.seconds
 
 fun createBehandlingsflytClient(
     config: BehandlingsflytConfig,
-    tokenProvider: ITokenProvider = TokenProvider,
+    tokenProvider: ITokenProvider,
 ): HttpClient = createHttpClient(4.seconds) {
     defaultRequest {
         url("${config.baseUrl.toString().trimEnd('/')}/")

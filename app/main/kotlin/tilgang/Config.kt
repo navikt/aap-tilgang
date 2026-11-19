@@ -23,7 +23,8 @@ data class Config(
     val saf: SafConfig = SafConfig(),
     val pdl: PdlConfig = PdlConfig(),
     val msGraph: MsGraphConfig = MsGraphConfig(),
-    val tilgangsmaskin: TilgangsmaskinConfig = TilgangsmaskinConfig()
+    val tilgangsmaskin: TilgangsmaskinConfig = TilgangsmaskinConfig(),
+    val texas: TexasConfig = TexasConfig()
 )
 
 data class Role(
@@ -61,4 +62,9 @@ data class TilgangsmaskinConfig(
     val baseUrl: URI = URI(requiredConfigForKey("INTEGRASJON_TILGANGSMASKIN_URL")),
     val scope: String = requiredConfigForKey("INTEGRASJON_TILGANGSMASKIN_SCOPE"),
     val consumerId: String = System.getenv("NAIS_APP_NAME") ?: "tilgang",
+)
+
+data class TexasConfig(
+    val tokenEndpoint: URI = URI(requiredConfigForKey("NAIS_TOKEN_ENDPOINT")),
+    val exchangeEndpoint: URI = URI(requiredConfigForKey("NAIS_TOKEN_EXCHANGE_ENDPOINT")),
 )

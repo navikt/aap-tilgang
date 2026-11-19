@@ -6,13 +6,12 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
-import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 
-class TexasGateway(private val httpClient: HttpClient) : ITokenProvider {
-    private val texasTokenEndpoint by lazy { requiredConfigForKey("NAIS_TOKEN_ENDPOINT") }
-    private val texasExchangeEndpoint by lazy { requiredConfigForKey("NAIS_TOKEN_EXCHANGE_ENDPOINT") }
-
+class TexasGateway(
+    private val tokenClient: HttpClient,
+    private val exchangeClient: HttpClient,
+) : ITokenProvider {
     override suspend fun m2mToken(scope: String): String {
         return machineToMachineToken(scope).access_token
     }
@@ -22,14 +21,14 @@ class TexasGateway(private val httpClient: HttpClient) : ITokenProvider {
     }
 
     suspend fun machineToMachineToken(scope: String): TexasTokenResponse {
-        return httpClient.post(texasTokenEndpoint) {
+        return tokenClient.post {
             contentType(ContentType.Application.Json)
             setBody(mapOf("identity_provider" to "entra_id", "target" to scope))
         }.body<TexasTokenResponse>()
     }
 
     suspend fun exchangeToken(scope: String, currentToken: OidcToken): TexasTokenResponse {
-        return httpClient.post(texasExchangeEndpoint) {
+        return exchangeClient.post {
             contentType(ContentType.Application.Json)
             setBody(
                 mapOf(

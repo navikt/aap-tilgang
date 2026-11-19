@@ -9,7 +9,6 @@ import io.ktor.util.AttributeKey
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import tilgang.TilgangsmaskinConfig
 import tilgang.auth.ITokenProvider
-import tilgang.auth.TokenProvider
 import tilgang.http.createHttpClient
 import kotlin.time.Duration.Companion.seconds
 
@@ -17,7 +16,7 @@ internal val tilgangsmaskinCurrentTokenKey = AttributeKey<OidcToken>("Tilgangsma
 
 fun createTilgangsmaskinClient(
     config: TilgangsmaskinConfig,
-    tokenProvider: ITokenProvider = TokenProvider,
+    tokenProvider: ITokenProvider,
 ): HttpClient = createHttpClient(10.seconds) {
     defaultRequest {
         url("${config.baseUrl.toString().trimEnd('/')}/")

@@ -20,6 +20,9 @@ import kotlin.time.Duration.Companion.seconds
 import no.nav.aap.komponenter.server.auth.IdentityProvider
 import no.nav.aap.komponenter.server.commonKtorModule
 import org.slf4j.LoggerFactory
+import tilgang.auth.TexasGateway
+import tilgang.auth.TokenProvider
+import tilgang.auth.createTexasClient
 import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytGateway
 import tilgang.integrasjoner.behandlingsflyt.createBehandlingsflytClient
 import tilgang.integrasjoner.msgraph.MsGraphGateway
@@ -89,15 +92,19 @@ fun Application.api(
 ) {
     val prometheus = AppConfig.prometheus
 
-    val pdlClient = createPdlClient(config.pdl)
+    val texasTokenClient = createTexasClient(config.texas.tokenEndpoint)
+    val texasExchangeClient = createTexasClient(config.texas.exchangeEndpoint)
+    val tokenProvider = TokenProvider(TexasGateway(texasTokenClient, texasExchangeClient), prometheus)
+
+    val pdlClient = createPdlClient(config.pdl, tokenProvider)
     val pdl = PdlGraphQLGateway(redis, pdlClient, prometheus)
-    val msGraphClient = createMsGraphClient(config.msGraph)
+    val msGraphClient = createMsGraphClient(config.msGraph, tokenProvider)
     val msGraph = MsGraphGateway(redis, msGraphClient, prometheus)
-    val behandlingsflytClient = createBehandlingsflytClient(config.behandlingsflyt)
+    val behandlingsflytClient = createBehandlingsflytClient(config.behandlingsflyt, tokenProvider)
     val behandlingsflyt = BehandlingsflytGateway(redis, behandlingsflytClient, prometheus)
-    val safClient = createSafClient(config.saf)
+    val safClient = createSafClient(config.saf, tokenProvider)
     val saf = SafGraphqlGateway(redis, safClient, prometheus)
-    val tilgangsmaskinClient = createTilgangsmaskinClient(config.tilgangsmaskin)
+    val tilgangsmaskinClient = createTilgangsmaskinClient(config.tilgangsmaskin, tokenProvider)
     val tilgangsmaskinGateway = TilgangsmaskinGateway(redis, tilgangsmaskinClient, prometheus)
     val regelService = RegelService(pdl, AdressebeskyttelseService(msGraph), tilgangsmaskinGateway
     )
@@ -133,6 +140,9 @@ fun Application.api(
         behandlingsflytClient.close()
         safClient.close()
         tilgangsmaskinClient.close()
+        tokenProvider.close()
+        texasTokenClient.close()
+        texasExchangeClient.close()
         environment.log.info("ktor har fullført nedstoppingen sin. Eventuelle requester og annet arbeid som ikke ble fullført innen timeout ble avbrutt.")
     }
 }

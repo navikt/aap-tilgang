@@ -1,33 +1,32 @@
 package tilgang.auth
 
 import com.github.benmanes.caffeine.cache.Caffeine
+import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.binder.cache.CaffeineCacheMetrics
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.ensureActive
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
-import tilgang.AppConfig
-import tilgang.http.createHttpClient
 import java.security.MessageDigest
 import java.time.Clock
 import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
-import kotlin.time.Duration.Companion.seconds
 
 interface ITokenProvider {
     suspend fun m2mToken(scope: String): String
     suspend fun oboToken(scope: String, currentToken: OidcToken): String
 }
 
-object TokenProvider : ITokenProvider {
-    private const val TOKEN_SAFETY_MARGIN_SECONDS = 30L
-    private const val FALLBACK_EXPIRES_IN_SECONDS = 60L
-
-    private val texasGateway: TexasGateway = TexasGateway(createHttpClient(2.seconds))
-    private val clock: Clock = Clock.systemUTC()
+class TokenProvider(
+    private val texasGateway: TexasGateway,
+    prometheus: MeterRegistry,
+    private val clock: Clock = Clock.systemUTC(),
+) : ITokenProvider, AutoCloseable {
     private val singleFlightScope = CoroutineScope(SupervisorJob())
     private val m2mCache = Caffeine.newBuilder()
         .maximumSize(128)
@@ -35,7 +34,7 @@ object TokenProvider : ITokenProvider {
         .recordStats()
         .build<String, CachedToken>()
         .also {
-            CaffeineCacheMetrics.monitor(AppConfig.prometheus, it, "tilgang_token_m2m_cache")
+            CaffeineCacheMetrics.monitor(prometheus, it, "tilgang_token_m2m_cache")
         }
 
     private val oboCache = Caffeine.newBuilder()
@@ -44,10 +43,14 @@ object TokenProvider : ITokenProvider {
         .recordStats()
         .build<String, CachedToken>()
         .also {
-            CaffeineCacheMetrics.monitor(AppConfig.prometheus, it, "tilgang_token_obo_cache")
+            CaffeineCacheMetrics.monitor(prometheus, it, "tilgang_token_obo_cache")
         }
     private val m2mInFlight = ConcurrentHashMap<String, Deferred<CachedToken>>()
     private val oboInFlight = ConcurrentHashMap<String, Deferred<CachedToken>>()
+
+    override fun close() {
+        singleFlightScope.cancel()
+    }
 
     override suspend fun oboToken(scope: String, currentToken: OidcToken): String {
         val cacheKey = "$scope:${sha256(currentToken.token())}"
@@ -103,18 +106,22 @@ object TokenProvider : ITokenProvider {
         inFlight: ConcurrentHashMap<String, Deferred<CachedToken>>,
         loader: suspend () -> CachedToken,
     ): CachedToken {
+        singleFlightScope.coroutineContext.ensureActive()
         cache.getIfPresent(key)?.takeIf { !it.isExpired(clock) }?.let { return it }
 
         val deferred = inFlight.computeIfAbsent(key) {
             singleFlightScope.async(start = CoroutineStart.LAZY) { loader() }
-                .also { nyDeferred ->
-                    nyDeferred.invokeOnCompletion { inFlight.remove(key, nyDeferred) }
-                    nyDeferred.start()
-                }
         }
+        deferred.invokeOnCompletion { inFlight.remove(key, deferred) }
+        deferred.start()
 
         val token = deferred.await()
         cache.put(key, token)
         return token
+    }
+
+    private companion object {
+        const val TOKEN_SAFETY_MARGIN_SECONDS = 30L
+        const val FALLBACK_EXPIRES_IN_SECONDS = 60L
     }
 }
