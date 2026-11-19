@@ -5,7 +5,7 @@
 Fullført dato: 2026-11-19.
 Oppgavegren: `test/architect-review`.
 Basegren: `main`, commit `e1f6b6d`.
-Implementasjon inkludert filorganisering: `3709d89`.
+Siste implementasjon, inkludert filorganisering og loggergrense: `0242f88`.
 Sesjon: `655c2699-5b66-4c28-871c-c6d1fcb8ba86`.
 Utviklerens effektive Git-e-post: `petter.ekrann@nav.no`.
 Jira: ikke oppgitt.
@@ -35,6 +35,10 @@ Eksisterende API og tilgangsavgjørelser skulle beholdes.
   med regler i `tilgang.kontroll.regler`. Adressebeskyttelsesadapteren ligger ved
   MS Graph-integrasjonen og statushåndtering i `tilgang.http`. Rotpakken har bare
   `App.kt` og `Config.kt`; relevante tester følger den nye strukturen.
+- `TilgangService` får en forbrukereid `ILogger` med `info` og `warn` i
+  konstruktøren. SLF4J-adapteren kobles inn i `App.kt`, med samme loggernavn,
+  loggnivåer og meldinger som før. Ingen SLF4J-avhengighet er igjen i
+  `tilgang.kontroll`.
 - Tester dekker blant annet klientkonfigurasjon, tokenlivssyklus, HTTP-grensen,
   kontekstisolasjon, adapterfeil, avklaringsbehov og eksisterende regelutfall.
 
@@ -61,6 +65,7 @@ habilitetsuttrykk, regelrekkefølge, kortslutning, lokal regelcache og HTTP 200 
 | `eebb9fd` | Forenklet håndtering av personoperasjoner |
 | `c8e8f49` | Regelmotor frikoblet fra integrasjonstyper |
 | `3709d89` | Samlet tilgangskontroll og regler i egne pakker |
+| `0242f88` | Injisert logger via eget grensesnitt |
 
 ## Validering
 
@@ -140,6 +145,36 @@ hoppet over. Kontraktmodulene hadde fortsatt ingen testkilder.
 GitHub varslet ved første push om 48 avhengighetssårbarheter på standardgrenen:
 20 høye og 28 moderate. Disse er ikke utredet i denne refaktoreringen.
 
+### Oppfølging: injisert logger
+
+Etter ønske fra utvikleren ble `ILogger` lagt til i `tilgang.kontroll`.
+Kun de to nivåene servicen allerede brukte er med; ingen standardlogger eller
+taus reserveimplementasjon er lagt til. Testen for organisasjonsunntaket
+verifiserer at både informasjonsmeldingen og advarselen sendes til den injiserte
+loggeren i riktig rekkefølge.
+
+Før commit `0242f88` bestod 97 berørte tester på 59 sekunder med:
+
+```sh
+./gradlew :app:test --tests 'tilgang.kontroll.TilgangServiceTest*' \
+  --tests tilgang.AppTilgangServiceTest --tests tilgang.TilgangApiTest \
+  --tests tilgang.TilgangRequestBakoverkompatibilitetTest \
+  --console=plain --no-daemon --no-configuration-cache \
+  --no-parallel --max-workers=1
+```
+
+Ingen feil eller hoppet over. `git diff --check` bestod, og kildekontroll bekreftet
+at kontrollpakken ikke lenger importerer SLF4J eller bruker `LoggerFactory`.
+
+Før neste push ble remote hentet og oppgavegrenen synkronisert med
+`git merge --ff-only origin/test/architect-review`
+2026-11-19T21:00:29+01:00. Remote lå på `fdd667c`; ingen innfletting var nødvendig.
+Full bygging med `./gradlew build` og flaggene ovenfor, inkludert
+`--rerun-tasks` og uten testfiltre, bestod ved `0242f88`:
+`BUILD SUCCESSFUL in 2m 29s`, alle 34 oppgaver kjørt på nytt.
+JUnit XML viste 588 app-tester og 50 plugin-tester, totalt 638, uten feil eller
+hoppet over. Kontraktmodulene hadde ingen testkilder.
+
 ## Gjenstående og overlevering
 
 Ingen kjente funksjonelle feil gjenstår fra arbeidet. Etter publisering gjenstår
@@ -201,6 +236,10 @@ Agentens svar er oppsummert etter meldingslisten.
 | 43 | Utvikler | kjør på |
 | 44 | Utvikler | push |
 | 45 | Utvikler, godkjenning av oppdatert sluttnotat-commit før push | true |
+| 46 | Utvikler | skal vi injecte logger i konstruktoren også |
+| 47 | Utvikler | kanskje vi kan lage en iLogger som vi sender inn |
+| 48 | Utvikler | push |
+| 49 | Utvikler, godkjenning av sluttnotat-commit for loggerendringen | true |
 
 Agentoppsummering: Arbeidet ble utført stegvis og committet mellom stegene.
 Klientoppsettet ble flyttet først, deretter TokenProvider-livssyklus,
@@ -222,3 +261,11 @@ om push; agenten synkroniserte oppgavegrenen og startet ny full validering før
 oppdatering av dette notatet og eksisterende PR.
 Alle 637 tester bestod også etter siste synkronisering, og utvikleren godkjente
 en separat dokumentasjonscommit av det oppdaterte sluttnotatet før push.
+Agenten forklarte avveiningen ved loggerinjeksjon. Etter utviklerens forslag om
+et eget grensesnitt ble `ILogger` implementert og koblet til SLF4J i
+komposisjonsroten. Loggernavn og eksisterende meldinger ble beholdt.
+97 berørte tester bestod før den separate implementasjonscommiten `0242f88`.
+Utvikleren ba deretter om push, og full validering ble startet etter
+synkronisering av oppgavegrenen.
+Full bygging bestod med 638 tester, og utvikleren godkjente en egen
+dokumentasjonscommit av oppdatert sluttnotat før push.
