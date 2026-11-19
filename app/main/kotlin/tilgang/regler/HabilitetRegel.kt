@@ -9,10 +9,14 @@ import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinAvvistGrunn
  */
 data object HabilitetRegel : Regel<HabilitetRegelInput> {
     override fun vurder(input: HabilitetRegelInput): Boolean {
-        val avvistMedHabilitetsgrunn =
-            input.tilgangsmaskinResponse.tilgangsmaskinAvvistResponse?.title == TilgangsmaskinAvvistGrunn.AVVIST_HABILITET.toString()
+        if (input.tilgangsmaskinResponse.harTilgang) {
+            return true
+        }
 
-        return input.tilgangsmaskinResponse.harTilgang || !avvistMedHabilitetsgrunn
+        val avvistResponse = checkNotNull(input.tilgangsmaskinResponse.tilgangsmaskinAvvistResponse) {
+            "Mangler avvisningsgrunn fra tilgangsmaskinen ved vurdering av habilitet"
+        }
+        return avvistResponse.title != TilgangsmaskinAvvistGrunn.AVVIST_HABILITET.toString()
     }
 }
 
