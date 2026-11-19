@@ -3,15 +3,12 @@ package tilgang.integrasjoner.pdl
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.accept
-import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.micrometer.core.instrument.MeterRegistry
-import no.nav.aap.komponenter.config.requiredConfigForKey
-import tilgang.auth.TokenProvider
 import tilgang.metrics.cacheHit
 import tilgang.metrics.cacheMiss
 import tilgang.redis.Key
@@ -30,9 +27,6 @@ class PdlGraphQLGateway(
     private val httpClient: HttpClient,
     private val prometheus: MeterRegistry,
 ) : IPdlGraphQLGateway {
-    private val baseUrl = requiredConfigForKey("PDL_BASE_URL")
-    private val scope = requiredConfigForKey("PDL_SCOPE")
-
     override suspend fun hentPersonBolk(personidenter: List<String>, callId: String): List<PersonResultat>? {
         val cachedById = personidenter.mapNotNull { ident ->
             redis[Key(PERSON_BOLK_PREFIX, ident)]?.deserialize<PersonResultat>()?.let { ident to it }
@@ -77,18 +71,20 @@ class PdlGraphQLGateway(
     }
 
     private suspend fun query(query: PdlRequest, callId: String): PdlResponse {
-        val response = httpClient.post(baseUrl) {
-            bearerAuth(TokenProvider.m2mToken(scope))
+        val httpResponse = httpClient.post {
             accept(ContentType.Application.Json)
             header("Nav-Call-Id", callId)
             header("TEMA", "AAP")
             header("Behandlingsnummer", BEHANDLINGSNUMMER_AAP_SAKSBEHANDLING)
             contentType(ContentType.Application.Json)
             setBody(query)
-        }.body<PdlResponse>()
+        }
+        val response = httpResponse.body<PdlResponse>()
 
         if (response.errors?.isNotEmpty() == true) {
-            throw PdlException("Feil ${response.errors.joinToString { it.message }} ved GraphQL oppslag mot $baseUrl")
+            throw PdlException(
+                "Feil ${response.errors.joinToString { it.message }} ved GraphQL oppslag mot ${httpResponse.call.request.url}"
+            )
         }
         return response
     }
