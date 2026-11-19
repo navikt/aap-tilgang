@@ -28,6 +28,7 @@ import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinRequest
 import tilgang.metrics.httpCallCounter
 import tilgang.metrics.nektetTilgangTeller
 import tilgang.regler.parseRoller
+import kotlin.collections.mapValues
 
 private val log = org.slf4j.LoggerFactory.getLogger("tilgang.routes.TilgangRoute")
 
@@ -66,11 +67,13 @@ fun NormalOpenAPIRoute.tilgang(
                 val harTilgang =
                     tilgangService.harTilgangTilBehandling(ident(), req, roller, token, callId)
 
-                if (harTilgang[req.operasjon] != true) {
+                val harTilgangTilOperasjonen = harTilgang[req.operasjon]?.harTilgang
+                if (harTilgangTilOperasjonen != true) {
                     prometheus.nektetTilgangTeller("behandling").increment()
                 }
+                val harTilgangTilAlleOperasjoner = harTilgang.mapValues { (_, resultat) -> resultat.harTilgang }
 
-                respond(TilgangResponse(harTilgang[req.operasjon] == true, harTilgang))
+                respond(TilgangResponse(harTilgangTilOperasjonen == true, harTilgangTilAlleOperasjoner))
             }
         }
 
@@ -89,7 +92,6 @@ fun NormalOpenAPIRoute.tilgang(
                 if (tilgang?.harTilgang != true) {
                     prometheus.nektetTilgangTeller("arensaker").increment()
                 }
-
                 val response = tilgang?.tilKontrakt() ?: BegrunnetTilgangsResponse(tilgang = false)
                 respond(response)
             }

@@ -4,7 +4,7 @@ data class TilgangResponse(val tilgang: Boolean, val tilgangIKontekst: Map<Opera
 data class BegrunnetTilgangsResponse(
     val tilgang: Boolean,
     val avvistResponse: Avisning? = null,
-    val tilgangIKontekst: Map<Operasjon, Boolean>? = null
+    val tilgangIKontekst: Map<Operasjon, Avisning>? = null
 )
 
 public data class Avisning(
