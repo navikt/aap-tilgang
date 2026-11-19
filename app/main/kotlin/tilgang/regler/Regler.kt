@@ -1,19 +1,16 @@
 package tilgang.regler
 
 import no.nav.aap.tilgang.Operasjon
+import tilgang.Tilgangsvurdering
 import tilgang.integrasjoner.pdl.IPdlGraphQLGateway
 import tilgang.integrasjoner.tilgangsmaskin.ITilgangsmaskinGateway
 import tilgang.service.AdressebeskyttelseService
-
-interface IRegelService {
-    suspend fun vurderTilgang(input: RegelInput): Map<Operasjon, Boolean>
-}
 
 class RegelService(
     pdlGateway: IPdlGraphQLGateway,
     adressebeskyttelseService: AdressebeskyttelseService,
     tilgangsmaskinGateway: ITilgangsmaskinGateway
-) : IRegelService {
+) : Tilgangsvurdering {
 
     private val regelOppsett = mapOf(
         Operasjon.SE to listOf(

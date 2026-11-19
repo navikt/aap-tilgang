@@ -13,20 +13,16 @@ import no.nav.aap.tilgang.Rolle
 import no.nav.aap.tilgang.SakTilgangRequest
 import no.nav.aap.tilgang.TilbakekrevingTilgangRequest
 import org.slf4j.LoggerFactory
-import tilgang.integrasjoner.behandlingsflyt.IBehandlingsflytGateway
 import tilgang.integrasjoner.saf.BrukerIdType
-import tilgang.integrasjoner.saf.ISafGraphqlGateway
 import tilgang.integrasjoner.saf.SafJournalpost
 import tilgang.integrasjoner.tilgangsmaskin.BrukerOgRegeltype
-import tilgang.integrasjoner.tilgangsmaskin.ITilgangsmaskinGateway
-import tilgang.regler.IRegelService
 import tilgang.regler.RegelInput
 
 class TilgangService(
-    private val safGateway: ISafGraphqlGateway,
-    private val behandlingsflytGateway: IBehandlingsflytGateway,
-    private val regelService: IRegelService,
-    private val tilgangsmaskinGateway: ITilgangsmaskinGateway
+    private val journalpostOppslag: JournalpostOppslag,
+    private val identOppslag: IdentOppslag,
+    private val tilgangsvurdering: Tilgangsvurdering,
+    private val persontilgang: Persontilgang
 ) {
     private val log = LoggerFactory.getLogger(TilgangService::class.java)
 
@@ -38,7 +34,7 @@ class TilgangService(
         callId: String
     ): Boolean {
         log.info("Sjekker tilgang til sak ${req.saksnummer}")
-        val identer = req.relevanteIdenter ?: behandlingsflytGateway
+        val identer = req.relevanteIdenter ?: identOppslag
             .hentIdenterForSak(req.saksnummer)
 
         val regelInput = RegelInput(
@@ -52,7 +48,7 @@ class TilgangService(
             påkrevdRolle = req.påkrevdRolle ?: emptyList(),
             operasjoner = listOf(req.operasjon)
         )
-        return regelService.vurderTilgang(regelInput)[req.operasjon] == true
+        return tilgangsvurdering.vurderTilgang(regelInput)[req.operasjon] == true
     }
 
     suspend fun harTilgangTilBehandling(
@@ -63,7 +59,7 @@ class TilgangService(
         callId: String,
     ): Map<Operasjon, Boolean> {
         log.info("Sjekker tilgang til behandling ${req.behandlingsreferanse}")
-        val identer = req.relevanteIdenter ?: behandlingsflytGateway
+        val identer = req.relevanteIdenter ?: identOppslag
             .hentIdenterForBehandling(req.behandlingsreferanse.toString())
 
         val avklaringsbehov =
@@ -80,7 +76,7 @@ class TilgangService(
             påkrevdRolle = req.påkrevdRolle ?: emptyList(),
             operasjoner = Operasjon.entries
         )
-        return regelService.vurderTilgang(regelInput)
+        return tilgangsvurdering.vurderTilgang(regelInput)
     }
 
     suspend fun harTilgangTilJournalpost(
@@ -91,7 +87,7 @@ class TilgangService(
         callId: String
     ): Boolean {
         log.info("Sjekker tilgang til journalpost ${req.journalpostId}")
-        val journalpostInfo: SafJournalpost = safGateway.hentJournalpostInfo(req.journalpostId, callId)
+        val journalpostInfo: SafJournalpost = journalpostOppslag.hentJournalpostInfo(req.journalpostId, callId)
 
         if (journalpostInfo.bruker?.type == BrukerIdType.ORGNR) {
             log.warn("Journalpost ${journalpostInfo.journalpostId} har orgnr som bruker – tilgang vil vurderes som OK.")
@@ -114,7 +110,7 @@ class TilgangService(
             påkrevdRolle = req.påkrevdRolle ?: emptyList(),
             operasjoner = listOf(req.operasjon),
         )
-        return regelService.vurderTilgang(regelInput)[req.operasjon] == true
+        return tilgangsvurdering.vurderTilgang(regelInput)[req.operasjon] == true
     }
 
     suspend fun harTilgangTilArensakerForPerson(
@@ -136,14 +132,14 @@ class TilgangService(
             operasjoner = listOf(req.operasjon)
         )
 
-        return regelService.vurderTilgang(regelInput)[req.operasjon] == true
+        return tilgangsvurdering.vurderTilgang(regelInput)[req.operasjon] == true
     }
 
     private suspend fun finnIdenterForJournalpost(journalpost: SafJournalpost): RelevanteIdenter {
         val saksnummer = finnKelvinSaksnummerForJournalpost(journalpost)
         log.info("Finner identer på journalpost med saksnummer $saksnummer.")
         if (saksnummer != null) {
-            val identer = behandlingsflytGateway.hentIdenterForSak(saksnummer)
+            val identer = identOppslag.hentIdenterForSak(saksnummer)
             require(identer.søker.isNotEmpty()) { "Fant ingen søkeridenter for sak $saksnummer" }
             return identer
         } else {
@@ -165,7 +161,7 @@ class TilgangService(
         token: OidcToken,
         callId: String,
     ): Boolean {
-        return tilgangsmaskinGateway.harTilganger(brukerIdenter, token, callId)
+        return persontilgang.harTilganger(brukerIdenter, token, callId)
     }
 
     suspend fun harTilgangTilPerson(
@@ -189,10 +185,10 @@ class TilgangService(
                 operasjoner = listOf(req.operasjon!!),
             )
 
-            return regelService.vurderTilgang(regelInput)[req.operasjon] == true
+            return tilgangsvurdering.vurderTilgang(regelInput)[req.operasjon] == true
         }
 
-        return tilgangsmaskinGateway.harTilgangTilPerson(req.personIdent, token, callId)
+        return persontilgang.harTilgangTilPerson(req.personIdent, token, callId)
     }
 
     suspend fun harTilgangTilTilbakekreving(
@@ -203,7 +199,7 @@ class TilgangService(
         callId: String,
     ): Boolean {
         log.info("Sjekker tilgang til tilbakekrevingsbehandling ${req.behandlingsreferanse}")
-        val identer = behandlingsflytGateway.hentIdenterForSak(req.saksnummer)
+        val identer = identOppslag.hentIdenterForSak(req.saksnummer)
 
         val regelInput = RegelInput(
             callId = callId,
@@ -216,7 +212,7 @@ class TilgangService(
             påkrevdRolle = req.effektivePåkrevdRoller(),
             operasjoner = listOf(req.operasjon)
         )
-        return regelService.vurderTilgang(regelInput)[req.operasjon] == true
+        return tilgangsvurdering.vurderTilgang(regelInput)[req.operasjon] == true
     }
 
 }

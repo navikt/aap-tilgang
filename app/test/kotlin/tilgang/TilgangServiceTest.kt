@@ -21,8 +21,6 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.ValueSource
-import tilgang.integrasjoner.behandlingsflyt.IBehandlingsflytGateway
-import tilgang.integrasjoner.saf.ISafGraphqlGateway
 import tilgang.integrasjoner.pdl.Gradering
 import tilgang.integrasjoner.pdl.IPdlGraphQLGateway
 import tilgang.integrasjoner.pdl.PersonResultat
@@ -30,7 +28,6 @@ import tilgang.integrasjoner.tilgangsmaskin.HarTilgangFraTilgangsmaskinen
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinAvvistGrunn
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinAvvistResponse
 import tilgang.integrasjoner.tilgangsmaskin.ITilgangsmaskinGateway
-import tilgang.regler.IRegelService
 import tilgang.regler.RegelInput
 import tilgang.regler.RegelService
 import tilgang.service.AdressebeskyttelseGruppe
@@ -49,16 +46,16 @@ class TilgangServiceTest {
         }
     }
 
-    private val safGateway = mockk<ISafGraphqlGateway>()
-    private val behandlingsflytGateway = mockk<IBehandlingsflytGateway>()
-    private val regelService = mockk<IRegelService>(relaxed = true)
-    private val tilgangsmaskinGateway = mockk<ITilgangsmaskinGateway>(relaxed = true)
+    private val journalpostOppslag = mockk<JournalpostOppslag>()
+    private val identOppslag = mockk<IdentOppslag>()
+    private val tilgangsvurdering = mockk<Tilgangsvurdering>(relaxed = true)
+    private val persontilgang = mockk<Persontilgang>(relaxed = true)
 
     private val service = TilgangService(
-        safGateway = safGateway,
-        behandlingsflytGateway = behandlingsflytGateway,
-        regelService = regelService,
-        tilgangsmaskinGateway = tilgangsmaskinGateway
+        journalpostOppslag = journalpostOppslag,
+        identOppslag = identOppslag,
+        tilgangsvurdering = tilgangsvurdering,
+        persontilgang = persontilgang
     )
 
     @AfterEach
@@ -70,13 +67,14 @@ class TilgangServiceTest {
     inner class TilgangTilArenasakerMedRegler {
         private val pdlGateway = mockk<IPdlGraphQLGateway>()
         private val adressebeskyttelseService = mockk<AdressebeskyttelseService>()
+        private val tilgangsmaskinGateway = mockk<ITilgangsmaskinGateway>()
         private val token = mockk<OidcToken>()
         private val personIdent = "12345678901"
         private val serviceMedRegler = TilgangService(
-            safGateway,
-            behandlingsflytGateway,
+            journalpostOppslag,
+            identOppslag,
             RegelService(pdlGateway, adressebeskyttelseService, tilgangsmaskinGateway),
-            tilgangsmaskinGateway
+            persontilgang
         )
 
         @ParameterizedTest
@@ -139,8 +137,8 @@ class TilgangServiceTest {
                 tilgangsmaskinGateway.harTilgangTilPersonKomplett(personIdent, token, "ansattIdent", "callId")
             }
             coVerify {
-                safGateway wasNot Called
-                behandlingsflytGateway wasNot Called
+                journalpostOppslag wasNot Called
+                identOppslag wasNot Called
             }
         }
 
@@ -189,7 +187,7 @@ class TilgangServiceTest {
             val token = mockk<OidcToken>()
             val roller = listOf(Rolle.LES)
             val input = slot<RegelInput>()
-            coEvery { regelService.vurderTilgang(capture(input)) } returns mapOf(Operasjon.SE to true)
+            coEvery { tilgangsvurdering.vurderTilgang(capture(input)) } returns mapOf(Operasjon.SE to true)
 
             val harTilgang = service.harTilgangTilArensakerForPerson("ansattIdent", req, token, roller, "callId")
 
@@ -210,18 +208,18 @@ class TilgangServiceTest {
                 Rolle.BESLUTTER
             )
             assertThat(input.captured.operasjoner).containsExactly(Operasjon.SE)
-            coVerify(exactly = 1) { regelService.vurderTilgang(any()) }
+            coVerify(exactly = 1) { tilgangsvurdering.vurderTilgang(any()) }
             coVerify {
-                safGateway wasNot Called
-                behandlingsflytGateway wasNot Called
-                tilgangsmaskinGateway wasNot Called
+                journalpostOppslag wasNot Called
+                identOppslag wasNot Called
+                persontilgang wasNot Called
             }
         }
 
         @ParameterizedTest
         @ValueSource(booleans = [true, false])
         suspend fun `returnerer regelservice sitt resultat for SE`(harTilgang: Boolean) {
-            coEvery { regelService.vurderTilgang(any()) } returns mapOf(Operasjon.SE to harTilgang)
+            coEvery { tilgangsvurdering.vurderTilgang(any()) } returns mapOf(Operasjon.SE to harTilgang)
 
             val resultat = service.harTilgangTilArensakerForPerson(
                 "ansattIdent", ArenasakTilgangRequest("12345678901"), mockk(), emptyList(), "callId"
@@ -232,7 +230,7 @@ class TilgangServiceTest {
 
         @Test
         suspend fun `nekter tilgang når regelservice mangler resultat for SE`() {
-            coEvery { regelService.vurderTilgang(any()) } returns emptyMap()
+            coEvery { tilgangsvurdering.vurderTilgang(any()) } returns emptyMap()
 
             val harTilgang = service.harTilgangTilArensakerForPerson(
                 "ansattIdent", ArenasakTilgangRequest("12345678901"), mockk(), emptyList(), "callId"
@@ -247,7 +245,7 @@ class TilgangServiceTest {
             val påkrevdRolle = if (tomRolleliste) emptyList() else listOf(Rolle.BESLUTTER)
             val req = ArenasakTilgangRequest("12345678901", påkrevdRolle, Operasjon.SE)
             val input = slot<RegelInput>()
-            coEvery { regelService.vurderTilgang(capture(input)) } returns mapOf(Operasjon.SE to true)
+            coEvery { tilgangsvurdering.vurderTilgang(capture(input)) } returns mapOf(Operasjon.SE to true)
 
             service.harTilgangTilArensakerForPerson("ansattIdent", req, mockk(), emptyList(), "callId")
 
@@ -268,9 +266,9 @@ class TilgangServiceTest {
             service.harTilgangTilPerson("ansattIdent", req, mockk(), emptyList(), "callId")
 
             coVerify {
-                regelService wasNot Called
+                tilgangsvurdering wasNot Called
 
-                tilgangsmaskinGateway.harTilgangTilPerson(personIdent, any(), "callId")
+                persontilgang.harTilgangTilPerson(personIdent, any(), "callId")
             }
         }
 
@@ -282,8 +280,8 @@ class TilgangServiceTest {
             service.harTilgangTilPerson("ansattIdent", req, mockk(), emptyList(), "callId")
 
             coVerify {
-                regelService.vurderTilgang(any())
-                tilgangsmaskinGateway wasNot Called
+                tilgangsvurdering.vurderTilgang(any())
+                persontilgang wasNot Called
             }
         }
 
