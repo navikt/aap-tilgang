@@ -29,7 +29,7 @@ class RegelService(
             AvdelingslederRolleRegel,
         ),
         Operasjon.SAKSBEHANDLE to listOf(
-            AvklaringsbehovRolleRegel,
+            SaksbehandleRolleRegel,
             AdressebeskyttelseRegel,
             TilgangsmaskinKomplettRegel
         )
@@ -48,7 +48,7 @@ class RegelService(
         DriftRolleRegel to RegelMedInputgenerator(DriftRolleRegel, RolleInputGenerator),
         DriftLesRolleRegel to RegelMedInputgenerator(DriftLesRolleRegel, RolleInputGenerator),
         AvdelingslederRolleRegel to RegelMedInputgenerator(AvdelingslederRolleRegel, RolleInputGenerator),
-        AvklaringsbehovRolleRegel to RegelMedInputgenerator(AvklaringsbehovRolleRegel, AvklaringsbehovInputGenerator),
+        SaksbehandleRolleRegel to RegelMedInputgenerator(SaksbehandleRolleRegel, AvklaringsbehovInputGenerator),
         TilgangsmaskinKomplettRegel to RegelMedInputgenerator(
             TilgangsmaskinKomplettRegel,
             TilgangsmaskinKomplettInputGenerator(tilgangsmaskinGateway)
