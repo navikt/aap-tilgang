@@ -19,6 +19,7 @@ import no.nav.aap.tilgang.Rolle
 import no.nav.aap.tilgang.SakTilgangRequest
 import no.nav.aap.tilgang.TilbakekrevingTilgangRequest
 import no.nav.aap.tilgang.TilgangResponse
+import no.nav.aap.tilgang.BegrunnetTilgangsResponse
 import tilgang.Role
 import tilgang.TilgangService
 import tilgang.auth.ident
@@ -27,6 +28,7 @@ import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinRequest
 import tilgang.metrics.httpCallCounter
 import tilgang.metrics.nektetTilgangTeller
 import tilgang.regler.parseRoller
+import kotlin.collections.mapValues
 
 private val log = org.slf4j.LoggerFactory.getLogger("tilgang.routes.TilgangRoute")
 
@@ -65,31 +67,33 @@ fun NormalOpenAPIRoute.tilgang(
                 val harTilgang =
                     tilgangService.harTilgangTilBehandling(ident(), req, roller, token, callId)
 
-                if (harTilgang[req.operasjon] != true) {
+                val harTilgangTilOperasjonen = harTilgang[req.operasjon]?.harTilgang
+                if (harTilgangTilOperasjonen != true) {
                     prometheus.nektetTilgangTeller("behandling").increment()
                 }
+                val harTilgangTilAlleOperasjoner = harTilgang.mapValues { (_, resultat) -> resultat.harTilgang }
 
-                respond(TilgangResponse(harTilgang[req.operasjon] == true, harTilgang))
+                respond(TilgangResponse(harTilgangTilOperasjonen == true, harTilgangTilAlleOperasjoner))
             }
         }
 
         route("/arenasaker") {
             // Brukes av Arena-visningsklienten for å sjekke om en bruker har tilgang til å se arenasaker for en person
-            post<Unit, TilgangResponse, ArenasakTilgangRequest> { _, req ->
+            post<Unit, BegrunnetTilgangsResponse, ArenasakTilgangRequest> { _, req ->
                 prometheus.httpCallCounter(pipeline.call).increment()
 
                 val callId = pipeline.call.request.header("Nav-CallId") ?: "ukjent"
                 val token = token()
                 val roller = parseRoller(rolesWithGroupIds = roles, roller())
 
-                val harTilgang =
+                val tilgang =
                     tilgangService.harTilgangTilArensakerForPerson(ident(), req, token, roller, callId)
 
-                if (!harTilgang) {
+                if (tilgang?.harTilgang != true) {
                     prometheus.nektetTilgangTeller("arensaker").increment()
                 }
-
-                respond(TilgangResponse(harTilgang))
+                val response = tilgang?.tilKontrakt() ?: BegrunnetTilgangsResponse(tilgang = false)
+                respond(response)
             }
         }
 

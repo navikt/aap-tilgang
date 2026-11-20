@@ -48,7 +48,7 @@ class RegelServiceTest {
                 roller = listOf()
             )
         )
-        Assertions.assertTrue(svar[Operasjon.SAKSBEHANDLE] == false)
+        Assertions.assertEquals(RegelResultat(false), svar[Operasjon.SAKSBEHANDLE])
     }
 
     @ParameterizedTest
@@ -69,12 +69,12 @@ class RegelServiceTest {
                 )
             )
             if (avklaringsbehov.løsesAv.contains(Rolle.SAKSBEHANDLER_NASJONAL)) {
-                Assertions.assertTrue(svar[Operasjon.SAKSBEHANDLE] == true)
+                Assertions.assertEquals(RegelResultat(true), svar[Operasjon.SAKSBEHANDLE])
             } else {
-                Assertions.assertTrue(svar[Operasjon.SAKSBEHANDLE] == false)
+                Assertions.assertEquals(RegelResultat(false), svar[Operasjon.SAKSBEHANDLE])
             }
-            Assertions.assertTrue(svar[Operasjon.DRIFTE] == false)
-            Assertions.assertTrue(svar[Operasjon.DELEGERE] == false)
+            Assertions.assertEquals(RegelResultat(false), svar[Operasjon.DRIFTE])
+            Assertions.assertEquals(RegelResultat(false), svar[Operasjon.DELEGERE])
         }
 
     @ParameterizedTest
@@ -95,11 +95,11 @@ class RegelServiceTest {
                     roller = listOf(Rolle.DRIFT)
                 )
             )
-            Assertions.assertTrue(svar[Operasjon.DRIFTE] == true)
-            Assertions.assertTrue(svar[Operasjon.DRIFT_LES] == true)
-            Assertions.assertTrue(svar[Operasjon.SAKSBEHANDLE] == false)
-            Assertions.assertTrue(svar[Operasjon.SE] == false)
-            Assertions.assertTrue(svar[Operasjon.DELEGERE] == false)
+            Assertions.assertEquals(RegelResultat(true), svar[Operasjon.DRIFTE])
+            Assertions.assertEquals(RegelResultat(true), svar[Operasjon.DRIFT_LES])
+            Assertions.assertEquals(RegelResultat(false), svar[Operasjon.SAKSBEHANDLE])
+            Assertions.assertEquals(RegelResultat(false), svar[Operasjon.SE])
+            Assertions.assertEquals(RegelResultat(false), svar[Operasjon.DELEGERE])
         }
 
     @ParameterizedTest
@@ -120,11 +120,11 @@ class RegelServiceTest {
                     roller = listOf(Rolle.DRIFT_LES)
                 )
             )
-            Assertions.assertTrue(svar[Operasjon.DRIFT_LES] == true)
-            Assertions.assertTrue(svar[Operasjon.DRIFTE] == false)
-            Assertions.assertTrue(svar[Operasjon.SAKSBEHANDLE] == false)
-            Assertions.assertTrue(svar[Operasjon.SE] == false)
-            Assertions.assertTrue(svar[Operasjon.DELEGERE] == false)
+            Assertions.assertEquals(RegelResultat(true), svar[Operasjon.DRIFT_LES])
+            Assertions.assertEquals(RegelResultat(false), svar[Operasjon.DRIFTE])
+            Assertions.assertEquals(RegelResultat(false), svar[Operasjon.SAKSBEHANDLE])
+            Assertions.assertEquals(RegelResultat(false), svar[Operasjon.SE])
+            Assertions.assertEquals(RegelResultat(false), svar[Operasjon.DELEGERE])
         }
 
     @ParameterizedTest
@@ -144,11 +144,11 @@ class RegelServiceTest {
                 roller = listOf(Rolle.LES)
             )
         )
-        Assertions.assertTrue(svar[Operasjon.SE] == true)
-        Assertions.assertTrue(svar[Operasjon.SAKSBEHANDLE] == false)
-        Assertions.assertTrue(svar[Operasjon.DRIFTE] == false)
-        Assertions.assertTrue(svar[Operasjon.DRIFT_LES] == false)
-        Assertions.assertTrue(svar[Operasjon.DELEGERE] == false)
+        Assertions.assertEquals(RegelResultat(true), svar[Operasjon.SE])
+        Assertions.assertEquals(RegelResultat(false), svar[Operasjon.SAKSBEHANDLE])
+        Assertions.assertEquals(RegelResultat(false), svar[Operasjon.DRIFTE])
+        Assertions.assertEquals(RegelResultat(false), svar[Operasjon.DRIFT_LES])
+        Assertions.assertEquals(RegelResultat(false), svar[Operasjon.DELEGERE])
     }
 
     @Test
@@ -167,10 +167,10 @@ class RegelServiceTest {
                 roller = listOf(Rolle.SAKSBEHANDLER_NASJONAL)
             )
         )
-        Assertions.assertTrue(svar[Operasjon.SAKSBEHANDLE] == false)
-        Assertions.assertTrue(svar[Operasjon.SE] == true)
-        Assertions.assertTrue(svar[Operasjon.DRIFTE] == false)
-        Assertions.assertTrue(svar[Operasjon.DELEGERE] == false)
+        Assertions.assertEquals(RegelResultat(false), svar[Operasjon.SAKSBEHANDLE])
+        Assertions.assertEquals(RegelResultat(true), svar[Operasjon.SE])
+        Assertions.assertEquals(RegelResultat(false), svar[Operasjon.DRIFTE])
+        Assertions.assertEquals(RegelResultat(false), svar[Operasjon.DELEGERE])
     }
 
     val graphGateway = object : IMsGraphGateway {
