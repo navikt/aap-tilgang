@@ -26,11 +26,14 @@ import tilgang.integrasjoner.msgraph.MsGraphGateway
 import tilgang.integrasjoner.pdl.PdlGraphQLGateway
 import tilgang.integrasjoner.saf.SafGraphqlGateway
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinGateway
+import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinHttpClient
 import tilgang.redis.Redis
 import tilgang.regler.RegelService
 import tilgang.routes.actuator
 import tilgang.routes.tilgang
 import tilgang.service.AdressebeskyttelseService
+import tilgang.unleash.FeatureToggle
+import tilgang.unleash.UnleashService
 
 
 internal object AppConfig {
@@ -82,6 +85,7 @@ fun main() {
 
 fun Application.api(
     config: Config = Config(), redis: Redis = Redis.from(config.redis),
+    unleash: UnleashService = UnleashService(),
 ) {
     val httpClient = createHttpClient(10.seconds)
 
@@ -91,7 +95,21 @@ fun Application.api(
     val msGraph = MsGraphGateway(redis, httpClient, prometheus)
     val behandlingsflyt = BehandlingsflytGateway(redis, createHttpClient(timeout = 4.seconds), prometheus)
     val saf = SafGraphqlGateway(redis, httpClient, prometheus)
-    val tilgangsmaskinGateway = TilgangsmaskinGateway(redis, httpClient, prometheus)
+
+    val tilgangmaskinClient = TilgangsmaskinHttpClient.create()
+    val tilgangsmaskinGateway = TilgangsmaskinGateway(redis, httpClient, prometheus, httpClientProvider = {
+        // Vi sender det inn dynamisk her slik at vi kan bytte i Unleash uten å restarte containeren.
+        if (unleash.isEnabled(FeatureToggle.TilgangsmaskinRaskRobustHttpklient)) {
+            tilgangmaskinClient
+        } else {
+            httpClient
+        }
+    })
+    monitor.subscribe(ApplicationStopped) {
+        // Lukk connections på en ryddig måte ovenfor remote server
+        tilgangmaskinClient.close()
+    }
+
     val regelService = RegelService(pdl, AdressebeskyttelseService(msGraph), tilgangsmaskinGateway
     )
     val tilgangService = TilgangService(saf, behandlingsflyt, regelService, tilgangsmaskinGateway)
