@@ -48,4 +48,13 @@ class TilgangmaskinRegelTest {
         val input = HabilitetRegelInput(HarTilgangFraTilgangsmaskinen(true, null))
         assertTrue(HabilitetRegel.vurder(input))
     }
+
+    @Test
+    fun `Skal feile når et avslag mangler avvisningsgrunn`() {
+        val input = HabilitetRegelInput(HarTilgangFraTilgangsmaskinen(false, null))
+
+        assertThrows(IllegalStateException::class.java) {
+            HabilitetRegel.vurder(input)
+        }
+    }
 }

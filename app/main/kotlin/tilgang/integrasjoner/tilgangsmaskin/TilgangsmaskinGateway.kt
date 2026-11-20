@@ -27,11 +27,6 @@ import tilgang.redis.Redis.Companion.serialize
 
 interface ITilgangsmaskinGateway {
     suspend fun harTilgangTilPerson(brukerIdent: String, token: OidcToken, callId: String? = null): Boolean
-    suspend fun harTilganger(
-        brukerIdenter: List<BrukerOgRegeltype>,
-        token: OidcToken,
-        callId: String? = null,
-    ): Boolean
 
     suspend fun harTilgangTilPersonKjerne(
         brukerIdent: String,
@@ -116,12 +111,8 @@ class TilgangsmaskinGateway(
             tilgang
         } catch (e: ClientRequestException) {
             if (e.response.status == HttpStatusCode.Forbidden) {
-                val avvistResponse = runCatching {
-                    e.response.body<TilgangsmaskinAvvistResponse>()
-                }.onFailure { parseErr ->
-                    log.warn("Greide ikke parse avvist-respons fra tilgangsmaskinen", parseErr)
-                }.getOrNull()
-                avvistResponse?.let { log.info("403 fra tilgangsmaskin: ${it.title}") }
+                val avvistResponse = e.response.body<TilgangsmaskinAvvistResponse>()
+                log.info("403 fra tilgangsmaskin: ${avvistResponse.title}")
                 val ikkeTilgang = HarTilgangFraTilgangsmaskinen(false, avvistResponse)
                 redis.set(
                     Key(TILGANGSMASKIN_KJERNE_PREFIX, brukerIdent + ansattIdent),
@@ -161,12 +152,8 @@ class TilgangsmaskinGateway(
             tilgang
         } catch (e: ClientRequestException) {
             if (e.response.status == HttpStatusCode.Forbidden) {
-                val avvistResponse = runCatching {
-                    e.response.body<TilgangsmaskinAvvistResponse>()
-                }.onFailure { parseErr ->
-                    log.warn("Greide ikke parse avvist-respons fra tilgangsmaskinen", parseErr)
-                }.getOrNull()
-                avvistResponse?.let { log.info("403 fra tilgangsmaskin: ${it.title}") }
+                val avvistResponse = e.response.body<TilgangsmaskinAvvistResponse>()
+                log.info("403 fra tilgangsmaskin: ${avvistResponse.title}")
                 val ikkeTilgang = HarTilgangFraTilgangsmaskinen(false, avvistResponse)
                 redis.set(
                     Key(TILGANGSMASKIN_KOMPLETT_PREFIX, brukerIdent + ansattIdent),
@@ -174,27 +161,6 @@ class TilgangsmaskinGateway(
                     redisExpireSec
                 )
                 ikkeTilgang
-            } else throw e
-        }
-    }
-
-    override suspend fun harTilganger(
-        brukerIdenter: List<BrukerOgRegeltype>,
-        token: OidcToken,
-        callId: String?,
-    ): Boolean {
-        return try {
-            httpClient.post("$baseUrl/api/v1/bulk") {
-                bearerAuth(tokenProvider.oboToken(scope, token))
-                tilgangsmaskinSporingsHeaders(callId)
-                contentType(ContentType.Application.Json)
-                setBody(brukerIdenter)
-            }
-            true
-        } catch (e: ClientRequestException) {
-            if (e.response.status == HttpStatusCode.Forbidden) {
-                log.info("Kall til tilgangsmaskin returnerte 403")
-                false
             } else throw e
         }
     }
