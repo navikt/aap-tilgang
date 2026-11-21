@@ -12,7 +12,7 @@ Alle modulene bruker Gradles standardmapper: `src/main/kotlin`,
 `src/main/resources`, `src/test/kotlin` og `src/test/resources`.
 
 I `tilgang-service/src/main/kotlin` ligger `TilgangService.kt` direkte i roten.
-Øvrige filer er gruppert i `input`, `kontrakter`, `modeller` og `regler`.
+Øvrige filer er gruppert i `input`, `kontrakter`, `modeller`, `regler` og `exceptions`.
 Det felles pakkeprefikset er utelatt fra katalogstiene; pakkene er fortsatt
 `tilgang.kontroll` og `tilgang.kontroll.regler`. Testene følger samme flate
 grunnstruktur i `src/test/kotlin`.

@@ -4,6 +4,7 @@ import io.mockk.Called
 import io.mockk.clearAllMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verifySequence
@@ -66,6 +67,38 @@ class TilgangServiceTest {
         verifySequence {
             log.info("Sjekker tilgang til journalpost 123")
             log.warn("Journalpost 123 har orgnr som bruker – tilgang vil vurderes som OK.")
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `gir domenefeil når journalpost mangler søkeridenter`(harSaksnummer: Boolean) = runTest {
+        val kontekst = Tilgangskontekst("ansatt", emptyList(), BrukerToken("test-token"), "call-id")
+        coEvery { journalpostOppslag.hentJournalpostInfo(123, "call-id") } returns
+                JournalpostInfo(123, null, false, if (harSaksnummer) "sak-1" else null)
+        if (harSaksnummer) {
+            coEvery { identOppslag.hentIdenterForSak("sak-1") } returns
+                    mockk { every { søker } returns emptyList() }
+        }
+
+        val feil = assertFailsWith<ManglerSøkerIdentException> {
+            service.harTilgangTilJournalpost(
+                JournalposttilgangInput(123, null, emptyList(), Operasjon.SE), kontekst
+            )
+        }
+
+        assertThat(feil).hasMessage(
+            if (harSaksnummer) "Fant ingen søkeridenter for sak sak-1"
+            else "Fant ingen ident på søker i journalposten"
+        )
+        if (harSaksnummer) {
+            coVerify(exactly = 1) { identOppslag.hentIdenterForSak("sak-1") }
+        } else {
+            coVerify { identOppslag wasNot Called }
+        }
+        coVerify {
+            tilgangsvurdering wasNot Called
+            persontilgang wasNot Called
         }
     }
 

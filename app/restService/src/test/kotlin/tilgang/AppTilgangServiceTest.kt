@@ -29,6 +29,7 @@ import tilgang.kontroll.AvklaringsbehovType
 import tilgang.kontroll.BehandlingstilgangInput
 import tilgang.kontroll.BrukerToken
 import tilgang.kontroll.JournalposttilgangInput
+import tilgang.kontroll.ManglerSøkerIdentException
 import tilgang.kontroll.Personregel
 import tilgang.kontroll.PersontilgangInput
 import tilgang.kontroll.Tilgangskontekst
@@ -108,7 +109,7 @@ class AppTilgangServiceTest {
             sak = if (kelvinsak) Sak(null, "KELVIN", Sakstype.FAGSAK) else null,
         )
 
-        assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<ManglerSøkerIdentException> {
             service.harTilgangTilJournalpost(
                 JournalposttilgangInput(123, null, emptyList(), Operasjon.SE), kontekst
             )

@@ -98,11 +98,13 @@ class TilgangService(
         log.info("Finner identer på journalpost med saksnummer $saksnummer.")
         if (saksnummer != null) {
             val identer = identOppslag.hentIdenterForSak(saksnummer)
-            require(identer.søker.isNotEmpty()) { "Fant ingen søkeridenter for sak $saksnummer" }
+            if (identer.søker.isEmpty()) {
+                throw ManglerSøkerIdentException("Fant ingen søkeridenter for sak $saksnummer")
+            }
             return identer
         } else {
             val søkerIdent = journalpost.søkerIdent
-            requireNotNull(søkerIdent) { "Fant ingen ident på søker i journalposten" }
+                ?: throw ManglerSøkerIdentException("Fant ingen ident på søker i journalposten")
             return RelevanteIdenter(søker = listOf(søkerIdent), barn = emptyList())
         }
     }
