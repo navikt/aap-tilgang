@@ -5,7 +5,7 @@
 Fullført dato: 2026-11-19.
 Oppgavegren: `test/architect-review`.
 Basegren: `main`, commit `e1f6b6d`.
-Siste implementasjon, inkludert filorganisering og loggergrense: `0242f88`.
+Siste implementasjon, inkludert modulskille og flytting av REST-hosten: `070760a`.
 Sesjon: `655c2699-5b66-4c28-871c-c6d1fcb8ba86`.
 Utviklerens effektive Git-e-post: `petter.ekrann@nav.no`.
 Jira: ikke oppgitt.
@@ -39,6 +39,14 @@ Eksisterende API og tilgangsavgjørelser skulle beholdes.
   konstruktøren. SLF4J-adapteren kobles inn i `App.kt`, med samme loggernavn,
   loggnivåer og meldinger som før. Ingen SLF4J-avhengighet er igjen i
   `tilgang.kontroll`.
+- Tilgangsservice, regelmotor, egne typer og grensesnitt ligger i Gradle-biblioteket
+  `tilgang-service`. Produksjonsavhengighetene er `api-kontrakt`, Kotlin og
+  coroutines, uten Ktor eller avhengighet tilbake til hosten. Rollemapping fra
+  hostkonfigurasjon ligger i `tilgang.routes`.
+- Ktor-hosten ligger i `app/restService`, med byggefil, kildekode, ressurser og
+  tester. Gradle-modulnavnet er fortsatt `app`; Docker og README følger den nye
+  katalogen. Rene service- og regeltester ligger i biblioteket, mens HTTP-,
+  adapter- og hostavhengige regeltester ligger i hosten.
 - Tester dekker blant annet klientkonfigurasjon, tokenlivssyklus, HTTP-grensen,
   kontekstisolasjon, adapterfeil, avklaringsbehov og eksisterende regelutfall.
 
@@ -66,6 +74,8 @@ habilitetsuttrykk, regelrekkefølge, kortslutning, lokal regelcache og HTTP 200 
 | `c8e8f49` | Regelmotor frikoblet fra integrasjonstyper |
 | `3709d89` | Samlet tilgangskontroll og regler i egne pakker |
 | `0242f88` | Injisert logger via eget grensesnitt |
+| `f9b2625` | Skilt tilgangsservice og regelmotor fra Ktor-hosten i eget bibliotek |
+| `070760a` | Flyttet hostens innhold til `app/restService`, med samme Gradle-modulnavn |
 
 ## Validering
 
@@ -175,6 +185,80 @@ Full bygging med `./gradlew build` og flaggene ovenfor, inkludert
 JUnit XML viste 588 app-tester og 50 plugin-tester, totalt 638, uten feil eller
 hoppet over. Kontraktmodulene hadde ingen testkilder.
 
+### Oppfølging: eget bibliotek og REST-host
+
+Utvikleren valgte å flytte hele tilgangslogikken, inkludert regelmotoren, til
+`tilgang-service`. Commit `f9b2625` flytter 42 produksjonsfiler uten
+innholdsendringer. Rollemappingen som bruker hostkonfigurasjon ble flyttet til
+routes. Rene tester ble flyttet til biblioteket; de eksisterende hostavhengige
+Arena-testene ble skilt ut i `TilgangServiceMedReglerTest` uten å endre
+testtilfeller, parameterdata eller forventninger.
+
+Bibliotekets produksjonsavhengigheter og JAR-er ble kontrollert. Biblioteket
+inneholder service og regler, den tynne host-JAR-en inneholder ikke kontrollpakken,
+og kjørbar host-JAR inneholder hovedklassen og `TilgangService` nøyaktig én gang. Ingen
+TLS-relaterte tester eller prosjektinnstillinger er endret.
+
+Commit `070760a` flytter alle 63 hostfiler byte-identisk til `app/restService`.
+`settings.gradle.kts` kobler fortsatt `:app` til denne prosjektkatalogen.
+Docker kopierer nå `app/restService/build/libs/app-all.jar`; IDE-modulnavnene
+og de delte CI-kommandoene med `app:buildFatJar` er beholdt. Gamle genererte
+hostartefakter ble fjernet med `:app:clean` før flyttingen. Ressurser for
+produksjon og test og den nye Docker-kildestien ble kontrollert.
+
+Full bygging ved `070760a` bestod på 25 sekunder. Fordi hosttesten ble hentet
+fra Gradle-cache, ble alle 548 hosttester deretter kjørt på nytt i den nye
+katalogen med:
+
+```sh
+./gradlew :app:test --rerun --no-build-cache --console=plain --no-daemon \
+  --no-configuration-cache --no-parallel --max-workers=1
+```
+
+Denne kjøringen bestod på 29 sekunder uten feil eller hoppet over.
+
+#### Publiseringskontroll 2026-11-21
+
+Sesjon: `655c2699-5b66-4c28-871c-c6d1fcb8ba86`.
+Utviklerens effektive Git-e-post: `petter.ekrann@nav.no`.
+Oppgavegren: `test/architect-review`; basegren: `main`.
+Validert implementasjon: `070760a`.
+
+`git fetch origin` og `git merge --ff-only origin/test/architect-review` ble
+kjørt 2026-11-21T14:23:32+01:00. Oppgavegrenen på remote lå på `385e42c`;
+ingen innfletting var nødvendig. `origin/main` var oppdatert til `75c8b49`;
+den ble ikke flettet inn som del av denne pushen. PR #710 var fortsatt åpen
+fra `test/architect-review` til `main`.
+
+Full bygging etter synkronisering ble kjørt uten testfiltre og med tvungen
+ny kjøring av alle oppgaver:
+
+```sh
+./gradlew build --rerun-tasks --console=plain --no-daemon \
+  --no-configuration-cache --no-parallel --max-workers=1
+```
+
+`BUILD SUCCESSFUL in 1m 29s`; alle 38 Gradle-oppgaver ble kjørt på nytt.
+Kjøringen brukte Java 25 og forhåndslastet Byte Buddy-agent for MockK,
+uten TLS-overstyringer.
+
+| Modul | Tester | Feil | Hoppet over |
+| --- | ---: | ---: | ---: |
+| app, i app/restService | 548 | 0 | 0 |
+| tilgang-service | 40 | 0 | 0 |
+| plugin | 50 | 0 | 0 |
+| api-kontrakt | Ingen testkilder | 0 | 0 |
+| plugin-kontrakt | Ingen testkilder | 0 | 0 |
+| Totalt | 638 | 0 | 0 |
+
+Alle 638 tester ble kjørt på nytt. Arbeidstreet var rent før oppdatering av
+sluttnotatet. Tilgjengeligheten av Trivy og zizmor ble kontrollert igjen;
+ingen av verktøyene er installert. Ingen Docker-imagebygging, utrulling eller
+verifisering mot produksjon er utført lokalt.
+
+Utvikleren godkjente en separat dokumentasjonscommit av dette oppdaterte notatet
+før push og oppdatering av eksisterende PR #710.
+
 ## Gjenstående og overlevering
 
 Ingen kjente funksjonelle feil gjenstår fra arbeidet. Etter publisering gjenstår
@@ -240,6 +324,16 @@ Agentens svar er oppsummert etter meldingslisten.
 | 47 | Utvikler | kanskje vi kan lage en iLogger som vi sender inn |
 | 48 | Utvikler | push |
 | 49 | Utvikler, godkjenning av sluttnotat-commit for loggerendringen | true |
+| 50 | Utvikler | i dotnet så finnes det sln og proj filer, det finner jeg ikke igjen i kotlin |
+| 51 | Utvikler | så modul og prosjekt er ganske likt |
+| 52 | Utvikler | Jeg vil skille mellom ktor hosten og tilganservicen |
+| 53 | Utvikler, valg i avklaring | Hele tilgangslogikken, inkludert regelmotoren (anbefalt) |
+| 54 | Utvikler | vi trenger ikke å tenke på tls under tester |
+| 55 | Utvikler | vis strukturen |
+| 56 | Utvikler | vis strukturen |
+| 57 | Utvikler | la oss legge innholdet i app inn i ett nivå til som vi kalle restService |
+| 58 | Utvikler | push |
+| 59 | Utvikler, godkjenning av sluttnotat-commit for modulskille og REST-host | true |
 
 Agentoppsummering: Arbeidet ble utført stegvis og committet mellom stegene.
 Klientoppsettet ble flyttet først, deretter TokenProvider-livssyklus,
@@ -269,3 +363,15 @@ Utvikleren ba deretter om push, og full validering ble startet etter
 synkronisering av oppgavegrenen.
 Full bygging bestod med 638 tester, og utvikleren godkjente en egen
 dokumentasjonscommit av oppdatert sluttnotat før push.
+Agenten forklarte sammenhengen mellom .NET-prosjekter og Gradle-moduler.
+Etter utviklerens valg ble tilgangsservice og regelmotor flyttet til eget
+bibliotek uten produksjonsavhengighet på Ktor eller hosten. Tester ble skilt
+etter eierskap, og modulgrense og JAR-er ble kontrollert. Bibliotekuttrekket
+ble committet som `f9b2625`, og katalogstrukturen ble vist.
+Etter ønske fra utvikleren ble hosten flyttet ett nivå ned til `app/restService`,
+med uendret Gradle-modulnavn og oppdatert Docker-sti. Alle 63 filer beholdt
+identisk innhold; full bygging og ny kjøring av hosttestene bestod før
+commit `070760a`. Ingen av disse commitene var pushet før utvikleren ba om push.
+Agenten synkroniserte oppgavegrenen og kjørte alle 638 tester på nytt før
+oppdatering av dette notatet og forespørsel om separat dokumentasjonscommit.
+Utvikleren godkjente dokumentasjonscommiten før publisering.
