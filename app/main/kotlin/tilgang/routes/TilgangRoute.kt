@@ -34,7 +34,6 @@ import tilgang.kontroll.SakstilgangInput
 import tilgang.kontroll.TilbakekrevingstilgangInput
 import tilgang.kontroll.TilgangService
 import tilgang.kontroll.Tilgangskontekst
-import tilgang.kontroll.regler.parseRoller
 import tilgang.metrics.httpCallCounter
 import tilgang.metrics.nektetTilgangTeller
 

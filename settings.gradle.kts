@@ -5,7 +5,7 @@ pluginManagement {
 }
 
 rootProject.name = "tilgang"
-include("app", "plugin", "api-kontrakt", "plugin-kontrakt")
+include("app", "tilgang-service", "plugin", "api-kontrakt", "plugin-kontrakt")
 
 dependencyResolutionManagement {
     // Felles for alle gradle prosjekter i repoet

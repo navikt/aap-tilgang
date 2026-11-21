@@ -11,6 +11,7 @@ application {
 
 dependencies {
     implementation(project(":api-kontrakt"))
+    implementation(project(":tilgang-service"))
     implementation(libs.behandlingsflytKontrakt)
     implementation(libs.postmottakKontrakt)
     implementation(kelvinLibs.ktor.server.call.logging)

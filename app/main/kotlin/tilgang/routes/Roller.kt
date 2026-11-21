@@ -1,4 +1,4 @@
-package tilgang.kontroll.regler
+package tilgang.routes
 
 import tilgang.Role
 import no.nav.aap.tilgang.Rolle
