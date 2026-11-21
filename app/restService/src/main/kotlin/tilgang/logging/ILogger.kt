@@ -1,4 +1,4 @@
-package tilgang.kontroll
+package tilgang.logging
 
 interface ILogger {
     fun info(message: String)

@@ -8,6 +8,14 @@ konfigurasjon, integrasjoner og adaptere.
 Hosten avhenger av biblioteket, ikke omvendt. Biblioteket bruker `api-kontrakt`
 for felles roller og operasjoner, men har ingen Ktor-avhengighet.
 
+`TilgangsforespørselService` i hosten samordner ressursforespørslene.
+`TilgangsgrunnlagService` henter ident- og journalpostdata sentralt gjennom
+hostens egne grensesnitt. Bibliotekets `TilgangService` mottar ferdig
+`Tilgangsgrunnlag` og returnerer `Map<Operasjon, Boolean>`.
+Direkte person- og bulktilgang ligger i REST-fasaden, uten en kunstig operasjonsnøkkel.
+Regelmotorens oppslag for adressebeskyttelse og personkontroll er fortsatt beholdt.
+`App.kt` kobler sammen komponentene; biblioteket avhenger ikke av grunnlagsinnhentingen.
+
 Alle modulene bruker Gradles standardmapper: `src/main/kotlin`,
 `src/main/resources`, `src/test/kotlin` og `src/test/resources`.
 
@@ -17,8 +25,18 @@ Det felles pakkeprefikset er utelatt fra katalogstiene; pakkene er fortsatt
 `tilgang.kontroll` og `tilgang.kontroll.regler`. Testene følger samme flate
 grunnstruktur i `src/test/kotlin`.
 
-Rene enhetstester kjøres med `./gradlew :tilgang-service:test`.
-HTTP- og adaptertester ligger i `app/restService`; `./gradlew :app:test` kjører disse,
+```mermaid
+flowchart LR
+    routes["REST-routes"] --> facade["TilgangsforespørselService<br/>host"]
+    facade --> ground["TilgangsgrunnlagService<br/>host"]
+    ground --> integrations["SAF / Behandlingsflyt"]
+    facade --> service["TilgangService<br/>bibliotek"]
+    service --> assessment["Tilgangsvurdering / regelmotor"]
+    facade --> person["Persontilgang / Tilgangsmaskin"]
+```
+
+Bibliotekets enhetstester kjøres med `./gradlew :tilgang-service:test`.
+Orkestrerings-, HTTP- og adaptertester ligger i `app/restService`; `./gradlew :app:test` kjører disse,
 og `./gradlew build` bygger og tester alle modulene.
 
 ## Modulavhengigheter

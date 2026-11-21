@@ -1,4 +1,4 @@
-package tilgang.kontroll
+package tilgang.grunnlag
 
 import no.nav.aap.tilgang.RelevanteIdenter
 

@@ -1,4 +1,4 @@
-package tilgang.kontroll
+package tilgang.grunnlag
 
 data class JournalpostInfo(
     val journalpostId: Long,

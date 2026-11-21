@@ -27,6 +27,12 @@ import org.slf4j.LoggerFactory
 import tilgang.auth.TexasGateway
 import tilgang.auth.TokenProvider
 import tilgang.auth.createTexasClient
+import tilgang.foresporsel.Persontilgang
+import tilgang.foresporsel.TilgangsforespørselService
+import tilgang.grunnlag.IdentOppslag
+import tilgang.grunnlag.JournalpostInfo
+import tilgang.grunnlag.JournalpostOppslag
+import tilgang.grunnlag.TilgangsgrunnlagService
 import tilgang.http.StatusPagesConfigHelper
 import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytGateway
 import tilgang.integrasjoner.behandlingsflyt.createBehandlingsflytClient
@@ -48,12 +54,7 @@ import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinGateway
 import tilgang.integrasjoner.tilgangsmaskin.createTilgangsmaskinClient
 import tilgang.kontroll.AvklaringsbehovType
 import tilgang.kontroll.BrukerToken
-import tilgang.kontroll.ILogger
-import tilgang.kontroll.IdentOppslag
-import tilgang.kontroll.JournalpostInfo
-import tilgang.kontroll.JournalpostOppslag
 import tilgang.kontroll.Personregel
-import tilgang.kontroll.Persontilgang
 import tilgang.kontroll.TilgangService
 import tilgang.kontroll.Tilgangsgrunnlag
 import tilgang.kontroll.Tilgangskontekst
@@ -66,6 +67,7 @@ import tilgang.kontroll.regler.Habilitetsgrunnlag
 import tilgang.kontroll.regler.Personkontroll
 import tilgang.kontroll.regler.RegelInput
 import tilgang.kontroll.regler.RegelService
+import tilgang.logging.ILogger
 import tilgang.redis.Redis
 import tilgang.routes.actuator
 import tilgang.routes.tilgang
@@ -183,45 +185,57 @@ internal fun createTilgangService(
     behandlingsflyt: BehandlingsflytGateway,
     regelService: RegelService,
     tilgangsmaskin: TilgangsmaskinGateway,
-): TilgangService = TilgangService(
-    journalpostOppslag = object : JournalpostOppslag {
-        override suspend fun hentJournalpostInfo(journalpostId: Long, callId: String): JournalpostInfo {
-            val journalpost = saf.hentJournalpostInfo(journalpostId, callId)
-            return JournalpostInfo(
-                journalpostId = journalpost.journalpostId,
-                søkerIdent = journalpost.bruker?.id,
-                gjelderOrganisasjon = journalpost.bruker?.type == BrukerIdType.ORGNR,
-                saksnummer = journalpost.sak?.takeIf { it.fagsaksystem == "KELVIN" }?.fagsakId,
-            )
-        }
-    },
-    identOppslag = object : IdentOppslag {
-        override suspend fun hentIdenterForSak(saksnummer: String): RelevanteIdenter =
-            behandlingsflyt.hentIdenterForSak(saksnummer)
+): TilgangsforespørselService {
+    val log = object : ILogger {
+        private val logger = LoggerFactory.getLogger(TilgangService::class.java)
 
-        override suspend fun hentIdenterForBehandling(behandlingsnummer: String): RelevanteIdenter =
-            behandlingsflyt.hentIdenterForBehandling(behandlingsnummer)
-    },
-    tilgangsvurdering = object : Tilgangsvurdering {
-        override suspend fun vurderTilgang(input: Tilgangsgrunnlag): Map<Operasjon, Boolean> =
-            regelService.vurderTilgang(
-                RegelInput(
-                    kontekst = input.kontekst,
-                    søkerIdenter = input.søkerIdenter,
-                    avklaringsbehovRoller = listOfNotNull(
-                        input.avklaringsbehov?.let { behov ->
-                            when (behov.type) {
-                                AvklaringsbehovType.BEHANDLING -> Definisjon.forKode(behov.kode).løsesAv.toList()
-                                AvklaringsbehovType.JOURNALPOST -> PostmottakDefinisjon.forKode(behov.kode).løsesAv.toList()
-                            }
-                        }
-                    ),
-                    påkrevdRolle = input.påkrevdRolle,
-                    operasjoner = input.operasjoner,
+        override fun info(message: String) = logger.info(message)
+
+        override fun warn(message: String) = logger.warn(message)
+    }
+    val grunnlagService = TilgangsgrunnlagService(
+        identOppslag = object : IdentOppslag {
+            override suspend fun hentIdenterForSak(saksnummer: String): RelevanteIdenter =
+                behandlingsflyt.hentIdenterForSak(saksnummer)
+
+            override suspend fun hentIdenterForBehandling(behandlingsnummer: String): RelevanteIdenter =
+                behandlingsflyt.hentIdenterForBehandling(behandlingsnummer)
+        },
+        journalpostOppslag = object : JournalpostOppslag {
+            override suspend fun hentJournalpostInfo(journalpostId: Long, callId: String): JournalpostInfo {
+                val journalpost = saf.hentJournalpostInfo(journalpostId, callId)
+                return JournalpostInfo(
+                    journalpostId = journalpost.journalpostId,
+                    søkerIdent = journalpost.bruker?.id,
+                    gjelderOrganisasjon = journalpost.bruker?.type == BrukerIdType.ORGNR,
+                    saksnummer = journalpost.sak?.takeIf { it.fagsaksystem == "KELVIN" }?.fagsakId,
                 )
-            )
-    },
-    persontilgang = object : Persontilgang {
+            }
+        },
+        log = log,
+    )
+    val tilgangService = TilgangService(
+        tilgangsvurdering = object : Tilgangsvurdering {
+            override suspend fun vurderTilgang(input: Tilgangsgrunnlag): Map<Operasjon, Boolean> =
+                regelService.vurderTilgang(
+                    RegelInput(
+                        kontekst = input.kontekst,
+                        søkerIdenter = input.søkerIdenter,
+                        avklaringsbehovRoller = listOfNotNull(
+                            input.avklaringsbehov?.let { behov ->
+                                when (behov.type) {
+                                    AvklaringsbehovType.BEHANDLING -> Definisjon.forKode(behov.kode).løsesAv.toList()
+                                    AvklaringsbehovType.JOURNALPOST -> PostmottakDefinisjon.forKode(behov.kode).løsesAv.toList()
+                                }
+                            }
+                        ),
+                        påkrevdRolle = input.påkrevdRolle,
+                        operasjoner = input.operasjoner,
+                    )
+                )
+        },
+    )
+    val persontilgang = object : Persontilgang {
         override suspend fun harTilgangTilPerson(
             brukerIdent: String,
             token: BrukerToken,
@@ -237,14 +251,9 @@ internal fun createTilgangService(
             OidcToken(token.verdi),
             callId,
         )
-    },
-    log = object : ILogger {
-        private val logger = LoggerFactory.getLogger(TilgangService::class.java)
-
-        override fun info(message: String) = logger.info(message)
-        override fun warn(message: String) = logger.warn(message)
-    },
-)
+    }
+    return TilgangsforespørselService(grunnlagService, tilgangService, persontilgang, log)
+}
 
 internal fun createRegelService(
     pdl: IPdlGraphQLGateway,

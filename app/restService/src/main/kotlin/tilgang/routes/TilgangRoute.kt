@@ -23,6 +23,7 @@ import no.nav.aap.tilgang.TilgangResponse
 import tilgang.Role
 import tilgang.auth.ident
 import tilgang.auth.roller
+import tilgang.foresporsel.TilgangsforespørselService
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinRequest
 import tilgang.kontroll.ArenasakstilgangInput
 import tilgang.kontroll.BehandlingstilgangInput
@@ -32,7 +33,6 @@ import tilgang.kontroll.Personregel
 import tilgang.kontroll.PersontilgangInput
 import tilgang.kontroll.SakstilgangInput
 import tilgang.kontroll.TilbakekrevingstilgangInput
-import tilgang.kontroll.TilgangService
 import tilgang.kontroll.Tilgangskontekst
 import tilgang.metrics.httpCallCounter
 import tilgang.metrics.nektetTilgangTeller
@@ -40,7 +40,7 @@ import tilgang.metrics.nektetTilgangTeller
 private val log = org.slf4j.LoggerFactory.getLogger("tilgang.routes.TilgangRoute")
 
 fun NormalOpenAPIRoute.tilgang(
-    tilgangService: TilgangService,
+    tilgangService: TilgangsforespørselService,
     roles: List<Role>,
     prometheus: PrometheusMeterRegistry
 ) {
