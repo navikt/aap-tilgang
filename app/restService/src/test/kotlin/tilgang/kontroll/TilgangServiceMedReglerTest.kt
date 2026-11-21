@@ -15,7 +15,8 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
 import tilgang.AzureTokenGen
-import tilgang.createRegelService
+import tilgang.createTilgangService
+import tilgang.createTilgangsforespørselService
 import tilgang.createTilgangService
 import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytGateway
 import tilgang.integrasjoner.msgraph.AdressebeskyttelseGruppe
@@ -47,10 +48,10 @@ class TilgangServiceMedReglerTest {
     private val behandlingsflytGateway = mockk<BehandlingsflytGateway>()
     private val token = BrukerToken(AzureTokenGen("issuer", "audience").generate())
     private val personIdent = "12345678901"
-    private val serviceMedRegler = createTilgangService(
+    private val serviceMedRegler = createTilgangsforespørselService(
         safGateway,
         behandlingsflytGateway,
-        createRegelService(pdlGateway, adressebeskyttelseService, tilgangsmaskinGateway),
+        createTilgangService(pdlGateway, adressebeskyttelseService, tilgangsmaskinGateway),
         tilgangsmaskinGateway
     )
 

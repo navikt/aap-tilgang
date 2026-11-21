@@ -1,5 +1,7 @@
 package tilgang.kontroll.regler
 
+import tilgang.kontroll.Tilgangsgrunnlag
+
 import no.nav.aap.tilgang.Rolle
 
 data object LeseRolleRegel : Regel<List<Rolle>> {
@@ -17,7 +19,7 @@ data object LeseRolleRegel : Regel<List<Rolle>> {
 }
 
 data object RolleInputGenerator : InputGenerator<List<Rolle>> {
-    override suspend fun generer(input: RegelInput): List<Rolle> {
+    override suspend fun generer(input: Tilgangsgrunnlag): List<Rolle> {
         return input.kontekst.roller
     }
 }

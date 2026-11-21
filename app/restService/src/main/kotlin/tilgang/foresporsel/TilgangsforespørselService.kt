@@ -4,10 +4,9 @@ import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.RelevanteIdenter
 import no.nav.aap.tilgang.Rolle
 import org.slf4j.Logger
+import tilgang.grunnlag.AvklaringsbehovType
 import tilgang.grunnlag.TilgangsgrunnlagService
 import tilgang.kontroll.ArenasakstilgangInput
-import tilgang.kontroll.Avklaringsbehov
-import tilgang.kontroll.AvklaringsbehovType
 import tilgang.kontroll.BehandlingstilgangInput
 import tilgang.kontroll.BrukerToken
 import tilgang.kontroll.JournalposttilgangInput
@@ -49,14 +48,14 @@ class TilgangsforespørselService(
             input.behandlingsreferanse, input.relevanteIdenter
         )
 
-        val avklaringsbehov = input.avklaringsbehovKode?.let {
-            Avklaringsbehov(it, AvklaringsbehovType.BEHANDLING)
-        }
+        val avklaringsbehovRoller = grunnlagService.finnAvklaringsbehovRoller(
+            input.avklaringsbehovKode, AvklaringsbehovType.BEHANDLING
+        )
 
         val grunnlag = Tilgangsgrunnlag(
             kontekst = kontekst,
             søkerIdenter = identer,
-            avklaringsbehov = avklaringsbehov,
+            avklaringsbehovRoller = avklaringsbehovRoller,
             påkrevdRolle = input.påkrevdRolle,
             operasjoner = Operasjon.entries
         )
@@ -77,14 +76,14 @@ class TilgangsforespørselService(
 
         val identer = grunnlagService.finnIdenterForJournalpost(journalpostInfo)
 
-        val avklaringsbehov = input.avklaringsbehovKode?.let {
-            Avklaringsbehov(it, AvklaringsbehovType.JOURNALPOST)
-        }
+        val avklaringsbehovRoller = grunnlagService.finnAvklaringsbehovRoller(
+            input.avklaringsbehovKode, AvklaringsbehovType.JOURNALPOST
+        )
 
         return vurderOperasjon(
             kontekst = kontekst,
             søkerIdenter = identer,
-            avklaringsbehov = avklaringsbehov,
+            avklaringsbehovRoller = avklaringsbehovRoller,
             påkrevdRolle = input.påkrevdRolle,
             operasjon = input.operasjon,
         )
@@ -148,12 +147,12 @@ class TilgangsforespørselService(
         søkerIdenter: RelevanteIdenter,
         påkrevdRolle: List<Rolle>,
         operasjon: Operasjon,
-        avklaringsbehov: Avklaringsbehov? = null,
+        avklaringsbehovRoller: List<List<Rolle>> = emptyList(),
     ): Boolean = tilgangService.vurderTilgang(
         Tilgangsgrunnlag(
             kontekst = kontekst,
             søkerIdenter = søkerIdenter,
-            avklaringsbehov = avklaringsbehov,
+            avklaringsbehovRoller = avklaringsbehovRoller,
             påkrevdRolle = påkrevdRolle,
             operasjoner = listOf(operasjon),
         )

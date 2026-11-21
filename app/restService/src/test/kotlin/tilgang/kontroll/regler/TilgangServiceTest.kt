@@ -18,7 +18,7 @@ import org.junit.jupiter.params.provider.EnumSource
 import tilgang.AzureTokenGen
 import tilgang.TilgangsmaskinConfig
 import tilgang.auth.ITokenProvider
-import tilgang.createRegelService
+import tilgang.createTilgangService
 import tilgang.fakes.Fakes
 import tilgang.fakes.WithFakes
 import tilgang.integrasjoner.msgraph.AdressebeskyttelseService
@@ -32,11 +32,12 @@ import tilgang.integrasjoner.pdl.PersonResultat
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinGateway
 import tilgang.integrasjoner.tilgangsmaskin.createTilgangsmaskinClient
 import tilgang.kontroll.BrukerToken
+import tilgang.kontroll.Tilgangsgrunnlag
 import tilgang.kontroll.Tilgangskontekst
 import java.util.UUID
 
 @WithFakes
-class RegelServiceTest {
+class TilgangServiceTest {
     private val redis = Fakes.getRedisServer()
     private val tokenProvider = mockk<ITokenProvider> {
         coEvery { oboToken(any(), any()) } returns "test-token"
@@ -53,8 +54,8 @@ class RegelServiceTest {
     @ParameterizedTest
     @EnumSource(value = Definisjon::class, names = ["BESTILL_BREV"], mode = EnumSource.Mode.EXCLUDE)
     fun `skal alltid gi false når roller er tom array`(avklaringsbehov: Definisjon) = runTest {
-        val svar = regelService.vurderTilgang(
-            RegelInput(
+        val svar = tilgangService.vurderTilgang(
+            Tilgangsgrunnlag(
                 kontekst = Tilgangskontekst("123", emptyList(), BrukerToken(token), UUID.randomUUID().toString()),
                 søkerIdenter = RelevanteIdenter(søker = listOf("123"), barn = listOf()),
                 operasjoner = listOf(Operasjon.SAKSBEHANDLE),
@@ -68,8 +69,8 @@ class RegelServiceTest {
     @EnumSource(value = Definisjon::class, names = ["BESTILL_BREV"], mode = EnumSource.Mode.EXCLUDE)
     fun `skal gi tilgang til operasjoner for NAY-steg som saksbehandler nasjonal`(avklaringsbehov: Definisjon) =
         runTest {
-            val svar = regelService.vurderTilgang(
-                RegelInput(
+            val svar = tilgangService.vurderTilgang(
+                Tilgangsgrunnlag(
                     kontekst = Tilgangskontekst(
                         "123", listOf(Rolle.SAKSBEHANDLER_NASJONAL), BrukerToken(token), UUID.randomUUID().toString()
                     ),
@@ -92,8 +93,8 @@ class RegelServiceTest {
     fun `skal gi tilgang til drift, men ikke noe annet for driftsrolleinnehavere`(avklaringsbehov: Definisjon) =
         runTest {
 
-            val svar = regelService.vurderTilgang(
-                RegelInput(
+            val svar = tilgangService.vurderTilgang(
+                Tilgangsgrunnlag(
                     kontekst = Tilgangskontekst(
                         "123", listOf(Rolle.DRIFT), BrukerToken(token), UUID.randomUUID().toString()
                     ),
@@ -114,8 +115,8 @@ class RegelServiceTest {
     fun `skal gi tilgang til drift_les, men ikke drift for driftsleserolleinnehavere`(avklaringsbehov: Definisjon) =
         runTest {
 
-            val svar = regelService.vurderTilgang(
-                RegelInput(
+            val svar = tilgangService.vurderTilgang(
+                Tilgangsgrunnlag(
                     kontekst = Tilgangskontekst(
                         "123", listOf(Rolle.DRIFT_LES), BrukerToken(token), UUID.randomUUID().toString()
                     ),
@@ -135,8 +136,8 @@ class RegelServiceTest {
     @EnumSource(value = Definisjon::class, names = ["BESTILL_BREV"], mode = EnumSource.Mode.EXCLUDE)
     fun `skal kun gi tilgang til å se for leserolle`(avklaringsbehov: Definisjon) = runTest {
 
-        val svar = regelService.vurderTilgang(
-            RegelInput(
+        val svar = tilgangService.vurderTilgang(
+            Tilgangsgrunnlag(
                 kontekst = Tilgangskontekst(
                     "123", listOf(Rolle.LES), BrukerToken(token), UUID.randomUUID().toString()
                 ),
@@ -155,8 +156,8 @@ class RegelServiceTest {
     @Test
     fun `skal returnere false på saksbehandle dersom det ikke finnes noe avklaringsbehov å vurdere `() = runTest {
 
-        val svar = regelService.vurderTilgang(
-            RegelInput(
+        val svar = tilgangService.vurderTilgang(
+            Tilgangsgrunnlag(
                 kontekst = Tilgangskontekst(
                     "123", listOf(Rolle.SAKSBEHANDLER_NASJONAL), BrukerToken(token), UUID.randomUUID().toString()
                 ),
@@ -213,7 +214,7 @@ class RegelServiceTest {
         }
     }
 
-    val regelService = createRegelService(
+    val tilgangService = createTilgangService(
         pdlService,
         AdressebeskyttelseService(graphGateway),
         TilgangsmaskinGateway(redis, tilgangsmaskinClient, prometheus)

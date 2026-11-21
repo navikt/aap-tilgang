@@ -17,11 +17,9 @@ import io.ktor.server.routing.routing
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlin.time.Duration.Companion.seconds
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.komponenter.server.auth.IdentityProvider
 import no.nav.aap.komponenter.server.commonKtorModule
-import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.RelevanteIdenter
 import org.slf4j.LoggerFactory
 import tilgang.auth.TexasGateway
@@ -52,25 +50,19 @@ import tilgang.integrasjoner.tilgangsmaskin.ITilgangsmaskinGateway
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinAvvistGrunn
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinGateway
 import tilgang.integrasjoner.tilgangsmaskin.createTilgangsmaskinClient
-import tilgang.kontroll.AvklaringsbehovType
 import tilgang.kontroll.BrukerToken
 import tilgang.kontroll.Personregel
 import tilgang.kontroll.TilgangService
-import tilgang.kontroll.Tilgangsgrunnlag
 import tilgang.kontroll.Tilgangskontekst
-import tilgang.kontroll.Tilgangsvurdering
 import tilgang.kontroll.regler.AdressebeskyttelseOppslag
 import tilgang.kontroll.regler.Adressebeskyttelsesrolle
 import tilgang.kontroll.regler.Adressebeskyttelsesroller
 import tilgang.kontroll.regler.Adressegradering
 import tilgang.kontroll.regler.Habilitetsgrunnlag
 import tilgang.kontroll.regler.Personkontroll
-import tilgang.kontroll.regler.RegelInput
-import tilgang.kontroll.regler.RegelService
 import tilgang.redis.Redis
 import tilgang.routes.actuator
 import tilgang.routes.tilgang
-import no.nav.aap.postmottak.kontrakt.avklaringsbehov.Definisjon as PostmottakDefinisjon
 
 
 internal object AppConfig {
@@ -139,8 +131,9 @@ fun Application.api(
     val saf = SafGraphqlGateway(redis, safClient, prometheus)
     val tilgangsmaskinClient = createTilgangsmaskinClient(config.tilgangsmaskin, tokenProvider)
     val tilgangsmaskinGateway = TilgangsmaskinGateway(redis, tilgangsmaskinClient, prometheus)
-    val regelService = createRegelService(pdl, AdressebeskyttelseService(msGraph), tilgangsmaskinGateway)
-    val tilgangService = createTilgangService(saf, behandlingsflyt, regelService, tilgangsmaskinGateway)
+    val tilgangService = createTilgangService(pdl, AdressebeskyttelseService(msGraph), tilgangsmaskinGateway)
+    val forespørselService =
+        createTilgangsforespørselService(saf, behandlingsflyt, tilgangService, tilgangsmaskinGateway)
 
     install(StatusPages, StatusPagesConfigHelper.setup(prometheus))
 
@@ -155,7 +148,7 @@ fun Application.api(
 
         authenticate(IdentityProvider.ENTRA_ID.value) {
             apiRouting {
-                tilgang(tilgangService, config.roles, prometheus)
+                tilgang(forespørselService, config.roles, prometheus)
             }
         }
     }
@@ -179,10 +172,10 @@ fun Application.api(
     }
 }
 
-internal fun createTilgangService(
+internal fun createTilgangsforespørselService(
     saf: SafGraphqlGateway,
     behandlingsflyt: BehandlingsflytGateway,
-    regelService: RegelService,
+    tilgangService: TilgangService,
     tilgangsmaskin: TilgangsmaskinGateway,
 ): TilgangsforespørselService {
     val log = LoggerFactory.getLogger(TilgangService::class.java)
@@ -207,27 +200,6 @@ internal fun createTilgangService(
         },
         log = log,
     )
-    val tilgangService = TilgangService(
-        tilgangsvurdering = object : Tilgangsvurdering {
-            override suspend fun vurderTilgang(input: Tilgangsgrunnlag): Map<Operasjon, Boolean> =
-                regelService.vurderTilgang(
-                    RegelInput(
-                        kontekst = input.kontekst,
-                        søkerIdenter = input.søkerIdenter,
-                        avklaringsbehovRoller = listOfNotNull(
-                            input.avklaringsbehov?.let { behov ->
-                                when (behov.type) {
-                                    AvklaringsbehovType.BEHANDLING -> Definisjon.forKode(behov.kode).løsesAv.toList()
-                                    AvklaringsbehovType.JOURNALPOST -> PostmottakDefinisjon.forKode(behov.kode).løsesAv.toList()
-                                }
-                            }
-                        ),
-                        påkrevdRolle = input.påkrevdRolle,
-                        operasjoner = input.operasjoner,
-                    )
-                )
-        },
-    )
     val persontilgang = object : Persontilgang {
         override suspend fun harTilgangTilPerson(
             brukerIdent: String,
@@ -248,11 +220,11 @@ internal fun createTilgangService(
     return TilgangsforespørselService(grunnlagService, tilgangService, persontilgang, log)
 }
 
-internal fun createRegelService(
+internal fun createTilgangService(
     pdl: IPdlGraphQLGateway,
     adressebeskyttelseService: AdressebeskyttelseService,
     tilgangsmaskin: ITilgangsmaskinGateway,
-): RegelService = RegelService(
+): TilgangService = TilgangService(
     adressebeskyttelseOppslag = object : AdressebeskyttelseOppslag {
         override suspend fun hentGraderinger(personIdenter: List<String>, callId: String): List<Adressegradering> =
             requireNotNull(pdl.hentPersonBolk(personIdenter, callId)).flatMap { person ->

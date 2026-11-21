@@ -9,6 +9,7 @@ import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verifySequence
 import kotlinx.coroutines.test.runTest
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.RelevanteIdenter
 import no.nav.aap.tilgang.Rolle
@@ -23,24 +24,26 @@ import org.slf4j.Logger
 import tilgang.foresporsel.Persontilgang
 import tilgang.foresporsel.TilgangsforespørselService
 import tilgang.grunnlag.IdentOppslag
+import tilgang.grunnlag.AvklaringsbehovType
 import tilgang.grunnlag.JournalpostInfo
 import tilgang.grunnlag.JournalpostOppslag
 import tilgang.grunnlag.TilgangsgrunnlagService
 import java.util.UUID
 import kotlin.random.Random
 import kotlin.test.assertFailsWith
+import no.nav.aap.postmottak.kontrakt.avklaringsbehov.Definisjon as PostmottakDefinisjon
 
 class TilgangsforespørselServiceTest {
 
     private val journalpostOppslag = mockk<JournalpostOppslag>()
     private val identOppslag = mockk<IdentOppslag>()
-    private val tilgangsvurdering = mockk<Tilgangsvurdering>(relaxed = true)
+    private val tilgangService = mockk<TilgangService>(relaxed = true)
     private val persontilgang = mockk<Persontilgang>(relaxed = true)
     private val log = mockk<Logger>(relaxUnitFun = true)
 
     private val service = TilgangsforespørselService(
         grunnlagService = TilgangsgrunnlagService(identOppslag, journalpostOppslag, log),
-        tilgangService = TilgangService(tilgangsvurdering),
+        tilgangService = tilgangService,
         persontilgang = persontilgang,
         log = log,
     )
@@ -103,7 +106,7 @@ class TilgangsforespørselServiceTest {
             coVerify { identOppslag wasNot Called }
         }
         coVerify {
-            tilgangsvurdering wasNot Called
+            tilgangService wasNot Called
             persontilgang wasNot Called
         }
     }
@@ -114,7 +117,7 @@ class TilgangsforespørselServiceTest {
         val input = slot<Tilgangsgrunnlag>()
         val identer = RelevanteIdenter(listOf("søker-ident"), emptyList())
         coEvery { identOppslag.hentIdenterForSak("sak-1") } returns identer
-        coEvery { tilgangsvurdering.vurderTilgang(capture(input)) } returns
+        coEvery { tilgangService.vurderTilgang(capture(input)) } returns
                 mapOf(Operasjon.SE to true, Operasjon.DRIFTE to true)
 
         for (indeks in 1..2) {
@@ -158,31 +161,37 @@ class TilgangsforespørselServiceTest {
 
     @ParameterizedTest
     @EnumSource(AvklaringsbehovType::class)
-    fun `sender kode og behovstype videre uten eksterne definisjoner`(type: AvklaringsbehovType) = runTest {
+    fun `klargjør rollekrav fra riktig avklaringsbehov før vurdering`(type: AvklaringsbehovType) = runTest {
         val input = slot<Tilgangsgrunnlag>()
         val kontekst = Tilgangskontekst("ansatt", emptyList(), BrukerToken("test-token"), "call-id")
-        coEvery { tilgangsvurdering.vurderTilgang(capture(input)) } returns mapOf(Operasjon.SE to true)
+        coEvery { tilgangService.vurderTilgang(capture(input)) } returns mapOf(Operasjon.SE to true)
         coEvery { journalpostOppslag.hentJournalpostInfo(123, "call-id") } returns
                 JournalpostInfo(123, "søker-ident", false, null)
+        val (kode, forventedeRoller) = when (type) {
+            AvklaringsbehovType.BEHANDLING -> "5003" to Definisjon.forKode("5003").løsesAv.toList()
+            AvklaringsbehovType.JOURNALPOST -> PostmottakDefinisjon.entries.first().let {
+                it.kode.name to it.løsesAv.toList()
+            }
+        }
 
         val resultat = when (type) {
             AvklaringsbehovType.BEHANDLING -> service.harTilgangTilBehandling(
                 BehandlingstilgangInput(
                     behandlingsreferanse = UUID.randomUUID(),
-                    avklaringsbehovKode = "kode-fra-klient",
+                    avklaringsbehovKode = kode,
                     påkrevdRolle = emptyList(),
                     relevanteIdenter = RelevanteIdenter(listOf("søker-ident"), emptyList()),
                 ),
                 kontekst,
             )[Operasjon.SE]
             AvklaringsbehovType.JOURNALPOST -> service.harTilgangTilJournalpost(
-                JournalposttilgangInput(123, "kode-fra-klient", emptyList(), Operasjon.SE),
+                JournalposttilgangInput(123, kode, emptyList(), Operasjon.SE),
                 kontekst,
             )
         }
 
         assertThat(resultat).isTrue()
-        assertThat(input.captured.avklaringsbehov).isEqualTo(Avklaringsbehov("kode-fra-klient", type))
+        assertThat(input.captured.avklaringsbehovRoller).containsExactly(forventedeRoller)
     }
 
     @Nested
@@ -195,7 +204,7 @@ class TilgangsforespørselServiceTest {
             val roller = listOf(Rolle.LES)
             val kontekst = Tilgangskontekst("ansattIdent", roller, token, "callId")
             val input = slot<Tilgangsgrunnlag>()
-            coEvery { tilgangsvurdering.vurderTilgang(capture(input)) } returns mapOf(Operasjon.SE to true)
+            coEvery { tilgangService.vurderTilgang(capture(input)) } returns mapOf(Operasjon.SE to true)
 
             val harTilgang = service.harTilgangTilArenasakerForPerson(req, kontekst)
 
@@ -203,7 +212,7 @@ class TilgangsforespørselServiceTest {
             assertThat(input.captured.kontekst).isSameAs(kontekst)
             assertThat(input.captured.søkerIdenter.søker).containsExactly(req.personIdent)
             assertThat(input.captured.søkerIdenter.barn).isEmpty()
-            assertThat(input.captured.avklaringsbehov).isNull()
+            assertThat(input.captured.avklaringsbehovRoller).isEmpty()
             assertThat(input.captured.påkrevdRolle).containsExactly(
                 Rolle.LES,
                 Rolle.SAKSBEHANDLER_NASJONAL,
@@ -212,7 +221,7 @@ class TilgangsforespørselServiceTest {
                 Rolle.BESLUTTER
             )
             assertThat(input.captured.operasjoner).containsExactly(Operasjon.SE)
-            coVerify(exactly = 1) { tilgangsvurdering.vurderTilgang(any()) }
+            coVerify(exactly = 1) { tilgangService.vurderTilgang(any()) }
             coVerify {
                 journalpostOppslag wasNot Called
                 identOppslag wasNot Called
@@ -223,7 +232,7 @@ class TilgangsforespørselServiceTest {
         @ParameterizedTest
         @ValueSource(booleans = [true, false])
         suspend fun `returnerer regelservice sitt resultat for SE`(harTilgang: Boolean) {
-            coEvery { tilgangsvurdering.vurderTilgang(any()) } returns mapOf(Operasjon.SE to harTilgang)
+            coEvery { tilgangService.vurderTilgang(any()) } returns mapOf(Operasjon.SE to harTilgang)
 
             val resultat = service.harTilgangTilArenasakerForPerson(
                 ArenasakstilgangInput("12345678901", Rolle.kanLeseSaker(), Operasjon.SE),
@@ -235,7 +244,7 @@ class TilgangsforespørselServiceTest {
 
         @Test
         suspend fun `nekter tilgang når regelservice mangler resultat for SE`() {
-            coEvery { tilgangsvurdering.vurderTilgang(any()) } returns emptyMap()
+            coEvery { tilgangService.vurderTilgang(any()) } returns emptyMap()
 
             val harTilgang = service.harTilgangTilArenasakerForPerson(
                 ArenasakstilgangInput("12345678901", Rolle.kanLeseSaker(), Operasjon.SE),
@@ -251,7 +260,7 @@ class TilgangsforespørselServiceTest {
             val påkrevdRolle = if (tomRolleliste) emptyList() else listOf(Rolle.BESLUTTER)
             val req = ArenasakstilgangInput("12345678901", påkrevdRolle, Operasjon.SE)
             val input = slot<Tilgangsgrunnlag>()
-            coEvery { tilgangsvurdering.vurderTilgang(capture(input)) } returns mapOf(Operasjon.SE to true)
+            coEvery { tilgangService.vurderTilgang(capture(input)) } returns mapOf(Operasjon.SE to true)
 
             service.harTilgangTilArenasakerForPerson(
                 req, Tilgangskontekst("ansattIdent", emptyList(), BrukerToken("test-token"), "callId")
@@ -276,14 +285,14 @@ class TilgangsforespørselServiceTest {
             )
 
             coVerify {
-                tilgangsvurdering wasNot Called
+                tilgangService wasNot Called
 
                 persontilgang.harTilgangTilPerson(personIdent, any(), "callId")
             }
         }
 
         @Test
-        suspend fun `harTilgangTilPerson - skal kun kalle RegelService hvis operasjon er DRIFTE`() {
+        suspend fun `harTilgangTilPerson - skal kun kalle TilgangService hvis operasjon er DRIFTE`() {
             val personIdent = Random.nextLong().toString()
             val req = PersontilgangInput(personIdent, emptyList(), Operasjon.DRIFTE)
 
@@ -292,7 +301,7 @@ class TilgangsforespørselServiceTest {
             )
 
             coVerify {
-                tilgangsvurdering.vurderTilgang(any())
+                tilgangService.vurderTilgang(any())
                 persontilgang wasNot Called
             }
         }

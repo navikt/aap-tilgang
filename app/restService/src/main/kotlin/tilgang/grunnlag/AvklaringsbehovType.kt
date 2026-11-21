@@ -1,4 +1,4 @@
-package tilgang.kontroll
+package tilgang.grunnlag
 
 enum class AvklaringsbehovType {
     BEHANDLING,

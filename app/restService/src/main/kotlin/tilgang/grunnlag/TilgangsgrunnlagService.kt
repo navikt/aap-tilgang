@@ -1,9 +1,12 @@
 package tilgang.grunnlag
 
 import java.util.UUID
+import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.tilgang.RelevanteIdenter
+import no.nav.aap.tilgang.Rolle
 import org.slf4j.Logger
 import tilgang.kontroll.ManglerSøkerIdentException
+import no.nav.aap.postmottak.kontrakt.avklaringsbehov.Definisjon as PostmottakDefinisjon
 
 class TilgangsgrunnlagService(
     private val identOppslag: IdentOppslag,
@@ -23,6 +26,16 @@ class TilgangsgrunnlagService(
 
     suspend fun hentJournalpostInfo(journalpostId: Long, callId: String): JournalpostInfo =
         journalpostOppslag.hentJournalpostInfo(journalpostId, callId)
+
+    fun finnAvklaringsbehovRoller(kode: String?, type: AvklaringsbehovType): List<List<Rolle>> =
+        listOfNotNull(
+            kode?.let {
+                when (type) {
+                    AvklaringsbehovType.BEHANDLING -> Definisjon.forKode(it).løsesAv.toList()
+                    AvklaringsbehovType.JOURNALPOST -> PostmottakDefinisjon.forKode(it).løsesAv.toList()
+                }
+            }
+        )
 
     suspend fun finnIdenterForJournalpost(journalpost: JournalpostInfo): RelevanteIdenter {
         val saksnummer = journalpost.saksnummer

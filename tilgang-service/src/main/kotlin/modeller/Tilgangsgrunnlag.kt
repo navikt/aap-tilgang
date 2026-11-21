@@ -7,7 +7,8 @@ import no.nav.aap.tilgang.Rolle
 class Tilgangsgrunnlag(
     val kontekst: Tilgangskontekst,
     val søkerIdenter: RelevanteIdenter,
-    val avklaringsbehov: Avklaringsbehov?,
-    val påkrevdRolle: List<Rolle>,
+    // Alternative roller per avklaringsbehov; alle behov må være oppfylt.
+    val avklaringsbehovRoller: List<List<Rolle>> = emptyList(),
+    val påkrevdRolle: List<Rolle> = emptyList(),
     val operasjoner: List<Operasjon>,
 )

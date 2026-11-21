@@ -10,7 +10,8 @@ for felles roller og operasjoner, men har ingen Ktor-avhengighet.
 
 `TilgangsforespørselService` i hosten samordner ressursforespørslene.
 `TilgangsgrunnlagService` henter ident- og journalpostdata sentralt gjennom
-hostens egne grensesnitt. Bibliotekets `TilgangService` mottar ferdig
+hostens egne grensesnitt og oversetter avklaringsbehovskoder til rollekrav.
+Bibliotekets `TilgangService` eier regelmotoren, mottar ferdig
 `Tilgangsgrunnlag` og returnerer `Map<Operasjon, Boolean>`.
 Direkte person- og bulktilgang ligger i REST-fasaden, uten en kunstig operasjonsnøkkel.
 Regelmotorens oppslag for adressebeskyttelse og personkontroll er fortsatt beholdt.
@@ -20,7 +21,7 @@ Alle modulene bruker Gradles standardmapper: `src/main/kotlin`,
 `src/main/resources`, `src/test/kotlin` og `src/test/resources`.
 
 I `tilgang-service/src/main/kotlin` ligger `TilgangService.kt` direkte i roten.
-Øvrige filer er gruppert i `input`, `kontrakter`, `modeller`, `regler` og `exceptions`.
+Øvrige filer er gruppert i `input`, `modeller`, `regler` og `exceptions`.
 Det felles pakkeprefikset er utelatt fra katalogstiene; pakkene er fortsatt
 `tilgang.kontroll` og `tilgang.kontroll.regler`. Testene følger samme flate
 grunnstruktur i `src/test/kotlin`.
@@ -30,8 +31,9 @@ flowchart LR
     routes["REST-routes"] --> facade["TilgangsforespørselService<br/>host"]
     facade --> ground["TilgangsgrunnlagService<br/>host"]
     ground --> integrations["SAF / Behandlingsflyt"]
+    ground --> definitions["Avklaringsbehovsdefinisjoner"]
     facade --> service["TilgangService<br/>bibliotek"]
-    service --> assessment["Tilgangsvurdering / regelmotor"]
+    service --> rules["Regler<br/>bibliotek"]
     facade --> person["Persontilgang / Tilgangsmaskin"]
 ```
 
