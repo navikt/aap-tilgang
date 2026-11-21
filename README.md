@@ -22,6 +22,10 @@ Grunnlaget inneholder kallkontekst, søker- og barnidenter, ferdige rollekrav og
 REST-svarene er uendret; ordinære avslag gir fortsatt HTTP 200 med `tilgang=false`.
 Hosten bruker `org.slf4j.Logger` direkte. Biblioteket har ingen logging-avhengighet.
 
+Alle roller i `Rolle` leses fra `AAP_<ROLLENAVN>` gjennom konfigurasjonsoppslaget,
+uten en egen hardkodet rolleliste. Hver rolle må ha en gyldig gruppe-ID som UUID;
+manglende eller ugyldig konfigurasjon stopper oppstarten.
+
 Alle modulene bruker Gradles standardmapper: `src/main/kotlin`,
 `src/main/resources`, `src/test/kotlin` og `src/test/resources`.
 

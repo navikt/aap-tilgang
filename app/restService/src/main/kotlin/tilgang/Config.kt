@@ -8,16 +8,9 @@ import no.nav.aap.tilgang.Rolle
 private fun getEnvVar(envar: String) = System.getenv(envar) ?: error("missing envvar $envar")
 
 data class Config(
-    val roles: List<Role> = listOf(
-        Role(Rolle.SAKSBEHANDLER_OPPFOLGING, UUID.fromString(getEnvVar("AAP_SAKSBEHANDLER_OPPFOLGING"))),
-        Role(Rolle.SAKSBEHANDLER_NASJONAL, UUID.fromString(getEnvVar("AAP_SAKSBEHANDLER_NASJONAL"))),
-        Role(Rolle.BESLUTTER, UUID.fromString(getEnvVar("AAP_BESLUTTER"))),
-        Role(Rolle.LES, UUID.fromString(getEnvVar("AAP_LES"))),
-        Role(Rolle.DRIFT, UUID.fromString(getEnvVar("AAP_DRIFT"))),
-        Role(Rolle.DRIFT_LES, UUID.fromString(getEnvVar("AAP_DRIFT_LES"))),
-        Role(Rolle.PRODUKSJONSSTYRING, UUID.fromString(getEnvVar("AAP_PRODUKSJONSSTYRING"))),
-        Role(Rolle.KVALITETSSIKRER, UUID.fromString(getEnvVar("AAP_KVALITETSSIKRER"))),
-    ),
+    val roles: List<Role> = Rolle.entries.map { rolle ->
+        Role(rolle, UUID.fromString(requiredConfigForKey("AAP_${rolle.name}")))
+    },
     val redis: RedisConfig = RedisConfig(),
     val behandlingsflyt: BehandlingsflytConfig = BehandlingsflytConfig(),
     val saf: SafConfig = SafConfig(),
