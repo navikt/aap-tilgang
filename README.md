@@ -1,6 +1,38 @@
 # aap-tilgang
 Applikasjon for å sjekke om brukere har tilgang til Kelvin-ressurs.
 
+## Host og tilgangslogikk
+Gradle-modulen `app` ligger i `app/restService` og er Ktor-hosten med routes,
+konfigurasjon, integrasjoner og adaptere.
+`tilgang-service` er biblioteket med tilgangsservice, regler og egne grensesnitt.
+Hosten avhenger av biblioteket, ikke omvendt. Biblioteket bruker `api-kontrakt`
+for felles roller og operasjoner, men har ingen Ktor-avhengighet.
+
+Rene enhetstester kjøres med `./gradlew :tilgang-service:test`.
+HTTP- og adaptertester ligger i `app/restService`; `./gradlew :app:test` kjører disse,
+og `./gradlew build` bygger og tester alle modulene.
+
+## Modulavhengigheter
+
+Pilene viser direkte Gradle-avhengigheter fra modulen som bruker et bibliotek
+til biblioteket. Eksterne biblioteker og byggeoppsett er utelatt.
+
+```mermaid
+flowchart LR
+    app["app<br/>app/restService (Ktor-host)"]
+    service["tilgang-service"]
+    api["api-kontrakt"]
+    plugin["plugin"]
+    pluginContract["plugin-kontrakt"]
+
+    app --> service
+    app --> api
+    service --> api
+    plugin --> pluginContract
+    plugin --> api
+    pluginContract --> api
+```
+
 ## Plugin
 For integrasjon mot tilgang-tjenesten finnes det en plugin og en http-klient, se [plugin/README.md](plugin/README.md) 
 
