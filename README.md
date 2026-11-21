@@ -11,6 +11,12 @@ for felles roller og operasjoner, men har ingen Ktor-avhengighet.
 Alle modulene bruker Gradles standardmapper: `src/main/kotlin`,
 `src/main/resources`, `src/test/kotlin` og `src/test/resources`.
 
+I `tilgang-service/src/main/kotlin` ligger `TilgangService.kt` direkte i roten.
+Øvrige filer er gruppert i `input`, `kontrakter`, `modeller` og `regler`.
+Det felles pakkeprefikset er utelatt fra katalogstiene; pakkene er fortsatt
+`tilgang.kontroll` og `tilgang.kontroll.regler`. Testene følger samme flate
+grunnstruktur i `src/test/kotlin`.
+
 Rene enhetstester kjøres med `./gradlew :tilgang-service:test`.
 HTTP- og adaptertester ligger i `app/restService`; `./gradlew :app:test` kjører disse,
 og `./gradlew build` bygger og tester alle modulene.
