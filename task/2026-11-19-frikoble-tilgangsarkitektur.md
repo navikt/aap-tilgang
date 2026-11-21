@@ -5,7 +5,7 @@
 Fullført dato: 2026-11-19.
 Oppgavegren: `test/architect-review`.
 Basegren: `main`, commit `e1f6b6d`.
-Siste implementasjon, inkludert modulskille og flytting av REST-hosten: `070760a`.
+Siste implementasjon, inkludert samlet vurdering i biblioteket: `a955a3f`.
 Sesjon: `655c2699-5b66-4c28-871c-c6d1fcb8ba86`.
 Utviklerens effektive Git-e-post: `petter.ekrann@nav.no`.
 Jira: ikke oppgitt.
@@ -22,31 +22,43 @@ Eksisterende API og tilgangsavgjørelser skulle beholdes.
 - `App.kt` oppretter og lukker klientene og en injiserbar `TokenProvider`.
   Tokenutløp, caching og single-flight er videreført; oppstart og opprydding av
   innlasting er flyttet ut av `computeIfAbsent`.
-- `TilgangService` bruker forbrukereide grensesnitt og egne inputmodeller i
-  stedet for API-requesttyper, gatewaytyper og HTTP-tokenklasser.
+- `TilgangService` eier regelmotoren i biblioteket og vurderer ferdig
+  `Tilgangsgrunnlag` til `Map<Operasjon, Boolean>`. Den bruker forbrukereide
+  grensesnitt for adressebeskyttelse, roller og personkontroll, ikke gatewaytyper
+  eller HTTP-tokenklasser. Tidligere `RegelService`, videresendingslaget
+  `Tilgangsvurdering` og den dupliserte modellen `RegelInput` er fjernet.
 - `Tilgangskontekst` samler ansattidentitet, roller, ugjennomsiktig brukertoken og
   callId. Bulk-endepunktet krever fortsatt bare token og callId.
-- `RegelService` bruker egne grensesnitt for adressebeskyttelse, roller og
-  personkontroll. Integrasjonsresultater og eksterne avklaringsbehov oversettes i
-  adaptere i `App.kt`.
+- Hostens `TilgangsforespørselService` samordner ressursforespørsler og beholder
+  direkte person- og bulktilgang uten en kunstig operasjonsnøkkel.
+  `TilgangsgrunnlagService` henter ident- og journalpostdata sentralt og oversetter
+  eksterne avklaringsbehovskoder til rollekrav. Valgfritt identgrunnlag fra kalleren
+  og journalpostens tidlige organisasjonsunntak er beholdt. `App.kt` kobler sammen
+  komponentene og adapterne; biblioteket avhenger ikke av grunnlagsinnhentingen.
 - Navn og filinndeling er ryddet, med én type per fil der det var hensiktsmessig.
   Offentlig pluginmetode og eksisterende metrikketiketter er beholdt.
 - Tilgangsservice, egne inputtyper og kontrakter er samlet i `tilgang.kontroll`,
   med regler i `tilgang.kontroll.regler`. Adressebeskyttelsesadapteren ligger ved
   MS Graph-integrasjonen og statushåndtering i `tilgang.http`. Rotpakken har bare
   `App.kt` og `Config.kt`; relevante tester følger den nye strukturen.
-- `TilgangService` får en forbrukereid `ILogger` med `info` og `warn` i
-  konstruktøren. SLF4J-adapteren kobles inn i `App.kt`, med samme loggernavn,
-  loggnivåer og meldinger som før. Ingen SLF4J-avhengighet er igjen i
-  `tilgang.kontroll`.
+- Det midlertidige `ILogger` og adapteren er fjernet. Hostens grunnlagsservice
+  og REST-fasade får standard `org.slf4j.Logger` i konstruktøren, med samme
+  loggernavn, loggnivåer og meldinger som før. Biblioteket har ingen
+  logging-avhengighet.
 - Tilgangsservice, regelmotor, egne typer og grensesnitt ligger i Gradle-biblioteket
   `tilgang-service`. Produksjonsavhengighetene er `api-kontrakt`, Kotlin og
   coroutines, uten Ktor eller avhengighet tilbake til hosten. Rollemapping fra
   hostkonfigurasjon ligger i `tilgang.routes`.
 - Ktor-hosten ligger i `app/restService`, med byggefil, kildekode, ressurser og
   tester. Gradle-modulnavnet er fortsatt `app`; Docker og README følger den nye
-  katalogen. Rene service- og regeltester ligger i biblioteket, mens HTTP-,
-  adapter- og hostavhengige regeltester ligger i hosten.
+  katalogen. Bibliotekets vurderings- og regeltester ligger i biblioteket, mens
+  orkestrerings-, HTTP-, adapter- og hostavhengige regeltester ligger i hosten.
+- Alle fem moduler bruker standard kilde- og ressursmapper under `src`.
+  Kotlin-kildekode følger ikke lenger med som ressurser i produksjons-JAR-ene.
+  Bibliotekets felles pakkeprefiks er utelatt fra katalogstiene; filer er gruppert
+  i `input`, `modeller`, `regler` og `exceptions`, med `TilgangService.kt` i roten.
+- `ManglerSøkerIdentException` uttrykker manglende søkeridentgrunnlag for
+  journalpost, med tidligere meldinger og `IllegalArgumentException` som base.
 - Tester dekker blant annet klientkonfigurasjon, tokenlivssyklus, HTTP-grensen,
   kontekstisolasjon, adapterfeil, avklaringsbehov og eksisterende regelutfall.
 
@@ -76,8 +88,18 @@ habilitetsuttrykk, regelrekkefølge, kortslutning, lokal regelcache og HTTP 200 
 | `0242f88` | Injisert logger via eget grensesnitt |
 | `f9b2625` | Skilt tilgangsservice og regelmotor fra Ktor-hosten i eget bibliotek |
 | `070760a` | Flyttet hostens innhold til `app/restService`, med samme Gradle-modulnavn |
+| `c50b98b` | Standard kilde- og ressursmapper; ingen Kotlin-kilder i produksjons-JAR-er |
+| `a563335` | Flatet ut og gruppert bibliotekets filer uten å endre Kotlin-pakkene |
+| `424cdc3` | Egen feiltype for manglende søkeridentgrunnlag |
+| `bb49158` | Sentralt grunnlagsoppslag og REST-fasade skilt fra kartbasert vurdering |
+| `e24c042` | Erstattet ILogger med standard SLF4J Logger i hosten |
+| `a955a3f` | Samlet regelmotoren i TilgangService og fjernet adapter og duplisert input |
 
 ## Validering
+
+Gjeldende publiseringskontroll ved `a955a3f` er dokumentert nedenfor:
+642 tester bestod etter remote-synkronisering 2026-11-21, uten feil eller
+hoppet over. Tidligere resultater er beholdt som historikk.
 
 Full bygging av alle fire moduler ved `c8e8f49` bestod før avslutning:
 
@@ -276,6 +298,100 @@ uendret; siste fullkjøring ved `070760a` hadde 638 beståtte tester som dokumen
 ovenfor. Denne publiseringen omfatter README og oppdatering av sluttnotatet.
 Utvikleren godkjente en separat commit av det oppdaterte sluttnotatet før push.
 
+### Oppfølging: standardmapper, grunnlagsgrense og samlet vurdering
+
+Etter README-pushen ble standard kilde- og ressursmapper innført i `c50b98b`.
+De brede ressursrøttene som pakket Kotlin-kilder inn i produksjons-JAR-er ble
+fjernet. Hostens 62 kilde- og ressursfiler ble flyttet uten innholdsendringer;
+logback-ressursene og publiserte kildearkiver ble beholdt.
+
+I `a563335` ble bibliotekets 49 produksjons- og testfiler flatet ut og gruppert.
+Kotlin-pakkene og alle 58 kompilerte klassenavn var uendret. Full bygging ved
+begge disse stegene bestod med 638 tester.
+
+`424cdc3` introduserte `ManglerSøkerIdentException` som underklasse av
+`IllegalArgumentException`, med de tidligere feilmeldingene. To målrettede
+tilfeller for manglende søkeridenter ble lagt til. 94 berørte tester bestod
+etter at testgrunnlaget ble tilpasset eksisterende validering av ikke-tom
+søkerliste.
+
+Utvikleren valgte å beholde identoppslag sentralt, ikke flytte det til alle
+REST-kallere. `bb49158` skilte derfor grunnlagsinnhenting og REST-orkestrering
+fra bibliotekets kartbaserte vurdering. Eksisterende orkestreringstester ble
+flyttet til hosten uten å endre testkroppene. To vurderingstilfeller ble lagt til,
+og full bygging bestod med 642 tester.
+
+Etter en ny avklaring ble eget `ILogger` fjernet i `e24c042`. Hosten bruker
+standard SLF4J Logger direkte, fortsatt injisert med samme kategori og meldinger.
+35 berørte orkestrerings- og komposisjonstester bestod.
+
+Utvikleren påpekte deretter det indirekte vurderingshoppet gjennom hosten.
+I `a955a3f` overtok `TilgangService` den eksisterende regelmotoren.
+`Tilgangsvurdering`, videresendingslaget, `RegelInput` og den rå
+`Avklaringsbehov`-modellen ble fjernet. `Tilgangsgrunnlag` inneholder ferdige
+rollekrav, og kildetypen for avklaringsbehov ligger nå i hosten.
+De to bibliotekstilfellene tester faktisk avslag uten oppslag når roller
+mangler. Orkestreringstilfellene for avklaringsbehov tester ferdige rollekrav.
+En gammel null-assertion for avklaringsbehov måtte oppdateres til tom rollekravliste
+før full bygging bestod med 642 tester.
+
+Regelmotorens kropp er kontrollert mot forrige implementasjon: bare klasse- og
+grunnlagsnavn er endret. Regeloppsett, rekkefølge, kortslutning og regelcache
+innenfor hvert vurderingskall er identiske. Ukjente avklaringsbehov feiler fortsatt
+etter nødvendig identgrunnlag og før vurdering; organisasjonsunntaket omgår
+både identoppslag, kodeoversetting og vurdering.
+
+#### Publiseringskontroll etter siste refaktorering
+
+Sesjon: `655c2699-5b66-4c28-871c-c6d1fcb8ba86`.
+Utviklerens effektive Git-e-post: `petter.ekrann@nav.no`.
+Oppgavegren: `test/architect-review`; basegren: `main`.
+Validert implementasjon: `a955a3ff9b52fa33bb8525487f6ba3da86caea86`.
+
+Før validering ble `git fetch origin` og
+`git merge --ff-only origin/test/architect-review` kjørt 2026-11-21.
+Remote lå fortsatt på `226b5d3`; ingen innfletting var nødvendig.
+`origin/main` var `75c8b49` og ble ikke flettet inn som del av pushen.
+Eksisterende PR #710 var åpen fra oppgavegrenen til `main`.
+
+Full publiseringsvalidering startet 2026-11-21T16:00:31+01:00, uten testfiltre:
+
+```sh
+JAVA_HOME=/home/p/.copilot/session-state/655c2699-5b66-4c28-871c-c6d1fcb8ba86/files/jdk25 \
+JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-} -javaagent:/home/p/.gradle/caches/modules-2/files-2.1/net.bytebuddy/byte-buddy-agent/1.18.2/62f38a6faf7f069d661b79a07d566f504b0b20c4/byte-buddy-agent-1.18.2.jar" \
+./gradlew build --rerun-tasks --console=plain --no-daemon \
+  --no-configuration-cache --no-parallel --max-workers=1
+```
+
+`BUILD SUCCESSFUL in 1m 29s`; alle 38 Gradle-oppgaver ble kjørt på nytt,
+uten TLS-overstyringer.
+
+| Modul | Tester | Feil | Hoppet over |
+| --- | ---: | ---: | ---: |
+| app, i app/restService | 570 | 0 | 0 |
+| tilgang-service | 22 | 0 | 0 |
+| plugin | 50 | 0 | 0 |
+| api-kontrakt | Ingen testkilder | 0 | 0 |
+| plugin-kontrakt | Ingen testkilder | 0 | 0 |
+| Totalt | 642 | 0 | 0 |
+
+Dette er en ny fullkjøring; det tidligere fritaket for en ren README-push
+gjelder ikke denne publiseringen. README beskriver nå grunnlagsinnhenting,
+rollekrav, vurderingsflyt, standard logging og bevart REST-atferd.
+
+Bibliotekets produksjonskilder har ingen avhengighet på hosten, Ktor, SLF4J
+eller eksterne Behandlingsflyt-/Postmottak-definisjoner. Separate host- og
+bibliotek-JAR-er, kjørbar host-JAR, fravær av Kotlin-kilder som
+produksjonsressurser og de publiserte kildearkivene er kontrollert.
+API-, plugin- og plugin-kontrakt-kildearkivene beholder henholdsvis 5, 24 og
+10 Kotlin-filer. `git diff --check` bestod.
+
+Trivy og zizmor er fortsatt ikke installert, kontrollert på nytt ved
+publiseringsgaten. Ingen automatiske skanninger med disse verktøyene,
+Docker-imagebygging, utrulling eller produksjonsverifisering er utført lokalt.
+Utvikleren godkjente en separat commit av README og dette oppdaterte
+fullføringsdokumentet før push og oppdatering av eksisterende PR #710.
+
 ## Gjenstående og overlevering
 
 Ingen kjente funksjonelle feil gjenstår fra arbeidet. Etter publisering gjenstår
@@ -354,6 +470,28 @@ Agentens svar er oppsummert etter meldingslisten.
 | 60 | Utvikler | legg til et diagram for avhengigheter i README.md på rot |
 | 61 | Utvikler | push uten tester vi har bare endret readme |
 | 62 | Utvikler, godkjenning av sluttnotat-commit for README-diagrammet | true |
+| 63 | Utvikler | er det mer vi kan gjøre for å rydde opp? |
+| 64 | Utvikler | kjør på |
+| 65 | Utvikler | trenger vi så mange nivåer ned til kontroll mappen |
+| 66 | Utvikler | gjør det, og grupper filene |
+| 67 | Utvikler | trenger vi noe exceptions i tilgangsservice |
+| 68 | Utvikler | ja la en mappe for exceptions og legg den der. |
+| 69 | Utvikler | Hva er det faktisk Tilgansservice gjør for noe. Kan vi abstrahere noen begreper |
+| 70 | Utvikler | Det virker på meg som om det er mye duplisert logikk i @tilgangsservice |
+| 71 | Utvikler | hvilke funksjoner finnes |
+| 72 | Utvikler | det virker rart at vi skal kalle ut for å finne identer |
+| 73 | Utvikler | og fortsatt ett forhold til tilgangsmaskinen |
+| 74 | Utvikler | Hva tenker du om å flytte grunnlagsdata helt til den som kalle rest tjenesten |
+| 75 | Utvikler | det er kanskje lurt å la identoppslaget ligge sentralt, jeg er bekymeret for kryss avhengigheter |
+| 76 | Utvikler | vi prøver det |
+| 77 | Utvikler | kan vi la alle funksjonene i tilgangservice returnere map<operasjon,bool> |
+| 78 | Utvikler, valg om direkte person-/bulktilgang | outside |
+| 79 | Utvikler | hvor er tilgangsvurdering implementert |
+| 80 | Utvikler | vi dropper den ilogger ideen, bruk standard log interface |
+| 81 | Utvikler | er det noe rart med at tilgangsvurerdering er implementer i rest servicen |
+| 82 | Utvikler | bra plan |
+| 83 | Utvikler | oppdater dokumentasjon og push |
+| 84 | Utvikler, godkjenning av dokumentasjonscommit for samlet vurdering og publisering | true |
 
 Agentoppsummering: Arbeidet ble utført stegvis og committet mellom stegene.
 Klientoppsettet ble flyttet først, deretter TokenProvider-livssyklus,
@@ -398,3 +536,19 @@ Utvikleren godkjente dokumentasjonscommiten før publisering.
 Agenten la til moduldiagrammet i README som commit `20a2c5c`, kontrollert mot
 Gradle-filene. Ved neste push ble bare dokumentasjonsendringer bekreftet;
 ingen tester ble kjørt på nytt, som uttrykkelig bedt om av utvikleren.
+
+Agentoppsummering av siste oppfølging: Standard kilde- og ressursmapper og
+flat gruppering ble innført i separate commits. En konkret feiltype for manglende
+identgrunnlag ble lagt til uten å endre meldinger eller ordinære avslag.
+Ansvarsdelingen ble drøftet, og utvikleren valgte sentralt identoppslag og
+direkte person-/bulktilgang utenfor den kartbaserte bibliotekstjenesten.
+Grunnlagsservice og REST-fasade ble skilt ut i hosten. Eget loggergrensesnitt
+ble deretter erstattet av standard SLF4J Logger.
+Etter avklaring av vurderingsadapteren ble regelmotoren samlet i bibliotekets
+TilgangService, med ferdige rollekrav og uten et vurderingshopp tilbake til
+hosten. Alle seks implementasjonscommits ble gjort separat uten push.
+Ved utviklerens neste push-ønske ble remote synkronisert og alle 642 tester
+kjørt på nytt. Dokumentasjonen ble oppdatert før planlagt publisering til
+eksisterende PR.
+Utvikleren godkjente en separat dokumentasjonscommit av README og det oppdaterte
+fullføringsdokumentet før publisering.

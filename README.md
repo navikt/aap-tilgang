@@ -17,6 +17,11 @@ Direkte person- og bulktilgang ligger i REST-fasaden, uten en kunstig operasjons
 Regelmotorens oppslag for adressebeskyttelse og personkontroll er fortsatt beholdt.
 `App.kt` kobler sammen komponentene; biblioteket avhenger ikke av grunnlagsinnhentingen.
 
+Grunnlaget inneholder kallkontekst, søker- og barnidenter, ferdige rollekrav og
+ønskede operasjoner. Regelresultater gjenbrukes bare innenfor samme vurderingskall.
+REST-svarene er uendret; ordinære avslag gir fortsatt HTTP 200 med `tilgang=false`.
+Hosten bruker `org.slf4j.Logger` direkte. Biblioteket har ingen logging-avhengighet.
+
 Alle modulene bruker Gradles standardmapper: `src/main/kotlin`,
 `src/main/resources`, `src/test/kotlin` og `src/test/resources`.
 
