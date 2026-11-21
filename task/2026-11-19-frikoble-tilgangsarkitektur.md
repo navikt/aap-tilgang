@@ -259,6 +259,23 @@ verifisering mot produksjon er utført lokalt.
 Utvikleren godkjente en separat dokumentasjonscommit av dette oppdaterte notatet
 før push og oppdatering av eksisterende PR #710.
 
+### Oppfølging: avhengighetsdiagram i README
+
+Commit `20a2c5c` legger til et Mermaid-diagram i rotens `README.md` med direkte
+Gradle-avhengigheter mellom de fem modulene. Pilene er kontrollert mot
+modulenes byggefiler; eksterne biblioteker og byggeoppsett er utelatt.
+
+Før publisering ble `git fetch origin` og
+`git merge --ff-only origin/test/architect-review` kjørt
+2026-11-21T14:32:30+01:00. Remote lå på `1e194e8`; ingen innfletting var nødvendig.
+Diffen mot remote inneholdt bare `README.md`, og `git diff --check` bestod.
+
+Ingen tester er kjørt på nytt, etter utviklerens uttrykkelige ønske om push uten
+tester for denne README-endringen. Produksjonskode, byggeoppsett og tester er
+uendret; siste fullkjøring ved `070760a` hadde 638 beståtte tester som dokumentert
+ovenfor. Denne publiseringen omfatter README og oppdatering av sluttnotatet.
+Utvikleren godkjente en separat commit av det oppdaterte sluttnotatet før push.
+
 ## Gjenstående og overlevering
 
 Ingen kjente funksjonelle feil gjenstår fra arbeidet. Etter publisering gjenstår
@@ -334,6 +351,9 @@ Agentens svar er oppsummert etter meldingslisten.
 | 57 | Utvikler | la oss legge innholdet i app inn i ett nivå til som vi kalle restService |
 | 58 | Utvikler | push |
 | 59 | Utvikler, godkjenning av sluttnotat-commit for modulskille og REST-host | true |
+| 60 | Utvikler | legg til et diagram for avhengigheter i README.md på rot |
+| 61 | Utvikler | push uten tester vi har bare endret readme |
+| 62 | Utvikler, godkjenning av sluttnotat-commit for README-diagrammet | true |
 
 Agentoppsummering: Arbeidet ble utført stegvis og committet mellom stegene.
 Klientoppsettet ble flyttet først, deretter TokenProvider-livssyklus,
@@ -375,3 +395,6 @@ commit `070760a`. Ingen av disse commitene var pushet før utvikleren ba om push
 Agenten synkroniserte oppgavegrenen og kjørte alle 638 tester på nytt før
 oppdatering av dette notatet og forespørsel om separat dokumentasjonscommit.
 Utvikleren godkjente dokumentasjonscommiten før publisering.
+Agenten la til moduldiagrammet i README som commit `20a2c5c`, kontrollert mot
+Gradle-filene. Ved neste push ble bare dokumentasjonsendringer bekreftet;
+ingen tester ble kjørt på nytt, som uttrykkelig bedt om av utvikleren.
