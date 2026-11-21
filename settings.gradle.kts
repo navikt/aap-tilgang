@@ -6,6 +6,7 @@ pluginManagement {
 
 rootProject.name = "tilgang"
 include("app", "tilgang-service", "plugin", "api-kontrakt", "plugin-kontrakt")
+project(":app").projectDir = file("app/restService")
 
 dependencyResolutionManagement {
     // Felles for alle gradle prosjekter i repoet
