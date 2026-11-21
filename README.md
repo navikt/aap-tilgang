@@ -12,6 +12,27 @@ Rene enhetstester kjøres med `./gradlew :tilgang-service:test`.
 HTTP- og adaptertester ligger i `app/restService`; `./gradlew :app:test` kjører disse,
 og `./gradlew build` bygger og tester alle modulene.
 
+## Modulavhengigheter
+
+Pilene viser direkte Gradle-avhengigheter fra modulen som bruker et bibliotek
+til biblioteket. Eksterne biblioteker og byggeoppsett er utelatt.
+
+```mermaid
+flowchart LR
+    app["app<br/>app/restService (Ktor-host)"]
+    service["tilgang-service"]
+    api["api-kontrakt"]
+    plugin["plugin"]
+    pluginContract["plugin-kontrakt"]
+
+    app --> service
+    app --> api
+    service --> api
+    plugin --> pluginContract
+    plugin --> api
+    pluginContract --> api
+```
+
 ## Plugin
 For integrasjon mot tilgang-tjenesten finnes det en plugin og en http-klient, se [plugin/README.md](plugin/README.md) 
 
