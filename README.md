@@ -8,6 +8,9 @@ konfigurasjon, integrasjoner og adaptere.
 Hosten avhenger av biblioteket, ikke omvendt. Biblioteket bruker `api-kontrakt`
 for felles roller og operasjoner, men har ingen Ktor-avhengighet.
 
+Alle modulene bruker Gradles standardmapper: `src/main/kotlin`,
+`src/main/resources`, `src/test/kotlin` og `src/test/resources`.
+
 Rene enhetstester kjøres med `./gradlew :tilgang-service:test`.
 HTTP- og adaptertester ligger i `app/restService`; `./gradlew :app:test` kjører disse,
 og `./gradlew build` bygger og tester alle modulene.
