@@ -67,7 +67,6 @@ import tilgang.kontroll.regler.Habilitetsgrunnlag
 import tilgang.kontroll.regler.Personkontroll
 import tilgang.kontroll.regler.RegelInput
 import tilgang.kontroll.regler.RegelService
-import tilgang.logging.ILogger
 import tilgang.redis.Redis
 import tilgang.routes.actuator
 import tilgang.routes.tilgang
@@ -186,13 +185,7 @@ internal fun createTilgangService(
     regelService: RegelService,
     tilgangsmaskin: TilgangsmaskinGateway,
 ): TilgangsforespørselService {
-    val log = object : ILogger {
-        private val logger = LoggerFactory.getLogger(TilgangService::class.java)
-
-        override fun info(message: String) = logger.info(message)
-
-        override fun warn(message: String) = logger.warn(message)
-    }
+    val log = LoggerFactory.getLogger(TilgangService::class.java)
     val grunnlagService = TilgangsgrunnlagService(
         identOppslag = object : IdentOppslag {
             override suspend fun hentIdenterForSak(saksnummer: String): RelevanteIdenter =

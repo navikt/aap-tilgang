@@ -3,6 +3,7 @@ package tilgang.foresporsel
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.RelevanteIdenter
 import no.nav.aap.tilgang.Rolle
+import org.slf4j.Logger
 import tilgang.grunnlag.TilgangsgrunnlagService
 import tilgang.kontroll.ArenasakstilgangInput
 import tilgang.kontroll.Avklaringsbehov
@@ -17,13 +18,12 @@ import tilgang.kontroll.TilbakekrevingstilgangInput
 import tilgang.kontroll.TilgangService
 import tilgang.kontroll.Tilgangsgrunnlag
 import tilgang.kontroll.Tilgangskontekst
-import tilgang.logging.ILogger
 
 class TilgangsforespørselService(
     private val grunnlagService: TilgangsgrunnlagService,
     private val tilgangService: TilgangService,
     private val persontilgang: Persontilgang,
-    private val log: ILogger,
+    private val log: Logger,
 ) {
     suspend fun harTilgangTilSak(
         input: SakstilgangInput,

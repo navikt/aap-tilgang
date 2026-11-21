@@ -19,13 +19,13 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.ValueSource
+import org.slf4j.Logger
 import tilgang.foresporsel.Persontilgang
 import tilgang.foresporsel.TilgangsforespørselService
 import tilgang.grunnlag.IdentOppslag
 import tilgang.grunnlag.JournalpostInfo
 import tilgang.grunnlag.JournalpostOppslag
 import tilgang.grunnlag.TilgangsgrunnlagService
-import tilgang.logging.ILogger
 import java.util.UUID
 import kotlin.random.Random
 import kotlin.test.assertFailsWith
@@ -36,7 +36,7 @@ class TilgangsforespørselServiceTest {
     private val identOppslag = mockk<IdentOppslag>()
     private val tilgangsvurdering = mockk<Tilgangsvurdering>(relaxed = true)
     private val persontilgang = mockk<Persontilgang>(relaxed = true)
-    private val log = mockk<ILogger>(relaxUnitFun = true)
+    private val log = mockk<Logger>(relaxUnitFun = true)
 
     private val service = TilgangsforespørselService(
         grunnlagService = TilgangsgrunnlagService(identOppslag, journalpostOppslag, log),

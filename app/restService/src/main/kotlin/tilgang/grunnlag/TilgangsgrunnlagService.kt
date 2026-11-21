@@ -2,13 +2,13 @@ package tilgang.grunnlag
 
 import java.util.UUID
 import no.nav.aap.tilgang.RelevanteIdenter
+import org.slf4j.Logger
 import tilgang.kontroll.ManglerSøkerIdentException
-import tilgang.logging.ILogger
 
 class TilgangsgrunnlagService(
     private val identOppslag: IdentOppslag,
     private val journalpostOppslag: JournalpostOppslag,
-    private val log: ILogger,
+    private val log: Logger,
 ) {
     suspend fun hentIdenterForSak(
         saksnummer: String,
