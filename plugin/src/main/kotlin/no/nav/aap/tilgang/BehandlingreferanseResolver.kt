@@ -1,4 +1,4 @@
-package no.nav.aap.tilgang.plugin.kontrakt
+package no.nav.aap.tilgang
 
 import java.util.UUID
 

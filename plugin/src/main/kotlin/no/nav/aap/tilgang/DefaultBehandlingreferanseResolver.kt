@@ -1,6 +1,5 @@
 package no.nav.aap.tilgang
 
-import no.nav.aap.tilgang.plugin.kontrakt.BehandlingreferanseResolver
 import java.util.UUID
 
 public class DefaultBehandlingreferanseResolver : BehandlingreferanseResolver {

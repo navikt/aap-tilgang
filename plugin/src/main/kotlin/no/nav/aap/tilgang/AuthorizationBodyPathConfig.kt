@@ -1,16 +1,16 @@
 package no.nav.aap.tilgang
 
 import java.util.UUID
-import no.nav.aap.tilgang.plugin.kontrakt.BehandlingreferanseResolver
-import no.nav.aap.tilgang.plugin.kontrakt.Behandlingsreferanse
-import no.nav.aap.tilgang.plugin.kontrakt.JournalpostIdResolver
-import no.nav.aap.tilgang.plugin.kontrakt.Journalpostreferanse
-import no.nav.aap.tilgang.plugin.kontrakt.Personreferanse
-import no.nav.aap.tilgang.plugin.kontrakt.RelevanteIdenterResolver
-import no.nav.aap.tilgang.plugin.kontrakt.Saksreferanse
 
-public data class AuthorizationBodyPathConfig(
+/**
+ * Tilgangskontroll basert på request body.
+ *
+ * @property kontekst Henter ut konteksten det bes om tilgang til fra body. Må settes for OBO-tokens;
+ * kan være `null` når ruten bare skal brukes med client credentials.
+ */
+public data class AuthorizationBodyPathConfig<T : Any>(
     val operasjon: Operasjon,
+    val kontekst: ((T) -> Tilgangskontekst)? = null,
     val applicationRole: String? = null,
     val authorizedAzps: List<UUID>? = null,
     val applicationsOnly: Boolean = false,
@@ -35,83 +35,43 @@ public data class AuthorizationBodyPathConfig(
         }
     }
 
-    public suspend fun tilTilgangRequest(request: Any): AuthorizedRequest {
-        when (request) {
-            is Saksreferanse -> {
-                val referanse = request.hentSaksreferanse()
-                val relevanteIdenter = relevanteIdenterResolver?.resolve(referanse)
-                return AuthorizedRequest(
-                    applicationsOnly,
-                    applicationRole,
-                    authorizedAzps,
-                    SakTilgangRequest(
-                        saksnummer = referanse,
-                        påkrevdRolle = påkrevdRolle,
-                        operasjon = operasjon,
-                        relevanteIdenter = relevanteIdenter
-                    )
+    public suspend fun tilTilgangRequest(request: T): AuthorizedRequest =
+        AuthorizedRequest(
+            applicationsOnly = applicationsOnly,
+            applicationRole = applicationRole,
+            authorizedAzps = authorizedAzps,
+            tilgangRequest = kontekst?.invoke(request)?.let { byggTilgangRequest(it) },
+        )
+
+    private suspend fun byggTilgangRequest(kontekst: Tilgangskontekst): TilgangRequest =
+        when (kontekst) {
+            is Tilgangskontekst.Sak -> SakTilgangRequest(
+                saksnummer = kontekst.saksnummer,
+                påkrevdRolle = påkrevdRolle,
+                operasjon = operasjon,
+                relevanteIdenter = relevanteIdenterResolver?.resolve(kontekst.saksnummer)
+            )
+
+            is Tilgangskontekst.Person -> PersonTilgangRequest(
+                personIdent = kontekst.personIdent,
+                påkrevdRolle = påkrevdRolle,
+                operasjon = operasjon,
+            )
+
+            is Tilgangskontekst.Behandling -> {
+                val referanse = behandlingreferanseResolver.resolve(kontekst.referanse)
+                BehandlingTilgangRequest(
+                    behandlingsreferanse = referanse,
+                    påkrevdRolle = påkrevdRolle.ifEmpty { kontekst.påkrevdRolle },
+                    operasjon = operasjon,
+                    relevanteIdenter = relevanteIdenterResolver?.resolve(referanse.toString())
                 )
             }
 
-            is Personreferanse -> {
-                val referanse = request.hentPersonreferanse()
-                return AuthorizedRequest(
-                    applicationsOnly,
-                    applicationRole,
-                    authorizedAzps,
-                    PersonTilgangRequest(
-                        personIdent = referanse,
-                        påkrevdRolle = påkrevdRolle,
-                        operasjon = operasjon,
-                    )
-                )
-            }
-
-            is Behandlingsreferanse -> {
-                val referanse = behandlingreferanseResolver.resolve(request.behandlingsreferanseResolverInput())
-                val relevanteIdenter = relevanteIdenterResolver?.resolve(referanse.toString())
-                val påkrevdeRoller = påkrevdRolle.ifEmpty {
-                    request.hentPåkrevdRolle()
-                }
-
-                return AuthorizedRequest(
-                    applicationsOnly,
-                    applicationRole,
-                    authorizedAzps,
-                    BehandlingTilgangRequest(
-                        behandlingsreferanse = referanse,
-                        påkrevdRolle = påkrevdeRoller,
-                        operasjon = operasjon,
-                        relevanteIdenter = relevanteIdenter
-                    )
-                )
-            }
-
-            is Journalpostreferanse -> {
-                val referanse =
-                    journalpostIdResolver.resolve(request.journalpostIdResolverInput())
-
-                val påkrevdeRoller = påkrevdRolle.ifEmpty {
-                    request.hentPåkrevdRolle()
-                }
-                return AuthorizedRequest(
-                    applicationsOnly,
-                    applicationRole,
-                    authorizedAzps,
-                    JournalpostTilgangRequest(
-                        journalpostId = referanse,
-                        påkrevdRolle = påkrevdeRoller,
-                        operasjon = operasjon
-                    )
-                )
-            }
-
-            else -> return AuthorizedRequest(
-                applicationsOnly = applicationsOnly,
-                applicationRole = applicationRole,
-                authorizedAzps = authorizedAzps,
-                tilgangRequest = null
+            is Tilgangskontekst.Journalpost -> JournalpostTilgangRequest(
+                journalpostId = journalpostIdResolver.resolve(kontekst.referanse),
+                påkrevdRolle = påkrevdRolle.ifEmpty { kontekst.påkrevdRolle },
+                operasjon = operasjon
             )
         }
-    }
 }

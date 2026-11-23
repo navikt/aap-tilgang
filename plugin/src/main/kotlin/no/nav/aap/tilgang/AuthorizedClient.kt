@@ -10,9 +10,9 @@ import com.papsign.ktor.openapigen.route.path.normal.put
 import com.papsign.ktor.openapigen.route.response.OpenAPIPipelineResponseContext
 import io.ktor.http.*
 import io.ktor.server.routing.*
+import no.nav.aap.tilgang.auditlog.AuditLogBodyConfig
 import no.nav.aap.tilgang.auditlog.AuditLogConfig
 import no.nav.aap.tilgang.auditlog.AuditLogPathParamConfig
-import no.nav.aap.tilgang.plugin.kontrakt.RelevanteIdenterResolver
 import org.jetbrains.annotations.ApiStatus
 
 public enum class Tags(override val description: String) : APITag {
@@ -71,11 +71,14 @@ public inline fun <reified TParams : Any, reified TResponse : Any, reified TRequ
             HttpMethod.Post
         )
 
-        is AuthorizationBodyPathConfig -> ktorRoute.installerTilgangBodyPlugin<TRequest>(
-            routeConfig,
-            auditLogConfig,
-            HttpMethod.Post
-        )
+        is AuthorizationBodyPathConfig<*> -> {
+            @Suppress("UNCHECKED_CAST")
+            ktorRoute.installerTilgangBodyPlugin(
+                routeConfig as AuthorizationBodyPathConfig<TRequest>,
+                auditLogConfig,
+                HttpMethod.Post
+            )
+        }
 
         is AuthorizationMachineToMachineConfig -> ktorRoute.installerTilgangMachineToMachinePlugin(
             routeConfig,
@@ -103,6 +106,56 @@ public inline fun <reified TParams : Any, reified TResponse : Any, reified TRequ
         )
     }
 }
+
+/**
+ * Som [authorizedPost] over, men typet mot request body slik at [AuthorizationBodyPathConfig.kontekst]
+ * og [AuditLogBodyConfig.resolverInput] får [TRequest] som parameter.
+ */
+public inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : Any> NormalOpenAPIRoute.authorizedPost(
+    routeConfig: AuthorizationBodyPathConfig<TRequest>,
+    auditLogConfig: AuditLogBodyConfig<TRequest>? = null,
+    exampleResponse: TResponse? = null,
+    exampleRequest: TRequest? = null,
+    vararg modules: RouteOpenAPIModule,
+    noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams, TRequest) -> Unit
+) {
+    val config: AuthorizationRouteConfig = routeConfig
+    val audit: AuditLogConfig? = auditLogConfig
+    authorizedPost<TParams, TResponse, TRequest>(config, audit, exampleResponse, exampleRequest, *modules, body = body)
+}
+
+/**
+ * Som typet [authorizedPost] over, men med auditlogging fra path-parameter.
+ */
+public inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : Any> NormalOpenAPIRoute.authorizedPost(
+    routeConfig: AuthorizationBodyPathConfig<TRequest>,
+    auditLogConfig: AuditLogPathParamConfig,
+    exampleResponse: TResponse? = null,
+    exampleRequest: TRequest? = null,
+    vararg modules: RouteOpenAPIModule,
+    noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams, TRequest) -> Unit
+) {
+    val config: AuthorizationRouteConfig = routeConfig
+    val audit: AuditLogConfig = auditLogConfig
+    authorizedPost<TParams, TResponse, TRequest>(config, audit, exampleResponse, exampleRequest, *modules, body = body)
+}
+
+/**
+ * Fanger [AuthorizationBodyPathConfig] eller [AuditLogBodyConfig] med annen type enn [TRequest] ved kompilering.
+ */
+@Deprecated(BODY_TYPE_MISMATCH, level = DeprecationLevel.ERROR)
+@Suppress("UNUSED_PARAMETER", "UnusedReceiverParameter")
+public fun <TParams : Any, TResponse : Any, TRequest : Any> NormalOpenAPIRoute.authorizedPost(
+    routeConfig: AuthorizationBodyPathConfig<*>,
+    auditLogConfig: AuditLogConfig? = null,
+    exampleResponse: TResponse? = null,
+    exampleRequest: TRequest? = null,
+    vararg modules: RouteOpenAPIModule,
+    body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams, TRequest) -> Unit
+): Unit = throw UnsupportedOperationException(BODY_TYPE_MISMATCH)
+
+private const val BODY_TYPE_MISMATCH: String =
+    "Typeparameteren til AuthorizationBodyPathConfig/AuditLogBodyConfig må være lik request body-typen (TRequest)"
 
 public inline fun <reified TParams : Any, reified TResponse : Any> NormalOpenAPIRoute.getGrunnlag(
     behandlingPathParam: BehandlingPathParam,
@@ -161,7 +214,14 @@ public inline fun <reified TParams : Any, reified TResponse : Any, reified TRequ
             HttpMethod.Put
         )
 
-        is AuthorizationBodyPathConfig -> ktorRoute.installerTilgangBodyPlugin<TRequest>(routeConfig, auditLogConfig, HttpMethod.Put)
+        is AuthorizationBodyPathConfig<*> -> {
+            @Suppress("UNCHECKED_CAST")
+            ktorRoute.installerTilgangBodyPlugin(
+                routeConfig as AuthorizationBodyPathConfig<TRequest>,
+                auditLogConfig,
+                HttpMethod.Put
+            )
+        }
         is AuthorizationMachineToMachineConfig -> ktorRoute.installerTilgangMachineToMachinePlugin(
             routeConfig,
             auditLogConfig,
@@ -182,6 +242,47 @@ public inline fun <reified TParams : Any, reified TResponse : Any, reified TRequ
         )
     }
 }
+
+/**
+ * Som [authorizedPut] over, men typet mot request body slik at [AuthorizationBodyPathConfig.kontekst]
+ * og [AuditLogBodyConfig.resolverInput] får [TRequest] som parameter.
+ */
+public inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : Any> NormalOpenAPIRoute.authorizedPut(
+    routeConfig: AuthorizationBodyPathConfig<TRequest>,
+    auditLogConfig: AuditLogBodyConfig<TRequest>? = null,
+    vararg modules: RouteOpenAPIModule,
+    noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams, TRequest) -> Unit
+) {
+    val config: AuthorizationRouteConfig = routeConfig
+    val audit: AuditLogConfig? = auditLogConfig
+    authorizedPut<TParams, TResponse, TRequest>(config, audit, *modules, body = body)
+}
+
+/**
+ * Som typet [authorizedPut] over, men med auditlogging fra path-parameter.
+ */
+public inline fun <reified TParams : Any, reified TResponse : Any, reified TRequest : Any> NormalOpenAPIRoute.authorizedPut(
+    routeConfig: AuthorizationBodyPathConfig<TRequest>,
+    auditLogConfig: AuditLogPathParamConfig,
+    vararg modules: RouteOpenAPIModule,
+    noinline body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams, TRequest) -> Unit
+) {
+    val config: AuthorizationRouteConfig = routeConfig
+    val audit: AuditLogConfig = auditLogConfig
+    authorizedPut<TParams, TResponse, TRequest>(config, audit, *modules, body = body)
+}
+
+/**
+ * Fanger [AuthorizationBodyPathConfig] eller [AuditLogBodyConfig] med annen type enn [TRequest] ved kompilering.
+ */
+@Deprecated(BODY_TYPE_MISMATCH, level = DeprecationLevel.ERROR)
+@Suppress("UNUSED_PARAMETER", "UnusedReceiverParameter")
+public fun <TParams : Any, TResponse : Any, TRequest : Any> NormalOpenAPIRoute.authorizedPut(
+    routeConfig: AuthorizationBodyPathConfig<*>,
+    auditLogConfig: AuditLogConfig? = null,
+    vararg modules: RouteOpenAPIModule,
+    body: suspend OpenAPIPipelineResponseContext<TResponse>.(TParams, TRequest) -> Unit
+): Unit = throw UnsupportedOperationException(BODY_TYPE_MISMATCH)
 
 @ApiStatus.Internal
 public fun håndterNoAuth(route: Route, auditLogConfig: AuditLogConfig?) {

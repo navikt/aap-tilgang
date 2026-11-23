@@ -118,13 +118,10 @@ flowchart RL
     service["tilgang-service"]
     api["api-kontrakt"]
     plugin["plugin"]
-    pluginContract["plugin-kontrakt"]
 
     app --> service
     app --> api
-    plugin --> pluginContract
     plugin --> api
-    pluginContract --> api
 
     %% Usynlig lenke for plassering: holder api-kontrakt alene lengst til venstre.
     %% Det er ingen avhengighet mellom tilgang-service og api-kontrakt.

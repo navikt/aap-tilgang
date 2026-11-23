@@ -3,7 +3,6 @@ package no.nav.aap.tilgang
 import io.ktor.http.Parameters
 import io.ktor.server.util.getOrFail
 import java.util.UUID
-import no.nav.aap.tilgang.plugin.kontrakt.RelevanteIdenterResolver
 
 /**
  * Informasjon som tilgang trenger for å utlede kontekst fra path til requesten.

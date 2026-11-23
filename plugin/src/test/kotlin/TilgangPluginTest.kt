@@ -32,7 +32,6 @@ import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.Rolle
 import no.nav.aap.tilgang.TILGANG_PLUGIN
 import no.nav.aap.tilgang.TilgangGateway
-import no.nav.aap.tilgang.plugin.kontrakt.Journalpostreferanse
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.AfterAll
@@ -57,16 +56,7 @@ class TilgangPluginTest {
             return OidcToken(azureTokenGen.generate(isApp, roles, azp))
         }
 
-        data class Journalpostinfo(@param:PathParam("behandlingReferanse") val behandlingReferanse: String) :
-            Journalpostreferanse {
-            override fun journalpostIdResolverInput(): String {
-                return behandlingReferanse
-            }
-
-            override fun hentPåkrevdRolle(): List<Rolle> {
-                return emptyList()
-            }
-        }
+        data class Journalpostinfo(@param:PathParam("behandlingReferanse") val behandlingReferanse: String)
 
         class IngenReferanse(val noe: String)
 
@@ -542,6 +532,31 @@ class TilgangPluginTest {
                 messages.first { it.contains("CEF:0|Kelvin|behandlingsflyt|1.0|audit:access|Auditlogg|INFO|flexString1=Permit request=/testApi/authorizedPost/med-audit-resolver duid=12345678901 flexString1Label=Decision end=") }
             assertNotNull(expected)
             assertTrue(expected.contains("suid=Lokalsaksbehandler"))
+
+            logger.detachAppender(appender)
+        }
+    }
+
+    @Test
+    fun `skal auditlogge - body-tilgang med path resolver`() {
+        runBlocking {
+            val randomUuid = UUID.randomUUID()
+            fakes.gittTilgangTilSak(randomUuid.toString(), true)
+
+            val logger = LoggerFactory.getLogger(TILGANG_PLUGIN) as Logger
+            val appender = LogCaptureAppender()
+            appender.start()
+            logger.addAppender(appender)
+
+            val res = oboPost<Saksinfo, Saksinfo>(
+                base("testApi/authorizedPost/med-path-audit/$randomUuid"),
+                Saksinfo(saksnummer = randomUuid),
+                generateToken(isApp = false)
+            )
+            assertThat(res?.saksnummer).isEqualTo(randomUuid)
+
+            val messages = appender.getLoggedMessages()
+            assertNotNull(messages.firstOrNull { it.contains("request=/testApi/authorizedPost/med-path-audit/$randomUuid duid=12345678901") })
 
             logger.detachAppender(appender)
         }

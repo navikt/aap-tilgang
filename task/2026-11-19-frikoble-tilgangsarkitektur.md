@@ -757,3 +757,55 @@ kontroll. Ingen utrulling er gjort lokalt.
 | 109 | Utvikler | på modulavhengigheter vil jeg ha apikontrakt helt til venstre |
 | 110 | Utvikler | push |
 | 111 | Utvikler, godkjenning av README, sluttnotat og push | true |
+
+## Oppfølging 2026-11-23: plugin-kontrakt slått sammen med plugin
+
+Tidspunkt: `2026-11-23T22:12:13+01:00`.
+Sesjon: `655c2699-5b66-4c28-871c-c6d1fcb8ba86`.
+Oppgavegren: `test/architect-review`; basegren: `main`.
+Utviklerens effektive Git-e-post: `petter.ekrann@nav.no`.
+Siste publiserte commit før oppfølgingen: `038452d`.
+
+Modulen `plugin-kontrakt` er fjernet og innholdet flyttet til `plugin`.
+Resolver-interfacene `BrukerIdentResolver`, `BehandlingreferanseResolver`,
+`JournalpostIdResolver` og `RelevanteIdenterResolver` ligger nå i pakken
+`no.nav.aap.tilgang`. Referanse-interfacene som DTO-er måtte implementere
+(`TilgangReferanse`, `Saksreferanse`, `Behandlingsreferanse`,
+`Journalpostreferanse`, `Personreferanse`, `AuditlogResolverInput`) er
+fjernet. `AuthorizationBodyPathConfig<T>` tar i stedet en `kontekst`-lambda
+som returnerer den lukkede typen `Tilgangskontekst`, og
+`AuditLogBodyConfig<T>` tar `resolverInput`.
+
+`authorizedPost` og `authorizedPut` har typede overloads for body-konfigurasjon
+med body- eller path-auditlogging. Et `@Deprecated(level = ERROR)`-overload
+gjør at feil body-type gir kompileringsfeil i stedet for `ClassCastException`
+ved kjøring. Dette ble bekreftet med en midlertidig testfil som ble slettet
+etterpå. Endringen er brytende for konsumentene `aap-api-intern`,
+`aap-behandlingsflyt`, `aap-dokumentinnhenting` og `aap-postmottak-backend`;
+commit-meldingen inneholder `(MAJOR)`. `plugin/README.md` har en
+migreringsveiledning.
+
+### Publiseringskontroll
+
+```sh
+./gradlew build --console=plain --no-daemon --no-configuration-cache \
+  --no-parallel --max-workers=1
+```
+
+`BUILD SUCCESSFUL`. Alle 659 tester bestod: 584 i hosten, 53 i pluginen og
+22 i biblioteket. Tre nye plugintester dekker kontekstens påkrevde rolle,
+manglende kontekst og body-tilgang med path-auditlogging. Søk etter
+`plugin.kontrakt` og de gamle `hent*`-metodene finner bare
+migreringstabellen i `plugin/README.md`. Trivy og zizmor ble ikke kjørt;
+verktøyene er ikke installert.
+
+### Tillegg til samtalehistorikken
+
+| Tur | Avsender | Melding |
+| ---: | --- | --- |
+| 112 | Utvikler | hvorfor vet både plugin og plugin-contract om api-kontrakt |
+| 113 | Utvikler | plugin-kontrakt ser ut til å være litt anemisk |
+| 114 | Utvikler | flytt pluin-kontrakt inn i plugin |
+| 115 | Utvikler | du kan oppdatere namespace og fjerne interface til data klasser |
+| 116 | Utvikler | siden vi er på en test branch så er det ikke så veldig farlig |
+| 117 | Utvikler, godkjenning av commit og push | commit_push |

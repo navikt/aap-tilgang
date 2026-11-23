@@ -1,8 +1,5 @@
 package no.nav.aap.tilgang
 
-import no.nav.aap.tilgang.plugin.kontrakt.BehandlingreferanseResolver
-import no.nav.aap.tilgang.plugin.kontrakt.JournalpostIdResolver
-
 @JvmInline
 public value class SakPathParam(val param: String)
 

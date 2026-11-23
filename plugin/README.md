@@ -39,14 +39,50 @@ dependencies {
 }
 ```
 
+Artefakten `no.nav.aap.tilgang:plugin-kontrakt` publiseres ikke lenger. Resolver-interfacene
+(`RelevanteIdenterResolver`, `BrukerIdentResolver`, `BehandlingreferanseResolver`, `JournalpostIdResolver`) ligger nå
+i plugin-artefakten, i pakken `no.nav.aap.tilgang`.
+
+### Migrering fra referanse-interfacene
+
+Request body trenger ikke lenger implementere `Saksreferanse`, `Personreferanse`, `Behandlingsreferanse`,
+`Journalpostreferanse` eller `AuditlogResolverInput`. Konteksten hentes i stedet ut i rute-konfigurasjonen:
+
+```kotlin
+authorizedPost<Unit, SvarDto, LøsBehovDto>(
+    AuthorizationBodyPathConfig(
+        operasjon = Operasjon.SAKSBEHANDLE,
+        kontekst = { Tilgangskontekst.Behandling(it.referanse.toString(), påkrevdRolle = it.behov.løsesAv) },
+    ),
+    AuditLogBodyConfig(
+        logger = auditLogger,
+        app = "behandlingsflyt",
+        brukerIdentResolver = brukerIdentResolver,
+        resolverInput = { it.referanse.toString() },
+    ),
+) { _, dto -> /* ... */ }
+```
+
+| Før (interface på body) | Nå (`kontekst` / `resolverInput`) |
+|---|---|
+| `Saksreferanse.hentSaksreferanse()` | `Tilgangskontekst.Sak(saksnummer)` |
+| `Personreferanse.hentPersonreferanse()` | `Tilgangskontekst.Person(personIdent)` |
+| `Behandlingsreferanse` | `Tilgangskontekst.Behandling(referanse, påkrevdRolle)` |
+| `Journalpostreferanse` | `Tilgangskontekst.Journalpost(referanse, påkrevdRolle)` |
+| `AuditlogResolverInput.hentAuditlogResolverInput()` | `AuditLogBodyConfig(resolverInput = { ... })` |
+
+`authorizedPost` og `authorizedPut` har egne overloads for `AuthorizationBodyPathConfig<TRequest>` sammen med
+`AuditLogBodyConfig<TRequest>` eller `AuditLogPathParamConfig`, slik at `it` får request-typen. Hvis typen til
+konfigurasjonen ikke er lik request body-typen, feiler kompileringen.
+
 ## Eksempler
 Se [AutorisertEksempelApp.kt](src/test/kotlin/AutorisertEksempelApp.kt) for eksempler. Der er eksempler på routes som
 autoriserer tilgang for requests med on-behalf-of tokens, client-credentials tokens, eller begge deler.
 
 Ved autorisering av requests med on-behalf-of tokens må man spesifisere kontekst man ber om tilgang for, som per nå er
 enten en sak, en behandling eller en journalpost. Denne konteksten definerer man for GET-requests ved å spesifisere
-`SakPathParam`, `BehandlingPathParam` eller `JournalpostPathParam` i `AuthorizationParamPathConfig`. For POST-requests
-må request body være en sub-type av `TilgangReferanse`.
+`SakPathParam`, `BehandlingPathParam` eller `JournalpostPathParam` i `AuthorizationParamPathConfig`. For POST- og
+PUT-requests henter man konteksten fra request body med `kontekst` i `AuthorizationBodyPathConfig`.
 
 Det er ikke alltid man har nødvendig kontekst for autorisering når man definerer en route. Dette kan være fordi konteksten
 baserer seg på en ID/referanse som ikke er verken en sak, en behandling eller en journalpost, men der man har en kobling

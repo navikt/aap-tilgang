@@ -18,7 +18,6 @@ import no.nav.aap.tilgang.auditlog.AuditLogPathParamConfig
 import no.nav.aap.tilgang.auditlog.AuditLoggerImpl
 import no.nav.aap.tilgang.auditlog.cef.AuthorizationDecision
 import no.nav.aap.tilgang.auditlog.cef.CefMessage
-import no.nav.aap.tilgang.plugin.kontrakt.AuditlogResolverInput
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*
@@ -32,7 +31,7 @@ public val log: Logger = LoggerFactory.getLogger(TILGANG_PLUGIN)
 
 @ApiStatus.Internal
 public inline fun <reified T : Any> Route.installerTilgangBodyPlugin(
-    pathConfig: AuthorizationBodyPathConfig,
+    pathConfig: AuthorizationBodyPathConfig<T>,
     auditLogConfig: AuditLogConfig?,
     httpMethod: HttpMethod
 ) {
@@ -49,7 +48,10 @@ public inline fun <reified T : Any> Route.installerTilgangBodyPlugin(
             { call: ApplicationCall -> pathConfig.tilTilgangRequest(call.parseGeneric<T>()) },
             { call: ApplicationCall ->
                 when (auditLogConfig) {
-                    is AuditLogBodyConfig -> auditLogConfig.tilIdent(call.parseGeneric<T>() as AuditlogResolverInput)
+                    is AuditLogBodyConfig<*> -> {
+                        @Suppress("UNCHECKED_CAST")
+                        (auditLogConfig as AuditLogBodyConfig<T>).tilIdent(call.parseGeneric<T>())
+                    }
                     is AuditLogPathParamConfig -> auditLogConfig.tilIdent(call.parameters)
                     else -> throw IllegalStateException("AuditLogConfig mangler")
                 }

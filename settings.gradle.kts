@@ -5,7 +5,7 @@ pluginManagement {
 }
 
 rootProject.name = "tilgang"
-include("app", "tilgang-service", "plugin", "api-kontrakt", "plugin-kontrakt")
+include("app", "tilgang-service", "plugin", "api-kontrakt")
 project(":app").projectDir = file("app/restService")
 
 dependencyResolutionManagement {

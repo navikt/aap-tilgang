@@ -39,7 +39,6 @@ kotlin {
 
 dependencies {
     api(project(":api-kontrakt"))
-    api(project(":plugin-kontrakt"))
 
     compileOnly(libs.server)
     compileOnly(libs.json)

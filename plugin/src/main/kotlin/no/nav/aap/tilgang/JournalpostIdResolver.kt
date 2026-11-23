@@ -1,4 +1,4 @@
-package no.nav.aap.tilgang.plugin.kontrakt
+package no.nav.aap.tilgang
 
 public fun interface JournalpostIdResolver {
     public suspend fun resolve(referanse: String): Long

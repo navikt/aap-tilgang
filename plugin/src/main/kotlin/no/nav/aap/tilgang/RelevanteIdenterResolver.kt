@@ -1,5 +1,4 @@
-package no.nav.aap.tilgang.plugin.kontrakt
-import no.nav.aap.tilgang.RelevanteIdenter
+package no.nav.aap.tilgang
 
 public fun interface RelevanteIdenterResolver {
     public suspend fun resolve(referanse: String): RelevanteIdenter
