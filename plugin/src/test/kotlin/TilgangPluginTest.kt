@@ -27,7 +27,7 @@ import no.nav.aap.komponenter.httpklient.httpclient.error.ManglerTilgangExceptio
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.tilgang.Beslutter
 import no.nav.aap.tilgang.ArenasakTilgangRequest
-import no.nav.aap.tilgang.Avisning
+import no.nav.aap.tilgang.Avvisning
 import no.nav.aap.tilgang.BegrunnetTilgangsResponse
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.Rolle
@@ -180,7 +180,7 @@ class TilgangPluginTest {
     fun `gateway leser og cacher avslag med begrunnelse for arenasaker`(kanOverstyres: Boolean): Unit = runBlocking {
         val request = ArenasakTilgangRequest(UUID.randomUUID().toString())
         val token = generateToken(isApp = false)
-        val avvisning = Avisning(
+        val avvisning = Avvisning(
             title = "AVVIST_GEOGRAFISK",
             begrunnelse = "Ikke tilgang til enhet",
             kanOverstyres = kanOverstyres

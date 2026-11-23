@@ -26,7 +26,7 @@ import kotlinx.coroutines.runBlocking
 import org.intellij.lang.annotations.Language
 import no.nav.aap.tilgang.BehandlingTilgangRequest
 import no.nav.aap.tilgang.ArenasakTilgangRequest
-import no.nav.aap.tilgang.Avisning
+import no.nav.aap.tilgang.Avvisning
 import no.nav.aap.tilgang.BegrunnetTilgangsResponse
 import no.nav.aap.tilgang.JournalpostTilgangRequest
 import no.nav.aap.tilgang.Operasjon
@@ -114,7 +114,7 @@ internal class Fakes(val azureTokenGen: AzureTokenGen) : AutoCloseable {
     }
 
     private val tilgangTilArenasaker = mutableMapOf<String, BegrunnetTilgangsResponse>()
-    fun gittTilgangTilArenasaker(personIdent: String, tilgang: Boolean, avvistResponse: Avisning? = null) {
+    fun gittTilgangTilArenasaker(personIdent: String, tilgang: Boolean, avvistResponse: Avvisning? = null) {
         tilgangTilArenasaker[personIdent] = BegrunnetTilgangsResponse(tilgang, avvistResponse)
     }
 

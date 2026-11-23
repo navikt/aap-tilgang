@@ -7,7 +7,7 @@ import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.komponenter.json.DefaultJsonMapper
-import no.nav.aap.tilgang.Avisning
+import no.nav.aap.tilgang.Avvisning
 import no.nav.aap.tilgang.BegrunnetTilgangsResponse
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.RelevanteIdenter
@@ -142,7 +142,7 @@ class RegelResultatTest {
         assertThat(kontrakt).isEqualTo(
             BegrunnetTilgangsResponse(
                 tilgang = false,
-                avvistResponse = Avisning(avvist.title, avvist.begrunnelse, kanOverstyres)
+                avvistResponse = Avvisning(avvist.title, avvist.begrunnelse, kanOverstyres)
             )
         )
         val mapper = DefaultJsonMapper.objectMapper()

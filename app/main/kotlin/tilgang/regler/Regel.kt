@@ -1,6 +1,6 @@
 package tilgang.regler
 
-import no.nav.aap.tilgang.Avisning
+import no.nav.aap.tilgang.Avvisning
 import no.nav.aap.tilgang.BegrunnetTilgangsResponse
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinAvvistResponse
 
@@ -12,7 +12,7 @@ data class RegelResultat(
         BegrunnetTilgangsResponse(
             tilgang = harTilgang,
             avvistResponse = tilgangsmaskinAvvistResponse?.let {
-                Avisning(
+                Avvisning(
                     title = it.title,
                     begrunnelse = it.begrunnelse,
                     kanOverstyres = it.kanOverstyres
