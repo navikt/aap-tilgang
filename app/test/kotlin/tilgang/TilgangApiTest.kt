@@ -132,7 +132,8 @@ class TilgangApiTest {
                         roles = listOf(Role(Rolle.LES, gruppeId)),
                         redis = Fakes.getRedisConfig(),
                     ),
-                    redis = Fakes.getRedisServer()
+                    redis = Fakes.getRedisServer(),
+                    unleash = UnleashService(FakeUnleash()),
                 )
             }
 
