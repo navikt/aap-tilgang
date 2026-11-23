@@ -1,6 +1,8 @@
-package tilgang.kontroll
+package tilgang.foresporsel.input
 
 import java.util.UUID
+import tilgang.kontroll.Operasjon
+import tilgang.kontroll.Rolle
 
 data class TilbakekrevingstilgangInput(
     val saksnummer: String,

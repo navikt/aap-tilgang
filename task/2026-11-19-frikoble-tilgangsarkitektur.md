@@ -971,3 +971,58 @@ er ikke endret. Push og commit av dette sluttnotatet avventer godkjenning.
 
 Godkjenningen erstatter ventestatusen ovenfor. Sluttnotatet og merge-commiten
 kan publiseres på `test/architect-review`, uten force-push.
+
+## Oppfølging 2026-11-23: forespørselsinput flyttet til app
+
+Tidspunkt: `2026-11-23T23:20:52+01:00`.
+Sesjon: `655c2699-5b66-4c28-871c-c6d1fcb8ba86`.
+Oppgavegren: `test/architect-review`; basegren: `main`.
+Utviklerens effektive Git-e-post: `petter.ekrann@nav.no`.
+Siste publiserte commit før oppfølgingen: `0994f28`.
+
+De seks input-typene for sak, behandling, journalpost, arenasak, person og
+tilbakekreving brukes av hostens ruter og `TilgangsforespørselService`,
+ikke av bibliotekets `TilgangService`. Typene er derfor flyttet fra
+`tilgang-service` til `app/restService` i pakken `tilgang.foresporsel.input`.
+Importer er oppdatert, og valideringen av rollekrav ved tilbakekreving er
+beholdt. JAR-kontroll bekreftet at alle seks klassene ligger i appens
+artefakt og ingen i `tilgang-service`.
+
+### Publiseringskontroll
+
+Etter `git fetch origin test/architect-review main` var lokal gren og
+oppgavegrenen på remote begge `0994f28`; main var `d3c988c`. Ingen
+innfletting var nødvendig. Utvikleren kjørte følgende kommando med Java 25,
+forhåndslastet Byte Buddy-agent og `-XX:ActiveProcessorCount=1`:
+
+```sh
+./gradlew build :app:test --rerun :plugin:test --rerun \
+  :tilgang-service:test --rerun --console=plain --no-daemon \
+  --no-configuration-cache --no-parallel --max-workers=1
+```
+
+Utvikleren oppga `BUILD SUCCESSFUL`. Agenten kontrollerte de nye
+testrapportene: 736 tester bestod, med 659 i hosten, 55 i pluginen og
+22 i biblioteket; ingen feil eller hoppet over. `git diff --check` bestod.
+Ny fetch etter testene viste ingen nye remote-committer.
+
+En separat, lokal formateringsendring i
+`plugin/src/main/kotlin/no/nav/aap/tilgang/resolver/DefaultBehandlingreferanseResolver.kt`
+var til stede under testkjøringen. Utvikleren valgte å la den bli liggende
+lokalt, så den inngår ikke i committen eller pushen. Endringen omformer kun
+metodens uttrykk og endrer ikke kall eller returverdi.
+
+Trivy og zizmor er ikke installert. En avgrenset kontroll av nye linjer
+fant ingen private nøkler eller vanlige tokenformater; dette er ikke en
+full sårbarhetsskanning. Ingen lokal utrulling er gjort.
+
+### Tillegg til samtalehistorikken
+
+| Tur | Avsender | Melding |
+| ---: | --- | --- |
+| 134 | Utvikler | det kan se ut som om det som ligger i input ikke lenger er i bruk |
+| 135 | Agent, sammendrag | Typene brukes i appen, men ikke i selve tilgang-service; anbefalte å flytte dem til app. |
+| 136 | Utvikler | flytt |
+| 137 | Agent, sammendrag | Flyttet typene til app; 99 utvalgte tester bestod med Gradle 9.8.2. |
+| 138 | Utvikler | push |
+| 139 | Utvikler, testresultat, valg for resolver og godkjenning av commit og push | BUILD SUCCESSFUL; leave; true |

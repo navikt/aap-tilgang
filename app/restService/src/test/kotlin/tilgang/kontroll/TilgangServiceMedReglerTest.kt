@@ -14,6 +14,7 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
 import tilgang.AzureTokenGen
 import tilgang.createTilgangService
+import tilgang.foresporsel.input.ArenasakstilgangInput
 import tilgang.createTilgangsforespørselService
 import tilgang.createTilgangService
 import tilgang.integrasjoner.behandlingsflyt.BehandlingsflytGateway

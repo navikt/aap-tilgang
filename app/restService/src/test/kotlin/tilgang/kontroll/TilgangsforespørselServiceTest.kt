@@ -20,6 +20,12 @@ import org.junit.jupiter.params.provider.ValueSource
 import org.slf4j.Logger
 import tilgang.foresporsel.Persontilgang
 import tilgang.foresporsel.TilgangsforespørselService
+import tilgang.foresporsel.input.ArenasakstilgangInput
+import tilgang.foresporsel.input.BehandlingstilgangInput
+import tilgang.foresporsel.input.JournalposttilgangInput
+import tilgang.foresporsel.input.PersontilgangInput
+import tilgang.foresporsel.input.SakstilgangInput
+import tilgang.foresporsel.input.TilbakekrevingstilgangInput
 import tilgang.grunnlag.IdentOppslag
 import tilgang.grunnlag.AvklaringsbehovType
 import tilgang.grunnlag.JournalpostInfo

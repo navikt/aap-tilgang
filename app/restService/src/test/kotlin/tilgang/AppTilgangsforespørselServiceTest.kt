@@ -26,11 +26,11 @@ import tilgang.integrasjoner.saf.Sak
 import tilgang.integrasjoner.saf.Sakstype
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinGateway
 import tilgang.grunnlag.AvklaringsbehovType
-import tilgang.kontroll.BehandlingstilgangInput
+import tilgang.foresporsel.input.BehandlingstilgangInput
+import tilgang.foresporsel.input.JournalposttilgangInput
+import tilgang.foresporsel.input.PersontilgangInput
 import tilgang.kontroll.BrukerToken
-import tilgang.kontroll.JournalposttilgangInput
 import tilgang.kontroll.ManglerSøkerIdentException
-import tilgang.kontroll.PersontilgangInput
 import tilgang.kontroll.Tilgangskontekst
 import tilgang.kontroll.Tilgangsgrunnlag
 import tilgang.kontroll.TilgangService
