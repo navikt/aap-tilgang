@@ -809,3 +809,73 @@ verktøyene er ikke installert.
 | 115 | Utvikler | du kan oppdatere namespace og fjerne interface til data klasser |
 | 116 | Utvikler | siden vi er på en test branch så er det ikke så veldig farlig |
 | 117 | Utvikler, godkjenning av commit og push | commit_push |
+
+## Oppfølging 2026-11-23: plugin gruppert i pakker
+
+Tidspunkt: `2026-11-23T22:32:39+01:00`.
+Sesjon: `655c2699-5b66-4c28-871c-c6d1fcb8ba86`.
+Oppgavegren: `test/architect-review`; basegren: `main`.
+Utviklerens effektive Git-e-post: `petter.ekrann@nav.no`.
+Validert kodecommit: `0dc75042e53c10cc5e79b305668c183fe218797c`.
+Siste publiserte commit før oppfølgingen: `919d791`.
+
+Pluginens filer er gruppert etter ansvar. Pakkene følger mappene:
+
+| Pakke under `no.nav.aap.tilgang` | Innhold |
+| --- | --- |
+| `config` | Rute-konfigurasjon, path-parametertyper og `Tilgangskontekst` |
+| `resolver` | Resolver-interfacene og standardimplementasjonene |
+| `klient` | `TilgangGateway` og `TilgangService` mot tilgangstjenesten |
+
+Rute-DSL-en og `TilgangPlugin` ligger fortsatt i rotpakken. Den eksisterende
+`auditlog`-pakken er beholdt. Importer og pakketabellen i `plugin/README.md`
+er oppdatert. Alle 29 Kotlin-filene i pluginens hovedkilder har
+pakkedeklarasjoner som samsvarer med mappene.
+
+Dette erstatter pakkeplasseringen beskrevet i forrige oppfølging:
+resolverne ligger nå i `no.nav.aap.tilgang.resolver`, ikke i rotpakken.
+Konsumentene må oppdatere importene for de flyttede typene. Endringen
+er merket `(MAJOR)` i kodecommitten; ingen tilgangslogikk er endret.
+
+### Publiseringskontroll
+
+Etter `git fetch origin` var lokal gren én commit foran
+`origin/test/architect-review`, uten nye remote-committer å flette inn.
+PR #710 er åpen fra oppgavegrenen mot `main`.
+
+Hele bygget ble kjørt etter fetch med Java 25, forhåndslastet
+Byte Buddy-agent og `-XX:ActiveProcessorCount=1`:
+
+```sh
+./gradlew build :app:test --rerun :plugin:test --rerun \
+  :tilgang-service:test --rerun --console=plain --no-daemon \
+  --no-configuration-cache --no-parallel --max-workers=1
+```
+
+`BUILD SUCCESSFUL in 40s`; tre testoppgaver ble kjørt på nytt og 32
+oppgaver var oppdaterte. Alle 659 tester bestod: 584 i hosten, 53 i
+pluginen og 22 i biblioteket, uten feil eller hoppet over.
+
+`git diff --check origin/test/architect-review HEAD` bestod.
+En avgrenset kontroll av nye linjer fant ingen private nøkler eller
+vanlige tokenformater. Trivy og zizmor er ikke installert og ble ikke
+kjørt; dette er ikke en full sårbarhetsskanning. Ingen lokal utrulling
+er gjort.
+
+Kodeendringen er committet lokalt, men ennå ikke pushet. Dette tillegget
+er lokalt og avventer godkjenning for commit. Neste steg er å committe
+sluttnotatet, pushe begge committene uten force og oppdatere PR #710.
+Konsumentmigrering gjenstår utenfor dette repoet.
+
+### Tillegg til samtalehistorikken
+
+| Tur | Avsender | Melding |
+| ---: | --- | --- |
+| 118 | Utvikler | i plugin grupper i mapper |
+| 119 | Agent, sammendrag | Filer, pakkenavn, importer og README er oppdatert og lokalt committet som `0dc7504`. Ingen push er gjort. |
+| 120 | Utvikler | push |
+| 121 | Utvikler, godkjenning av sluttnotat, push og oppdatering av PR #710 | true |
+
+Utviklerens godkjenning erstatter ventestatusen ovenfor. Sluttnotatet
+skal committes og publiseres sammen med den validerte kodecommitten på
+`test/architect-review`; ingen push til `main` og ingen force-push.
