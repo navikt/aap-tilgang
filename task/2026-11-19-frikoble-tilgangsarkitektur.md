@@ -552,3 +552,68 @@ kjørt på nytt. Dokumentasjonen ble oppdatert før planlagt publisering til
 eksisterende PR.
 Utvikleren godkjente en separat dokumentasjonscommit av README og det oppdaterte
 fullføringsdokumentet før publisering.
+
+## Oppfølging 2026-11-23: rollekoblinger, integrasjoner og REST-kontrakt
+
+`8c451a4` og `a44c430` lar konfigurasjonen binde kjente `Rolle`-verdier
+gjennom `AAP_<ROLLENAVN>`. En ubundet rolle utelates; en ugyldig konfigurert
+UUID stopper oppstarten. Enumen og det eksisterende konfigurasjonsformatet er beholdt.
+
+De åtte tiltakene fra gjennomgangen er implementert: manuelt dev-valg utløser
+ikke prod-jobben, og bibliotekversjoneringen følger de faktiske byggestiene.
+PDL-bolker kontrolleres før nye rader caches; et eksplisitt `not_found` gir
+fortsatt tom gradering. Graph-grupper caches først når alle sider er hentet.
+Hosten lukker Redis-instanser den selv eier. Pluginen beholder de samme cachene
+for måling når caching deaktiveres. Gradle tillater én synlig prosessor, og
+pluginens integrasjonstest bruker en ledig port. En egen, fortsatt uimplementert
+rolleplan gjelder dupliserte gruppe-ID-er og felles oppslag.
+
+README viser produksjonsøkosystemet fra `.nais/prod-gcp.yaml`.
+`contracts/openapi.yaml` beskriver de åtte autentiserte rutene og de tre driftsrutene.
+
+Implementasjonscommits etter rollekonfigurasjonen: `8c12d6e` (bygg og
+release), `8a9913e` (PDL, Graph og Redis) og `8ea2e0c` (plugin).
+Utvikleren godkjente publisering av disse endringene, README, kontrakten,
+begge planene og dette sluttnotatet sammen med rollekonfigurasjonen.
+
+### Publiseringskontroll
+
+Mål: `origin/test/architect-review` og eksisterende PR #710 til `main`.
+Etter fetch var `origin/test/architect-review` på `a1a4b8b`, en stamfar til
+lokal `a44c430`. `git merge --ff-only origin/test/architect-review` krevde
+ingen innfletting. Hele arbeidskopien, med de nye implementasjonsendringene,
+ble deretter validert med Java 25, forhåndslastet Byte Buddy-agent og
+`-XX:ActiveProcessorCount=1`:
+
+```sh
+./gradlew build --rerun-tasks --console=plain --no-daemon \
+  --no-configuration-cache --no-parallel --max-workers=1
+```
+
+`BUILD SUCCESSFUL in 1m 54s`; alle 38 oppgaver ble kjørt på nytt.
+Alle 654 tester bestod (582 host, 22 bibliotek, 50 plugin); ingen ble hoppet
+over. OpenAPI-kontraktens 53 lokale referanser ble slått opp, og workflowens
+miljøvilkår og byggestier ble kontrollert uten publisering eller utrulling.
+Ingen treff i en avgrenset lokal kontroll for private nøkler og vanlige
+tokenformater. Trivy og zizmor var ikke tilgjengelige. GitHub CI og
+PR-gjennomgang er separate fra den lokale byggingen.
+
+### Tillegg til samtalehistorikken
+
+| Tur | Avsender | Melding |
+| ---: | --- | --- |
+| 85 | Utvikler | roller i config skal lese alle rollene fra config ikke hardkode |
+| 86 | Utvikler | analyser |
+| 87 | Utvikler | trenger vi enumen? |
+| 88 | Utvikler | ok |
+| 89 | Utvikler | men det betyr også at hvis det kommer en ny rolle må man endre 2 steder |
+| 90 | Utvikler | we are using an expensive model. Just make a plan for what is smart to change. |
+| 91 | Utvikler | write plan |
+| 92 | Utvikler | scan whole repo to look for more improvments |
+| 93 | Utvikler | implement |
+| 94 | Utvikler | tegn ett diagram for tilgangservice sin plassering økosystemet basert på .nais/prod.yml legg det i README.md |
+| 95 | Utvikler | create openapi spec for the rest service. place it in the contracts folder |
+| 96 | Utvikler, valg av omfang i forbedringsplanen | all |
+| 97 | Utvikler, valg om PDL `not_found` | preserve |
+| 98 | Utvikler | push |
+| 99 | Utvikler, godkjenning av commits og publiseringsomfang | all |

@@ -17,6 +17,55 @@ Direkte person- og bulktilgang ligger i REST-fasaden, uten en kunstig operasjons
 Regelmotorens oppslag for adressebeskyttelse og personkontroll er fortsatt beholdt.
 `App.kt` kobler sammen komponentene; biblioteket avhenger ikke av grunnlagsinnhentingen.
 
+## Tilgang i produksjonsøkosystemet
+
+Diagrammet viser plasseringen til Tilgang slik den er konfigurert i
+[`.nais/prod-gcp.yaml`](.nais/prod-gcp.yaml). Det viser tillatte forbindelser fra
+manifestets `accessPolicy`, ikke alle mulige kall fra applikasjonskoden.
+
+```mermaid
+flowchart LR
+    callers["Tillatte klienter<br/>behandlingsflyt · postmottak-backend · oppgave<br/>saksbehandling · dokumentinnhenting · api-intern<br/>meldekort-backend · arenavisningsklient · brev · utbetal"]
+    entra["Entra ID<br/>NAVident · azp_name · grupper"]
+
+    subgraph prod["NAIS prod-gcp · namespace aap"]
+        service["Tilgang<br/>2–4 replikaer"]
+        valkey[("Valkey<br/>read/write")]
+        prometheus["Prometheus-metrikker"]
+        logs["Elastic · Loki"]
+        service <--> valkey
+        service --> prometheus
+        service --> logs
+    end
+
+    subgraph internal["Interne utgående tjenester"]
+        behandlingsflyt["behandlingsflyt"]
+        nom["nom-api<br/>namespace nom"]
+        pip["skjermede-personer-pip<br/>namespace nom"]
+        tilgangsmaskin["populasjonstilgangskontroll<br/>namespace tilgangsmaskin"]
+    end
+
+    subgraph external["Eksterne utgående tjenester"]
+        saf["SAF<br/>prod-fss"]
+        pdl["PDL<br/>prod-fss"]
+        graph["Microsoft Graph<br/>URL/scope konfigurert"]
+    end
+
+    callers -->|"inbound accessPolicy"| service
+    entra -->|"token claims"| service
+    service --> behandlingsflyt
+    service --> nom
+    service --> pip
+    service --> tilgangsmaskin
+    service --> saf
+    service --> pdl
+    service -.-> graph
+```
+
+Manifestet oppgir eksplisitte eksterne `accessPolicy`-regler for SAF og PDL.
+Microsoft Graph er konfigurert i miljøvariablene, men er ikke oppført under
+`accessPolicy.outbound.external` i dette manifestet.
+
 Grunnlaget inneholder kallkontekst, søker- og barnidenter, ferdige rollekrav og
 ønskede operasjoner. Regelresultater gjenbrukes bare innenfor samme vurderingskall.
 REST-svarene er uendret; ordinære avslag gir fortsatt HTTP 200 med `tilgang=false`.
@@ -46,6 +95,9 @@ flowchart LR
     service --> rules["Regler<br/>bibliotek"]
     facade --> person["Persontilgang / Tilgangsmaskin"]
 ```
+
+OpenAPI-kontrakten for REST-endepunktene og driftsrutene ligger i
+[contracts/openapi.yaml](contracts/openapi.yaml).
 
 Bibliotekets enhetstester kjøres med `./gradlew :tilgang-service:test`.
 Orkestrerings-, HTTP- og adaptertester ligger i `app/restService`; `./gradlew :app:test` kjører disse,
