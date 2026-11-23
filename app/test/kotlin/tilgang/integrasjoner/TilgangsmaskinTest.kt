@@ -4,7 +4,10 @@ import io.getunleash.FakeUnleash
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
 import io.ktor.client.plugins.ClientRequestException
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.headersOf
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -47,6 +50,17 @@ class TilgangsmaskinTest {
     fun `switches client without restart for every access check`(endpoint: String, allowed: Boolean) = runTest {
         val calls = mutableListOf<String>()
         val status = if (allowed) HttpStatusCode.OK else HttpStatusCode.Forbidden
+        val responseBody = if (allowed) "" else """
+            {
+                "type": "urn:tilgangsmaskin:avslag",
+                "title": "AVVIST_HABILITET",
+                "status": 403,
+                "navIdent": "Z123456",
+                "begrunnelse": "Inhabil",
+                "kanOverstyres": false
+            }
+        """.trimIndent()
+        val responseHeaders = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
         val cache = mockk<Redis>()
         coEvery { cache[any()] } returns null
         coEvery { cache.set(any(), any(), any()) } returns Unit
@@ -61,14 +75,14 @@ class TilgangsmaskinTest {
                 dispatcher = StandardTestDispatcher(testScheduler)
                 addHandler {
                     calls.add("standard")
-                    respond("", status)
+                    respond(responseBody, status, responseHeaders)
                 }
             }.use { standardEngine ->
                 MockEngine.create {
                     dispatcher = StandardTestDispatcher(testScheduler)
                     addHandler {
                         calls.add("robust")
-                        respond("", status)
+                        respond(responseBody, status, responseHeaders)
                     }
                 }.use { robustEngine ->
                     TilgangsmaskinHttpClient.create(standardEngine).use { standardClient ->
