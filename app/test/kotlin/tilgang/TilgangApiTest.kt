@@ -195,7 +195,8 @@ class TilgangApiTest {
             application {
                 api(
                     Config(roles = listOf(Role(Rolle.LES, gruppeId)), redis = Fakes.getRedisConfig()),
-                    redis = Fakes.getRedisServer()
+                    redis = Fakes.getRedisServer(),
+                    unleash = UnleashService(FakeUnleash()),
                 )
             }
             val response = client.post("/tilgang/behandling") {
