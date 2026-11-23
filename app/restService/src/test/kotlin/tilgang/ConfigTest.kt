@@ -5,12 +5,14 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
 import io.mockk.verify
-import no.nav.aap.komponenter.config.requiredConfigForKey
+import no.nav.aap.komponenter.config.configForKey
 import no.nav.aap.tilgang.Rolle
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import java.util.UUID
 import kotlin.test.assertFailsWith
 
@@ -19,15 +21,15 @@ class ConfigTest {
 
     @BeforeEach
     fun konfigurerRoller() {
-        mockkStatic(::requiredConfigForKey)
+        mockkStatic(::configForKey)
         rolleIdenter.forEach { (rolle, ident) ->
-            every { requiredConfigForKey("AAP_${rolle.name}") } returns ident.toString()
+            every { configForKey("AAP_${rolle.name}") } returns ident.toString()
         }
     }
 
     @AfterEach
     fun ryddOpp() {
-        unmockkStatic(::requiredConfigForKey)
+        unmockkStatic(::configForKey)
     }
 
     @Test
@@ -36,23 +38,28 @@ class ConfigTest {
 
         assertThat(config.roles.associate { it.name to it.objectId }).isEqualTo(rolleIdenter)
         Rolle.entries.forEach { rolle ->
-            verify(exactly = 1) { requiredConfigForKey("AAP_${rolle.name}") }
+            verify(exactly = 1) { configForKey("AAP_${rolle.name}") }
         }
     }
 
-    @Test
-    fun `manglende rollekonfigurasjon stopper lasting`() {
-        val feil = IllegalStateException("Mangler AAP_DRIFT_LES")
-        every { requiredConfigForKey("AAP_DRIFT_LES") } throws feil
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `laster bare roller som har konfigurert gruppeident`(alleMangler: Boolean) {
+        val manglendeRoller = if (alleMangler) Rolle.entries else listOf(Rolle.DRIFT_LES)
+        manglendeRoller.forEach { rolle ->
+            every { configForKey("AAP_${rolle.name}") } returns null
+        }
 
-        val resultat = assertFailsWith<IllegalStateException> { configMedRolleoppslag() }
+        val config = configMedRolleoppslag()
 
-        assertThat(resultat).isSameAs(feil)
+        assertThat(config.roles.associate { it.name to it.objectId })
+            .isEqualTo(rolleIdenter - manglendeRoller.toSet())
     }
 
-    @Test
-    fun `ugyldig gruppeident stopper lasting`() {
-        every { requiredConfigForKey("AAP_DRIFT_LES") } returns "ikke-en-uuid"
+    @ParameterizedTest
+    @ValueSource(strings = ["ikke-en-uuid", ""])
+    fun `ugyldig gruppeident stopper lasting`(ident: String) {
+        every { configForKey("AAP_DRIFT_LES") } returns ident
 
         assertFailsWith<IllegalArgumentException> { configMedRolleoppslag() }
     }

@@ -2,14 +2,17 @@ package tilgang
 
 import java.net.URI
 import java.util.UUID
+import no.nav.aap.komponenter.config.configForKey
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.tilgang.Rolle
 
 private fun getEnvVar(envar: String) = System.getenv(envar) ?: error("missing envvar $envar")
 
 data class Config(
-    val roles: List<Role> = Rolle.entries.map { rolle ->
-        Role(rolle, UUID.fromString(requiredConfigForKey("AAP_${rolle.name}")))
+    val roles: List<Role> = Rolle.entries.mapNotNull { rolle ->
+        configForKey("AAP_${rolle.name}")?.let { objectId ->
+            Role(rolle, UUID.fromString(objectId))
+        }
     },
     val redis: RedisConfig = RedisConfig(),
     val behandlingsflyt: BehandlingsflytConfig = BehandlingsflytConfig(),
