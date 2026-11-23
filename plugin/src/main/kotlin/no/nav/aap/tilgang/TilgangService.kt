@@ -38,7 +38,9 @@ public object TilgangService {
             is JournalpostTilgangRequest -> TilgangGateway.harTilgangTilJournalpost(request, token)
             is PersonTilgangRequest -> TilgangGateway.harTilgangTilPerson(request, token)
             is TilbakekrevingTilgangRequest -> TilgangGateway.harTilgangTilTilbakekreving(request, token)
-            is ArenasakTilgangRequest -> TilgangGateway.harTilgangTilArensakerForPerson(request, token)
+            is ArenasakTilgangRequest -> TilgangResponse(
+                TilgangGateway.harTilgangTilArensakerForPerson(request, token).tilgang
+            )
         }
     }
 }

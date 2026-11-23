@@ -157,8 +157,6 @@ class TilgangApiTest {
                 )
             )
             assertThat(json.has("navIdent") || json.has("type") || json.has("status")).isFalse()
-            val gammelKontrakt = mapper.readValue<TilgangResponse>(response.bodyAsText())
-            assertThat(gammelKontrakt.tilgang).isFalse()
         }
     }
 

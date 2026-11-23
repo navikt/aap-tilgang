@@ -14,6 +14,9 @@ client-credentials token, vil valideringen skje uten å kalle `tilgang`-tjeneste
 
 - **TilgangGateway**: Klienten som kaller `tilgang`-tjenesten. Denne brukes av `TilgangPlugin`, men kan også tas i bruk
 direkte i de tilfellene det er mer hensiktsmessig.
+`harTilgangTilArensakerForPerson` returnerer `BegrunnetTilgangsResponse` med tilgangsbeslutning og eventuell
+avvisningsgrunn i `avvistResponse`. De andre gateway-metodene og `TilgangService.harTilgang` returnerer fortsatt
+`TilgangResponse`.
 
 - **TilgangInspections**: Det er skrevet custom inspections for å gi advarsel dersom `get` og `post` brukes direkte. I
 de fleste tilfeller ønsker vi å bruke de tilsvarende <i>autoriserte</i> funksjonene, som vi finner i `AuthorizedClient`.

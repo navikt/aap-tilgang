@@ -51,7 +51,7 @@ public object TilgangGateway {
         .maximumSize(2_000)
         .expireAfterWrite(Duration.ofMinutes(30))
         .recordStats()
-        .build<ArenasakTilgangRequestMedNavIdent, TilgangResponse>()
+        .build<ArenasakTilgangRequestMedNavIdent, BegrunnetTilgangsResponse>()
 
     private var tilgangGatewayPersonCache = Caffeine.newBuilder()
         .maximumSize(2_000)
@@ -106,7 +106,7 @@ public object TilgangGateway {
     }
 
     private val tilgangArenasakUrl = baseUrl.resolve("/tilgang/arenasaker").toString()
-    public suspend fun harTilgangTilArensakerForPerson(body: ArenasakTilgangRequest, currentToken: OidcToken): TilgangResponse {
+    public suspend fun harTilgangTilArensakerForPerson(body: ArenasakTilgangRequest, currentToken: OidcToken): BegrunnetTilgangsResponse {
         return get(tilgangGatewayArenasakCache, ArenasakTilgangRequestMedNavIdent(body, currentToken.navIdent())) {
             post(currentToken, tilgangArenasakUrl, body)
         }
@@ -139,11 +139,11 @@ public object TilgangGateway {
         return value
     }
 
-    private suspend inline fun <reified Request> post(
+    private suspend inline fun <reified Request, reified Response> post(
         currentToken: OidcToken,
         url: String,
         request: Request
-    ): TilgangResponse {
+    ): Response {
         val newToken = client.post(texasUrl) {
             contentType(ContentType.Application.Json)
             setBody(buildMap {
