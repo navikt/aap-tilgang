@@ -1,6 +1,5 @@
 package tilgang.kontroll
 
-import no.nav.aap.tilgang.Operasjon
 import tilgang.kontroll.regler.AdressebeskyttelseInputGenerator
 import tilgang.kontroll.regler.AdressebeskyttelseOppslag
 import tilgang.kontroll.regler.AdressebeskyttelseRegel

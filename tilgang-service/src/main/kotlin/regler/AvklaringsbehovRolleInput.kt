@@ -1,6 +1,6 @@
 package tilgang.kontroll.regler
 
-import no.nav.aap.tilgang.Rolle
+import tilgang.kontroll.Rolle
 
 data class AvklaringsbehovRolleInput(
     val avklaringsbehovRoller: List<List<Rolle>>,

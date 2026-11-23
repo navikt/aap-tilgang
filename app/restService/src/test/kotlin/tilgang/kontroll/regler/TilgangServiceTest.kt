@@ -7,9 +7,9 @@ import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
-import no.nav.aap.tilgang.Operasjon
-import no.nav.aap.tilgang.RelevanteIdenter
-import no.nav.aap.tilgang.Rolle
+import tilgang.kontroll.Operasjon
+import tilgang.kontroll.RelevanteIdenter
+import tilgang.kontroll.Rolle
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
@@ -35,6 +35,7 @@ import tilgang.kontroll.BrukerToken
 import tilgang.kontroll.Tilgangsgrunnlag
 import tilgang.kontroll.Tilgangskontekst
 import java.util.UUID
+import tilgang.mapping.tilDomene
 
 @WithFakes
 class TilgangServiceTest {
@@ -59,7 +60,7 @@ class TilgangServiceTest {
                 kontekst = Tilgangskontekst("123", emptyList(), BrukerToken(token), UUID.randomUUID().toString()),
                 søkerIdenter = RelevanteIdenter(søker = listOf("123"), barn = listOf()),
                 operasjoner = listOf(Operasjon.SAKSBEHANDLE),
-                påkrevdRolle = avklaringsbehov.løsesAv,
+                påkrevdRolle = avklaringsbehov.løsesAv.tilDomene(),
             )
         )
         Assertions.assertTrue(svar[Operasjon.SAKSBEHANDLE] == false)
@@ -76,10 +77,10 @@ class TilgangServiceTest {
                     ),
                     søkerIdenter = RelevanteIdenter(søker = listOf("123"), barn = listOf()),
                     operasjoner = Operasjon.entries,
-                    påkrevdRolle = avklaringsbehov.løsesAv,
+                    påkrevdRolle = avklaringsbehov.løsesAv.tilDomene(),
                 )
             )
-            if (avklaringsbehov.løsesAv.contains(Rolle.SAKSBEHANDLER_NASJONAL)) {
+            if (avklaringsbehov.løsesAv.tilDomene().contains(Rolle.SAKSBEHANDLER_NASJONAL)) {
                 Assertions.assertTrue(svar[Operasjon.SAKSBEHANDLE] == true)
             } else {
                 Assertions.assertTrue(svar[Operasjon.SAKSBEHANDLE] == false)
@@ -100,7 +101,7 @@ class TilgangServiceTest {
                     ),
                     søkerIdenter = RelevanteIdenter(søker = listOf("123"), barn = listOf()),
                     operasjoner = Operasjon.entries,
-                    påkrevdRolle = avklaringsbehov.løsesAv,
+                    påkrevdRolle = avklaringsbehov.løsesAv.tilDomene(),
                 )
             )
             Assertions.assertTrue(svar[Operasjon.DRIFTE] == true)
@@ -122,7 +123,7 @@ class TilgangServiceTest {
                     ),
                     søkerIdenter = RelevanteIdenter(søker = listOf("123"), barn = listOf()),
                     operasjoner = Operasjon.entries,
-                    påkrevdRolle = avklaringsbehov.løsesAv,
+                    påkrevdRolle = avklaringsbehov.løsesAv.tilDomene(),
                 )
             )
             Assertions.assertTrue(svar[Operasjon.DRIFT_LES] == true)
@@ -143,7 +144,7 @@ class TilgangServiceTest {
                 ),
                 søkerIdenter = RelevanteIdenter(søker = listOf("123"), barn = listOf()),
                 operasjoner = Operasjon.entries,
-                påkrevdRolle = avklaringsbehov.løsesAv,
+                påkrevdRolle = avklaringsbehov.løsesAv.tilDomene(),
             )
         )
         Assertions.assertTrue(svar[Operasjon.SE] == true)

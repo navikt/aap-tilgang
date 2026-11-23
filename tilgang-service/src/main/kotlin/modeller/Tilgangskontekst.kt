@@ -1,6 +1,5 @@
 package tilgang.kontroll
 
-import no.nav.aap.tilgang.Rolle
 
 class Tilgangskontekst(
     val ansattIdent: String,

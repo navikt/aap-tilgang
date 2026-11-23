@@ -4,9 +4,6 @@ import io.mockk.Called
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
-import no.nav.aap.tilgang.Operasjon
-import no.nav.aap.tilgang.RelevanteIdenter
-import no.nav.aap.tilgang.Rolle
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource

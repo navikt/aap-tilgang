@@ -7,9 +7,10 @@ import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.test.runTest
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.tilgang.Operasjon
-import no.nav.aap.tilgang.RelevanteIdenter
-import no.nav.aap.tilgang.Rolle
+import tilgang.kontroll.Operasjon
+import tilgang.kontroll.RelevanteIdenter
+import no.nav.aap.tilgang.RelevanteIdenter as KontraktRelevanteIdenter
+import tilgang.kontroll.Rolle
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -39,6 +40,7 @@ import java.util.UUID
 import kotlin.test.assertFails
 import kotlin.test.assertFailsWith
 import no.nav.aap.postmottak.kontrakt.avklaringsbehov.Definisjon as PostmottakDefinisjon
+import tilgang.mapping.tilDomene
 
 class AppTilgangsforespørselServiceTest {
     private val saf = mockk<SafGraphqlGateway>()
@@ -60,7 +62,7 @@ class AppTilgangsforespørselServiceTest {
             bruker = Bruker("journalpost-ident", BrukerIdType.FNR),
             sak = fagsystem?.let { Sak("sak-1", it, Sakstype.FAGSAK) },
         )
-        val saksidenter = RelevanteIdenter(listOf("søker-ident"), listOf("barn-ident"))
+        val saksidenter = KontraktRelevanteIdenter(listOf("søker-ident"), listOf("barn-ident"))
         coEvery { behandlingsflyt.hentIdenterForSak("sak-1") } returns saksidenter
         val input = slot<Tilgangsgrunnlag>()
         coEvery { tilgangService.vurderTilgang(capture(input)) } returns mapOf(Operasjon.SE to false)
@@ -71,7 +73,7 @@ class AppTilgangsforespørselServiceTest {
 
         assertThat(resultat).isFalse()
         assertThat(input.captured.søkerIdenter).isEqualTo(
-            if (brukerSaksidenter) saksidenter else RelevanteIdenter(listOf("journalpost-ident"), emptyList())
+            if (brukerSaksidenter) saksidenter.tilDomene() else RelevanteIdenter(listOf("journalpost-ident"), emptyList())
         )
         assertThat(input.captured.kontekst).isSameAs(kontekst)
         coVerify(exactly = if (brukerSaksidenter) 1 else 0) {
@@ -124,7 +126,7 @@ class AppTilgangsforespørselServiceTest {
     @Test
     fun `bevarer hele behandlingsgrunnlaget og regelresultatet`() = runTest {
         val referanse = UUID.randomUUID()
-        val identer = RelevanteIdenter(listOf("søker"), listOf("barn"))
+        val identer = KontraktRelevanteIdenter(listOf("søker"), listOf("barn"))
         val roller = listOf(Rolle.LES, Rolle.BESLUTTER)
         val påkrevdeRoller = listOf(Rolle.BESLUTTER)
         val input = slot<Tilgangsgrunnlag>()
@@ -145,8 +147,8 @@ class AppTilgangsforespørselServiceTest {
         assertThat(input.captured.kontekst.callId).isEqualTo("call-id")
         assertThat(input.captured.kontekst.brukerToken).isSameAs(token)
         assertThat(input.captured.kontekst.roller).containsExactlyElementsOf(roller)
-        assertThat(input.captured.søkerIdenter).isEqualTo(identer)
-        assertThat(input.captured.avklaringsbehovRoller).containsExactly(Definisjon.forKode("5003").løsesAv)
+        assertThat(input.captured.søkerIdenter).isEqualTo(identer.tilDomene())
+        assertThat(input.captured.avklaringsbehovRoller).containsExactly(Definisjon.forKode("5003").løsesAv.tilDomene())
         assertThat(input.captured.påkrevdRolle).containsExactlyElementsOf(påkrevdeRoller)
         assertThat(input.captured.operasjoner).containsExactlyElementsOf(Operasjon.entries)
     }
@@ -172,7 +174,7 @@ class AppTilgangsforespørselServiceTest {
         )
 
         assertThat(resultat).isTrue()
-        assertThat(input.captured.avklaringsbehovRoller).containsExactly(definisjon.løsesAv.toList())
+        assertThat(input.captured.avklaringsbehovRoller).containsExactly(definisjon.løsesAv.tilDomene())
     }
 
     @ParameterizedTest

@@ -10,9 +10,6 @@ import io.mockk.slot
 import io.mockk.verifySequence
 import kotlinx.coroutines.test.runTest
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.tilgang.Operasjon
-import no.nav.aap.tilgang.RelevanteIdenter
-import no.nav.aap.tilgang.Rolle
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Nested
@@ -32,6 +29,8 @@ import java.util.UUID
 import kotlin.random.Random
 import kotlin.test.assertFailsWith
 import no.nav.aap.postmottak.kontrakt.avklaringsbehov.Definisjon as PostmottakDefinisjon
+import no.nav.aap.tilgang.Rolle as KontraktRolle
+import tilgang.mapping.tilDomene
 
 class TilgangsforespørselServiceTest {
 
@@ -144,7 +143,7 @@ class TilgangsforespørselServiceTest {
                     coVerify(exactly = 1) { journalpostOppslag.hentJournalpostInfo(123, kontekst.callId) }
                 }
                 "arenasaker" -> service.harTilgangTilArenasakerForPerson(
-                    ArenasakstilgangInput("søker-ident", Rolle.kanLeseSaker(), Operasjon.SE), kontekst
+                    ArenasakstilgangInput("søker-ident", KontraktRolle.kanLeseSaker().tilDomene(), Operasjon.SE), kontekst
                 )
                 "person" -> service.harTilgangTilPerson(
                     PersontilgangInput("søker-ident", emptyList(), Operasjon.DRIFTE), kontekst
@@ -168,9 +167,9 @@ class TilgangsforespørselServiceTest {
         coEvery { journalpostOppslag.hentJournalpostInfo(123, "call-id") } returns
                 JournalpostInfo(123, "søker-ident", false, null)
         val (kode, forventedeRoller) = when (type) {
-            AvklaringsbehovType.BEHANDLING -> "5003" to Definisjon.forKode("5003").løsesAv.toList()
+            AvklaringsbehovType.BEHANDLING -> "5003" to Definisjon.forKode("5003").løsesAv.tilDomene()
             AvklaringsbehovType.JOURNALPOST -> PostmottakDefinisjon.entries.first().let {
-                it.kode.name to it.løsesAv.toList()
+                it.kode.name to it.løsesAv.tilDomene()
             }
         }
 
@@ -199,7 +198,7 @@ class TilgangsforespørselServiceTest {
 
         @Test
         suspend fun `sender leseroller og SE sammen med kontekst til regelservice`() {
-            val req = ArenasakstilgangInput("12345678901", Rolle.kanLeseSaker(), Operasjon.SE)
+            val req = ArenasakstilgangInput("12345678901", KontraktRolle.kanLeseSaker().tilDomene(), Operasjon.SE)
             val token = BrukerToken("test-token")
             val roller = listOf(Rolle.LES)
             val kontekst = Tilgangskontekst("ansattIdent", roller, token, "callId")
@@ -235,7 +234,7 @@ class TilgangsforespørselServiceTest {
             coEvery { tilgangService.vurderTilgang(any()) } returns mapOf(Operasjon.SE to harTilgang)
 
             val resultat = service.harTilgangTilArenasakerForPerson(
-                ArenasakstilgangInput("12345678901", Rolle.kanLeseSaker(), Operasjon.SE),
+                ArenasakstilgangInput("12345678901", KontraktRolle.kanLeseSaker().tilDomene(), Operasjon.SE),
                 Tilgangskontekst("ansattIdent", emptyList(), BrukerToken("test-token"), "callId"),
             )
 
@@ -247,7 +246,7 @@ class TilgangsforespørselServiceTest {
             coEvery { tilgangService.vurderTilgang(any()) } returns emptyMap()
 
             val harTilgang = service.harTilgangTilArenasakerForPerson(
-                ArenasakstilgangInput("12345678901", Rolle.kanLeseSaker(), Operasjon.SE),
+                ArenasakstilgangInput("12345678901", KontraktRolle.kanLeseSaker().tilDomene(), Operasjon.SE),
                 Tilgangskontekst("ansattIdent", emptyList(), BrukerToken("test-token"), "callId"),
             )
 

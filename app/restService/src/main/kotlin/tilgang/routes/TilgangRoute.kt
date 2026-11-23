@@ -34,6 +34,8 @@ import tilgang.kontroll.PersontilgangInput
 import tilgang.kontroll.SakstilgangInput
 import tilgang.kontroll.TilbakekrevingstilgangInput
 import tilgang.kontroll.Tilgangskontekst
+import tilgang.mapping.tilDomene
+import tilgang.mapping.tilKontrakt
 import tilgang.metrics.httpCallCounter
 import tilgang.metrics.nektetTilgangTeller
 
@@ -53,9 +55,9 @@ fun NormalOpenAPIRoute.tilgang(
 
                 val input = SakstilgangInput(
                     saksnummer = req.saksnummer,
-                    påkrevdRolle = req.påkrevdRolle.orEmpty(),
-                    operasjon = req.operasjon,
-                    relevanteIdenter = req.relevanteIdenter,
+                    påkrevdRolle = req.påkrevdRolle.orEmpty().tilDomene(),
+                    operasjon = req.operasjon.tilDomene(),
+                    relevanteIdenter = req.relevanteIdenter?.tilDomene(),
                 )
                 val harTilgang =
                     tilgangService.harTilgangTilSak(input, kontekst)
@@ -76,11 +78,11 @@ fun NormalOpenAPIRoute.tilgang(
                 val input = BehandlingstilgangInput(
                     behandlingsreferanse = req.behandlingsreferanse,
                     avklaringsbehovKode = req.avklaringsbehovKode,
-                    påkrevdRolle = req.påkrevdRolle.orEmpty(),
-                    relevanteIdenter = req.relevanteIdenter,
+                    påkrevdRolle = req.påkrevdRolle.orEmpty().tilDomene(),
+                    relevanteIdenter = req.relevanteIdenter?.tilDomene(),
                 )
                 val harTilgang =
-                    tilgangService.harTilgangTilBehandling(input, kontekst)
+                    tilgangService.harTilgangTilBehandling(input, kontekst).tilKontrakt()
 
                 if (harTilgang[req.operasjon] != true) {
                     prometheus.nektetTilgangTeller("behandling").increment()
@@ -99,8 +101,8 @@ fun NormalOpenAPIRoute.tilgang(
 
                 val input = ArenasakstilgangInput(
                     personIdent = req.personIdent,
-                    påkrevdRolle = req.påkrevdRolle,
-                    operasjon = req.operasjon,
+                    påkrevdRolle = req.påkrevdRolle.tilDomene(),
+                    operasjon = req.operasjon.tilDomene(),
                 )
                 val harTilgang =
                     tilgangService.harTilgangTilArenasakerForPerson(input, kontekst)
@@ -127,8 +129,8 @@ fun NormalOpenAPIRoute.tilgang(
                 val input = JournalposttilgangInput(
                     journalpostId = req.journalpostId,
                     avklaringsbehovKode = req.avklaringsbehovKode,
-                    påkrevdRolle = req.påkrevdRolle.orEmpty(),
-                    operasjon = req.operasjon,
+                    påkrevdRolle = req.påkrevdRolle.orEmpty().tilDomene(),
+                    operasjon = req.operasjon.tilDomene(),
                 )
                 val harTilgang =
                     tilgangService.harTilgangTilJournalpost(input, kontekst)
@@ -162,8 +164,8 @@ fun NormalOpenAPIRoute.tilgang(
 
                 val input = PersontilgangInput(
                     personIdent = req.personIdent,
-                    påkrevdRolle = req.påkrevdRolle.orEmpty(),
-                    operasjon = req.operasjon,
+                    påkrevdRolle = req.påkrevdRolle.orEmpty().tilDomene(),
+                    operasjon = req.operasjon?.tilDomene(),
                 )
                 val harTilgang = tilgangService.harTilgangTilPerson(
                     input, kontekst
@@ -185,8 +187,8 @@ fun NormalOpenAPIRoute.tilgang(
                 val input = TilbakekrevingstilgangInput(
                     saksnummer = req.saksnummer,
                     behandlingsreferanse = req.behandlingsreferanse,
-                    påkrevdRolle = req.effektivePåkrevdRoller(),
-                    operasjon = req.operasjon,
+                    påkrevdRolle = req.effektivePåkrevdRoller().tilDomene(),
+                    operasjon = req.operasjon.tilDomene(),
                 )
                 val harTilgang =
                     tilgangService.harTilgangTilTilbakekreving(input, kontekst)
@@ -214,7 +216,7 @@ fun NormalOpenAPIRoute.tilgang(
 private fun OpenAPIPipelineContext.tilgangskontekst(roles: List<Role>): Tilgangskontekst =
     Tilgangskontekst(
         ansattIdent = ident(),
-        roller = parseRoller(rolesWithGroupIds = roles, roller()),
+        roller = parseRoller(rolesWithGroupIds = roles, roller()).tilDomene(),
         brukerToken = BrukerToken(pipeline.call.token().token()),
         callId = pipeline.call.request.header("Nav-CallId") ?: "ukjent",
     )

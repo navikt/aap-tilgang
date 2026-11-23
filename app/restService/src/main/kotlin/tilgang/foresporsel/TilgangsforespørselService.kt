@@ -1,8 +1,8 @@
 package tilgang.foresporsel
 
-import no.nav.aap.tilgang.Operasjon
-import no.nav.aap.tilgang.RelevanteIdenter
-import no.nav.aap.tilgang.Rolle
+import tilgang.kontroll.Operasjon
+import tilgang.kontroll.RelevanteIdenter
+import tilgang.kontroll.Rolle
 import org.slf4j.Logger
 import tilgang.grunnlag.AvklaringsbehovType
 import tilgang.grunnlag.TilgangsgrunnlagService

@@ -1,6 +1,6 @@
 package tilgang.kontroll.regler
 
-import no.nav.aap.tilgang.Rolle
+import tilgang.kontroll.Rolle
 
 data object DriftRolleRegel : Regel<List<Rolle>> {
     override fun vurder(input: List<Rolle>): Boolean {

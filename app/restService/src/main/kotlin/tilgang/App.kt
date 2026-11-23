@@ -20,7 +20,6 @@ import kotlin.time.Duration.Companion.seconds
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.komponenter.server.auth.IdentityProvider
 import no.nav.aap.komponenter.server.commonKtorModule
-import no.nav.aap.tilgang.RelevanteIdenter
 import org.slf4j.LoggerFactory
 import tilgang.auth.TexasGateway
 import tilgang.auth.TokenProvider
@@ -51,6 +50,7 @@ import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinAvvistGrunn
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinGateway
 import tilgang.integrasjoner.tilgangsmaskin.createTilgangsmaskinClient
 import tilgang.kontroll.BrukerToken
+import tilgang.kontroll.RelevanteIdenter
 import tilgang.kontroll.Personregel
 import tilgang.kontroll.TilgangService
 import tilgang.kontroll.Tilgangskontekst
@@ -60,6 +60,7 @@ import tilgang.kontroll.regler.Adressebeskyttelsesroller
 import tilgang.kontroll.regler.Adressegradering
 import tilgang.kontroll.regler.Habilitetsgrunnlag
 import tilgang.kontroll.regler.Personkontroll
+import tilgang.mapping.tilDomene
 import tilgang.redis.Redis
 import tilgang.routes.actuator
 import tilgang.routes.tilgang
@@ -194,10 +195,10 @@ internal fun createTilgangsforespørselService(
     val grunnlagService = TilgangsgrunnlagService(
         identOppslag = object : IdentOppslag {
             override suspend fun hentIdenterForSak(saksnummer: String): RelevanteIdenter =
-                behandlingsflyt.hentIdenterForSak(saksnummer)
+                behandlingsflyt.hentIdenterForSak(saksnummer).tilDomene()
 
             override suspend fun hentIdenterForBehandling(behandlingsnummer: String): RelevanteIdenter =
-                behandlingsflyt.hentIdenterForBehandling(behandlingsnummer)
+                behandlingsflyt.hentIdenterForBehandling(behandlingsnummer).tilDomene()
         },
         journalpostOppslag = object : JournalpostOppslag {
             override suspend fun hentJournalpostInfo(journalpostId: Long, callId: String): JournalpostInfo {

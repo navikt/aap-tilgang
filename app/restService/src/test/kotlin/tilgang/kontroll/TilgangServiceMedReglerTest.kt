@@ -6,8 +6,6 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
-import no.nav.aap.tilgang.Operasjon
-import no.nav.aap.tilgang.Rolle
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
@@ -30,6 +28,8 @@ import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinAvvistGrunn
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinAvvistResponse
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinGateway
 import java.util.UUID
+import no.nav.aap.tilgang.Rolle as KontraktRolle
+import tilgang.mapping.tilDomene
 
 class TilgangServiceMedReglerTest {
     companion object {
@@ -86,7 +86,7 @@ class TilgangServiceMedReglerTest {
         } returns HarTilgangFraTilgangsmaskinen(true)
 
         val harTilgang = serviceMedRegler.harTilgangTilArenasakerForPerson(
-            ArenasakstilgangInput(personIdent, Rolle.kanLeseSaker(), Operasjon.SE),
+            ArenasakstilgangInput(personIdent, KontraktRolle.kanLeseSaker().tilDomene(), Operasjon.SE),
             Tilgangskontekst("ansattIdent", listOf(rolle), token, "callId"),
         )
 
@@ -124,7 +124,7 @@ class TilgangServiceMedReglerTest {
         } returns HarTilgangFraTilgangsmaskinen(true)
 
         val harTilgang = serviceMedRegler.harTilgangTilArenasakerForPerson(
-            ArenasakstilgangInput(personIdent, Rolle.kanLeseSaker(), Operasjon.SE),
+            ArenasakstilgangInput(personIdent, KontraktRolle.kanLeseSaker().tilDomene(), Operasjon.SE),
             Tilgangskontekst("ansattIdent", listOf(Rolle.LES), token, "callId"),
         )
 
@@ -169,7 +169,7 @@ class TilgangServiceMedReglerTest {
         )
 
         val harTilgang = serviceMedRegler.harTilgangTilArenasakerForPerson(
-            ArenasakstilgangInput(personIdent, Rolle.kanLeseSaker(), Operasjon.SE),
+            ArenasakstilgangInput(personIdent, KontraktRolle.kanLeseSaker().tilDomene(), Operasjon.SE),
             Tilgangskontekst("ansattIdent", listOf(Rolle.LES), token, "callId"),
         )
 

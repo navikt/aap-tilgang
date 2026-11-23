@@ -2,10 +2,11 @@ package tilgang.grunnlag
 
 import java.util.UUID
 import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.tilgang.RelevanteIdenter
-import no.nav.aap.tilgang.Rolle
+import tilgang.kontroll.RelevanteIdenter
+import tilgang.kontroll.Rolle
 import org.slf4j.Logger
 import tilgang.kontroll.ManglerSøkerIdentException
+import tilgang.mapping.tilDomene
 import no.nav.aap.postmottak.kontrakt.avklaringsbehov.Definisjon as PostmottakDefinisjon
 
 class TilgangsgrunnlagService(
@@ -31,8 +32,8 @@ class TilgangsgrunnlagService(
         listOfNotNull(
             kode?.let {
                 when (type) {
-                    AvklaringsbehovType.BEHANDLING -> Definisjon.forKode(it).løsesAv.toList()
-                    AvklaringsbehovType.JOURNALPOST -> PostmottakDefinisjon.forKode(it).løsesAv.toList()
+                    AvklaringsbehovType.BEHANDLING -> Definisjon.forKode(it).løsesAv.tilDomene()
+                    AvklaringsbehovType.JOURNALPOST -> PostmottakDefinisjon.forKode(it).løsesAv.tilDomene()
                 }
             }
         )

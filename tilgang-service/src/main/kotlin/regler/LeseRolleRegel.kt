@@ -2,7 +2,7 @@ package tilgang.kontroll.regler
 
 import tilgang.kontroll.Tilgangsgrunnlag
 
-import no.nav.aap.tilgang.Rolle
+import tilgang.kontroll.Rolle
 
 data object LeseRolleRegel : Regel<List<Rolle>> {
     private val tillatteRoller = setOf(

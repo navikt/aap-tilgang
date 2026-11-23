@@ -1,6 +1,6 @@
 package tilgang.grunnlag
 
-import no.nav.aap.tilgang.RelevanteIdenter
+import tilgang.kontroll.RelevanteIdenter
 
 interface IdentOppslag {
     suspend fun hentIdenterForSak(saksnummer: String): RelevanteIdenter

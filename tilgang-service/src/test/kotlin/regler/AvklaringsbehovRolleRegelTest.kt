@@ -1,17 +1,17 @@
 package tilgang.kontroll.regler
 
-import no.nav.aap.behandlingsflyt.kontrakt.avklaringsbehov.Definisjon
-import no.nav.aap.tilgang.Rolle
+import tilgang.kontroll.Rolle
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
 class AvklaringsbehovRolleRegelTest {
+    private val rollerSomLøserBehov = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING, Rolle.SAKSBEHANDLER_NASJONAL)
 
     @Test
-    fun `gir tilgang når bruker har riktig rolle for avklaringsbehov fra behandlingsflyt`() {
+    fun `gir tilgang når bruker har riktig rolle for avklaringsbehov`() {
         val input = AvklaringsbehovRolleInput(
-            avklaringsbehovRoller = listOf(Definisjon.MANUELT_SATT_PÅ_VENT.løsesAv),
+            avklaringsbehovRoller = listOf(rollerSomLøserBehov),
             påkrevdRolle = emptyList(),
             roller = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING)
         )
@@ -19,9 +19,9 @@ class AvklaringsbehovRolleRegelTest {
     }
 
     @Test
-    fun `gir ikke tilgang når bruker mangler rolle for avklaringsbehov fra behandlingsflyt`() {
+    fun `gir ikke tilgang når bruker mangler rolle for avklaringsbehov`() {
         val input = AvklaringsbehovRolleInput(
-            avklaringsbehovRoller = listOf(Definisjon.MANUELT_SATT_PÅ_VENT.løsesAv),
+            avklaringsbehovRoller = listOf(rollerSomLøserBehov),
             påkrevdRolle = emptyList(),
             roller = listOf(Rolle.BESLUTTER)
         )
@@ -50,9 +50,9 @@ class AvklaringsbehovRolleRegelTest {
 
     @Test
     fun `krever både avklaringsbehov-rolle og påkrevdRolle når begge er satt`() {
-        // Bruker har SAKSBEHANDLER_OPPFOLGING som kan løse MANUELT_SATT_PÅ_VENT, og BESLUTTER som er påkrevdRolle
+        // Bruker har SAKSBEHANDLER_OPPFOLGING som kan løse behovet, og BESLUTTER som er påkrevdRolle
         val input = AvklaringsbehovRolleInput(
-            avklaringsbehovRoller = listOf(Definisjon.MANUELT_SATT_PÅ_VENT.løsesAv),
+            avklaringsbehovRoller = listOf(rollerSomLøserBehov),
             påkrevdRolle = listOf(Rolle.BESLUTTER),
             roller = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING, Rolle.BESLUTTER)
         )
@@ -62,7 +62,7 @@ class AvklaringsbehovRolleRegelTest {
     @Test
     fun `gir ikke tilgang når avklaringsbehov passer men påkrevdRolle mangler`() {
         val input = AvklaringsbehovRolleInput(
-            avklaringsbehovRoller = listOf(Definisjon.MANUELT_SATT_PÅ_VENT.løsesAv),
+            avklaringsbehovRoller = listOf(rollerSomLøserBehov),
             påkrevdRolle = listOf(Rolle.BESLUTTER),
             roller = listOf(Rolle.SAKSBEHANDLER_OPPFOLGING)
         )
@@ -72,7 +72,7 @@ class AvklaringsbehovRolleRegelTest {
     @Test
     fun `gir ikke tilgang når påkrevdRolle passer men avklaringsbehov-rolle mangler`() {
         val input = AvklaringsbehovRolleInput(
-            avklaringsbehovRoller = listOf(Definisjon.MANUELT_SATT_PÅ_VENT.løsesAv),
+            avklaringsbehovRoller = listOf(rollerSomLøserBehov),
             påkrevdRolle = listOf(Rolle.BESLUTTER),
             roller = listOf(Rolle.BESLUTTER)
         )

@@ -2,7 +2,7 @@ package tilgang.kontroll.regler
 
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
-import no.nav.aap.tilgang.Rolle
+import tilgang.kontroll.Rolle
 
 class AvdelingslederRolleRegelTest {
     @Test
