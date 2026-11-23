@@ -617,3 +617,94 @@ PR-gjennomgang er separate fra den lokale byggingen.
 | 97 | Utvikler, valg om PDL `not_found` | preserve |
 | 98 | Utvikler | push |
 | 99 | Utvikler, godkjenning av commits og publiseringsomfang | all |
+
+## Oppfølging 2026-11-23: uavhengig domenebibliotek
+
+Tidspunkt: `2026-11-23T21:12:49+01:00`.
+Sesjon: `655c2699-5b66-4c28-871c-c6d1fcb8ba86`.
+Oppgavegren: `test/architect-review`; basegren: `main`.
+Utviklerens effektive Git-e-post: `petter.ekrann@nav.no`.
+Siste publiserte commit før oppfølgingen: `b8cbbc4`.
+Endringene nedenfor var lokale og ikke publisert da valideringen ble kjørt.
+
+`tilgang-service` brukte tidligere `Rolle`, `Operasjon` og `RelevanteIdenter`
+fra `api-kontrakt` i input, vurderingsgrunnlag og returverdier. Dette var
+årsaken til den direkte Gradle-avhengigheten, selv om HTTP-requesttypene
+allerede var fjernet fra biblioteket.
+
+Biblioteket har nå egne domenetyper og kjenner ikke `api-kontrakt`.
+Kontrakten kjenner heller ikke biblioteket. `app` avhenger av begge og mapper
+ved REST-rutene, kontekstbyggingen og integrasjonsadapterne. Rolle- og
+operasjonsmappingene bruker uttømmende `when`. Eksisterende kontrakt,
+Redis-format og tilgangsavgjørelser er beholdt. En ny rolle må oppdateres
+i kontrakten, domenet og mappingen.
+
+Dette erstatter den tidligere omtalen under «Endringer» av `api-kontrakt`
+som produksjonsavhengighet i biblioteket. Biblioteket bruker nå Kotlin og
+coroutines, uten prosjektavhengigheter. Testavhengigheten til
+behandlingsflyt-kontrakten er også fjernet; konkrete avklaringsbehov oversettes
+og testes fortsatt i hosten.
+
+Logback og Ktor Netty i `plugin` er flyttet fra `implementation` til
+`testImplementation`. Appen beholder begge som runtime-avhengigheter.
+README viser den nye modulgrensen, og Mermaid-noden `graph` er omdøpt til
+`msGraph` for å unngå reservert syntaks i produksjonsdiagrammet.
+
+Implementasjonscommits: `82592bf` (plugin-avhengigheter) og `8f2fa03`
+(frikobling av biblioteket med adaptere og tester).
+
+### Publiseringskontroll
+
+`git fetch origin test/architect-review` hentet oppgavegrenen før byggingen.
+Lokal HEAD og remote var begge `b8cbbc4`; ingen innfletting var nødvendig.
+Målet er fortsatt `origin/test/architect-review` og eksisterende
+PR #710 til `main`. Utvikleren godkjente commits av implementasjon,
+plugin-opprydding, README og dette sluttnotatet før publisering.
+
+Hele byggingen og testsuiten ble kjørt på nytt uten testfiltre, med Java 25,
+forhåndslastet Byte Buddy-agent og `-XX:ActiveProcessorCount=1`:
+
+```sh
+./gradlew build --rerun-tasks --console=plain --no-daemon \
+  --no-configuration-cache --no-parallel --max-workers=1
+```
+
+`BUILD SUCCESSFUL in 1m 39s`; alle 38 oppgaver ble kjørt på nytt.
+JUnit XML-rapportene viste 656 tester: 584 i hosten, 22 i biblioteket og
+50 i pluginen, uten feil eller hoppet over. De to nye testene kontrollerer
+rolle- og operasjonsmappingene.
+
+Før publiseringskontrollen ble alle bibliotekets Gradle-konfigurasjoner
+undersøkt med `:tilgang-service:dependencies`: ingen prosjektavhengigheter,
+`api-kontrakt` eller eksterne forretningskontrakter ble funnet.
+Pluginens genererte POM og `dependencyInsight` på `runtimeClasspath`
+bekreftet at Logback og Ktor Netty ikke lenger følger med ved kjøring.
+
+`git diff --check` bestod. En avgrenset lokal kontroll av de 37 endrede filene
+ga ingen treff på private nøkler eller vanlige GitHub-, Slack- og
+AWS-nøkkelformater. Diff-gjennomgangen viste at eksisterende rollekrav og
+avslagsregler er beholdt. Dette er ikke en full sårbarhetsskanning:
+Trivy og zizmor er fortsatt ikke installert. GitHub CI og PR-gjennomgang
+er separate fra lokal validering; ingen utrulling ble kjørt lokalt.
+
+Ingen kjente funksjonelle blokkeringer gjenstår i denne oppfølgingen.
+Den tidligere rolleplanen om dupliserte gruppe-ID-er er fortsatt separat.
+
+### Tillegg til samtalehistorikken
+
+| Tur | Avsender | Melding |
+| ---: | --- | --- |
+| 100 | Utvikler | grafen feiler å rendere på github |
+| 101 | Utvikler | se på avhengigheter i gradel filene |
+| 102 | Utvikler | fjern unødvendige avhengigheter |
+| 103 | Utvikler | list avhengigheter pr modul |
+| 104 | Utvikler | hvorfor er tilangang-service avhengig ac api-kontrakt |
+| 105 | Utvikler | app skal vite om kontrakt og tilgang-service men de skal ikke vite om hverandre |
+| 106 | Utvikler | tegn opp avhengighetene |
+| 107 | Utvikler | push |
+| 108 | Utvikler, godkjenning av commits og push til PR #710 | true |
+
+Agentens svar, oppsummert: Avhengigheten skyldtes delte felttyper, ikke
+HTTP-requestene. Biblioteket har fått egne typer, og hosten mapper mellom
+dem og kontrakten. Moduldiagrammet viser ingen kant mellom biblioteket
+og kontrakten i noen retning.

@@ -5,8 +5,10 @@ Applikasjon for å sjekke om brukere har tilgang til Kelvin-ressurs.
 Gradle-modulen `app` ligger i `app/restService` og er Ktor-hosten med routes,
 konfigurasjon, integrasjoner og adaptere.
 `tilgang-service` er biblioteket med tilgangsservice, regler og egne grensesnitt.
-Hosten avhenger av biblioteket, ikke omvendt. Biblioteket bruker `api-kontrakt`
-for felles roller og operasjoner, men har ingen Ktor-avhengighet.
+Hosten avhenger av biblioteket og av `api-kontrakt`. Biblioteket og kontrakten
+kjenner ikke hverandre: biblioteket har egne typer for `Rolle`, `Operasjon` og
+`RelevanteIdenter`, og ingen Ktor-avhengighet. Hosten mapper mellom kontrakt-
+og bibliotektyper i `tilgang.mapping`.
 
 `TilgangsforespørselService` i hosten samordner ressursforespørslene.
 `TilgangsgrunnlagService` henter ident- og journalpostdata sentralt gjennom
@@ -48,7 +50,7 @@ flowchart LR
     subgraph external["Eksterne utgående tjenester"]
         saf["SAF<br/>prod-fss"]
         pdl["PDL<br/>prod-fss"]
-        graph["Microsoft Graph<br/>URL/scope konfigurert"]
+        msGraph["Microsoft Graph<br/>URL/scope konfigurert"]
     end
 
     callers -->|"inbound accessPolicy"| service
@@ -59,7 +61,7 @@ flowchart LR
     service --> tilgangsmaskin
     service --> saf
     service --> pdl
-    service -.-> graph
+    service -.-> msGraph
 ```
 
 Manifestet oppgir eksplisitte eksterne `accessPolicy`-regler for SAF og PDL.
@@ -71,8 +73,10 @@ Grunnlaget inneholder kallkontekst, søker- og barnidenter, ferdige rollekrav og
 REST-svarene er uendret; ordinære avslag gir fortsatt HTTP 200 med `tilgang=false`.
 Hosten bruker `org.slf4j.Logger` direkte. Biblioteket har ingen logging-avhengighet.
 
-Kjente roller defineres av `Rolle`, og gruppe-ID-er leses fra `AAP_<ROLLENAVN>`
-gjennom `configForKey`, uten en egen hardkodet rolleliste.
+Kjente roller defineres av `Rolle` i `api-kontrakt`, og gruppe-ID-er leses fra
+`AAP_<ROLLENAVN>` gjennom `configForKey`, uten en egen hardkodet rolleliste.
+En ny rolle må også legges til i bibliotekets `Rolle` og i mappingen;
+mappingen bruker uttømmende `when`, så bygget feiler hvis en kontraktverdi mangler.
 Bare roller med konfigurert verdi lastes. Manglende verdier utelater rollen;
 en konfigurert verdi må være en gyldig UUID, ellers stopper oppstarten.
 
@@ -118,7 +122,6 @@ flowchart LR
 
     app --> service
     app --> api
-    service --> api
     plugin --> pluginContract
     plugin --> api
     pluginContract --> api
