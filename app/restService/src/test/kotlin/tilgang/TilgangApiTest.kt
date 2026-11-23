@@ -13,6 +13,9 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.server.testing.testApplication
+import kotlinx.coroutines.runBlocking
+import io.mockk.mockk
+import io.mockk.verify
 import java.util.UUID
 import no.nav.aap.komponenter.json.DefaultJsonMapper
 import no.nav.aap.tilgang.Rolle
@@ -75,6 +78,32 @@ class TilgangApiTest {
             assertThat(response.status).isEqualTo(HttpStatusCode.OK)
             assertThat(response.bodyAsText()).isEqualTo("[\"BESLUTTER\"]")
         }
+    }
+
+    @Test
+    fun `lukker ikke redis som er injisert av kalleren`() {
+        val redis = Fakes.getRedisServer()
+
+        testApplication {
+            application {
+                api(Config(redis = Fakes.getRedisConfig()), redis)
+            }
+        }
+
+        assertThat(runBlocking { redis.ready() }).isTrue()
+    }
+
+    @Test
+    fun `lukker redis som appen oppretter selv`() {
+        val redis = mockk<tilgang.redis.Redis>(relaxed = true)
+
+        testApplication {
+            application {
+                api(Config(redis = Fakes.getRedisConfig()), null) { redis }
+            }
+        }
+
+        verify(exactly = 1) { redis.close() }
     }
 
     @ParameterizedTest

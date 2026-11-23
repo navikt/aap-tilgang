@@ -113,8 +113,19 @@ fun main() {
 }
 
 fun Application.api(
-    config: Config = Config(), redis: Redis = Redis.from(config.redis),
+    config: Config = Config(),
+    redis: Redis? = null,
 ) {
+    api(config, redis, Redis::from)
+}
+
+internal fun Application.api(
+    config: Config,
+    redis: Redis?,
+    redisFactory: (RedisConfig) -> Redis,
+) {
+    val ownsRedis = redis == null
+    val redisClient = redis ?: redisFactory(config.redis)
     val prometheus = AppConfig.prometheus
 
     val texasTokenClient = createTexasClient(config.texas.tokenEndpoint)
@@ -122,15 +133,15 @@ fun Application.api(
     val tokenProvider = TokenProvider(TexasGateway(texasTokenClient, texasExchangeClient), prometheus)
 
     val pdlClient = createPdlClient(config.pdl, tokenProvider)
-    val pdl = PdlGraphQLGateway(redis, pdlClient, prometheus)
+    val pdl = PdlGraphQLGateway(redisClient, pdlClient, prometheus)
     val msGraphClient = createMsGraphClient(config.msGraph, tokenProvider)
-    val msGraph = MsGraphGateway(redis, msGraphClient, prometheus)
+    val msGraph = MsGraphGateway(redisClient, msGraphClient, prometheus)
     val behandlingsflytClient = createBehandlingsflytClient(config.behandlingsflyt, tokenProvider)
-    val behandlingsflyt = BehandlingsflytGateway(redis, behandlingsflytClient, prometheus)
+    val behandlingsflyt = BehandlingsflytGateway(redisClient, behandlingsflytClient, prometheus)
     val safClient = createSafClient(config.saf, tokenProvider)
-    val saf = SafGraphqlGateway(redis, safClient, prometheus)
+    val saf = SafGraphqlGateway(redisClient, safClient, prometheus)
     val tilgangsmaskinClient = createTilgangsmaskinClient(config.tilgangsmaskin, tokenProvider)
-    val tilgangsmaskinGateway = TilgangsmaskinGateway(redis, tilgangsmaskinClient, prometheus)
+    val tilgangsmaskinGateway = TilgangsmaskinGateway(redisClient, tilgangsmaskinClient, prometheus)
     val tilgangService = createTilgangService(pdl, AdressebeskyttelseService(msGraph), tilgangsmaskinGateway)
     val forespørselService =
         createTilgangsforespørselService(saf, behandlingsflyt, tilgangService, tilgangsmaskinGateway)
@@ -144,7 +155,7 @@ fun Application.api(
     )
 
     routing {
-        actuator(prometheus, redis)
+        actuator(prometheus, redisClient)
 
         authenticate(IdentityProvider.ENTRA_ID.value) {
             apiRouting {
@@ -168,6 +179,7 @@ fun Application.api(
         tokenProvider.close()
         texasTokenClient.close()
         texasExchangeClient.close()
+        if (ownsRedis) redisClient.close()
         environment.log.info("ktor har fullført nedstoppingen sin. Eventuelle requester og annet arbeid som ikke ble fullført innen timeout ble avbrutt.")
     }
 }

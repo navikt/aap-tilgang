@@ -44,6 +44,7 @@ class PdlTest {
     private val cache = mutableMapOf<Key, ByteArray>()
     private val mottatteSpørringer = mutableListOf<PdlRequest>()
     private var feilRespons: String? = null
+    private var personBolkRespons: String? = null
     private val person = PersonResultat("456", listOf(Gradering.FORTROLIG), "ok")
     private val geografiskTilknytning = HentGeografiskTilknytningResult(
         gtType = PdlGeoType.KOMMUNE,
@@ -113,6 +114,42 @@ class PdlTest {
         }
     }
 
+    @Test
+    fun `behandler not_found som tom gradering og cacher resultatet`() = runTest {
+        personBolkRespons = """
+            {"data":{"hentPersonBolk":[{"ident":"456","person":null,"code":"not_found"}]}}
+        """.trimIndent()
+
+        medGateway("/graphql") { gateway ->
+            val resultat = gateway.hentPersonBolk(listOf("456"), "call-id")
+
+            assertThat(resultat).containsExactly(PersonResultat("456", emptyList(), "not_found"))
+            assertThat(cache[Key("personBolk", "456")]?.deserialize<PersonResultat>())
+                .isEqualTo(PersonResultat("456", emptyList(), "not_found"))
+        }
+    }
+
+    @Test
+    fun `avviser ufullstendig bolk uten aa cache delresultater`() = runTest {
+        personBolkRespons = """
+            {"data":{"hentPersonBolk":[{
+              "ident":"456",
+              "person":{"adressebeskyttelse":[{"gradering":"FORTROLIG"}]},
+              "code":"ok"
+            }]}}
+        """.trimIndent()
+
+        medGateway("/graphql") { gateway ->
+            val exception = assertFailsWith<PdlException> {
+                gateway.hentPersonBolk(listOf("456", "789"), "call-id")
+            }
+
+            assertThat(exception).hasMessageContaining("Ufullstendig")
+            assertThat(cache).doesNotContainKey(Key("personBolk", "456"))
+            coVerify(exactly = 0) { redis.set(any(), any(), any()) }
+        }
+    }
+
     private suspend fun medGateway(path: String, test: suspend (PdlGraphQLGateway) -> Unit) {
         val server = embeddedServer(Netty, port = 0) {
             install(ContentNegotiation) {
@@ -130,15 +167,13 @@ class PdlTest {
                         """
                             {"data":{"hentGeografiskTilknytning":{"gtType":"KOMMUNE","gtKommune":"3207"}}}
                         """.trimIndent()
-                    } else {
-                        """
+                    } else personBolkRespons ?: """
                             {"data":{"hentPersonBolk":[{
                               "ident":"456",
                               "person":{"adressebeskyttelse":[{"gradering":"FORTROLIG"}]},
                               "code":"ok"
                             }]}}
                         """.trimIndent()
-                    }
                     call.respondText(response, ContentType.Application.Json)
                 }
             }

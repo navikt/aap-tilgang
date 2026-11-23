@@ -43,18 +43,33 @@ class PdlGraphQLGateway(
 
         prometheus.cacheMiss(PERSON_BOLK_PREFIX).increment(manglendePersonidenter.size.toDouble())
 
-        val result = query(PdlRequest.hentPersonBolk(manglendePersonidenter), callId)
-        val nyePersoner = result.data?.hentPersonBolk?.map {
-            val nyPerson = PersonResultat(
-                it.ident,
-                it.person?.adressebeskyttelse?.map { it.gradering } ?: emptyList(),
-                it.code)
-            redis.set(Key(PERSON_BOLK_PREFIX, it.ident), nyPerson.serialize(), 3600)
-            nyPerson
-        }?.toMutableList()
-        nyePersoner?.addAll(personBolkResult)
+        val resultater = query(PdlRequest.hentPersonBolk(manglendePersonidenter), callId)
+            .data?.hentPersonBolk
+            ?: throw PdlException("Mangler hentPersonBolk-data i svar fra PDL")
 
-        return nyePersoner?.toList()
+        val mottatteIdenter = resultater.map { it.ident }.toSet()
+        val etterspurteIdenter = manglendePersonidenter.toSet()
+        val manglendeSvar = etterspurteIdenter - mottatteIdenter
+        val uventedeSvar = mottatteIdenter - etterspurteIdenter
+        if (manglendeSvar.isNotEmpty() || uventedeSvar.isNotEmpty() || resultater.size != mottatteIdenter.size) {
+            throw PdlException("Ufullstendig eller ugyldig hentPersonBolk-svar fra PDL")
+        }
+
+        val nyePersoner = resultater.map { resultat ->
+            val graderinger = when (resultat.code) {
+                "ok" -> resultat.person?.adressebeskyttelse?.map { it.gradering }
+                    ?: throw PdlException("Mangler persondata i ok-svar fra PDL")
+                "not_found" -> emptyList()
+                else -> throw PdlException("PDL avviste oppslag for en etterspurt identitet")
+            }
+            PersonResultat(resultat.ident, graderinger, resultat.code)
+        }
+
+        nyePersoner.forEach { person ->
+            redis.set(Key(PERSON_BOLK_PREFIX, person.ident), person.serialize(), 3600)
+        }
+
+        return nyePersoner + personBolkResult
     }
 
     override suspend fun hentGeografiskTilknytning(ident: String, callId: String): HentGeografiskTilknytningResult? {

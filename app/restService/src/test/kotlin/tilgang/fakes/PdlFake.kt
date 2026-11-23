@@ -2,6 +2,8 @@ package tilgang.fakes
 
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import io.ktor.http.ContentType
 import io.ktor.serialization.jackson.jackson
 import io.ktor.server.application.Application
@@ -11,6 +13,7 @@ import io.ktor.server.request.receive
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
+import tilgang.integrasjoner.pdl.PdlRequest
 
 fun Application.pdlFake() {
     install(ContentNegotiation) {
@@ -35,54 +38,16 @@ fun Application.pdlFake() {
 }
 
 private fun genererHentPersonBolkRespons(body: String): String {
-    val identer = finnIdenterIBody(body)
-
-    if (identer.size == 2) {
-        return """
-                    { "data":
-                    {"hentPersonBolk": [
-                            {
-                              "ident": "${identer[0]}",
-                              "person": {
-                                 "navn": [
-                                   {
-                                     "fornavn": "Ola",
-                                     "mellomnavn": null,
-                                     "etternavn": "Normann"
-                                   }
-                                 ]
-                              },
-                              "code": "ok"
-                            },
-                            {
-                              "ident": "${identer[1]}",
-                              "person": null,
-                              "code": "not_found"
-                            }
-                            ]
-                    }}
-                """.trimIndent()
-    } else {
-        return """
-                    { "data":
-                    {"hentPersonBolk": [
-                            {
-                              "ident": "${if (identer.isEmpty()) "1234568" else identer[0]}",
-                              "person": {
-                                 "navn": [
-                                   {
-                                     "fornavn": "Ola",
-                                     "mellomnavn": null,
-                                     "etternavn": "Normann"
-                                   }
-                                 ]
-                              },
-                              "code": "ok"
-                            }
-                            ]
-                    }}
-                """.trimIndent()
+    val identer = jacksonObjectMapper().readValue<PdlRequest>(body).variables.identer.orEmpty()
+    val personer = identer.mapIndexed { index, ident ->
+        val notFound = identer.size == 2 && index == 1
+        mapOf(
+            "ident" to ident,
+            "person" to if (notFound) null else mapOf("adressebeskyttelse" to emptyList<Any>()),
+            "code" to if (notFound) "not_found" else "ok",
+        )
     }
+    return jacksonObjectMapper().writeValueAsString(mapOf("data" to mapOf("hentPersonBolk" to personer)))
 }
 
 private fun genererHentAdressebeskytelseOgGeotilknytning(): String {
@@ -103,16 +68,4 @@ private fun genererHentAdressebeskytelseOgGeotilknytning(): String {
               }
             }
         """.trimIndent()
-}
-
-private fun finnIdenterIBody(body: String): List<String> {
-    return body.substringAfter("\"identer\" :")
-        .substringBefore("}")
-        .substringBefore(",")
-        .replace("[", "")
-        .replace("]", "")
-        .replace("\"", "")
-        .split(",")
-        .map { it.replace("\n", "").trim() }
-        .filter { it != "null" }
 }

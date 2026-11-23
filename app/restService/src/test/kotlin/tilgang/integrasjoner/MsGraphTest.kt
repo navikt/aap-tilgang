@@ -48,6 +48,9 @@ class MsGraphTest {
     private val cache = ConcurrentHashMap<Key, ByteArray>()
     private val mottatteTokens = ConcurrentLinkedQueue<String>()
     private var responseStatus = HttpStatusCode.OK
+    private var paginate = false
+    private var failOnSecondPage = false
+    private var externalNextLink = false
 
     @ParameterizedTest
     @ValueSource(strings = ["", "/", "/v1.0", "/v1.0/"])
@@ -109,12 +112,59 @@ class MsGraphTest {
         }
     }
 
+    @Test
+    fun `henter alle sider foer caching`() = runTest {
+        paginate = true
+
+        medGateway("/v1.0") { gateway ->
+            assertThat(gateway.hentAdGrupper(tokenA, "Z1")).isEqualTo(MemberOf(listOf(gruppeA, gruppeB)))
+            assertThat(mottatteTokens).containsExactly("Bearer obo-a", "Bearer obo-a")
+            assertThat(cache[Key("msgraph", "Z1")]?.deserialize<MemberOf>())
+                .isEqualTo(MemberOf(listOf(gruppeA, gruppeB)))
+            coVerify(exactly = 1) { redis.set(Key("msgraph", "Z1"), any(), 3600) }
+        }
+    }
+
+    @Test
+    fun `cacher ikke delvis resultat naar en senere side feiler`() = runTest {
+        paginate = true
+        failOnSecondPage = true
+
+        medGateway("/v1.0") { gateway ->
+            val exception = assertFailsWith<ClientRequestException> {
+                gateway.hentAdGrupper(tokenA, "Z1")
+            }
+
+            assertThat(exception.response.status).isEqualTo(HttpStatusCode.Forbidden)
+            assertThat(cache).doesNotContainKey(Key("msgraph", "Z1"))
+            coVerify(exactly = 0) { redis.set(any(), any(), any()) }
+        }
+    }
+
+    @Test
+    fun `foelger ikke nextLink til en annen vert`() = runTest {
+        paginate = true
+        externalNextLink = true
+
+        medGateway("/v1.0") { gateway ->
+            assertFailsWith<IllegalArgumentException> {
+                gateway.hentAdGrupper(tokenA, "Z1")
+            }
+
+            assertThat(mottatteTokens).containsExactly("Bearer obo-a")
+            coVerify(exactly = 0) { redis.set(any(), any(), any()) }
+        }
+    }
+
     private suspend fun medGateway(basePath: String, test: suspend (MsGraphGateway) -> Unit) {
         val server = embeddedServer(Netty, port = 0) {
             routing {
                 get("${basePath.trimEnd('/')}/me/memberOf") {
-                    assertThat(call.request.queryParameters["\$top"]).isEqualTo("500")
-                    assertThat(call.request.queryParameters["\$select"]).isEqualTo("id,mailNickname")
+                    val page = call.request.queryParameters["page"]
+                    if (page != "2") {
+                        assertThat(call.request.queryParameters["\$top"]).isEqualTo("500")
+                        assertThat(call.request.queryParameters["\$select"]).isEqualTo("id,mailNickname")
+                    }
                     val authorization = requireNotNull(call.request.header("Authorization"))
                     mottatteTokens.add(authorization)
                     val gruppe = when (authorization) {
@@ -122,11 +172,20 @@ class MsGraphTest {
                         "Bearer obo-b" -> gruppeB
                         else -> error("Uventet autentisering mot MS Graph")
                     }
-                    call.respondText(
-                        """{"value":[{"id":"${gruppe.id}","mailNickname":"${gruppe.name}"}]}""",
-                        ContentType.Application.Json,
-                        responseStatus
-                    )
+                    val status = if (page == "2" && failOnSecondPage) HttpStatusCode.Forbidden else responseStatus
+                    val response = if (page == "2") {
+                        """{"value":[{"id":"${gruppeB.id}","mailNickname":"${gruppeB.name}"}]}"""
+                    } else if (paginate) {
+                        val nextLink = if (externalNextLink) {
+                            "https://example.invalid/me/memberOf?page=2"
+                        } else {
+                            "${basePath.trimEnd('/')}/me/memberOf?page=2"
+                        }
+                        """{"value":[{"id":"${gruppe.id}","mailNickname":"${gruppe.name}"}],"@odata.nextLink":"$nextLink"}"""
+                    } else {
+                        """{"value":[{"id":"${gruppe.id}","mailNickname":"${gruppe.name}"}]}"""
+                    }
+                    call.respondText(response, ContentType.Application.Json, status)
                 }
             }
         }.start()
