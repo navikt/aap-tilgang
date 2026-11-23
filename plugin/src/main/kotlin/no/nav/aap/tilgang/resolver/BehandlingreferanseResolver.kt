@@ -1,4 +1,4 @@
-package no.nav.aap.tilgang
+package no.nav.aap.tilgang.resolver
 
 import java.util.UUID
 

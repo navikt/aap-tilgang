@@ -1,4 +1,4 @@
-package no.nav.aap.tilgang
+package no.nav.aap.tilgang.klient
 
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
@@ -21,6 +21,13 @@ import java.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import no.nav.aap.komponenter.config.requiredConfigForKey
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
+import no.nav.aap.tilgang.ArenasakTilgangRequest
+import no.nav.aap.tilgang.BehandlingTilgangRequest
+import no.nav.aap.tilgang.JournalpostTilgangRequest
+import no.nav.aap.tilgang.PersonTilgangRequest
+import no.nav.aap.tilgang.SakTilgangRequest
+import no.nav.aap.tilgang.TilbakekrevingTilgangRequest
+import no.nav.aap.tilgang.TilgangResponse
 
 public object TilgangGateway {
     private val baseUrl = URI.create(requiredConfigForKey("INTEGRASJON_TILGANG_URL"))

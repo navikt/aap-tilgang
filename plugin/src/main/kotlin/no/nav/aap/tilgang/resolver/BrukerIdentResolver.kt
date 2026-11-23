@@ -1,4 +1,4 @@
-package no.nav.aap.tilgang
+package no.nav.aap.tilgang.resolver
 
 /**
  * Brukes i forbindelse med auditlogging for å finne fnr for bruker det gjøres oppslag på.

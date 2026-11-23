@@ -1,4 +1,9 @@
-package no.nav.aap.tilgang
+package no.nav.aap.tilgang.config
+
+import no.nav.aap.tilgang.resolver.BehandlingreferanseResolver
+import no.nav.aap.tilgang.resolver.DefaultBehandlingreferanseResolver
+import no.nav.aap.tilgang.resolver.DefaultJournalpostIdResolver
+import no.nav.aap.tilgang.resolver.JournalpostIdResolver
 
 @JvmInline
 public value class SakPathParam(val param: String)

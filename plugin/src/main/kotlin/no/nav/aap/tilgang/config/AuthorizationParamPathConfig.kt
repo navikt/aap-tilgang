@@ -1,8 +1,14 @@
-package no.nav.aap.tilgang
+package no.nav.aap.tilgang.config
 
 import io.ktor.http.Parameters
 import io.ktor.server.util.getOrFail
 import java.util.UUID
+import no.nav.aap.tilgang.BehandlingTilgangRequest
+import no.nav.aap.tilgang.JournalpostTilgangRequest
+import no.nav.aap.tilgang.Operasjon
+import no.nav.aap.tilgang.Rolle
+import no.nav.aap.tilgang.SakTilgangRequest
+import no.nav.aap.tilgang.resolver.RelevanteIdenterResolver
 
 /**
  * Informasjon som tilgang trenger for å utlede kontekst fra path til requesten.

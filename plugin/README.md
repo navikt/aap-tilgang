@@ -39,9 +39,16 @@ dependencies {
 }
 ```
 
-Artefakten `no.nav.aap.tilgang:plugin-kontrakt` publiseres ikke lenger. Resolver-interfacene
-(`RelevanteIdenterResolver`, `BrukerIdentResolver`, `BehandlingreferanseResolver`, `JournalpostIdResolver`) ligger nå
-i plugin-artefakten, i pakken `no.nav.aap.tilgang`.
+Artefakten `no.nav.aap.tilgang:plugin-kontrakt` publiseres ikke lenger. Innholdet ligger nå i plugin-artefakten,
+og pakkene følger mappene:
+
+| Pakke | Innhold |
+|---|---|
+| `no.nav.aap.tilgang` | `authorizedGet`/`authorizedPost`/`authorizedPut`, `getGrunnlag`, `TilgangPlugin` |
+| `no.nav.aap.tilgang.config` | rute-konfigurasjonene, path-parametertypene og `Tilgangskontekst` |
+| `no.nav.aap.tilgang.resolver` | `RelevanteIdenterResolver`, `BrukerIdentResolver`, `BehandlingreferanseResolver`, `JournalpostIdResolver` og standardimplementasjonene |
+| `no.nav.aap.tilgang.klient` | `TilgangGateway` og `TilgangService` mot tilgangstjenesten |
+| `no.nav.aap.tilgang.auditlog` | auditlogg-konfigurasjon og CEF-meldinger |
 
 ### Migrering fra referanse-interfacene
 

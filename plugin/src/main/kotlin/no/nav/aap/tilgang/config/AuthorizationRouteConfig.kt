@@ -1,6 +1,7 @@
-package no.nav.aap.tilgang
+package no.nav.aap.tilgang.config
 
 import java.util.UUID
+import no.nav.aap.tilgang.TilgangRequest
 
 public interface AuthorizationRouteConfig
 

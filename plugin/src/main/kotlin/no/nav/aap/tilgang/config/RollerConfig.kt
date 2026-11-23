@@ -1,4 +1,4 @@
-package no.nav.aap.tilgang
+package no.nav.aap.tilgang.config
 
 import no.nav.aap.komponenter.config.requiredConfigForKey
 

@@ -1,11 +1,11 @@
 import java.util.UUID
 import kotlinx.coroutines.runBlocking
-import no.nav.aap.tilgang.AuthorizationBodyPathConfig
-import no.nav.aap.tilgang.AuthorizationParamPathConfig
+import no.nav.aap.tilgang.config.AuthorizationBodyPathConfig
+import no.nav.aap.tilgang.config.AuthorizationParamPathConfig
 import no.nav.aap.tilgang.BehandlingTilgangRequest
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.Rolle
-import no.nav.aap.tilgang.Tilgangskontekst
+import no.nav.aap.tilgang.config.Tilgangskontekst
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test

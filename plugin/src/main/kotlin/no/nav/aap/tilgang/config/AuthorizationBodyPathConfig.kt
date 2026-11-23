@@ -1,6 +1,18 @@
-package no.nav.aap.tilgang
+package no.nav.aap.tilgang.config
 
 import java.util.UUID
+import no.nav.aap.tilgang.BehandlingTilgangRequest
+import no.nav.aap.tilgang.JournalpostTilgangRequest
+import no.nav.aap.tilgang.Operasjon
+import no.nav.aap.tilgang.PersonTilgangRequest
+import no.nav.aap.tilgang.Rolle
+import no.nav.aap.tilgang.SakTilgangRequest
+import no.nav.aap.tilgang.TilgangRequest
+import no.nav.aap.tilgang.resolver.BehandlingreferanseResolver
+import no.nav.aap.tilgang.resolver.DefaultBehandlingreferanseResolver
+import no.nav.aap.tilgang.resolver.DefaultJournalpostIdResolver
+import no.nav.aap.tilgang.resolver.JournalpostIdResolver
+import no.nav.aap.tilgang.resolver.RelevanteIdenterResolver
 
 /**
  * Tilgangskontroll basert på request body.

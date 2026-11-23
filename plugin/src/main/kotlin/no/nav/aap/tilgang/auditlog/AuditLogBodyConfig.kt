@@ -2,7 +2,7 @@ package no.nav.aap.tilgang.auditlog
 
 import io.ktor.http.*
 import io.ktor.server.util.*
-import no.nav.aap.tilgang.BrukerIdentResolver
+import no.nav.aap.tilgang.resolver.BrukerIdentResolver
 import org.slf4j.Logger
 
 

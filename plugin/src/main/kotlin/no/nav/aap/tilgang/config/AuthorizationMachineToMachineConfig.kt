@@ -1,6 +1,7 @@
-package no.nav.aap.tilgang
+package no.nav.aap.tilgang.config
 
 import java.util.*
+import no.nav.aap.tilgang.log
 
 /** Maskin-til-maskin autorisering uten on-behalf-of (OBO) tokens.
  *

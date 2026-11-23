@@ -23,6 +23,12 @@ import org.slf4j.LoggerFactory
 import java.util.*
 import no.nav.aap.komponenter.server.auth.token
 import org.jetbrains.annotations.ApiStatus
+import no.nav.aap.tilgang.config.AuthorizationBodyPathConfig
+import no.nav.aap.tilgang.config.AuthorizationMachineToMachineConfig
+import no.nav.aap.tilgang.config.AuthorizationParamPathConfig
+import no.nav.aap.tilgang.config.AuthorizedRequest
+import no.nav.aap.tilgang.config.RollerConfig
+import no.nav.aap.tilgang.klient.TilgangService
 
 @ApiStatus.Internal
 public const val TILGANG_PLUGIN: String = "TilgangPlugin"

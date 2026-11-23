@@ -14,6 +14,14 @@ import no.nav.aap.tilgang.auditlog.AuditLogBodyConfig
 import no.nav.aap.tilgang.auditlog.AuditLogConfig
 import no.nav.aap.tilgang.auditlog.AuditLogPathParamConfig
 import org.jetbrains.annotations.ApiStatus
+import no.nav.aap.tilgang.config.AuthorizationBodyPathConfig
+import no.nav.aap.tilgang.config.AuthorizationMachineToMachineConfig
+import no.nav.aap.tilgang.config.AuthorizationParamPathConfig
+import no.nav.aap.tilgang.config.AuthorizationRouteConfig
+import no.nav.aap.tilgang.config.BehandlingPathParam
+import no.nav.aap.tilgang.config.NoAuthConfig
+import no.nav.aap.tilgang.config.RollerConfig
+import no.nav.aap.tilgang.resolver.RelevanteIdenterResolver
 
 public enum class Tags(override val description: String) : APITag {
     Tilgangkontrollert("Dette endepunktet er tilgangkontrollert.")

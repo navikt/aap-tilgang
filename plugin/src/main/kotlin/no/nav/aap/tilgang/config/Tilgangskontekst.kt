@@ -1,4 +1,6 @@
-package no.nav.aap.tilgang
+package no.nav.aap.tilgang.config
+
+import no.nav.aap.tilgang.Rolle
 
 /**
  * Konteksten det bes om tilgang til. Hentes ut fra request body med [AuthorizationBodyPathConfig.kontekst].

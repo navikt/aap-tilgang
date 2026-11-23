@@ -1,8 +1,18 @@
-package no.nav.aap.tilgang
+package no.nav.aap.tilgang.klient
 
 import io.ktor.server.application.ApplicationCall
 import java.util.UUID
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
+import no.nav.aap.tilgang.ArenasakTilgangRequest
+import no.nav.aap.tilgang.BehandlingTilgangRequest
+import no.nav.aap.tilgang.JournalpostTilgangRequest
+import no.nav.aap.tilgang.PersonTilgangRequest
+import no.nav.aap.tilgang.SakTilgangRequest
+import no.nav.aap.tilgang.TilbakekrevingTilgangRequest
+import no.nav.aap.tilgang.TilgangResponse
+import no.nav.aap.tilgang.config.AuthorizedRequest
+import no.nav.aap.tilgang.getClaimOrNull
+import no.nav.aap.tilgang.rolesClaim
 
 public object TilgangService {
     public suspend fun harTilgang(

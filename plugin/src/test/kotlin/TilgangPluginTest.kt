@@ -26,12 +26,12 @@ import java.util.UUID
 import kotlinx.coroutines.runBlocking
 import no.nav.aap.komponenter.httpklient.httpclient.error.ManglerTilgangException
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
-import no.nav.aap.tilgang.Beslutter
+import no.nav.aap.tilgang.config.Beslutter
 import no.nav.aap.tilgang.ArenasakTilgangRequest
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.Rolle
 import no.nav.aap.tilgang.TILGANG_PLUGIN
-import no.nav.aap.tilgang.TilgangGateway
+import no.nav.aap.tilgang.klient.TilgangGateway
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.AfterAll
