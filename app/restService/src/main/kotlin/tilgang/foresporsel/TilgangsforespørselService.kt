@@ -8,9 +8,7 @@ import tilgang.grunnlag.AvklaringsbehovType
 import tilgang.grunnlag.TilgangsgrunnlagService
 import tilgang.kontroll.ArenasakstilgangInput
 import tilgang.kontroll.BehandlingstilgangInput
-import tilgang.kontroll.BrukerToken
 import tilgang.kontroll.JournalposttilgangInput
-import tilgang.kontroll.Personregel
 import tilgang.kontroll.PersontilgangInput
 import tilgang.kontroll.SakstilgangInput
 import tilgang.kontroll.TilbakekrevingstilgangInput
@@ -99,14 +97,6 @@ class TilgangsforespørselService(
             påkrevdRolle = input.påkrevdRolle,
             operasjon = input.operasjon,
         )
-    }
-
-    suspend fun harTilgangTilPersoner(
-        personregler: List<Personregel>,
-        token: BrukerToken,
-        callId: String,
-    ): Boolean {
-        return persontilgang.harTilganger(personregler, token, callId)
     }
 
     suspend fun harTilgangTilPerson(

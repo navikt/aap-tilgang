@@ -26,6 +26,8 @@ fun Application.tilgangsmaskinFake() {
             val body = call.receive<String>()
             if (body.contains("123")) {
                 call.respond(HttpStatusCode.NoContent)
+            } else if (body.contains("400")) {
+                call.respond(HttpStatusCode.BadRequest)
             } else if (body.contains("456")) {
                 val body = TilgangsmaskinAvvistResponse(
                     type = "https://confluence.adeo.no/display/TM/Tilgangsmaskin+API+og+regelsett",
@@ -43,7 +45,9 @@ fun Application.tilgangsmaskinFake() {
 
         post("/api/v1/komplett") {
             val body = call.receive<String>()
-            if (body.contains("456")) {
+            if (body.contains("400")) {
+                call.respond(HttpStatusCode.BadRequest)
+            } else if (body.contains("456")) {
                 val body = TilgangsmaskinAvvistResponse(
                     type = "https://confluence.adeo.no/display/TM/Tilgangsmaskin+API+og+regelsett",
                     title = "AVVIST_GEOGRAFISK",
@@ -57,5 +61,6 @@ fun Application.tilgangsmaskinFake() {
                 call.respond(HttpStatusCode.NoContent)
             }
         }
+
     }
 }

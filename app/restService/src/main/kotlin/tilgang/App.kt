@@ -44,14 +44,13 @@ import tilgang.integrasjoner.pdl.createPdlClient
 import tilgang.integrasjoner.saf.BrukerIdType
 import tilgang.integrasjoner.saf.SafGraphqlGateway
 import tilgang.integrasjoner.saf.createSafClient
-import tilgang.integrasjoner.tilgangsmaskin.BrukerOgRegeltype
+import tilgang.integrasjoner.tilgangsmaskin.HarTilgangFraTilgangsmaskinen
 import tilgang.integrasjoner.tilgangsmaskin.ITilgangsmaskinGateway
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinAvvistGrunn
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinGateway
 import tilgang.integrasjoner.tilgangsmaskin.createTilgangsmaskinClient
 import tilgang.kontroll.BrukerToken
 import tilgang.kontroll.RelevanteIdenter
-import tilgang.kontroll.Personregel
 import tilgang.kontroll.TilgangService
 import tilgang.kontroll.Tilgangskontekst
 import tilgang.kontroll.regler.AdressebeskyttelseOppslag
@@ -64,6 +63,8 @@ import tilgang.mapping.tilDomene
 import tilgang.redis.Redis
 import tilgang.routes.actuator
 import tilgang.routes.tilgang
+import tilgang.unleash.FeatureToggle
+import tilgang.unleash.UnleashService
 
 
 internal object AppConfig {
@@ -116,17 +117,21 @@ fun main() {
 fun Application.api(
     config: Config = Config(),
     redis: Redis? = null,
+    unleash: UnleashService? = null,
 ) {
-    api(config, redis, Redis::from)
+    api(config, redis, unleash, Redis::from)
 }
 
 internal fun Application.api(
     config: Config,
     redis: Redis?,
+    unleash: UnleashService? = null,
     redisFactory: (RedisConfig) -> Redis,
 ) {
     val ownsRedis = redis == null
     val redisClient = redis ?: redisFactory(config.redis)
+    val ownsUnleash = unleash == null
+    val unleashService = unleash ?: UnleashService()
     val prometheus = AppConfig.prometheus
 
     val texasTokenClient = createTexasClient(config.texas.tokenEndpoint)
@@ -142,7 +147,14 @@ internal fun Application.api(
     val safClient = createSafClient(config.saf, tokenProvider)
     val saf = SafGraphqlGateway(redisClient, safClient, prometheus)
     val tilgangsmaskinClient = createTilgangsmaskinClient(config.tilgangsmaskin, tokenProvider)
-    val tilgangsmaskinGateway = TilgangsmaskinGateway(redisClient, tilgangsmaskinClient, prometheus)
+    val robustTilgangsmaskinClient = createTilgangsmaskinClient(config.tilgangsmaskin, tokenProvider, robust = true)
+    val tilgangsmaskinGateway = TilgangsmaskinGateway(redisClient, tilgangsmaskinClient, prometheus) {
+        if (unleashService.isEnabled(FeatureToggle.TilgangsmaskinRaskRobustHttpklient)) {
+            robustTilgangsmaskinClient
+        } else {
+            tilgangsmaskinClient
+        }
+    }
     val tilgangService = createTilgangService(pdl, AdressebeskyttelseService(msGraph), tilgangsmaskinGateway)
     val forespørselService =
         createTilgangsforespørselService(saf, behandlingsflyt, tilgangService, tilgangsmaskinGateway)
@@ -177,6 +189,8 @@ internal fun Application.api(
         behandlingsflytClient.close()
         safClient.close()
         tilgangsmaskinClient.close()
+        robustTilgangsmaskinClient.close()
+        if (ownsUnleash) unleashService.close()
         tokenProvider.close()
         texasTokenClient.close()
         texasExchangeClient.close()
@@ -220,15 +234,6 @@ internal fun createTilgangsforespørselService(
             callId: String,
         ): Boolean = tilgangsmaskin.harTilgangTilPerson(brukerIdent, OidcToken(token.verdi), callId)
 
-        override suspend fun harTilganger(
-            brukerIdenter: List<Personregel>,
-            token: BrukerToken,
-            callId: String,
-        ): Boolean = tilgangsmaskin.harTilganger(
-            brukerIdenter.map { BrukerOgRegeltype(it.personIdent, it.regeltype) },
-            OidcToken(token.verdi),
-            callId,
-        )
     }
     return TilgangsforespørselService(grunnlagService, tilgangService, persontilgang, log)
 }
@@ -269,11 +274,7 @@ internal fun createTilgangService(
             val resultat = tilgangsmaskin.harTilgangTilPersonKjerne(
                 personIdent, OidcToken(kontekst.brukerToken.verdi), kontekst.ansattIdent, kontekst.callId
             )
-            return Habilitetsgrunnlag(
-                harTilgang = resultat.harTilgang,
-                avvistForHabilitet = resultat.tilgangsmaskinAvvistResponse?.title ==
-                        TilgangsmaskinAvvistGrunn.AVVIST_HABILITET.toString(),
-            )
+            return resultat.tilHabilitetsgrunnlag()
         }
 
         override suspend fun harTilgangTilPerson(personIdent: String, kontekst: Tilgangskontekst): Boolean =
@@ -282,3 +283,14 @@ internal fun createTilgangService(
             ).harTilgang
     },
 )
+
+internal fun HarTilgangFraTilgangsmaskinen.tilHabilitetsgrunnlag(): Habilitetsgrunnlag {
+    if (harTilgang) return Habilitetsgrunnlag(harTilgang = true, avvistForHabilitet = false)
+    val avvisning = checkNotNull(tilgangsmaskinAvvistResponse) {
+        "Mangler avvisningsgrunn fra tilgangsmaskinen ved vurdering av habilitet"
+    }
+    return Habilitetsgrunnlag(
+        harTilgang = false,
+        avvistForHabilitet = avvisning.title == TilgangsmaskinAvvistGrunn.AVVIST_HABILITET.toString(),
+    )
+}

@@ -32,6 +32,7 @@ dependencies {
     implementation(kelvinLibs.logstash.logback.encoder)
     implementation(kelvinLibs.nimbus.jose.jwt)
     implementation(kelvinLibs.caffeine)
+    implementation(kelvinLibs.unleash.client.java)
     implementation(libs.lettuce)
     implementation(libs.coroutinesReactor)
     implementation(kelvinLibs.ktor.client.core)

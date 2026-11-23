@@ -24,14 +24,12 @@ import tilgang.integrasjoner.saf.SafGraphqlGateway
 import tilgang.integrasjoner.saf.SafJournalpost
 import tilgang.integrasjoner.saf.Sak
 import tilgang.integrasjoner.saf.Sakstype
-import tilgang.integrasjoner.tilgangsmaskin.BrukerOgRegeltype
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinGateway
 import tilgang.grunnlag.AvklaringsbehovType
 import tilgang.kontroll.BehandlingstilgangInput
 import tilgang.kontroll.BrukerToken
 import tilgang.kontroll.JournalposttilgangInput
 import tilgang.kontroll.ManglerSøkerIdentException
-import tilgang.kontroll.Personregel
 import tilgang.kontroll.PersontilgangInput
 import tilgang.kontroll.Tilgangskontekst
 import tilgang.kontroll.Tilgangsgrunnlag
@@ -238,22 +236,4 @@ class AppTilgangsforespørselServiceTest {
         coVerify { tilgangService wasNot Called }
     }
 
-    @Test
-    fun `oversetter personregler og token for bulk og bevarer avslag`() = runTest {
-        val forventet = listOf(BrukerOgRegeltype("person-1", "KJERNE"), BrukerOgRegeltype("person-2", "KOMPLETT"))
-        coEvery {
-            tilgangsmaskin.harTilganger(forventet, match { it.token() == token.verdi }, "call-id")
-        } returns false
-
-        val resultat = service.harTilgangTilPersoner(
-            listOf(Personregel("person-1", "KJERNE"), Personregel("person-2", "KOMPLETT")),
-            token,
-            "call-id",
-        )
-
-        assertThat(resultat).isFalse()
-        coVerify(exactly = 1) {
-            tilgangsmaskin.harTilganger(forventet, match { it.token() == token.verdi }, "call-id")
-        }
-    }
 }

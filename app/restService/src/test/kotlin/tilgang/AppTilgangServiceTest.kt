@@ -83,26 +83,22 @@ class AppTilgangServiceTest {
         "AVVIST_HABILITET, false",
         "AVVIST_GEOGRAFISK, true",
         "UKJENT, true",
-        "NULL, true",
-        nullValues = ["NULL"],
     )
     fun `bare habilitetsavslag nekter driftsoperasjoner og samme kontroll gjenbrukes`(
-        grunn: String?,
+        grunn: String,
         forventetTilgang: Boolean,
     ) = runTest {
         coEvery { tilgangsmaskin.harTilgangTilPersonKjerne(any(), any(), any(), any()) } returns
                 HarTilgangFraTilgangsmaskinen(
                     false,
-                    grunn?.let {
-                        TilgangsmaskinAvvistResponse(
+                    TilgangsmaskinAvvistResponse(
                             type = "avvist",
-                            title = it,
+                            title = grunn,
                             status = 403,
                             navIdent = "ansatt",
                             begrunnelse = "Avvist",
                             kanOverstyres = false,
-                        )
-                    },
+                        ),
                 )
 
         val resultat = service.vurderTilgang(input(Operasjon.DRIFTE, Operasjon.DRIFT_LES))
@@ -118,6 +114,16 @@ class AppTilgangServiceTest {
         coVerify {
             pdl wasNot Called
             adressebeskyttelse wasNot Called
+        }
+    }
+
+    @Test
+    fun `avslag uten avvisningsgrunn kan ikke gi tilgang`() = runTest {
+        coEvery { tilgangsmaskin.harTilgangTilPersonKjerne(any(), any(), any(), any()) } returns
+                HarTilgangFraTilgangsmaskinen(false)
+
+        assertFailsWith<IllegalStateException> {
+            service.vurderTilgang(input(Operasjon.DRIFTE))
         }
     }
 

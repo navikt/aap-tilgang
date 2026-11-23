@@ -9,6 +9,8 @@ metadata:
     systemkatalog.nav.no/system: SK-268
 spec:
   image: {{image}}
+  ingresses:
+    - https://aap-tilgang.intern.nav.no
   azure:
     application:
       enabled: true
@@ -57,6 +59,8 @@ spec:
         - id: elastic
         - id: loki
 
+  envFrom:
+    - secret: kelvin-unleash-api-token
   env:
     # Roller
     - name: AAP_BESLUTTER
@@ -113,6 +117,9 @@ spec:
   accessPolicy:
     inbound:
       rules:
+        - application: arenaoppslag
+          namespace: aap
+          cluster: prod-fss
         - application: behandlingsflyt
         - application: postmottak-backend
         - application: oppgave
@@ -133,5 +140,6 @@ spec:
         - application: populasjonstilgangskontroll
           namespace: tilgangsmaskin
       external:
+        - host: aap-unleash-api.nav.cloud.nais.io
         - host: saf.prod-fss-pub.nais.io
         - host: pdl-api.prod-fss-pub.nais.io

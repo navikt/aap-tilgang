@@ -24,12 +24,10 @@ import tilgang.Role
 import tilgang.auth.ident
 import tilgang.auth.roller
 import tilgang.foresporsel.TilgangsforespørselService
-import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinRequest
 import tilgang.kontroll.ArenasakstilgangInput
 import tilgang.kontroll.BehandlingstilgangInput
 import tilgang.kontroll.BrukerToken
 import tilgang.kontroll.JournalposttilgangInput
-import tilgang.kontroll.Personregel
 import tilgang.kontroll.PersontilgangInput
 import tilgang.kontroll.SakstilgangInput
 import tilgang.kontroll.TilbakekrevingstilgangInput
@@ -139,19 +137,6 @@ fun NormalOpenAPIRoute.tilgang(
                     prometheus.nektetTilgangTeller("journalpost").increment()
                 }
 
-                respond(TilgangResponse(harTilgang))
-            }
-        }
-        route("/test/tilgangsmaskinen") {
-            post<Unit, TilgangResponse, TilgangsmaskinRequest> { _, req ->
-                prometheus.httpCallCounter(pipeline.call).increment()
-                val callId = pipeline.call.request.header("Nav-CallId") ?: "ukjent"
-                val harTilgang =
-                    tilgangService.harTilgangTilPersoner(
-                        req.brukerIdenter.map { Personregel(it.brukerId, it.type) },
-                        BrukerToken(token().token()),
-                        callId,
-                    )
                 respond(TilgangResponse(harTilgang))
             }
         }

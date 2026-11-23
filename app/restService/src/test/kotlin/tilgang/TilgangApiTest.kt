@@ -2,6 +2,7 @@ package tilgang
 
 import com.nimbusds.jwt.SignedJWT
 import com.fasterxml.jackson.module.kotlin.readValue
+import io.getunleash.FakeUnleash
 import io.ktor.client.HttpClient
 import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.get
@@ -32,6 +33,7 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import tilgang.fakes.Fakes
 import tilgang.fakes.WithFakes
+import tilgang.unleash.UnleashService
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @WithFakes
@@ -67,7 +69,8 @@ class TilgangApiTest {
                         roles = alleRoller,
                         redis = Fakes.getRedisConfig(),
                     ),
-                    redis = Fakes.getRedisServer()
+                    redis = Fakes.getRedisServer(),
+                    unleash = UnleashService(FakeUnleash())
                 )
             }
 
@@ -86,7 +89,7 @@ class TilgangApiTest {
 
         testApplication {
             application {
-                api(Config(redis = Fakes.getRedisConfig()), redis)
+                api(Config(redis = Fakes.getRedisConfig()), redis, UnleashService(FakeUnleash()))
             }
         }
 
@@ -99,7 +102,7 @@ class TilgangApiTest {
 
         testApplication {
             application {
-                api(Config(redis = Fakes.getRedisConfig()), null) { redis }
+                api(Config(redis = Fakes.getRedisConfig()), null, UnleashService(FakeUnleash())) { redis }
             }
         }
 
@@ -126,7 +129,8 @@ class TilgangApiTest {
                         roles = listOf(Role(rolle, gruppeId)),
                         redis = Fakes.getRedisConfig(),
                     ),
-                    redis = Fakes.getRedisServer()
+                    redis = Fakes.getRedisServer(),
+                    unleash = UnleashService(FakeUnleash())
                 )
             }
 
@@ -149,7 +153,8 @@ class TilgangApiTest {
             application {
                 api(
                     Config(roles = emptyList(), redis = Fakes.getRedisConfig()),
-                    redis = Fakes.getRedisServer()
+                    redis = Fakes.getRedisServer(),
+                    unleash = UnleashService(FakeUnleash())
                 )
             }
 
@@ -166,6 +171,27 @@ class TilgangApiTest {
     }
 
     @Test
+    fun `tidligere bulk-endepunkt finnes ikke`() {
+        testApplication {
+            application {
+                api(
+                    Config(redis = Fakes.getRedisConfig()),
+                    redis = Fakes.getRedisServer(),
+                    unleash = UnleashService(FakeUnleash()),
+                )
+            }
+
+            val response = client.post("/tilgang/test/tilgangsmaskinen") {
+                bearerAuth(issueToken(emptyList()).serialize())
+                contentType(ContentType.Application.Json)
+                setBody("""{"brukerIdenter":[]}""")
+            }
+
+            assertThat(response.status).isEqualTo(HttpStatusCode.NotFound)
+        }
+    }
+
+    @Test
     fun `henter roller fra token for hvert kall i samme applikasjon`() {
         val lesegruppe = UUID.randomUUID()
         val driftsgruppe = UUID.randomUUID()
@@ -176,7 +202,8 @@ class TilgangApiTest {
                         roles = listOf(Role(Rolle.LES, lesegruppe), Role(Rolle.DRIFT, driftsgruppe)),
                         redis = Fakes.getRedisConfig(),
                     ),
-                    redis = Fakes.getRedisServer()
+                    redis = Fakes.getRedisServer(),
+                    unleash = UnleashService(FakeUnleash())
                 )
             }
 
@@ -209,7 +236,8 @@ class TilgangApiTest {
                         roles = listOf(Role(Rolle.LES, gruppeId)),
                         redis = Fakes.getRedisConfig(),
                     ),
-                    redis = Fakes.getRedisServer()
+                    redis = Fakes.getRedisServer(),
+                    unleash = UnleashService(FakeUnleash())
                 )
             }
 

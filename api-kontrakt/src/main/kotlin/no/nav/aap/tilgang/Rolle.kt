@@ -19,7 +19,9 @@ enum class Rolle {
     /** Ren lesetilgang, ment for blant annet NKS og Riksrevisjonen. */
     LES,
 
-    /** Opprette og redigere køer i produksjonsstyringsverktøyet. */
+    /** Opprette og redigere køer i produksjonsstyringsverktøyet.
+     * Merk: denne er ikke i bruk
+     * */
     PRODUKSJONSSTYRING,
 
     /** Alle tilganger i driftsverktøyet, både lesing og skriving. Primært for utviklere av AAP. */

@@ -1,6 +1,7 @@
 package tilgang.integrasjoner.tilgangsmaskin
 
 import io.ktor.client.HttpClient
+import io.ktor.client.HttpClientConfig
 import io.ktor.client.plugins.api.createClientPlugin
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.bearerAuth
@@ -17,7 +18,22 @@ internal val tilgangsmaskinCurrentTokenKey = AttributeKey<OidcToken>("Tilgangsma
 fun createTilgangsmaskinClient(
     config: TilgangsmaskinConfig,
     tokenProvider: ITokenProvider,
-): HttpClient = createHttpClient(10.seconds) {
+    robust: Boolean = false,
+): HttpClient {
+    val configure: HttpClientConfig<*>.() -> Unit = {
+        configureTilgangsmaskin(config, tokenProvider)
+    }
+    return if (robust) {
+        TilgangsmaskinHttpClient.create(configureClient = configure)
+    } else {
+        createHttpClient(10.seconds, configure)
+    }
+}
+
+private fun HttpClientConfig<*>.configureTilgangsmaskin(
+    config: TilgangsmaskinConfig,
+    tokenProvider: ITokenProvider,
+) {
     defaultRequest {
         url("${config.baseUrl.toString().trimEnd('/')}/")
         header("Nav-Consumer-Id", config.consumerId)

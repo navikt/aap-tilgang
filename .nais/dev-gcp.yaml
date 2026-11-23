@@ -59,6 +59,8 @@ spec:
         - id: elastic
         - id: loki
 
+  envFrom:
+    - secret: kelvin-unleash-api-token
   env:
     # Roller
     - name: AAP_BESLUTTER
@@ -115,6 +117,9 @@ spec:
   accessPolicy:
     inbound:
       rules:
+        - application: arenaoppslag
+          namespace: aap
+          cluster: dev-fss
         - application: behandlingsflyt
         - application: postmottak-backend
         - application: oppgave
@@ -138,5 +143,6 @@ spec:
         - application: populasjonstilgangskontroll
           namespace: tilgangsmaskin
       external:
+        - host: aap-unleash-api.nav.cloud.nais.io
         - host: saf.dev-fss-pub.nais.io
         - host: pdl-api.dev-fss-pub.nais.io

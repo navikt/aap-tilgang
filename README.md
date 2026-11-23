@@ -15,7 +15,7 @@ og bibliotektyper i `tilgang.mapping`.
 hostens egne grensesnitt og oversetter avklaringsbehovskoder til rollekrav.
 Bibliotekets `TilgangService` eier regelmotoren, mottar ferdig
 `Tilgangsgrunnlag` og returnerer `Map<Operasjon, Boolean>`.
-Direkte person- og bulktilgang ligger i REST-fasaden, uten en kunstig operasjonsnøkkel.
+Direkte persontilgang ligger i REST-fasaden, uten en kunstig operasjonsnøkkel.
 Regelmotorens oppslag for adressebeskyttelse og personkontroll er fortsatt beholdt.
 `App.kt` kobler sammen komponentene; biblioteket avhenger ikke av grunnlagsinnhentingen.
 
@@ -158,6 +158,17 @@ Den skal være satt til din github personal access token.
 Denne opprettes på Github ved å gå til settings -> developer settings. 
 Husk `read:packages`-rettighet og enable SSO.
 
+
+## Unleash
+
+Feature toggle `raskRobustTilgangsmaskin` velger den dedikerte HTTP-klienten for Tilgangsmaskinen.
+Når togglen er av eller ukjent, bruker appen standardklienten for Tilgangsmaskinen.
+Appen sjekker togglen før hvert utgående kall. Endringer gjelder når Unleash-SDK-en har hentet dem, uten omstart.
+Cachede tilgangsbeslutninger gjelder fortsatt.
+
+Appen trenger `NAIS_APP_NAME`, `UNLEASH_SERVER_API_URL` og `UNLEASH_SERVER_API_TOKEN`.
+Nais-manifestene henter Unleash-konfigurasjonen fra secret `kelvin-unleash-api-token`, som i Postmottak.
+Den lokale `TestApp` bruker `FakeUnleash` med togglen av.
 
 ## Henvendelser
 Spørsmål knyttet til koden eller prosjektet kan stilles som issues her på GitHub

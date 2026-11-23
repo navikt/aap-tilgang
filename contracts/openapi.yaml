@@ -112,31 +112,6 @@ paths:
           $ref: "#/components/responses/RequestTimeout"
         "500":
           $ref: "#/components/responses/InternalError"
-  /tilgang/test/tilgangsmaskinen:
-    post:
-      tags: [Tilgang]
-      summary: Test tilgang mot Tilgangsmaskinen for flere identiteter
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/TilgangsmaskinRequest"
-      responses:
-        "200":
-          description: Samlet tilgangsvurdering
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/TilgangResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "408":
-          $ref: "#/components/responses/RequestTimeout"
-        "500":
-          $ref: "#/components/responses/InternalError"
   /tilgang/person:
     post:
       tags: [Tilgang]
@@ -407,22 +382,6 @@ components:
           type: array
           items:
             type: string
-    TilgangsmaskinRequest:
-      type: object
-      required: [brukerIdenter]
-      properties:
-        brukerIdenter:
-          type: array
-          items:
-            $ref: "#/components/schemas/BrukerOgRegeltype"
-    BrukerOgRegeltype:
-      type: object
-      required: [brukerId, type]
-      properties:
-        brukerId:
-          type: string
-        type:
-          type: string
     Operasjon:
       type: string
       enum: [SE, SAKSBEHANDLE, DRIFTE, DRIFT_LES, DELEGERE]

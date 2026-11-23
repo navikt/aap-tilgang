@@ -1,5 +1,6 @@
 package tilgang.integrasjoner
 
+import io.getunleash.FakeUnleash
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
@@ -21,6 +22,7 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import org.assertj.core.api.Assertions.assertThat
@@ -30,7 +32,6 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.ValueSource
 import tilgang.TilgangsmaskinConfig
 import tilgang.auth.ITokenProvider
-import tilgang.integrasjoner.tilgangsmaskin.BrukerOgRegeltype
 import tilgang.integrasjoner.tilgangsmaskin.HarTilgangFraTilgangsmaskinen
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinAvvistGrunn
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinAvvistResponse
@@ -39,6 +40,8 @@ import tilgang.integrasjoner.tilgangsmaskin.createTilgangsmaskinClient
 import tilgang.redis.Key
 import tilgang.redis.Redis
 import tilgang.redis.Redis.Companion.deserialize
+import tilgang.unleash.FeatureToggle
+import tilgang.unleash.UnleashService
 import java.net.URI
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -53,39 +56,58 @@ class TilgangsmaskinTest {
     private val mottatteKall = ConcurrentLinkedQueue<MottattKall>()
     private var responseStatus = HttpStatusCode.NoContent
 
+    @Test
+    fun `bytter klient uten omstart med konfigurert url og obo-token`() = runBlocking {
+        val fake = FakeUnleash()
+        val feature = FeatureToggle.TilgangsmaskinRaskRobustHttpklient
+        val klientvalg = mutableListOf<Boolean>()
+        UnleashService(fake).use { unleash ->
+            medGateway("/prefiks", { unleash.isEnabled(feature).also(klientvalg::add) }) { gateway ->
+                for (enabled in listOf(false, true, false)) {
+                    if (enabled) fake.enable(feature.key()) else fake.disable(feature.key())
+                    cache.clear()
+                    for (metode in listOf("person", "kjerne", "komplett")) {
+                        assertThat(kall(gateway, metode)).isTrue()
+                    }
+                }
+            }
+        }
+        assertThat(klientvalg).containsExactly(false, false, false, true, true, true, false, false, false)
+        assertThat(mottatteKall.map { it.endepunkt })
+            .containsExactly("komplett", "kjerne", "komplett", "komplett", "kjerne", "komplett", "komplett", "kjerne", "komplett")
+        assertThat(mottatteKall.map { it.authorization }).containsOnly("Bearer obo-a")
+        assertThat(mottatteKall.map { it.callId }).containsOnly("call-id")
+        coVerify(exactly = 9) { tokenProvider.oboToken("tilgangsmaskin-test-scope", tokenA) }
+    }
+
     @ParameterizedTest
     @ValueSource(strings = ["", "/", "/prefiks", "/prefiks/"])
-    fun `bruker konfigurert url og obo-token for alle fire kall`(basePath: String) = runTest {
+    fun `bruker konfigurert url og obo-token for alle tre kall`(basePath: String) = runTest {
         medGateway(basePath) { gateway ->
-            for (metode in listOf("person", "bulk", "kjerne", "komplett")) {
+            for (metode in listOf("person", "kjerne", "komplett")) {
                 assertThat(kall(gateway, metode)).isTrue()
             }
 
             assertThat(mottatteKall.map { it.endepunkt })
-                .containsExactly("komplett", "bulk", "kjerne", "komplett")
+                .containsExactly("komplett", "kjerne", "komplett")
             assertThat(mottatteKall.map { it.authorization }).containsOnly("Bearer obo-a")
             assertThat(mottatteKall.map { it.callId }).containsOnly("call-id")
             assertThat(mottatteKall.map { it.contentType }).containsExactly(
                 ContentType.Text.Plain,
                 ContentType.Application.Json,
-                ContentType.Application.Json,
                 ContentType.Application.Json
             )
             val bodies = mottatteKall.map { it.body }
             assertThat(bodies[0]).isEqualTo("123")
+            assertThat(bodies[1]).isEqualTo("123")
             assertThat(bodies[2]).isEqualTo("123")
-            assertThat(bodies[3]).isEqualTo("123")
-            val bulk = Redis.mapper.readTree(bodies[1])
-            assertThat(bulk.size()).isEqualTo(1)
-            assertThat(bulk[0]["brukerId"].asText()).isEqualTo("123")
-            assertThat(bulk[0]["type"].asText()).isEqualTo("KJERNE")
-            coVerify(exactly = 4) { tokenProvider.oboToken("tilgangsmaskin-test-scope", tokenA) }
+            coVerify(exactly = 3) { tokenProvider.oboToken("tilgangsmaskin-test-scope", tokenA) }
         }
     }
 
     @ParameterizedTest
     @CsvSource("kjerne, true", "kjerne, false", "komplett, true", "komplett, false")
-    fun `cacher positive og negative vurderinger i seks timer`(metode: String, harTilgang: Boolean) = runTest {
+    fun `cacher positive vurderinger i seks timer og avslag i tretti minutter`(metode: String, harTilgang: Boolean) = runTest {
         responseStatus = if (harTilgang) HttpStatusCode.NoContent else HttpStatusCode.Forbidden
 
         medGateway("") { gateway ->
@@ -100,12 +122,12 @@ class TilgangsmaskinTest {
                 .isEqualTo(if (harTilgang) null else avvisning(metode))
             assertThat(mottatteKall).hasSize(1)
             coVerify(exactly = 1) { tokenProvider.oboToken("tilgangsmaskin-test-scope", tokenA) }
-            coVerify(exactly = 1) { redis.set(key, any(), 21600) }
+            coVerify(exactly = 1) { redis.set(key, any(), if (harTilgang) 21600 else 1800) }
         }
     }
 
     @ParameterizedTest
-    @ValueSource(strings = ["person", "bulk"])
+    @ValueSource(strings = ["person"])
     fun `returnerer false ved 403 for ukachede kall`(metode: String) = runTest {
         responseStatus = HttpStatusCode.Forbidden
 
@@ -116,7 +138,7 @@ class TilgangsmaskinTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = ["person", "bulk", "kjerne", "komplett"])
+    @ValueSource(strings = ["person", "kjerne", "komplett"])
     fun `lar andre http-feil forplante seg uten aa cache svaret`(metode: String) = runTest {
         responseStatus = HttpStatusCode.BadRequest
 
@@ -156,7 +178,6 @@ class TilgangsmaskinTest {
         token: OidcToken = tokenA,
     ): Boolean = when (metode) {
         "person" -> gateway.harTilgangTilPerson("123", token, callId)
-        "bulk" -> gateway.harTilganger(listOf(BrukerOgRegeltype("123", "KJERNE")), token, callId)
         "kjerne" -> gateway.harTilgangTilPersonKjerne("123", token, "Z1", callId).harTilgang
         "komplett" -> gateway.harTilgangTilPersonKomplett("123", token, "Z1", callId).harTilgang
         else -> error("Ukjent testmetode")
@@ -175,13 +196,17 @@ class TilgangsmaskinTest {
         kanOverstyres = false
     )
 
-    private suspend fun medGateway(basePath: String, test: suspend (TilgangsmaskinGateway) -> Unit) {
+    private suspend fun medGateway(
+        basePath: String,
+        brukRobust: () -> Boolean = { false },
+        test: suspend (TilgangsmaskinGateway) -> Unit,
+    ) {
         val server = embeddedServer(Netty, port = 0) {
             install(ContentNegotiation) {
                 jackson()
             }
             routing {
-                for (endepunkt in listOf("kjerne", "komplett", "bulk")) {
+                for (endepunkt in listOf("kjerne", "komplett")) {
                     post("${basePath.trimEnd('/')}/api/v1/$endepunkt") {
                         assertThat(call.request.header("Nav-Consumer-Id")).isEqualTo("test-consumer")
                         mottatteKall.add(
@@ -220,7 +245,11 @@ class TilgangsmaskinTest {
             }
 
             createTilgangsmaskinClient(config, tokenProvider).use { client ->
-                test(TilgangsmaskinGateway(redis, client, prometheus))
+                createTilgangsmaskinClient(config, tokenProvider, robust = true).use { robustClient ->
+                    test(TilgangsmaskinGateway(redis, client, prometheus) {
+                        if (brukRobust()) robustClient else client
+                    })
+                }
             }
         } finally {
             server.stop(0, 0)

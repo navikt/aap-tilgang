@@ -31,11 +31,16 @@ import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.PersonTilgangRequest
 import no.nav.aap.tilgang.SakTilgangRequest
 import no.nav.aap.tilgang.TilgangResponse
+import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicInteger
 
 internal class Fakes(val azureTokenGen: AzureTokenGen) : AutoCloseable {
+    private val tokenutvekslingMedFeil = ConcurrentHashMap.newKeySet<String>()
+    private val tokenutvekslingKall = ConcurrentHashMap<String, AtomicInteger>()
     private val texas = embeddedServer(Netty, port = 0, module = { texasFake() }).start()
     private val tilgang = embeddedServer(Netty, port = 0, module = { tilgangFake() }).apply { start() }
 
@@ -54,7 +59,13 @@ internal class Fakes(val azureTokenGen: AzureTokenGen) : AutoCloseable {
                 call.respond(TestToken(azureTokenGen.generate(isApp = true)))
             }
             post("/token/exchange") {
-                call.respond(TestToken(azureTokenGen.generate(isApp = false)))
+                val token = call.receive<Map<String, String>>().getValue("user_token")
+                tokenutvekslingKall.computeIfAbsent(token) { AtomicInteger() }.incrementAndGet()
+                if (tokenutvekslingMedFeil.remove(token)) {
+                    call.respond(HttpStatusCode.ServiceUnavailable, "Midlertidig feil")
+                } else {
+                    call.respond(TestToken(azureTokenGen.generate(isApp = false)))
+                }
             }
             post("/introspect") {
                 call.respond(mapOf("active" to true))
@@ -63,12 +74,27 @@ internal class Fakes(val azureTokenGen: AzureTokenGen) : AutoCloseable {
     }
 
     private val tilgangTilSak = mutableMapOf<String, Boolean>()
+    private val tilgangTilSakFeil = ConcurrentHashMap<String, HttpStatusCode>()
+    private val tilgangTilSakKall = ConcurrentHashMap<String, AtomicInteger>()
     var sistMottattSakTilgangRequest: SakTilgangRequest? = null
         private set
 
     fun gittTilgangTilSak(sak: String, tilgang: Boolean) {
+        tilgangTilSakFeil.remove(sak)
         tilgangTilSak[sak] = tilgang
     }
+
+    fun gittFeilVedTilgangTilSak(sak: String, status: HttpStatusCode) {
+        tilgangTilSakFeil[sak] = status
+    }
+
+    fun antallTilgangskallTilSak(sak: String): Int = tilgangTilSakKall[sak]?.get() ?: 0
+
+    fun gittMidlertidigFeilVedTokenutveksling(token: OidcToken) {
+        tokenutvekslingMedFeil.add(token.token())
+    }
+
+    fun antallTokenutvekslinger(token: OidcToken): Int = tokenutvekslingKall[token.token()]?.get() ?: 0
 
     private val tilgangTilBehandlingIKontekst = mutableMapOf<UUID, Map<Operasjon, Boolean>>()
     fun gittTilgangTilBehandlingIKontekst(behandling: UUID, tilgangMap: Map<Operasjon, Boolean>) {
@@ -127,7 +153,13 @@ internal class Fakes(val azureTokenGen: AzureTokenGen) : AutoCloseable {
                 post("/tilgang/sak") {
                     val req = call.receive<SakTilgangRequest>()
                     sistMottattSakTilgangRequest = req
-                    call.respond(TilgangResponse(tilgangTilSak[req.saksnummer] == true))
+                    tilgangTilSakKall.computeIfAbsent(req.saksnummer) { AtomicInteger() }.incrementAndGet()
+                    val feilstatus = tilgangTilSakFeil[req.saksnummer]
+                    if (feilstatus != null) {
+                        call.respond(feilstatus, "Tilgangstjenesten er utilgjengelig")
+                    } else {
+                        call.respond(TilgangResponse(tilgangTilSak[req.saksnummer] == true))
+                    }
                 }
                 post("/tilgang/behandling") {
                     val req = call.receive<BehandlingTilgangRequest>()
