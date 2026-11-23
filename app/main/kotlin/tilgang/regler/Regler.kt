@@ -60,11 +60,15 @@ class RegelService(
 
         val regelCache = mutableMapOf<Regel<*>, RegelResultat>()
 
+        // Vurder alle aktuelle operasjoner, men stopp ved første avslag for hver operasjon.
+        // takeUnless gjør tillatelser til null, slik at søket fortsetter til et avslag.
+        // Hvis ingen regler avslår (også ved tom regelliste), gis tilgang.
         return aktuelleOperasjoner.mapValues { (_, regler) ->
             regler.firstNotNullOfOrNull { regel ->
                 hentRegelresultat(regelCache, regel, input).takeUnless { it.harTilgang }
             } ?: RegelResultat(harTilgang = true)
         }
+        // Alle operasjoner som er aktuelle får ett RegelResult i Map-returen.
     }
 
     private suspend fun hentRegelresultat(
