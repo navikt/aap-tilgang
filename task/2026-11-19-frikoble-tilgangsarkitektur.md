@@ -879,3 +879,95 @@ Konsumentmigrering gjenstår utenfor dette repoet.
 Utviklerens godkjenning erstatter ventestatusen ovenfor. Sluttnotatet
 skal committes og publiseres sammen med den validerte kodecommitten på
 `test/architect-review`; ingen push til `main` og ingen force-push.
+
+## Oppfølging 2026-11-23: main flettet inn, push blokkert
+
+Tidspunkt: `2026-11-23T22:52:32+01:00`.
+Sesjon: `655c2699-5b66-4c28-871c-c6d1fcb8ba86`.
+Oppgavegren: `test/architect-review`; basegren: `main`.
+Utviklerens effektive Git-e-post: `petter.ekrann@nav.no`.
+Validert lokal merge-commit: `54c9442`; innflettet main: `d3c988c`.
+Siste publiserte commit før oppfølgingen: `00e1cd8`.
+
+Endringene fra main er tilpasset modulstrukturen: Unleash velger mellom
+tilgangsmaskinens standardklient og den nye klienten med samlet tidsbudsjett,
+og avslag uten habilitetsgrunn kan ikke gi tilgang. Etter utviklerens valg er
+det tidligere bulk-endepunktet og tilhørende kode og OpenAPI-beskrivelse
+fjernet, i tråd med main.
+
+Etter `git fetch origin test/architect-review main` var oppgavegrenen seks
+committer foran remote og ingen committer bak. `git diff --check
+origin/test/architect-review HEAD` bestod. Fullt bygg og alle 736 tester
+bestod med Gradle 9.8.2 etter fetch: 659 i hosten, 55 i pluginen og 22 i
+biblioteket, ingen feil eller hoppet over.
+
+Prosjektets wrapper fra main bruker Gradle 9.9.2. Følgende påkrevde
+validering startet ikke fordi Java ikke fant monteringspunktet ved
+opprettelse av Gradles daemon-katalog:
+
+```sh
+./gradlew build :app:test --rerun :plugin:test --rerun \
+  :tilgang-service:test --rerun --console=plain --no-daemon \
+  --no-configuration-cache --no-parallel --max-workers=1
+```
+
+Separat Gradle-hjem og forsøk uten egen daemon hadde samme feil.
+Push er blokkert til wrapperen kan kjøre hele testsuiten. Merge-commiten
+er bare lokal og er ikke tilgjengelig på remote. Dette tillegget er også
+kun lokalt og ikke committet. Neste steg er å løse miljøfeilen, kjøre
+testene med wrapperen, oppdatere sluttnotatet og innhente godkjenning
+for å committe det før push.
+
+### Tillegg til samtalehistorikken
+
+| Tur | Avsender | Melding |
+| ---: | --- | --- |
+| 122 | Utvikler | pull from main and merge |
+| 123 | Utvikler, valg for bulk-endepunktet | remove |
+| 124 | Utvikler, godkjenning av lokal merge-commit | true |
+| 125 | Agent, sammendrag | Main er flettet inn lokalt som `54c9442`; 736 tester bestod med Gradle 9.8.2. Wrapperen 9.9.2 startet ikke. |
+| 126 | Utvikler | push |
+
+### Videre feilsøking
+
+Gradle 9.9.2 undersøker filsystemets egenskaper med Java
+`Files.getFileStore` før daemon-katalogen tas i bruk. Lesing av både
+`/proc/self/mountinfo` og `/proc/self/mounts` gir `Permission denied`
+i dette miljøet. En allerede opprettet daemon-katalog og et separat
+Gradle-hjem endret ikke feilen. Systemets Java 17 kunne heller ikke starte
+wrapperen, fordi Java-sikkerhetskonfigurasjonen ikke kunne lastes.
+
+Ingen miljørettigheter, Gradle-wrapper eller prosjektkode ble endret.
+Tilgang til monteringsinformasjonen må undersøkes i kjøremiljøet før
+wrapperen kan valideres. Push er fortsatt blokkert.
+
+| Tur | Avsender | Melding |
+| ---: | --- | --- |
+| 127 | Utvikler | prøv å fikse feilen |
+
+### Validering i utviklerens terminal
+
+Tidspunkt: `2026-11-23T23:05:15+01:00`.
+Den tidligere blokkerte valideringen ble utført i utviklerens terminal.
+Utvikleren oppga `BUILD SUCCESSFUL` for den ovennevnte kommandoen med
+prosjektets Gradle 9.9.2-wrapper. Agenten kontrollerte de nye XML-rapportene:
+659 tester i hosten, 55 i pluginen og 22 i biblioteket; ingen feil eller
+hoppet over. `54c9442` var fortsatt lokal HEAD etter testene.
+
+Etter ny `git fetch origin test/architect-review main` var lokal gren
+fortsatt seks committer foran oppgavegrenen på remote og ingen bak. Main
+var fortsatt `d3c988c`. Ingen innfletting var nødvendig. Tilgangsfeilen
+gjelder agentens kjøremiljø; prosjektets wrapper og systemrettigheter
+er ikke endret. Push og commit av dette sluttnotatet avventer godkjenning.
+
+| Tur | Avsender | Melding |
+| ---: | --- | --- |
+| 128 | Utvikler | hva må jeg gjøre |
+| 129 | Agent, sammendrag | Ba utvikleren kontrollere tilgang til monteringsinformasjon i egen terminal. |
+| 130 | Utvikler | `83 92 0:29 / /usr/lib/modules/6.6.87.2-microsoft-standard-WSL2 rw,nosuid,nodev,noatime - overlay none rw,lowerdir=/modules,upperdir=/lib/modules/6.6.87.2-microsoft-standard-WSL2/rw/upper,workdir=/lib/modules/6.6.87.2-microsoft-standard-WSL2/rw/work,uuid=on` |
+| 131 | Agent, sammendrag | Ba utvikleren kjøre prosjektets wrapper og hele testsuiten i egen terminal. |
+| 132 | Utvikler | BUILD SUCCESSFUL |
+| 133 | Utvikler, godkjenning av sluttnotat, push og oppdatering av PR #710 | true |
+
+Godkjenningen erstatter ventestatusen ovenfor. Sluttnotatet og merge-commiten
+kan publiseres på `test/architect-review`, uten force-push.
