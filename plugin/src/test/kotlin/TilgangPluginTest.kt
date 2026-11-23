@@ -18,7 +18,9 @@ import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import io.ktor.serialization.jackson.jackson
 import io.ktor.server.engine.embeddedServer
+import io.ktor.server.engine.*
 import io.ktor.server.netty.Netty
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import java.net.URI
 import java.util.UUID
 import kotlinx.coroutines.runBlocking
@@ -69,18 +71,45 @@ class TilgangPluginTest {
         class IngenReferanse(val noe: String)
 
         val autorisertEksempelAppServer =
-            embeddedServer(Netty, port = 8082) { autorisertEksempelApp() }
+            embeddedServer(Netty, port = 0) { autorisertEksempelApp() }
+        private var appPort: Int? = null
 
         @JvmStatic
         @BeforeAll
         fun beforeAll() {
             System.setProperty("AAP_BESLUTTER", "en-eller-annen-uid")
             autorisertEksempelAppServer.start()
+            appPort = runBlocking {
+                autorisertEksempelAppServer.engine.resolvedConnectors()
+                    .first { it.type == ConnectorType.HTTP }
+                    .port
+            }
         }
 
         @JvmStatic
         @AfterAll
         fun afterAll() {
+            val registry = SimpleMeterRegistry()
+            TilgangGateway.initialiserPrometheus(registry)
+            val request = ArenasakTilgangRequest(UUID.randomUUID().toString())
+            val token = generateToken(isApp = false)
+            fakes.gittTilgangTilArenasaker(request.personIdent, true)
+            assertThat(runBlocking { TilgangGateway.harTilgangTilArensakerForPerson(request, token).tilgang })
+                .isTrue()
+
+            val cacheSize = registry.find("cache.size").tag("cache", "tilgang_arenasak_cache").gauge()
+            assertThat(cacheSize).isNotNull
+            assertThat(cacheSize!!.value()).isGreaterThan(0.0)
+
+            fakes.gittTilgangTilArenasaker(request.personIdent, false)
+            assertThat(runBlocking { TilgangGateway.harTilgangTilArensakerForPerson(request, token).tilgang })
+                .isTrue()
+
+            TilgangGateway.disableCaching()
+            assertThat(runBlocking { TilgangGateway.harTilgangTilArensakerForPerson(request, token).tilgang })
+                .isFalse()
+            assertThat(cacheSize.value()).isEqualTo(0.0)
+
             fakes.close()
             autorisertEksempelAppServer.stop()
         }
@@ -154,7 +183,8 @@ class TilgangPluginTest {
         return if (resp.status.isSuccess()) resp.body() else null
     }
 
-    private fun base(path: String) = URI.create("http://localhost:8082/").resolve(path).toString()
+    private fun base(path: String) =
+        URI.create("http://localhost:${requireNotNull(appPort)}/").resolve(path).toString()
 
     @ParameterizedTest
     @ValueSource(booleans = [true, false])

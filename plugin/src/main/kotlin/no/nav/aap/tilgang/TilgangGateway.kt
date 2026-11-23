@@ -25,6 +25,8 @@ import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 public object TilgangGateway {
     private val baseUrl = URI.create(requiredConfigForKey("INTEGRASJON_TILGANG_URL"))
     private var prometheus: MeterRegistry? = null
+    @Volatile
+    private var cachingDisabled = false
     private val tilgangScope = requiredConfigForKey("INTEGRASJON_TILGANG_SCOPE")
     private val texasUrl = requiredConfigForKey("NAIS_TOKEN_EXCHANGE_ENDPOINT")
 
@@ -128,6 +130,10 @@ public object TilgangGateway {
         key: Key,
         mapper: suspend (key: Key) -> Value
     ): Value {
+        if (cachingDisabled) {
+            return mapper(key)
+        }
+
         val cached = cache.getIfPresent(key)
         if (cached != null) {
             return cached
@@ -166,25 +172,12 @@ public object TilgangGateway {
      * mister eller får tilganger.
      */
     public fun disableCaching() {
-        tilgangGatewayBehandlingCache = Caffeine.newBuilder()
-            .maximumSize(0)
-            .build()
-
-        tilgangGatewaySakCache = Caffeine.newBuilder()
-            .maximumSize(0)
-            .build()
-
-        tilgangGatewayJournalpostCache = Caffeine.newBuilder()
-            .maximumSize(0)
-            .build()
-
-        tilgangGatewayArenasakCache = Caffeine.newBuilder()
-            .maximumSize(0)
-            .build()
-
-        tilgangGatewayPersonCache = Caffeine.newBuilder()
-            .maximumSize(0)
-            .build()
+        cachingDisabled = true
+        tilgangGatewayBehandlingCache.invalidateAll()
+        tilgangGatewaySakCache.invalidateAll()
+        tilgangGatewayJournalpostCache.invalidateAll()
+        tilgangGatewayArenasakCache.invalidateAll()
+        tilgangGatewayPersonCache.invalidateAll()
     }
 }
 
