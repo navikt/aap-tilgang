@@ -11,6 +11,7 @@ import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
+import tilgang.integrasjoner.tilgangsmaskin.BrukerOgRegeltype
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinAvvistResponse
 
 fun Application.tilgangsmaskinFake() {
@@ -26,6 +27,8 @@ fun Application.tilgangsmaskinFake() {
             val body = call.receive<String>()
             if (body.contains("123")) {
                 call.respond(HttpStatusCode.NoContent)
+            } else if (body.contains("400")) {
+                call.respond(HttpStatusCode.BadRequest)
             } else if (body.contains("456")) {
                 val body = TilgangsmaskinAvvistResponse(
                     type = "https://confluence.adeo.no/display/TM/Tilgangsmaskin+API+og+regelsett",
@@ -43,7 +46,9 @@ fun Application.tilgangsmaskinFake() {
 
         post("/api/v1/komplett") {
             val body = call.receive<String>()
-            if (body.contains("456")) {
+            if (body.contains("400")) {
+                call.respond(HttpStatusCode.BadRequest)
+            } else if (body.contains("456")) {
                 val body = TilgangsmaskinAvvistResponse(
                     type = "https://confluence.adeo.no/display/TM/Tilgangsmaskin+API+og+regelsett",
                     title = "AVVIST_GEOGRAFISK",
@@ -53,6 +58,15 @@ fun Application.tilgangsmaskinFake() {
                     kanOverstyres = false
                 )
                 call.respond(HttpStatusCode.Forbidden, body)
+            } else {
+                call.respond(HttpStatusCode.NoContent)
+            }
+        }
+
+        post("/api/v1/bulk") {
+            val brukerIdenter = call.receive<List<BrukerOgRegeltype>>()
+            if (brukerIdenter.any { it.brukerId == "456" }) {
+                call.respond(HttpStatusCode.Forbidden)
             } else {
                 call.respond(HttpStatusCode.NoContent)
             }

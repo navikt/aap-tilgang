@@ -5,6 +5,7 @@ import com.papsign.ktor.openapigen.annotations.parameters.PathParam
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.ServerResponseException
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.get
@@ -28,6 +29,7 @@ import no.nav.aap.tilgang.Beslutter
 import no.nav.aap.tilgang.ArenasakTilgangRequest
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.Rolle
+import no.nav.aap.tilgang.SakTilgangRequest
 import no.nav.aap.tilgang.TILGANG_PLUGIN
 import no.nav.aap.tilgang.TilgangGateway
 import no.nav.aap.tilgang.plugin.kontrakt.Journalpostreferanse
@@ -188,6 +190,41 @@ class TilgangPluginTest {
         assertThat(TilgangGateway.harTilgangTilArensakerForPerson(annenOperasjon, token).tilgang).isFalse()
 
         assertThat(TilgangGateway.harTilgangTilArensakerForPerson(request, token).tilgang).isTrue()
+    }
+
+    @Test
+    fun `tilgangskall prøves ikke på nytt og tekniske feil caches ikke`() {
+        val sak = UUID.randomUUID().toString()
+        val request = SakTilgangRequest(saksnummer = sak, operasjon = Operasjon.SE)
+        val token = generateToken(isApp = false)
+        fakes.gittFeilVedTilgangTilSak(sak, HttpStatusCode.ServiceUnavailable)
+
+        val failure = assertThrows<ServerResponseException> {
+            runBlocking { TilgangGateway.harTilgangTilSak(request, token) }
+        }
+        assertThat(failure.response.status).isEqualTo(HttpStatusCode.ServiceUnavailable)
+        assertThat(fakes.antallTilgangskallTilSak(sak)).isEqualTo(1)
+        assertThat(fakes.antallTokenutvekslinger(token)).isEqualTo(1)
+
+        fakes.gittTilgangTilSak(sak, true)
+        val response = runBlocking { TilgangGateway.harTilgangTilSak(request, token) }
+        assertThat(response.tilgang).isTrue()
+        assertThat(fakes.antallTilgangskallTilSak(sak)).isEqualTo(2)
+    }
+
+    @Test
+    fun `tokenutveksling prøves fortsatt på nytt før ett tilgangskall`() {
+        val sak = UUID.randomUUID().toString()
+        val token = generateToken(isApp = false)
+        fakes.gittTilgangTilSak(sak, true)
+        fakes.gittMidlertidigFeilVedTokenutveksling(token)
+
+        val response = runBlocking {
+            TilgangGateway.harTilgangTilSak(SakTilgangRequest(saksnummer = sak, operasjon = Operasjon.SE), token)
+        }
+        assertThat(response.tilgang).isTrue()
+        assertThat(fakes.antallTokenutvekslinger(token)).isEqualTo(2)
+        assertThat(fakes.antallTilgangskallTilSak(sak)).isEqualTo(1)
     }
 
     @Test

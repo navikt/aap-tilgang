@@ -24,6 +24,8 @@ import tilgang.redis.Key
 import tilgang.redis.Redis
 import tilgang.redis.Redis.Companion.deserialize
 import tilgang.redis.Redis.Companion.serialize
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
 
 interface ITilgangsmaskinGateway {
     suspend fun harTilgangTilPerson(brukerIdent: String, token: OidcToken, callId: String? = null): Boolean
@@ -45,17 +47,18 @@ interface ITilgangsmaskinGateway {
 
 private val log = LoggerFactory.getLogger(TilgangsmaskinGateway::class.java)
 
-// NB: Denne TTL-en gjelder både positive (tilgang) og negative (avslag) resultater.
-// Et avslag som senere endrer seg (f.eks. skjerming/verge fjernes) blir dermed liggende
-// i cache i inntil 6 timer.
+// Tilgang caches i 6 timer og avslag i 30 minutter for å redusere svartid og belastning på Tilgangsmaskinen.
+// Tilgangsmaskinen cacher selv ansattes AD-grupper i 3 timer og skjerming, Nom og PDL-persondata i 12 timer.
+// Disse cachetidene er relevante for vårt valg av TTL, men vår cache gjelder ferdige tilgangsbeslutninger
+// og kan forsinke endringer med ytterligere 6 timer for tilgang eller 30 minutter for avslag.
 //
-// PDL synkroniserer i praksis mot Folkeregisteret omtrent én gang i døgnet, så en TTL
-// på 6 timer vurderes som akseptabel.
-//
-// Merk at fremtidig funksjonalitet styrt av `kanOverstyres` kan gi midlertidig tilgang
-// til personer som normalt ikke er tilgjengelige (f.eks. personer som døde for lenge siden).
-// Dersom slike overstyringer skal tre i kraft raskt, bør TTL for negative svar vurderes på nytt.
-private val redisExpireSec = 21600L
+// Når `kanOverstyres` er true, kan ansatte be om begrunnet enkelttilgang til brukere de normalt
+// ikke har tilgang til. Enkelttilgang er midlertidig og kan ikke overstyre kjerneregler.
+// Avslag caches kortere for at blant annet ny enkelttilgang skal slå raskere gjennom.
+// En cachet godkjenning kan fortsatt bli liggende etter utløp eller tilbakekalling.
+// TTL og invalidering må vurderes hvis slike endringer skal få rask virkning.
+private val redisExpireSec = 6.hours.inWholeSeconds
+private val redisAvslagExpireSec = 30.minutes.inWholeSeconds
 
 /**
  * Se Confluence for dokumentasjon.
@@ -63,10 +66,14 @@ private val redisExpireSec = 21600L
  */
 class TilgangsmaskinGateway(
     private val redis: Redis,
-    private val httpClient: HttpClient,
+    httpClient: HttpClient,
     private val prometheus: MeterRegistry,
     private val tokenProvider: ITokenProvider = TokenProvider,
+    private val httpClientProvider: () -> HttpClient = { httpClient },
 ) : ITilgangsmaskinGateway {
+    private val httpClient: HttpClient
+        get() = httpClientProvider()
+
     private val baseUrl = requiredConfigForKey("INTEGRASJON_TILGANGSMASKIN_URL")
     private val scope = requiredConfigForKey("INTEGRASJON_TILGANGSMASKIN_SCOPE")
 
@@ -117,7 +124,7 @@ class TilgangsmaskinGateway(
                 redis.set(
                     Key(TILGANGSMASKIN_KJERNE_PREFIX, brukerIdent + ansattIdent),
                     ikkeTilgang.serialize(),
-                    redisExpireSec
+                    redisAvslagExpireSec
                 )
                 ikkeTilgang
             } else throw e
@@ -158,7 +165,7 @@ class TilgangsmaskinGateway(
                 redis.set(
                     Key(TILGANGSMASKIN_KOMPLETT_PREFIX, brukerIdent + ansattIdent),
                     ikkeTilgang.serialize(),
-                    redisExpireSec
+                    redisAvslagExpireSec
                 )
                 ikkeTilgang
             } else throw e
