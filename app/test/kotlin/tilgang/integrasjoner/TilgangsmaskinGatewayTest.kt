@@ -122,7 +122,7 @@ class TilgangsmaskinGatewayTest {
         assertThat(resultat.tilgangsmaskinAvvistResponse?.title).isEqualTo("AVVIST_HABILITET")
         assertThat(sjekkPerson(regeltype)).isEqualTo(resultat)
         assertThat(engine.requestHistory).hasSize(1)
-        coVerify(exactly = 1) { redis.set(any(), any(), 21600L) }
+        coVerify(exactly = 1) { redis.set(any(), any(), 1800L) }
     }
 
     @ParameterizedTest
