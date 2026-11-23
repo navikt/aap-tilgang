@@ -708,3 +708,52 @@ Agentens svar, oppsummert: Avhengigheten skyldtes delte felttyper, ikke
 HTTP-requestene. Biblioteket har fått egne typer, og hosten mapper mellom
 dem og kontrakten. Moduldiagrammet viser ingen kant mellom biblioteket
 og kontrakten i noen retning.
+
+## Oppfølging 2026-11-23: kontrakten til venstre i moduldiagrammet
+
+Tidspunkt: `2026-11-23T21:25:29+01:00`.
+Sesjon: `655c2699-5b66-4c28-871c-c6d1fcb8ba86`.
+Oppgavegren: `test/architect-review`; basegren: `main`.
+Utviklerens effektive Git-e-post: `petter.ekrann@nav.no`.
+Siste publiserte commit før oppfølgingen: `b8f94f1`.
+
+README bruker nå `flowchart RL` i moduldiagrammet. Den usynlige
+plasseringslenken `service ~~~ api` gir `api-kontrakt` en egen kolonne
+lengst til venstre. De fem synlige avhengighetspilene er uendret.
+Kommentarer presiserer at plasseringslenken ikke er en avhengighet.
+Ingen applikasjonskode eller Gradle-avhengigheter er endret.
+
+### Publiseringskontroll
+
+Etter `git fetch origin test/architect-review` var lokal HEAD og remote
+begge `b8f94f1`; ingen innfletting var nødvendig. Utvikleren godkjente
+commit av README og dette sluttnotatet og push til eksisterende PR #710.
+
+Hele bygget ble kjørt, med tvungen ny kjøring av alle tre modulene med
+testkilder. Kjøringen brukte Java 25, forhåndslastet Byte Buddy-agent og
+`-XX:ActiveProcessorCount=1`:
+
+```sh
+./gradlew build :app:test --rerun :plugin:test --rerun \
+  :tilgang-service:test --rerun --console=plain --no-daemon \
+  --no-configuration-cache --no-parallel --max-workers=1
+```
+
+`BUILD SUCCESSFUL in 39s`; tre testoppgaver ble kjørt på nytt og 35
+oppgaver var oppdaterte. Alle 656 tester bestod: 584 i hosten, 50 i pluginen
+og 22 i biblioteket, uten feil eller hoppet over.
+
+`git diff --check` bestod. Diffen er begrenset til dokumentasjon.
+Lokal Mermaid-rendering ble ikke bekreftet: Google Chrome kunne ikke
+kjøres på grunn av manglende tilgang, og Chromium feilet ved Snap-oppstart.
+Diagramkoden og den usynlige lenkens betydning ble vist til utvikleren.
+Trivy og zizmor ble ikke kjørt; verktøyene var utilgjengelige ved forrige
+kontroll. Ingen utrulling er gjort lokalt.
+
+### Tillegg til samtalehistorikken
+
+| Tur | Avsender | Melding |
+| ---: | --- | --- |
+| 109 | Utvikler | på modulavhengigheter vil jeg ha apikontrakt helt til venstre |
+| 110 | Utvikler | push |
+| 111 | Utvikler, godkjenning av README, sluttnotat og push | true |

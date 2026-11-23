@@ -113,7 +113,7 @@ Pilene viser direkte Gradle-avhengigheter fra modulen som bruker et bibliotek
 til biblioteket. Eksterne biblioteker og byggeoppsett er utelatt.
 
 ```mermaid
-flowchart LR
+flowchart RL
     app["app<br/>app/restService (Ktor-host)"]
     service["tilgang-service"]
     api["api-kontrakt"]
@@ -125,6 +125,10 @@ flowchart LR
     plugin --> pluginContract
     plugin --> api
     pluginContract --> api
+
+    %% Usynlig lenke for plassering: holder api-kontrakt alene lengst til venstre.
+    %% Det er ingen avhengighet mellom tilgang-service og api-kontrakt.
+    service ~~~ api
 ```
 
 ## Plugin
