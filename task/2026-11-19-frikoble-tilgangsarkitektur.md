@@ -1026,3 +1026,31 @@ full sårbarhetsskanning. Ingen lokal utrulling er gjort.
 | 137 | Agent, sammendrag | Flyttet typene til app; 99 utvalgte tester bestod med Gradle 9.8.2. |
 | 138 | Utvikler | push |
 | 139 | Utvikler, testresultat, valg for resolver og godkjenning av commit og push | BUILD SUCCESSFUL; leave; true |
+
+## Oppfølging 2026-11-24: resolverendringen tas med
+
+Tidspunkt: `2026-11-24T09:03:16+01:00`.
+Sesjon: `655c2699-5b66-4c28-871c-c6d1fcb8ba86`.
+Oppgavegren: `test/architect-review`; basegren: `main`.
+Utviklerens effektive Git-e-post: `petter.ekrann@nav.no`.
+Siste publiserte commit før oppfølgingen: `f72d716`.
+
+Utvikleren ønsket likevel å ta med den tidligere lokale endringen i
+`DefaultBehandlingreferanseResolver`. Metoden bruker uttrykksbody i stedet
+for blokkbody; kall og returverdi er uendret. Dette korrigerer beslutningen
+om å holde endringen lokal i forrige oppføring.
+
+Etter `git fetch origin` var lokal gren og remote begge `f72d716`.
+Utvikleren kjørte kommandoen fra forrige publiseringskontroll på nytt og
+oppga `success`. De ferske XML-rapportene viste 736 tester: 659 i app,
+55 i plugin og 22 i tilgang-service, uten feil eller hoppet over.
+`git diff --check` bestod. Trivy og zizmor er ikke kjørt.
+
+| Tur | Avsender | Melding |
+| ---: | --- | --- |
+| 140 | Utvikler | hva mener du med siste kommentar |
+| 141 | Agent, sammendrag | Forklarte at en lokal omskriving av resolvermetoden ikke ble pushet. |
+| 142 | Utvikler | la den bli med |
+| 143 | Agent, sammendrag | Ba om ny full testkjøring før push. |
+| 144 | Utvikler | success |
+| 145 | Utvikler, godkjenning av sluttnotat, commit og push | true |
