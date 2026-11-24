@@ -1,0 +1,21 @@
+package no.nav.aap.tilgang.config
+
+import no.nav.aap.tilgang.resolver.BehandlingreferanseResolver
+import no.nav.aap.tilgang.resolver.DefaultBehandlingreferanseResolver
+import no.nav.aap.tilgang.resolver.DefaultJournalpostIdResolver
+import no.nav.aap.tilgang.resolver.JournalpostIdResolver
+
+@JvmInline
+public value class SakPathParam(val param: String)
+
+public data class BehandlingPathParam(
+    val param: String,
+    val resolver: BehandlingreferanseResolver = DefaultBehandlingreferanseResolver()
+)
+
+public data class JournalpostPathParam(
+    val param: String,
+    val resolver: JournalpostIdResolver = DefaultJournalpostIdResolver()
+)
+
+public data class PersonIdentPathParam(val param: String)

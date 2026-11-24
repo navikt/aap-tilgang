@@ -1,0 +1,12 @@
+package tilgang.kontroll
+
+enum class Rolle {
+    SAKSBEHANDLER_OPPFOLGING,
+    SAKSBEHANDLER_NASJONAL,
+    KVALITETSSIKRER,
+    BESLUTTER,
+    LES,
+    PRODUKSJONSSTYRING,
+    DRIFT,
+    DRIFT_LES,
+}

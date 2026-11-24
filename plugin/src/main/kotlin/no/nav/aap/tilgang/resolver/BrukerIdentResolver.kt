@@ -1,0 +1,9 @@
+package no.nav.aap.tilgang.resolver
+
+/**
+ * Brukes i forbindelse med auditlogging for å finne fnr for bruker det gjøres oppslag på.
+ * For eksempel ved å slå opp ident i databasen vha. saksnummer.
+ */
+public fun interface BrukerIdentResolver {
+    public suspend fun resolve(referanse: String): String
+}

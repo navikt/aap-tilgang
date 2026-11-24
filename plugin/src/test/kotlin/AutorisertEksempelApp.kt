@@ -17,19 +17,21 @@ import java.util.*
 import kotlin.random.Random
 import no.nav.aap.komponenter.server.auth.IdentityProvider
 import no.nav.aap.komponenter.server.commonKtorModule
-import no.nav.aap.tilgang.AuthorizationBodyPathConfig
-import no.nav.aap.tilgang.AuthorizationMachineToMachineConfig
-import no.nav.aap.tilgang.AuthorizationParamPathConfig
-import no.nav.aap.tilgang.BehandlingPathParam
-import no.nav.aap.tilgang.Beslutter
-import no.nav.aap.tilgang.JournalpostPathParam
-import no.nav.aap.tilgang.NoAuthConfig
+import no.nav.aap.tilgang.config.AuthorizationBodyPathConfig
+import no.nav.aap.tilgang.config.AuthorizationMachineToMachineConfig
+import no.nav.aap.tilgang.config.AuthorizationParamPathConfig
+import no.nav.aap.tilgang.config.BehandlingPathParam
+import no.nav.aap.tilgang.config.Beslutter
+import no.nav.aap.tilgang.resolver.BrukerIdentResolver
+import no.nav.aap.tilgang.config.JournalpostPathParam
+import no.nav.aap.tilgang.config.NoAuthConfig
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.RelevanteIdenter
 import no.nav.aap.tilgang.Rolle
-import no.nav.aap.tilgang.RollerConfig
-import no.nav.aap.tilgang.SakPathParam
+import no.nav.aap.tilgang.config.RollerConfig
+import no.nav.aap.tilgang.config.SakPathParam
 import no.nav.aap.tilgang.Tags
+import no.nav.aap.tilgang.config.Tilgangskontekst
 import no.nav.aap.tilgang.auditlog.AuditLogBodyConfig
 import no.nav.aap.tilgang.auditlog.AuditLogPathParamConfig
 import no.nav.aap.tilgang.auditlog.PathBrukerIdentResolver
@@ -38,11 +40,6 @@ import no.nav.aap.tilgang.authorizedPost
 import no.nav.aap.tilgang.getGrunnlag
 import no.nav.aap.tilgang.kanSaksbehandleKey
 import no.nav.aap.tilgang.log
-import no.nav.aap.tilgang.plugin.kontrakt.AuditlogResolverInput
-import no.nav.aap.tilgang.plugin.kontrakt.Behandlingsreferanse
-import no.nav.aap.tilgang.plugin.kontrakt.BrukerIdentResolver
-import no.nav.aap.tilgang.plugin.kontrakt.Personreferanse
-import no.nav.aap.tilgang.plugin.kontrakt.Saksreferanse
 
 val enAnnenReferanseTilbehandlingReferanse = mutableMapOf<String, UUID>()
 val AUTHORIZED_AZP: UUID = UUID.randomUUID()
@@ -153,7 +150,8 @@ fun Application.autorisertEksempelApp() {
                     route("post") {
                         authorizedPost<Unit, Personinfo, Personinfo>(
                             AuthorizationBodyPathConfig(
-                                operasjon = Operasjon.SE
+                                operasjon = Operasjon.SE,
+                                kontekst = { Tilgangskontekst.Person(it.personIdent) },
                             )
                         ) { _, dto ->
                             respond(dto)
@@ -177,6 +175,7 @@ fun Application.autorisertEksempelApp() {
                         authorizedPost<Unit, Long, Journalpostinfo>(
                             AuthorizationBodyPathConfig(
                                 operasjon = Operasjon.SAKSBEHANDLE,
+                                kontekst = { Tilgangskontekst.Journalpost(it.behandlingReferanse) },
                                 applicationRole = "tilgang-rolle",
                             ),
                             modules = arrayOf(TagModule(listOf(Tags.Tilgangkontrollert)))
@@ -268,6 +267,7 @@ fun Application.autorisertEksempelApp() {
                         authorizedPost<Unit, Saksinfo, Saksinfo>(
                             AuthorizationBodyPathConfig(
                                 operasjon = Operasjon.SAKSBEHANDLE,
+                                kontekst = Saksinfo::tilgangskontekst,
                                 påkrevdRolle = listOf(Rolle.BESLUTTER),
                             )
                         ) { _, dto ->
@@ -278,7 +278,10 @@ fun Application.autorisertEksempelApp() {
                 route("testApi/authorizedPost") {
                     route("on-behalf-of/saksinfo") {
                         authorizedPost<Unit, Saksinfo, Saksinfo>(
-                            AuthorizationBodyPathConfig(operasjon = Operasjon.SAKSBEHANDLE)
+                            AuthorizationBodyPathConfig(
+                                operasjon = Operasjon.SAKSBEHANDLE,
+                                kontekst = Saksinfo::tilgangskontekst,
+                            )
                         ) { _, dto ->
                             respond(dto)
                         }
@@ -288,6 +291,7 @@ fun Application.autorisertEksempelApp() {
                         authorizedPost<Unit, Behandlinginfo, Behandlinginfo>(
                             AuthorizationBodyPathConfig(
                                 operasjon = Operasjon.SAKSBEHANDLE,
+                                kontekst = { Tilgangskontekst.Behandling(it.enAnnenReferanse) },
                                 behandlingreferanseResolver = { enAnnenReferanseTilbehandlingReferanse.getValue(it) })
                         ) { _, dto ->
                             respond(dto)
@@ -297,6 +301,7 @@ fun Application.autorisertEksempelApp() {
                         authorizedPost<Unit, Saksinfo, Saksinfo>(
                             AuthorizationBodyPathConfig(
                                 operasjon = Operasjon.SAKSBEHANDLE,
+                                kontekst = Saksinfo::tilgangskontekst,
                                 applicationRole = "tilgang-rolle"
                             )
                         ) { _, dto ->
@@ -318,13 +323,30 @@ fun Application.autorisertEksempelApp() {
                         authorizedPost<Unit, RequestMedAuditResolver, RequestMedAuditResolver>(
                             AuthorizationBodyPathConfig(
                                 operasjon = Operasjon.SAKSBEHANDLE,
+                                kontekst = { Tilgangskontekst.Sak(it.saksreferanse.toString()) },
                             ),
                             AuditLogBodyConfig(
                                 logger = log,
                                 app = "behandlingsflyt",
-                                brukerIdentResolver = TestResolver()
+                                brukerIdentResolver = TestResolver(),
+                                resolverInput = { it.saksreferanse.toString() },
                             ),
                             modules = arrayOf(TagModule(listOf(Tags.Tilgangkontrollert)))
+                        ) { _, dto ->
+                            respond(dto)
+                        }
+                    }
+                    route("med-path-audit/{saksnummer}") {
+                        authorizedPost<Unit, Saksinfo, Saksinfo>(
+                            AuthorizationBodyPathConfig(
+                                operasjon = Operasjon.SAKSBEHANDLE,
+                                kontekst = { Tilgangskontekst.Sak(it.saksnummer.toString()) },
+                            ),
+                            AuditLogPathParamConfig(
+                                logger = log,
+                                app = "behandlingsflyt",
+                                brukerIdentResolver = PathBrukerIdentResolver(TestResolver(), "saksnummer"),
+                            ),
                         ) { _, dto ->
                             respond(dto)
                         }
@@ -333,6 +355,7 @@ fun Application.autorisertEksempelApp() {
                         authorizedPost<Unit, Saksinfo, Saksinfo>(
                             AuthorizationBodyPathConfig(
                                 operasjon = Operasjon.SAKSBEHANDLE,
+                                kontekst = Saksinfo::tilgangskontekst,
                                 authorizedAzps = listOf(AUTHORIZED_AZP)
                             )
                         ) { _, dto ->
@@ -345,27 +368,13 @@ fun Application.autorisertEksempelApp() {
     }
 }
 
-data class Saksinfo(val saksnummer: UUID) : Saksreferanse {
-    override fun hentSaksreferanse(): String {
-        return saksnummer.toString()
-    }
+data class Saksinfo(val saksnummer: UUID) {
+    fun tilgangskontekst(): Tilgangskontekst = Tilgangskontekst.Sak(saksnummer.toString())
 }
 
-data class Personinfo(val personIdent: String) : Personreferanse {
-    override fun hentPersonreferanse(): String {
-        return personIdent
-    }
-}
+data class Personinfo(val personIdent: String)
 
-data class Behandlinginfo(val enAnnenReferanse: String) : Behandlingsreferanse {
-    override fun behandlingsreferanseResolverInput(): String {
-        return enAnnenReferanse
-    }
-
-    override fun hentPåkrevdRolle(): List<Rolle> {
-        return emptyList()
-    }
-}
+data class Behandlinginfo(val enAnnenReferanse: String)
 
 class TestResolver : BrukerIdentResolver {
     override suspend fun resolve(referanse: String): String {
@@ -374,15 +383,7 @@ class TestResolver : BrukerIdentResolver {
     }
 }
 
-class RequestMedAuditResolver(val saksreferanse: UUID) : AuditlogResolverInput, Saksreferanse {
-    override fun hentAuditlogResolverInput(): String {
-        return saksreferanse.toString()
-    }
-
-    override fun hentSaksreferanse(): String {
-        return saksreferanse.toString()
-    }
-}
+class RequestMedAuditResolver(val saksreferanse: UUID)
 
 data class EnAnnenReferanse(@param:PathParam("enAnnenReferanse") val enAnnenReferanse: String)
 data class BehandlingReferanse(@JsonValue @param:PathParam("referanse") val referanse: UUID = UUID.randomUUID()) {

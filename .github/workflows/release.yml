@@ -49,7 +49,7 @@ jobs:
       - uses: paulhatch/semantic-version@v6.0.7
         id: tag
         with:
-          change_path: "plugin/ plugin-kontrakt/ api-kontrakt/ buildSrc/"
+          change_path: "plugin/ api-kontrakt/ build-logic/ gradle/ build.gradle.kts settings.gradle.kts"
           bump_each_commit: true
           tag_prefix: ""
           bump_each_commit_patch_pattern: ''
@@ -95,7 +95,7 @@ jobs:
 
   prod:
     needs: [ dev ]
-    if: github.ref == 'refs/heads/main' || github.event.inputs.cluster == 'prod-gcp'
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.cluster == 'prod-gcp')
     permissions:
       contents: read
       id-token: write

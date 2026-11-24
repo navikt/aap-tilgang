@@ -39,13 +39,11 @@ kotlin {
 
 dependencies {
     api(project(":api-kontrakt"))
-    api(project(":plugin-kontrakt"))
 
     compileOnly(libs.server)
     compileOnly(libs.json)
     compileOnly(libs.infrastructure)
 
-    implementation(kelvinLibs.logback.classic)
     implementation(libs.ktorOpenApiGenerator)
     implementation(kelvinLibs.ktor.server.core)
 
@@ -58,7 +56,6 @@ dependencies {
     implementation(kelvinLibs.ktor.server.call.id)
     implementation(kelvinLibs.ktor.server.content.negotiation)
     implementation(kelvinLibs.ktor.server.metrics.micrometer)
-    implementation(kelvinLibs.ktor.server.netty)
     implementation(kelvinLibs.ktor.server.status.pages)
     implementation(kelvinLibs.ktor.serialization.jackson)
     implementation("io.ktor:ktor-server-double-receive:${kelvinLibs.versions.ktor.get()}")
@@ -70,6 +67,8 @@ dependencies {
     testImplementation(libs.server)
     testImplementation(libs.json)
     testImplementation(libs.infrastructure)
+    testImplementation(kelvinLibs.logback.classic)
+    testImplementation(kelvinLibs.ktor.server.netty)
     testImplementation(kelvinLibs.junit.jupiter.api)
     testRuntimeOnly(kelvinLibs.junit.jupiter.engine)
     testImplementation(kelvinLibs.assertj.core)

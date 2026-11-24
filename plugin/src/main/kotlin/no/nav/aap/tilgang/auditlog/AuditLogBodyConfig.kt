@@ -2,29 +2,30 @@ package no.nav.aap.tilgang.auditlog
 
 import io.ktor.http.*
 import io.ktor.server.util.*
-import no.nav.aap.tilgang.plugin.kontrakt.BrukerIdentResolver
+import no.nav.aap.tilgang.resolver.BrukerIdentResolver
 import org.slf4j.Logger
-import no.nav.aap.tilgang.plugin.kontrakt.AuditlogResolverInput
 
 
 /**
- * Auditlogconfig som krever at body implementerer [AuditlogResolverInput] for å hente ut input til [BrukerIdentResolver]
+ * Auditlogconfig som henter input til [BrukerIdentResolver] fra request body med [resolverInput]
  * Kun spørringer med OBO-token vil auditlogges
  * @property logger Typisk syslog. Se [guide](https://github.com/navikt/naudit)
  * @property brukerIdentResolver  Funksjon for å finne fnr for bruker det gjøres oppslag på
+ * @property resolverInput Henter input til [brukerIdentResolver] fra request body
  */
-data class AuditLogBodyConfig(
+data class AuditLogBodyConfig<T : Any>(
     val logger: Logger,
     val app: String,
     val brukerIdentResolver: BrukerIdentResolver,
+    val resolverInput: (T) -> String,
     val inkluderCallId: Boolean = false
 ) : AuditLogConfig {
     override fun logger() = logger
     override fun app() = app
     override fun inkluderCallId() = inkluderCallId
 
-    suspend fun tilIdent(request: AuditlogResolverInput): String {
-        return brukerIdentResolver.resolve(request.hentAuditlogResolverInput())
+    suspend fun tilIdent(request: T): String {
+        return brukerIdentResolver.resolve(resolverInput(request))
     }
 }
 

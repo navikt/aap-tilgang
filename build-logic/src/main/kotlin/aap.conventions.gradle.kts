@@ -19,7 +19,7 @@ testing {
 tasks {
     test {
         useJUnitPlatform()
-        maxParallelForks = Runtime.getRuntime().availableProcessors() / 2
+        maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).coerceAtLeast(1)
         testLogging {
             events("passed", "skipped", "failed")
         }
@@ -59,9 +59,3 @@ val toolchainLauncher = javaToolchains.launcherFor {
 }
 tasks.withType<Test>().configureEach { javaLauncher.set(toolchainLauncher) }
 tasks.withType<JavaExec>().configureEach { javaLauncher.set(toolchainLauncher) }
-
-
-kotlin.sourceSets["main"].kotlin.srcDirs("main")
-kotlin.sourceSets["test"].kotlin.srcDirs("test")
-sourceSets["main"].resources.srcDirs("main")
-sourceSets["test"].resources.srcDirs("test")

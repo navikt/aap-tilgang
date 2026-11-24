@@ -19,20 +19,21 @@ import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import io.ktor.serialization.jackson.jackson
 import io.ktor.server.engine.embeddedServer
+import io.ktor.server.engine.*
 import io.ktor.server.netty.Netty
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import java.net.URI
 import java.util.UUID
 import kotlinx.coroutines.runBlocking
 import no.nav.aap.komponenter.httpklient.httpclient.error.ManglerTilgangException
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
-import no.nav.aap.tilgang.Beslutter
+import no.nav.aap.tilgang.config.Beslutter
 import no.nav.aap.tilgang.ArenasakTilgangRequest
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.Rolle
 import no.nav.aap.tilgang.SakTilgangRequest
 import no.nav.aap.tilgang.TILGANG_PLUGIN
-import no.nav.aap.tilgang.TilgangGateway
-import no.nav.aap.tilgang.plugin.kontrakt.Journalpostreferanse
+import no.nav.aap.tilgang.klient.TilgangGateway
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.AfterAll
@@ -57,32 +58,50 @@ class TilgangPluginTest {
             return OidcToken(azureTokenGen.generate(isApp, roles, azp))
         }
 
-        data class Journalpostinfo(@param:PathParam("behandlingReferanse") val behandlingReferanse: String) :
-            Journalpostreferanse {
-            override fun journalpostIdResolverInput(): String {
-                return behandlingReferanse
-            }
-
-            override fun hentPåkrevdRolle(): List<Rolle> {
-                return emptyList()
-            }
-        }
+        data class Journalpostinfo(@param:PathParam("behandlingReferanse") val behandlingReferanse: String)
 
         class IngenReferanse(val noe: String)
 
         val autorisertEksempelAppServer =
-            embeddedServer(Netty, port = 8082) { autorisertEksempelApp() }
+            embeddedServer(Netty, port = 0) { autorisertEksempelApp() }
+        private var appPort: Int? = null
 
         @JvmStatic
         @BeforeAll
         fun beforeAll() {
             System.setProperty("AAP_BESLUTTER", "en-eller-annen-uid")
             autorisertEksempelAppServer.start()
+            appPort = runBlocking {
+                autorisertEksempelAppServer.engine.resolvedConnectors()
+                    .first { it.type == ConnectorType.HTTP }
+                    .port
+            }
         }
 
         @JvmStatic
         @AfterAll
         fun afterAll() {
+            val registry = SimpleMeterRegistry()
+            TilgangGateway.initialiserPrometheus(registry)
+            val request = ArenasakTilgangRequest(UUID.randomUUID().toString())
+            val token = generateToken(isApp = false)
+            fakes.gittTilgangTilArenasaker(request.personIdent, true)
+            assertThat(runBlocking { TilgangGateway.harTilgangTilArensakerForPerson(request, token).tilgang })
+                .isTrue()
+
+            val cacheSize = registry.find("cache.size").tag("cache", "tilgang_arenasak_cache").gauge()
+            assertThat(cacheSize).isNotNull
+            assertThat(cacheSize!!.value()).isGreaterThan(0.0)
+
+            fakes.gittTilgangTilArenasaker(request.personIdent, false)
+            assertThat(runBlocking { TilgangGateway.harTilgangTilArensakerForPerson(request, token).tilgang })
+                .isTrue()
+
+            TilgangGateway.disableCaching()
+            assertThat(runBlocking { TilgangGateway.harTilgangTilArensakerForPerson(request, token).tilgang })
+                .isFalse()
+            assertThat(cacheSize.value()).isEqualTo(0.0)
+
             fakes.close()
             autorisertEksempelAppServer.stop()
         }
@@ -156,7 +175,8 @@ class TilgangPluginTest {
         return if (resp.status.isSuccess()) resp.body() else null
     }
 
-    private fun base(path: String) = URI.create("http://localhost:8082/").resolve(path).toString()
+    private fun base(path: String) =
+        URI.create("http://localhost:${requireNotNull(appPort)}/").resolve(path).toString()
 
     @ParameterizedTest
     @ValueSource(booleans = [true, false])
@@ -549,6 +569,31 @@ class TilgangPluginTest {
                 messages.first { it.contains("CEF:0|Kelvin|behandlingsflyt|1.0|audit:access|Auditlogg|INFO|flexString1=Permit request=/testApi/authorizedPost/med-audit-resolver duid=12345678901 flexString1Label=Decision end=") }
             assertNotNull(expected)
             assertTrue(expected.contains("suid=Lokalsaksbehandler"))
+
+            logger.detachAppender(appender)
+        }
+    }
+
+    @Test
+    fun `skal auditlogge - body-tilgang med path resolver`() {
+        runBlocking {
+            val randomUuid = UUID.randomUUID()
+            fakes.gittTilgangTilSak(randomUuid.toString(), true)
+
+            val logger = LoggerFactory.getLogger(TILGANG_PLUGIN) as Logger
+            val appender = LogCaptureAppender()
+            appender.start()
+            logger.addAppender(appender)
+
+            val res = oboPost<Saksinfo, Saksinfo>(
+                base("testApi/authorizedPost/med-path-audit/$randomUuid"),
+                Saksinfo(saksnummer = randomUuid),
+                generateToken(isApp = false)
+            )
+            assertThat(res?.saksnummer).isEqualTo(randomUuid)
+
+            val messages = appender.getLoggedMessages()
+            assertNotNull(messages.firstOrNull { it.contains("request=/testApi/authorizedPost/med-path-audit/$randomUuid duid=12345678901") })
 
             logger.detachAppender(appender)
         }
