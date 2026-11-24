@@ -8,7 +8,7 @@ import no.nav.aap.postmottak.kontrakt.avklaringsbehov.Definisjon as PostmottakDe
  * Sjekker alltid alle regler - kan derfor hende at man ikke har sendt med hverken påkrevd rolle eller avklaringsbehov.
  * Skal returnere false i disse tilfellene
  */
-data object AvklaringsbehovRolleRegel : Regel<AvklaringsbehovRolleInput> {
+data object SaksbehandleRolleRegel : Regel<AvklaringsbehovRolleInput> {
     override fun vurder(input: AvklaringsbehovRolleInput): Boolean {
         val sjekker = mutableListOf<Boolean>()
 
