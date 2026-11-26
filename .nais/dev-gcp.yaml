@@ -128,7 +128,7 @@ spec:
         - application: api-intern
         - application: meldekort-backend
         - application: arenavisningsklient
-        - application: saksbehandling-lokal # For lokal utvikling. IKKE kopier denne til prod.yaml
+        - application: localauth # For lokal utvikling. IKKE kopier denne til prod.yaml
         - application: azure-token-generator
           namespace: nais
         - application: brev
