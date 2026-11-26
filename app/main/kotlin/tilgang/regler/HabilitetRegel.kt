@@ -18,6 +18,11 @@ data object HabilitetRegel : Regel<HabilitetRegelInput> {
         }
         return avvistResponse.title != TilgangsmaskinAvvistGrunn.AVVIST_HABILITET.toString()
     }
+
+    override fun vurderMedResultat(input: HabilitetRegelInput): RegelResultat {
+        val harTilgang = vurder(input)
+        return RegelResultat(harTilgang, input.tilgangsmaskinResponse.tilgangsmaskinAvvistResponse.takeUnless { harTilgang })
+    }
 }
 
 class HabilitetRegelInputGenerator(private val tilgangsmaskinGateway: ITilgangsmaskinGateway) :

@@ -7,6 +7,11 @@ data object TilgangsmaskinKomplettRegel : Regel<TilgangsmaskinKomplettInput> {
     override fun vurder(input: TilgangsmaskinKomplettInput): Boolean {
         return input.tilgangsmaskinResponse.harTilgang
     }
+
+    override fun vurderMedResultat(input: TilgangsmaskinKomplettInput): RegelResultat {
+        val harTilgang = vurder(input)
+        return RegelResultat(harTilgang, input.tilgangsmaskinResponse.tilgangsmaskinAvvistResponse.takeUnless { harTilgang })
+    }
 }
 
 class TilgangsmaskinKomplettInputGenerator(private val tilgangsmaskinGateway: ITilgangsmaskinGateway) :

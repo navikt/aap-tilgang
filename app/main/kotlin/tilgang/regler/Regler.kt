@@ -55,23 +55,27 @@ class RegelService(
         )
     )
 
-    suspend fun vurderTilgang(input: RegelInput): Map<Operasjon, Boolean> {
+    suspend fun vurderTilgang(input: RegelInput): Map<Operasjon, RegelResultat> {
         val aktuelleOperasjoner = regelOppsett.filterKeys { it in input.operasjoner }
 
-        val regelCache = mutableMapOf<Regel<*>, Boolean>()
+        val regelCache = mutableMapOf<Regel<*>, RegelResultat>()
 
+        // Vurder alle aktuelle operasjoner, men stopp ved første avslag for hver operasjon.
+        // takeUnless gjør tillatelser til null, slik at søket fortsetter til et avslag.
+        // Hvis ingen regler avslår (også ved tom regelliste), gis tilgang.
         return aktuelleOperasjoner.mapValues { (_, regler) ->
-            regler.all { regel ->
-                hentRegelresultat(regelCache, regel, input)
-            }
+            regler.firstNotNullOfOrNull { regel ->
+                hentRegelresultat(regelCache, regel, input).takeUnless { it.harTilgang }
+            } ?: RegelResultat(harTilgang = true)
         }
+        // Alle operasjoner som er aktuelle får ett RegelResult i Map-returen.
     }
 
     private suspend fun hentRegelresultat(
-        regelCache: MutableMap<Regel<*>, Boolean>,
+        regelCache: MutableMap<Regel<*>, RegelResultat>,
         regel: Regel<*>,
         input: RegelInput,
-    ): Boolean {
+    ): RegelResultat {
         regelCache[regel]?.let { return it }
 
         val vurdering = regelMedVurdering[regel]?.vurder(input)

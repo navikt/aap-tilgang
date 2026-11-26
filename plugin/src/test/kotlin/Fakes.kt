@@ -26,6 +26,8 @@ import kotlinx.coroutines.runBlocking
 import org.intellij.lang.annotations.Language
 import no.nav.aap.tilgang.BehandlingTilgangRequest
 import no.nav.aap.tilgang.ArenasakTilgangRequest
+import no.nav.aap.tilgang.Avvisning
+import no.nav.aap.tilgang.BegrunnetTilgangsResponse
 import no.nav.aap.tilgang.JournalpostTilgangRequest
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.PersonTilgangRequest
@@ -111,9 +113,9 @@ internal class Fakes(val azureTokenGen: AzureTokenGen) : AutoCloseable {
         tilgangTilJournalpost[journalpost] = tilgang
     }
 
-    private val tilgangTilArenasaker = mutableMapOf<String, Boolean>()
-    fun gittTilgangTilArenasaker(personIdent: String, tilgang: Boolean) {
-        tilgangTilArenasaker[personIdent] = tilgang
+    private val tilgangTilArenasaker = mutableMapOf<String, BegrunnetTilgangsResponse>()
+    fun gittTilgangTilArenasaker(personIdent: String, tilgang: Boolean, avvistResponse: Avvisning? = null) {
+        tilgangTilArenasaker[personIdent] = BegrunnetTilgangsResponse(tilgang, avvistResponse)
     }
 
     private val tilgangTilPerson = mutableMapOf<String, Boolean>()
@@ -176,7 +178,7 @@ internal class Fakes(val azureTokenGen: AzureTokenGen) : AutoCloseable {
                 }
                 post("/tilgang/arenasaker") {
                     val req = call.receive<ArenasakTilgangRequest>()
-                    call.respond(TilgangResponse(tilgangTilArenasaker[req.personIdent] == true))
+                    call.respond(tilgangTilArenasaker[req.personIdent] ?: BegrunnetTilgangsResponse(false))
                 }
                 post("tilgang/person") {
                     val req = call.receive<PersonTilgangRequest>()

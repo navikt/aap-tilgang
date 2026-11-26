@@ -20,6 +20,7 @@ import tilgang.integrasjoner.saf.SafJournalpost
 import tilgang.integrasjoner.tilgangsmaskin.BrukerOgRegeltype
 import tilgang.integrasjoner.tilgangsmaskin.TilgangsmaskinGateway
 import tilgang.regler.RegelInput
+import tilgang.regler.RegelResultat
 import tilgang.regler.RegelService
 
 class TilgangService(
@@ -52,7 +53,7 @@ class TilgangService(
             påkrevdRolle = req.påkrevdRolle ?: emptyList(),
             operasjoner = listOf(req.operasjon)
         )
-        return regelService.vurderTilgang(regelInput)[req.operasjon] == true
+        return regelService.vurderTilgang(regelInput)[req.operasjon]?.harTilgang == true
     }
 
     suspend fun harTilgangTilBehandling(
@@ -61,7 +62,7 @@ class TilgangService(
         roller: List<Rolle>,
         token: OidcToken,
         callId: String,
-    ): Map<Operasjon, Boolean> {
+    ): Map<Operasjon, RegelResultat> {
         log.info("Sjekker tilgang til behandling ${req.behandlingsreferanse}")
         val identer = req.relevanteIdenter ?: behandlingsflytGateway
             .hentIdenterForBehandling(req.behandlingsreferanse.toString())
@@ -114,7 +115,7 @@ class TilgangService(
             påkrevdRolle = req.påkrevdRolle ?: emptyList(),
             operasjoner = listOf(req.operasjon),
         )
-        return regelService.vurderTilgang(regelInput)[req.operasjon] == true
+        return regelService.vurderTilgang(regelInput)[req.operasjon]?.harTilgang == true
     }
 
     suspend fun harTilgangTilArensakerForPerson(
@@ -123,7 +124,7 @@ class TilgangService(
         token: OidcToken,
         roller: List<Rolle>,
         callId: String
-    ): Boolean {
+    ): RegelResultat? {
         val regelInput = RegelInput(
             callId = callId,
             ansattIdent = ansattIdent,
@@ -136,7 +137,7 @@ class TilgangService(
             operasjoner = listOf(req.operasjon)
         )
 
-        return regelService.vurderTilgang(regelInput)[req.operasjon] == true
+        return regelService.vurderTilgang(regelInput)[req.operasjon]
     }
 
     private suspend fun finnIdenterForJournalpost(journalpost: SafJournalpost): RelevanteIdenter {
@@ -181,7 +182,7 @@ class TilgangService(
                 operasjoner = listOf(req.operasjon!!),
             )
 
-            return regelService.vurderTilgang(regelInput)[req.operasjon] == true
+            return regelService.vurderTilgang(regelInput)[req.operasjon]?.harTilgang == true
         }
 
         return tilgangsmaskinGateway.harTilgangTilPerson(req.personIdent, token, callId)
@@ -208,7 +209,7 @@ class TilgangService(
             påkrevdRolle = req.effektivePåkrevdRoller(),
             operasjoner = listOf(req.operasjon)
         )
-        return regelService.vurderTilgang(regelInput)[req.operasjon] == true
+        return regelService.vurderTilgang(regelInput)[req.operasjon]?.harTilgang == true
     }
 
 }

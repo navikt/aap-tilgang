@@ -34,7 +34,7 @@ Husk `read:packages`-rettighet og enable SSO.
 
 ## Unleash
 
-Feature toggle `raskRobustTilgangsmaskin` velger den dedikerte HTTP-klienten for Tilgangsmaskinen.
+Feature toggle `TilgangsmaskinRaskRobustHttpklient` velger den dedikerte HTTP-klienten for Tilgangsmaskinen.
 Når togglen er av eller ukjent, bruker appen den delte HTTP-klienten.
 Appen sjekker togglen før hvert utgående kall. Endringer gjelder når Unleash-SDK-en har hentet dem, uten omstart.
 Cachede tilgangsbeslutninger gjelder fortsatt.

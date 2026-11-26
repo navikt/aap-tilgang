@@ -27,6 +27,8 @@ import no.nav.aap.komponenter.httpklient.httpclient.error.ManglerTilgangExceptio
 import no.nav.aap.komponenter.httpklient.httpclient.tokenprovider.OidcToken
 import no.nav.aap.tilgang.Beslutter
 import no.nav.aap.tilgang.ArenasakTilgangRequest
+import no.nav.aap.tilgang.Avvisning
+import no.nav.aap.tilgang.BegrunnetTilgangsResponse
 import no.nav.aap.tilgang.Operasjon
 import no.nav.aap.tilgang.Rolle
 import no.nav.aap.tilgang.SakTilgangRequest
@@ -171,6 +173,25 @@ class TilgangPluginTest {
         val response = TilgangGateway.harTilgangTilArensakerForPerson(request, generateToken(isApp = false))
 
         assertThat(response.tilgang).isEqualTo(harTilgang)
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `gateway leser og cacher avslag med begrunnelse for arenasaker`(kanOverstyres: Boolean): Unit = runBlocking {
+        val request = ArenasakTilgangRequest(UUID.randomUUID().toString())
+        val token = generateToken(isApp = false)
+        val avvisning = Avvisning(
+            title = "AVVIST_GEOGRAFISK",
+            begrunnelse = "Ikke tilgang til enhet",
+            kanOverstyres = kanOverstyres
+        )
+        fakes.gittTilgangTilArenasaker(request.personIdent, false, avvisning)
+
+        val response = TilgangGateway.harTilgangTilArensakerForPerson(request, token)
+
+        assertThat(response).isEqualTo(BegrunnetTilgangsResponse(false, avvisning))
+        fakes.gittTilgangTilArenasaker(request.personIdent, true)
+        assertThat(TilgangGateway.harTilgangTilArensakerForPerson(request, token)).isEqualTo(response)
     }
 
     @Test

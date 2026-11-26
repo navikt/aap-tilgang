@@ -55,7 +55,7 @@ fun Application.tilgangsmaskinFake() {
                     status = 403,
                     navIdent = "Z990883",
                     begrunnelse = "Du har ikke tilgang til brukerens geografiske område eller enhet.",
-                    kanOverstyres = false
+                    kanOverstyres = body.contains("45600000001")
                 )
                 call.respond(HttpStatusCode.Forbidden, body)
             } else {
